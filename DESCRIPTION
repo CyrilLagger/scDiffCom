@@ -1,11 +1,17 @@
 Package: scDiffCom
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Difference in Intercellular Communication from scRNA-seq data
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Authors@R:
+    person("Cyril", "Lagger", email = "cyril.lagger@liverpool.ac.uk", role = c("aut", "cre"))
+Description: The original purpose is to find age-related changes in intercellelular 
+    communication based on scRNA-seq transcriptomic data. The package leverages
+	several ligand-receptor databases and different computational methods in order
+	to infer significant cell-cell interaction changes in a tissue of interest.
+	The comparision is done between two conditions (e.g. young vs old). 
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 7.1.0
+Suggests: 
+    testthat (>= 2.1.0)
