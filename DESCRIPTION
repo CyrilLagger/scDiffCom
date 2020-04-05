@@ -17,4 +17,6 @@ Suggests:
     testthat (>= 2.1.0)
 Imports: 
     biomaRt,
-    dplyr
+    dplyr,
+    Seurat,
+    utils

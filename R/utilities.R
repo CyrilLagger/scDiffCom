@@ -51,7 +51,100 @@ get_human_orthologs <- function(genes) {
        length(unique(ensembl_all[,1])) == dim(ensembl_all)[[1]])) {
     stop("Problem of ortholog conversion.")
   } else {
-    message(paste0("Percentage of orthologs returned: ", nrow(ensembl_all)/length(genes)*100))
+    message(paste0("Percentage of orthologs returned: ", nrow(ensembl_all)/length(genes)*100), "%")
     return(ensembl_all)
+  }
+}
+
+
+#' Prepare Seurat data matrix for downstream analysis.
+#'
+#'
+#'
+#' @param seurat_obj a Seurat object
+#' @param assay character indicating the assay to choose from
+#' @param slot character indicating the slot to choose from
+#' @param log_scale logical indicating if returning log-normalized value (only for slot data)
+#' @param convert_to_human logical indicating if gene names have to be converted to human orthologs
+#' @param return_type character indicating the class of the return data (sparse, dense or data.frame)
+#'
+#' @return a dgCMatrix, a matrix or a data.frame
+#' @export
+#'
+#' @examples
+#' prepare_seurat_data(seurat_random_test)
+prepare_seurat_data <- function(seurat_obj,
+                            assay = "RNA",
+                            slot = "data",
+                            log_scale = TRUE,
+                            convert_to_human = FALSE,
+                            return_type = "dense") {
+  data <- Seurat::GetAssayData(object = seurat_obj,
+                               slot = slot,
+                               assay = assay)
+  if(slot == "data" & !log_scale) {
+    data <- expm1(data)
+  } else if(!log_scale) {
+    message("There is no log option for slot counts and scale.data.")
+  }
+  if(convert_to_human) {
+    message("Converting mouse genes to human orthologs.")
+    gene_mapping <- get_human_orthologs(rownames(data))
+    ng <- nrow(data)
+    data <- data[rownames(data) %in% gene_mapping$mouse_symbol, ]
+    message(paste0("Removing ", ng - nrow(data), " genes with no orthologs."))
+    gene_mapping <- gene_mapping[order(match(gene_mapping$mouse_symbol, rownames(data))),]
+    if(identical(rownames(data), gene_mapping$mouse_symbol)) {
+      rownames(data) <- gene_mapping$human_symbol
+    } else {
+      stop("Problem in ordering of the rows (genes). To solve later on.")
+    }
+  }
+  if(class(data) == "dgCMatrix") {
+    if(return_type == "sparse") {
+      message("Initial class (sparse) dgCMatrix, returning dgCMatrix.")
+      return(data)
+    } else if(return_type == "dense") {
+      message("Initial class (sparse) dgCMatrix, returning (dense) matrix.")
+      return(as.matrix(data))
+    } else {
+      message("Initial class (sparse) dgCMatrix, returning (dense) data.frame.")
+      return(as.data.frame(as.matrix(data)))
+    }
+  } else if(class(data) == "matrix") {
+    if((return_type == "dense") | (return_type == "sparse")) {
+      message("Initial class (dense) Matrix, returning (dense) Matrix.")
+      return(data)
+    } else {
+      message("Initial class (dense) Matrix, returning (dense) data.frame.")
+      return(as.data.frame(data))
+    }
+  } else {
+    stop(paste0("Class ", class(data), " is not recognized."))
+  }
+}
+
+#' Prepare Seurat metadata for downstream analysis
+#'
+#' @param seurat_obj a Seurat object
+#' @param seurat_cell_type_id a character indicating the column of cell-types in the Seurat object
+#' @param condition_id a character indicating a column with some condition on the cells
+#'
+#' @return a dataframe
+#' @export
+#'
+#' @examples
+#' prepare_seurat_metadata(seurat_random_test)
+prepare_seurat_metadata <- function(seurat_obj,
+                                    seurat_cell_type_id,
+                                    condition_id = NULL
+) {
+  if(is.null(condition_id)) {
+    return(data.frame(cell_id = rownames(seurat_obj@meta.data),
+                      cell_type = seurat_obj@meta.data[, seurat_cell_type_id]))
+  } else {
+    return(data.frame(cell_id = rownames(seurat_obj@meta.data),
+                      cell_type = seurat_obj@meta.data[, seurat_cell_type_id],
+                      condition = seurat_obj@meta.data[, condition_id]))
   }
 }
