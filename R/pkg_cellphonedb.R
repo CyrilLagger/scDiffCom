@@ -120,7 +120,7 @@ create_cpdb_input <- function(seurat_obj,
 #' @param output_path character
 #' @param output_format character
 #' @param means_result_name character
-#' @param significant_mean_result_name character
+#' @param significant_means_result_name character
 #' @param deconvoluted_result_name character
 #' @param verbose logical
 #' @param pvalues_result_name character
@@ -147,7 +147,7 @@ run_cpdb_from_files <- function(data_path,
                                 output_path = NULL,
                                 output_format = NULL,
                                 means_result_name = NULL,
-                                significant_mean_result_name = NULL,
+                                significant_means_result_name = NULL,
                                 deconvoluted_result_name = NULL,
                                 verbose = TRUE,
                                 pvalues_result_name = NULL,
@@ -182,7 +182,7 @@ run_cpdb_from_files <- function(data_path,
   if (!is.null(output_path)) command_cpdb <- paste0(command_cpdb, " --output-path=", output_path)
   if (!is.null(output_format)) command_cpdb <- paste0(command_cpdb, " --output-format=", output_format)
   if (!is.null(means_result_name)) command_cpdb <- paste0(command_cpdb, " --means-result-name=", means_result_name)
-  if (!is.null(significant_mean_result_name)) command_cpdb <- paste0(command_cpdb, " --significant-mean-result-name=", significant_mean_result_name)
+  if (!is.null(significant_means_result_name)) command_cpdb <- paste0(command_cpdb, " --significant-means-result-name=", significant_means_result_name)
   if (!is.null(deconvoluted_result_name)) command_cpdb <- paste0(command_cpdb, " --deconvoluted-result-name=", deconvoluted_result_name)
   if(verbose) {
     command_cpdb <- paste0(command_cpdb, " --verbose")
@@ -256,7 +256,7 @@ run_cpdb_heatmap <- function(metadata_path,
                              verbose = TRUE
 
 ) {
-  command_hm <- "cellphonedb plot heatmap"
+  command_hm <- "cellphonedb plot heatmap_plot"
   command_hm <- paste(command_hm, metadata_path, sep = " ")
 
   if (!is.null(pvalues_path)) command_hm <- paste0(command_hm, " --pvalues-path=", pvalues_path)
@@ -345,7 +345,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                         output_path = input_dir,
                         output_format = output_format,
                         means_result_name = NULL,
-                        significant_mean_result_name = NULL,
+                        significant_means_result_name = NULL,
                         deconvoluted_result_name = NULL,
                         verbose = verbose,
                         pvalues_result_name = NULL,
@@ -383,7 +383,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                         output_path = input_dir,
                         output_format = output_format,
                         means_result_name = paste0("means-", paths$cond1, ".txt"),
-                        significant_mean_result_name = paste0("significant-means-", paths$cond1, ".txt"),
+                        significant_means_result_name = paste0("significant-means-", paths$cond1, ".txt"),
                         deconvoluted_result_name = paste0("deconvoluted-", paths$cond1, ".txt"),
                         verbose = verbose,
                         pvalues_result_name = paste0("pvalues-", paths$cond1, ".txt"),
@@ -420,7 +420,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                         output_path = input_dir,
                         output_format = output_format,
                         means_result_name = paste0("means-", paths$cond2, ".txt"),
-                        significant_mean_result_name = paste0("significant-means-", paths$cond2, ".txt"),
+                        significant_means_result_name = paste0("significant-means-", paths$cond2, ".txt"),
                         deconvoluted_result_name = paste0("deconvoluted-", paths$cond2, ".txt"),
                         verbose = verbose,
                         pvalues_result_name = paste0("pvalues-", paths$cond2, ".txt"),
