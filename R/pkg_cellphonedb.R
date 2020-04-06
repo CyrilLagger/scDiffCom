@@ -59,11 +59,11 @@ create_cpdb_input <- function(seurat_obj,
     conds <- unique(metadata$condition)
     if(length(conds) != 2) stop("Wrong number of groups in cell-type conditions (expected 2).")
     meta1 <- metadata[metadata$condition == conds[[1]], ]
-    data1 <- data[, colnames(data) %in% meta1$cell_id]
+    data1 <- data[, colnames(data) %in% c("Gene", meta1$cell_id)]
     meta1$condition <- NULL
     colnames(meta1) <- c("Cell", "cell_type")
     meta2 <- metadata[metadata$condition == conds[[2]], ]
-    data2 <- data[, colnames(data) %in% meta2$cell_id]
+    data2 <- data[, colnames(data) %in% c("Gene", meta2$cell_id)]
     meta2$condition <- NULL
     colnames(meta2) <- c("Cell", "cell_type")
     message(paste0("Writing CellPhoneDB input data to ", input_dir, "/cpdb_data_" , conds[[1]], ".txt"))
