@@ -27,10 +27,12 @@ create_cpdb_input <- function(seurat_obj,
                               log_scale = log_scale,
                               convert_to_human = TRUE,
                               return_type = "data.frame")
+  data <- tibble::rownames_to_column(data, var = "Gene")
   if(is.null(condition_id)) {
     metadata <- prepare_seurat_metadata(seurat_obj = seurat_obj,
                                         seurat_cell_type_id = seurat_cell_type_id,
                                         condition_id = NULL)
+    colnames(metadata) <- c("Cell", "cell_type")
     message(paste0("Writing CellPhoneDB input data to ", input_dir, "/cpdb_data_noCond.txt"))
     utils::write.table(data,
                        file = paste0(input_dir, "/cpdb_data_noCond.txt"),
