@@ -253,6 +253,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                              log_scale = log_scale,
                              seurat_cell_type_id = seurat_cell_type_id,
                              condition_id = condition_id,
+                             min_cells = min_cells,
                              input_dir = input_dir)
   if(is.null(condition_id)) {
     run_cpdb_from_files(data_path = paths$data_path,
