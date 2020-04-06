@@ -4,34 +4,16 @@
 \alias{run_cpdb_from_seurat}
 \title{Run CellPhoneDB from a Seurat object}
 \usage{
-run_cpdb_from_seurat(
-  seurat_obj,
-  assay = "RNA",
-  slot = "data",
-  log_scale = TRUE,
-  seurat_cell_type_id,
-  condition_id = NULL,
-  input_dir = getwd(),
-  method = "statistical_analysis",
-  project_name = NULL,
-  iterations = NULL,
-  threshold = NULL,
-  result_precision = NULL,
-  counts_data = NULL,
-  output_path = NULL,
-  output_format = NULL,
-  means_result_name = NULL,
-  significant_mean_result_name = NULL,
-  deconvoluted_result_name = NULL,
-  verbose = TRUE,
-  pvalues_result_name = NULL,
-  debug_seed = NULL,
-  threads = NULL,
-  subsampling = FALSE,
-  subsampling_log = FALSE,
-  subsampling_num_pc = NULL,
-  subsampling_num_cells = NULL
-)
+run_cpdb_from_seurat(seurat_obj, assay = "RNA", slot = "data",
+  log_scale = TRUE, seurat_cell_type_id, condition_id = NULL,
+  input_dir = getwd(), method = "statistical_analysis",
+  project_name = NULL, iterations = NULL, threshold = NULL,
+  result_precision = NULL, counts_data = NULL, output_path = NULL,
+  output_format = NULL, means_result_name = NULL,
+  significant_mean_result_name = NULL, deconvoluted_result_name = NULL,
+  verbose = TRUE, pvalues_result_name = NULL, debug_seed = NULL,
+  threads = NULL, subsampling = FALSE, subsampling_log = FALSE,
+  subsampling_num_pc = NULL, subsampling_num_cells = NULL)
 }
 \arguments{
 \item{seurat_obj}{x}

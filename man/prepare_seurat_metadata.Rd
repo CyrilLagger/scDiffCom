@@ -4,7 +4,8 @@
 \alias{prepare_seurat_metadata}
 \title{Prepare Seurat metadata for downstream analysis}
 \usage{
-prepare_seurat_metadata(seurat_obj, seurat_cell_type_id, condition_id = NULL)
+prepare_seurat_metadata(seurat_obj, seurat_cell_type_id,
+  condition_id = NULL)
 }
 \arguments{
 \item{seurat_obj}{a Seurat object}

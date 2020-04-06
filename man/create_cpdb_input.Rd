@@ -4,15 +4,9 @@
 \alias{create_cpdb_input}
 \title{Create text files to be used by CellPhoneDB from a Seurat object}
 \usage{
-create_cpdb_input(
-  seurat_obj,
-  assay = "RNA",
-  slot = "data",
-  log_scale = TRUE,
-  seurat_cell_type_id,
-  condition_id = NULL,
-  input_dir = getwd()
-)
+create_cpdb_input(seurat_obj, assay = "RNA", slot = "data",
+  log_scale = TRUE, seurat_cell_type_id, condition_id = NULL,
+  input_dir = getwd())
 }
 \arguments{
 \item{seurat_obj}{a Seurat object}

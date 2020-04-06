@@ -1,0 +1,21 @@
+cell_id	cell_type
+ACTTGTTCAACGATGG-1-44-1-0	hepatocyte
+TGGCTGGAGAAGGTTT-1-44-1-0	hepatocyte
+AAACCTGCAATGTTGC-1-28-1-0	endothelial cell of hepatic sinusoid
+TGTGTTTAGAGGACGG-1-16-1-0	Kupffer cell
+CGTTAGAAGTCATGCT-1-16-1-0	Kupffer cell
+TCAGGATAGAGCTGCA-1-50-1-0	endothelial cell of hepatic sinusoid
+GGGAATGTCTGACCTC-1-50-1-0	NK cell
+GCCAAATTCTGGCGTG-1-10-0-0	NK cell
+CGGTTAACATTCCTGC-1-50-1-0	Kupffer cell
+TCAGGTATCAACGGCC-1-50-1-0	Kupffer cell
+TGAAAGAAGAGTAATC-1-27-1-0	B cell
+TAAACCGAGAGTACAT-1-27-1-0	myeloid leukocyte
+CCATGTCCATGGTAGG-1-16-1-0	Kupffer cell
+CAGCTAAGTCAGAATA-1-50-1-0	myeloid leukocyte
+TGGTTCCAGGCCGAAT-1-50-1-0	Kupffer cell
+CAGCATACAGTCAGAG-1-43-1-0	hepatocyte
+10X_P4_2_GGACATTCAGCATGAG-1	hepatocyte
+GCGCGATGTCCAGTGC-1-44-1-0	endothelial cell of hepatic sinusoid
+AAGGCAGTCCAGATCA-1-44-1-0	hepatocyte
+10X_P7_1_GCATGATGTCTGCAAT-1	hepatocyte

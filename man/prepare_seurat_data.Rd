@@ -4,14 +4,8 @@
 \alias{prepare_seurat_data}
 \title{Prepare Seurat data matrix for downstream analysis.}
 \usage{
-prepare_seurat_data(
-  seurat_obj,
-  assay = "RNA",
-  slot = "data",
-  log_scale = TRUE,
-  convert_to_human = FALSE,
-  return_type = "dense"
-)
+prepare_seurat_data(seurat_obj, assay = "RNA", slot = "data",
+  log_scale = TRUE, convert_to_human = FALSE, return_type = "dense")
 }
 \arguments{
 \item{seurat_obj}{a Seurat object}
