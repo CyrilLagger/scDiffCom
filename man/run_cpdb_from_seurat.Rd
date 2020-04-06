@@ -19,11 +19,7 @@ run_cpdb_from_seurat(
   result_precision = NULL,
   counts_data = NULL,
   output_format = NULL,
-  means_result_name = NULL,
-  significant_mean_result_name = NULL,
-  deconvoluted_result_name = NULL,
   verbose = TRUE,
-  pvalues_result_name = NULL,
   debug_seed = NULL,
   threads = NULL,
   subsampling = FALSE,
@@ -61,15 +57,7 @@ run_cpdb_from_seurat(
 
 \item{output_format}{x}
 
-\item{means_result_name}{x}
-
-\item{significant_mean_result_name}{x}
-
-\item{deconvoluted_result_name}{x}
-
 \item{verbose}{x}
-
-\item{pvalues_result_name}{x}
 
 \item{debug_seed}{x}
 
