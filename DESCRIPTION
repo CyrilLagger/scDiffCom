@@ -9,7 +9,7 @@ Description: The original purpose is to find age-related changes in intercellelu
 	several ligand-receptor databases and different computational methods in order
 	to infer significant cell-cell interaction changes in a tissue of interest.
 	The comparision is done between two conditions (e.g. young vs old). 
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.0

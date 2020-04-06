@@ -2,7 +2,7 @@
 % Please edit documentation in R/pkg_cellphonedb.R
 \name{create_cpdb_input}
 \alias{create_cpdb_input}
-\title{Title}
+\title{Create text files to be used by CellPhoneDB from a Seurat object}
 \usage{
 create_cpdb_input(
   seurat_obj,
@@ -11,7 +11,7 @@ create_cpdb_input(
   log_scale = TRUE,
   seurat_cell_type_id,
   condition_id = NULL,
-  output_dir
+  input_dir = getwd()
 )
 }
 \arguments{
@@ -27,11 +27,14 @@ create_cpdb_input(
 
 \item{condition_id}{xx}
 
-\item{output_dir}{xx}
+\item{input_dir}{xx}
 }
 \value{
-
+none
 }
 \description{
-Title
+Create text files to be used by CellPhoneDB from a Seurat object
+}
+\examples{
+
 }
