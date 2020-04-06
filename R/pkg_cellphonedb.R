@@ -5,21 +5,23 @@
 #' @param slot slot to pull data from
 #' @param log_scale logical
 #' @param seurat_cell_type_id xx
+#' @param min_cells xx
 #' @param condition_id xx
 #' @param input_dir xx
 #'
-#' @return none
+#' @return Path where the data and metadata are written.
 #' @export
 #'
 #' @examples
 #'
 create_cpdb_input <- function(seurat_obj,
-                                  assay = "RNA",
-                                  slot = "data",
-                                  log_scale = TRUE,
-                                  seurat_cell_type_id,
-                                  condition_id = NULL,
-                                  input_dir = getwd()
+                              assay = "RNA",
+                              slot = "data",
+                              log_scale = TRUE,
+                              seurat_cell_type_id,
+                              min_cells = 10,
+                              condition_id = NULL,
+                              input_dir = getwd()
 ) {
   data <- prepare_seurat_data(seurat_obj = seurat_obj,
                               assay = assay,
@@ -28,10 +30,14 @@ create_cpdb_input <- function(seurat_obj,
                               convert_to_human = TRUE,
                               return_type = "data.frame")
   data <- tibble::rownames_to_column(data, var = "Gene")
+  metadata <- prepare_seurat_metadata(seurat_obj = seurat_obj,
+                                      seurat_cell_type_id = seurat_cell_type_id,
+                                      condition_id = condition_id)
+  cell_type_filt <- filter_cell_types(metadata = metadata,
+                                      min_cells = min_cells)
+  metadata <- metadata[metadata$cell_type %in% cell_type_filt, ]
+  data <- data[, colnames(data) %in% metadata$cell_id]
   if(is.null(condition_id)) {
-    metadata <- prepare_seurat_metadata(seurat_obj = seurat_obj,
-                                        seurat_cell_type_id = seurat_cell_type_id,
-                                        condition_id = NULL)
     colnames(metadata) <- c("Cell", "cell_type")
     message(paste0("Writing CellPhoneDB input data to ", input_dir, "/cpdb_data_noCond.txt"))
     utils::write.table(data,
@@ -47,8 +53,52 @@ create_cpdb_input <- function(seurat_obj,
                        col.names = TRUE,
                        row.names = FALSE,
                        sep = '\t')
+    return(list(data_path = paste0(input_dir, "/cpdb_data_noCond.txt"),
+                metadata_path = paste0(input_dir, "/cpdb_metadata_noCond.txt") ))
   } else {
-    stop("Applying CellPhoneDB to multiple conditions is not yet implemented. Stay tuned!")
+    conds <- unique(metadata$condition)
+    if(length(conds) != 2) stop("Wrong number of groups in cell-type conditions (expected 2).")
+    meta1 <- metadata[metadata$condition == conds[[1]], ]
+    data1 <- data[, colnames(data) %in% meta1$cell_id]
+    meta1$condition <- NULL
+    colnames(meta1) <- c("Cell", "cell_type")
+    meta2 <- metadata[metadata$condition == conds[[2]], ]
+    data2 <- data[, colnames(data) %in% meta2$cell_id]
+    meta2$condition <- NULL
+    colnames(meta2) <- c("Cell", "cell_type")
+    message(paste0("Writing CellPhoneDB input data to ", input_dir, "/cpdb_data_" , conds[[1]], ".txt"))
+    utils::write.table(data1,
+                       file = paste0(input_dir, "/cpdb_data_" , conds[[1]], ".txt"),
+                       quote = FALSE,
+                       col.names = TRUE,
+                       row.names = FALSE,
+                       sep = '\t')
+    message(paste0("Writing CellPhoneDB input data to ", input_dir, "/cpdb_data_" , conds[[2]], ".txt"))
+    utils::write.table(data2,
+                       file = paste0(input_dir, "/cpdb_data_" , conds[[2]], ".txt"),
+                       quote = FALSE,
+                       col.names = TRUE,
+                       row.names = FALSE,
+                       sep = '\t')
+    message(paste0("Writing CellPhoneDB input metadata to ", input_dir, "/cpdb_metadata_", conds[[1]], ".txt"))
+    utils::write.table(meta1,
+                       file = paste0(input_dir, "/cpdb_metadata_", conds[[1]], ".txt"),
+                       quote = FALSE,
+                       col.names = TRUE,
+                       row.names = FALSE,
+                       sep = '\t')
+    message(paste0("Writing CellPhoneDB input metadata to ", input_dir, "/cpdb_metadata_", conds[[2]], ".txt"))
+    utils::write.table(metadata,
+                       file = paste0(input_dir, "/cpdb_metadata_", conds[[2]], ".txt"),
+                       quote = FALSE,
+                       col.names = TRUE,
+                       row.names = FALSE,
+                       sep = '\t')
+
+    return(list(data_path1 = paste0(input_dir, "/cpdb_data_" , conds[[1]], ".txt"),
+                metadata_path1 = paste0(input_dir, "/cpdb_metadata_", conds[[1]], ".txt"),
+                data_path2 = paste0(input_dir, "/cpdb_data_" , conds[[2]], ".txt"),
+                metadata_path2 = paste0(input_dir, "/cpdb_metadata_", conds[[2]], ".txt")))
   }
 }
 
@@ -146,14 +196,13 @@ run_cpdb_from_files <- function(data_path,
 #' @param log_scale x
 #' @param seurat_cell_type_id x
 #' @param condition_id x
+#' @param min_cells x
 #' @param input_dir x
 #' @param method x
-#' @param project_name x
 #' @param iterations x
 #' @param threshold x
 #' @param result_precision x
 #' @param counts_data x
-#' @param output_path x
 #' @param output_format x
 #' @param means_result_name x
 #' @param significant_mean_result_name x
@@ -177,15 +226,14 @@ run_cpdb_from_seurat <- function(seurat_obj,
                                  slot = "data",
                                  log_scale = TRUE,
                                  seurat_cell_type_id,
+                                 min_cells = 10,
                                  condition_id = NULL,
                                  input_dir = getwd(),
                                  method = 'statistical_analysis',
-                                 project_name = NULL,
                                  iterations = NULL,
                                  threshold = NULL,
                                  result_precision = NULL,
                                  counts_data = NULL,
-                                 output_path = NULL,
                                  output_format = NULL,
                                  means_result_name = NULL,
                                  significant_mean_result_name = NULL,
@@ -199,25 +247,23 @@ run_cpdb_from_seurat <- function(seurat_obj,
                                  subsampling_num_pc = NULL,
                                  subsampling_num_cells = NULL
 ) {
-  create_cpdb_input(seurat_obj = seurat_obj,
-                    assay = assay,
-                    slot = slot,
-                    log_scale = log_scale,
-                    seurat_cell_type_id = seurat_cell_type_id,
-                    condition_id = condition_id,
-                    input_dir = input_dir)
+  paths <- create_cpdb_input(seurat_obj = seurat_obj,
+                             assay = assay,
+                             slot = slot,
+                             log_scale = log_scale,
+                             seurat_cell_type_id = seurat_cell_type_id,
+                             condition_id = condition_id,
+                             input_dir = input_dir)
   if(is.null(condition_id)) {
-    data_path <- paste0(input_dir, "/cpdb_data_noCond.txt")
-    metadata_path <- paste0(input_dir, "/cpdb_metadata_noCond.txt")
-    run_cpdb_from_files(data_path = data_path,
-                        metadata_path = metadata_path,
+    run_cpdb_from_files(data_path = paths$data_path,
+                        metadata_path = paths$metadata_path,
                         method = method,
-                        project_name = project_name,
+                        project_name = "cpdb_results_noCond",
                         iterations = iterations,
                         threshold = threshold,
                         result_precision = result_precision,
                         counts_data = counts_data,
-                        output_path = output_path,
+                        output_path = input_dir,
                         output_format = output_format,
                         means_result_name = means_result_name,
                         significant_mean_result_name = significant_mean_result_name,
@@ -232,6 +278,49 @@ run_cpdb_from_seurat <- function(seurat_obj,
                         subsampling_num_cells = subsampling_num_cells
     )
   } else {
-    stop("Applying CellPhoneDB to multiple conditions is not yet implemented. Stay tuned!")
+    run_cpdb_from_files(data_path = paths$data_path1,
+                        metadata_path = paths$metadata_path1,
+                        method = method,
+                        project_name = "cpdb_results_Cond1",
+                        iterations = iterations,
+                        threshold = threshold,
+                        result_precision = result_precision,
+                        counts_data = counts_data,
+                        output_path = input_dir,
+                        output_format = output_format,
+                        means_result_name = means_result_name,
+                        significant_mean_result_name = significant_mean_result_name,
+                        deconvoluted_result_name = deconvoluted_result_name,
+                        verbose = verbose,
+                        pvalues_result_name = pvalues_result_name,
+                        debug_seed = debug_seed,
+                        threads = threads,
+                        subsampling = subsampling,
+                        subsampling_log = subsampling_log,
+                        subsampling_num_pc = subsampling_num_pc,
+                        subsampling_num_cells = subsampling_num_cells
+    )
+    run_cpdb_from_files(data_path = paths$data_path2,
+                        metadata_path = paths$metadata_path2,
+                        method = method,
+                        project_name = "cpdb_results_Cond2",
+                        iterations = iterations,
+                        threshold = threshold,
+                        result_precision = result_precision,
+                        counts_data = counts_data,
+                        output_path = input_dir,
+                        output_format = output_format,
+                        means_result_name = means_result_name,
+                        significant_mean_result_name = significant_mean_result_name,
+                        deconvoluted_result_name = deconvoluted_result_name,
+                        verbose = verbose,
+                        pvalues_result_name = pvalues_result_name,
+                        debug_seed = debug_seed,
+                        threads = threads,
+                        subsampling = subsampling,
+                        subsampling_log = subsampling_log,
+                        subsampling_num_pc = subsampling_num_pc,
+                        subsampling_num_cells = subsampling_num_cells
+    )
   }
 }

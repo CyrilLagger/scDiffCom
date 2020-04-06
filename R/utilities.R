@@ -143,8 +143,39 @@ prepare_seurat_metadata <- function(seurat_obj,
     return(data.frame(cell_id = rownames(seurat_obj@meta.data),
                       cell_type = seurat_obj@meta.data[, seurat_cell_type_id]))
   } else {
-    return(data.frame(cell_id = rownames(seurat_obj@meta.data),
-                      cell_type = seurat_obj@meta.data[, seurat_cell_type_id],
-                      condition = seurat_obj@meta.data[, condition_id]))
+    cond <- seurat_obj@meta.data[, condition_id]
+    if(length(unique(cond)) != 2)
+    {
+      stop("Comparison is only possible between two conditions.")
+    } else {
+      return(data.frame(cell_id = rownames(seurat_obj@meta.data),
+                        cell_type = seurat_obj@meta.data[, seurat_cell_type_id],
+                        condition = cond))
+    }
   }
+}
+
+#' Return cell-types containing a minimum of cells in each condition
+#'
+#' @param metadata Result from prepare_seurat_metadata
+#' @param min_cells Numeric indicating minimal number of cells in cell-types
+#'
+#' @return A vector of cell-types with at least min_cells cells
+#' @export
+#'
+#' @examples
+filter_cell_types <- function(metadata,
+                              min_cells
+
+) {
+  if("condition" %in% colnames(metadata)) {
+    filt <- apply(table(metadata$cell_type,
+                        metadata$condition) >= min_cells,
+                  MARGIN = 1,
+                  FUN = all)
+  } else {
+    filt <- table(metadata$cell_type) >= min_cells
+  }
+  cell_type_filt <- names(filt[filt])
+  return(cell_type_filt)
 }
