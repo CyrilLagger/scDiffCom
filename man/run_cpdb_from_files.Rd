@@ -16,7 +16,7 @@ run_cpdb_from_files(
   output_path = NULL,
   output_format = NULL,
   means_result_name = NULL,
-  significant_mean_result_name = NULL,
+  significant_means_result_name = NULL,
   deconvoluted_result_name = NULL,
   verbose = TRUE,
   pvalues_result_name = NULL,
@@ -51,7 +51,7 @@ run_cpdb_from_files(
 
 \item{means_result_name}{character}
 
-\item{significant_mean_result_name}{character}
+\item{significant_means_result_name}{character}
 
 \item{deconvoluted_result_name}{character}
 
