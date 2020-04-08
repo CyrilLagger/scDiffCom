@@ -19,4 +19,5 @@ Imports:
     biomaRt,
     dplyr,
     Seurat,
-    utils
+    utils,
+    data.table

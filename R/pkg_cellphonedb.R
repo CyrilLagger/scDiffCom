@@ -274,6 +274,69 @@ run_cpdb_heatmap <- function(metadata_path,
 
 }
 
+#' Title
+#'
+#' @param input_dir x
+#' @param condition_id x
+#' @param cond1 x
+#' @param cond2 x
+#'
+#' @return x
+#' @export
+#'
+#' @examples
+create_cpdp_cci <- function(
+  input_dir,
+  condition_id = NULL,
+  cond1 = NULL,
+  cond2 = NULL
+) {
+  if(is.null(condition_id)) {
+    cpdb_means <- utils::read.table(file = paste0(input_dir, '/cpdb_results_noCond/means.txt'),
+                                    header = TRUE,
+                                    sep = "\t")
+    cpdb_pvalues <- utils::read.table(file = paste0(input_dir, '/cpdb_results_noCond/pvalues.txt'),
+                                      header = TRUE,
+                                      sep = "\t")
+    if(!identical(cpdb_means[, 1:11], cpdb_pvalues[, 1:11]) |
+       !identical(colnames(cpdb_means), colnames(cpdb_pvalues))) {
+      stop("Non identical columns or interactions in means.txt and pvalues.txt.")
+    }
+    long_means <- data.table::melt(setDT(cpdb_means), id.vars = colnames(cpdb_means)[1:11], variable.name = "cell-type_pair", value.name = "score")
+    long_pvalues <- data.table::melt(setDT(cpdb_pvalues), id.vars = colnames(cpdb_pvalues)[1:11], variable.name = "cell-type_pair", value.name = "pvalue")
+    cpdb_comb <- data.table::merge.data.table(long_means, long_pvalues)
+    return(cpdb_comb)
+  } else {
+    cpdb_means_cond1 <- utils::read.table(file = paste0(input_dir, "/cpdb_results_", cond1, "/means-", cond1, ".txt"),
+                                    header = TRUE,
+                                    sep = "\t")
+    cpdb_pvalues_cond1 <- utils::read.table(file = paste0(input_dir, "/cpdb_results_", cond1, "/pvalues-", cond1, ".txt"),
+                                      header = TRUE,
+                                      sep = "\t")
+    cpdb_means_cond2 <- utils::read.table(file = paste0(input_dir, "/cpdb_results_", cond2, "/means-", cond2, ".txt"),
+                                          header = TRUE,
+                                          sep = "\t")
+    cpdb_pvalues_cond2 <- utils::read.table(file = paste0(input_dir, "/cpdb_results_", cond2, "/pvalues-", cond2, ".txt"),
+                                            header = TRUE,
+                                            sep = "\t")
+    if(!identical(cpdb_means_cond1[, 1:11], cpdb_pvalues_cond1[, 1:11]) |
+       !identical(colnames(cpdb_means_cond1), colnames(cpdb_pvalues_cond1)) |
+       !identical(cpdb_means_cond2[, 1:11], cpdb_pvalues_cond2[, 1:11]) |
+       !identical(colnames(cpdb_means_cond2), colnames(cpdb_pvalues_cond2))) {
+      stop("Non identical columns or interactions in means and pvalues files.")
+    }
+    long_means_cond1 <- data.table::melt(setDT(cpdb_means_cond1), id.vars = colnames(cpdb_means_cond1)[1:11], variable.name = "cell-type_pair", value.name = "score")
+    long_pvalues_cond1 <- data.table::melt(setDT(cpdb_pvalues_cond1), id.vars = colnames(cpdb_pvalues_cond1)[1:11], variable.name = "cell-type_pair", value.name = "pvalue")
+    cpdb_comb_cond1 <- data.table::merge.data.table(long_means_cond1, long_pvalues_cond1)
+    long_means_cond2 <- data.table::melt(setDT(cpdb_means_cond2), id.vars = colnames(cpdb_means_cond2)[1:11], variable.name = "cell-type_pair", value.name = "score")
+    long_pvalues_cond2 <- data.table::melt(setDT(cpdb_pvalues_cond2), id.vars = colnames(cpdb_pvalues_cond2)[1:11], variable.name = "cell-type_pair", value.name = "pvalue")
+    cpdb_comb_cond2 <- data.table::merge.data.table(long_means_cond2, long_pvalues_cond2)
+
+    cpdb_comb <- merge.data.table(cpdb_comb_cond1, cpdb_comb_cond2, suffixes = c(paste0("_", cond1), paste0("_", cond2)), all = TRUE)
+    return(cpdb_comb)
+  }
+}
+
 #' Run CellPhoneDB from a Seurat object
 #'
 #' @param seurat_obj x
@@ -448,3 +511,5 @@ run_cpdb_from_seurat <- function(seurat_obj,
                      verbose = verbose)
   }
 }
+
+
