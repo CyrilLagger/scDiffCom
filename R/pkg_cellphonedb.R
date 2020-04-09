@@ -305,6 +305,54 @@ create_cpdp_cci <- function(
     long_means <- data.table::melt(data.table::setDT(cpdb_means), id.vars = colnames(cpdb_means)[1:11], variable.name = "cell_type_pair", value.name = "score")
     long_pvalues <- data.table::melt(data.table::setDT(cpdb_pvalues), id.vars = colnames(cpdb_pvalues)[1:11], variable.name = "cell_type_pair", value.name = "pvalue")
     cpdb_comb <- data.table::merge.data.table(long_means, long_pvalues)
+    cpdb_deconv <- read.table(file = paste0(input_dir, "/cpdb_results_noCond/deconvoluted.txt"),
+                                    header = TRUE,
+                                    sep = "\t")
+    cpdb_deconv_comb <- data.table::melt(data.table::setDT(cpdb_deconv),
+                                          id.vars = colnames(cpdb_deconv)[1:6],
+                                          variable.name = "cell_type", value.name = "mean")
+    ct <- as.character(unique(cpdb_deconv_comb$cell_type))
+    df_ct <- data.table::data.table(cell_type_pair = as.vector(outer(ct, ct, FUN = paste, sep = ".")),
+                                    cell_type_a = rep(ct, times = length(ct)),
+                                    cell_type_b = rep(ct, each = length(ct)))
+    cpdb_comb <- data.table::merge.data.table(cpdb_comb, df_ct, by = "cell_type_pair")
+    fetch_mean_noCond <- function(partner_id,
+                           partner_number,
+                           ct,
+                           interaction_id
+    ) {
+      if(grepl("simple:", partner_id)) {
+        if (partner_number == 1) {
+          return(as.numeric(cpdb_deconv_comb[cpdb_deconv_comb$uniprot == substring(partner_id, 8) &
+                                               cpdb_deconv_comb$id_cp_interaction == interaction_id &
+                                               cpdb_deconv_comb$cell_type == ct &
+                                               cpdb_deconv_comb$is_complex == "False", "mean", with = FALSE ]))
+        } else {
+          return(NA)
+        }
+
+      } else {
+        return(as.numeric(cpdb_deconv_comb[cpdb_deconv_comb$complex_name == substring(partner_id, 9) &
+                                             cpdb_deconv_comb$id_cp_interaction == interaction_id &
+                                             cpdb_deconv_comb$cell_type == ct , "mean", with = FALSE ][partner_number]))
+      }
+    }
+    cpdb_comb$mean_a_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean_noCond(partner_id = x["partner_a"], partner_number = 1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
+    cpdb_comb$mean_a_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean_noCond(partner_id = x["partner_a"], partner_number = 2, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
+    cpdb_comb$mean_b_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean_noCond(partner_id = x["partner_b"], partner_number = 1, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
+    cpdb_comb$mean_b_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean_noCond(partner_id = x["partner_b"], partner_number = 2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
     return(cpdb_comb)
   } else {
     cpdb_means_cond1 <- utils::read.table(file = paste0(input_dir, "/cpdb_results_", cond1, "/means-", cond1, ".txt"),
@@ -339,7 +387,82 @@ create_cpdp_cci <- function(
     for (j in which(grepl("pvalue", colnames(cpdb_comb)))) {
       data.table::set(cpdb_comb, which(is.na(cpdb_comb[[j]])),j,1)
     }
+    cpdb_deconv_cond1 <- read.table(file = paste0(input_dir, "/cpdb_results_", cond1, "/deconvoluted-", cond1, ".txt"),
+                                  header = TRUE,
+                                  sep = "\t")
+    cpdb_deconv_cond2 <- read.table(file = paste0(input_dir, "/cpdb_results_", cond2, "/deconvoluted-", cond2, ".txt"),
+                                    header = TRUE,
+                                    sep = "\t")
+    long_deconv_cond1 <- data.table::melt(data.table::setDT(cpdb_deconv_cond1),
+                                          id.vars = colnames(cpdb_deconv_cond1)[1:6],
+                                          variable.name = "cell_type", value.name = "mean")
+    long_deconv_cond2 <- data.table::melt(data.table::setDT(cpdb_deconv_cond2),
+                                          id.vars = colnames(cpdb_deconv_cond2)[1:6],
+                                          variable.name = "cell_type", value.name = "mean")
+    cpdb_deconv_comb <- data.table::merge.data.table(long_deconv_cond1, long_deconv_cond2,
+                                          by = colnames(long_deconv_cond1)[1:7], suffixes = c("_young", "_old"), all = TRUE)
+    for (j in which(grepl("mean", colnames(cpdb_deconv_comb)))) {
+      data.table::set(cpdb_deconv_comb, which(is.na(cpdb_deconv_comb[[j]])),j,0)
+    }
+    ct <- as.character(unique(cpdb_deconv_comb$cell_type))
+    df_ct <- data.table::data.table(cell_type_pair = as.vector(outer(ct, ct, FUN = paste, sep = ".")),
+                                    cell_type_a = rep(ct, times = length(ct)),
+                                    cell_type_b = rep(ct, each = length(ct)))
+    cpdb_comb <- data.table::merge.data.table(cpdb_comb, df_ct, by = "cell_type_pair")
+    fetch_mean <- function(partner_id,
+                           partner_number,
+                           condition,
+                           ct,
+                           interaction_id
+    ) {
+      if(grepl("simple:", partner_id)) {
+        if (partner_number == 1) {
+          return(as.numeric(cpdb_deconv_comb[cpdb_deconv_comb$uniprot == substring(partner_id, 8) &
+                                               cpdb_deconv_comb$id_cp_interaction == interaction_id &
+                                               cpdb_deconv_comb$cell_type == ct &
+                                               cpdb_deconv_comb$is_complex == "False", paste0("mean_", condition), with = FALSE ]))
+        } else {
+          return(NA)
+        }
 
+      } else {
+        return(as.numeric(cpdb_deconv_comb[cpdb_deconv_comb$complex_name == substring(partner_id, 9) &
+                                             cpdb_deconv_comb$id_cp_interaction == interaction_id &
+                                             cpdb_deconv_comb$cell_type == ct , paste0("mean_", condition), with = FALSE ][partner_number]))
+      }
+    }
+    cpdb_comb[[paste0("mean_a_1_", cond1)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean(partner_id = x["partner_a"], partner_number = 1, condition = cond1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
+    cpdb_comb[[paste0("mean_a_2_", cond1)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean(partner_id = x["partner_a"], partner_number = 2, condition = cond1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
+    cpdb_comb[[paste0("mean_b_1_", cond1)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean(partner_id = x["partner_b"], partner_number = 1, condition = cond1, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
+    cpdb_comb[[paste0("mean_b_2_", cond1)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean(partner_id = x["partner_b"], partner_number = 2, condition = cond1, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
+    cpdb_comb[[paste0("mean_a_1_", cond2)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean(partner_id = x["partner_a"], partner_number = 1, condition = cond2, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
+    cpdb_comb[[paste0("mean_a_2_", cond2)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean(partner_id = x["partner_a"], partner_number = 2, condition = cond2, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
+    cpdb_comb[[paste0("mean_b_1_", cond2)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean(partner_id = x["partner_b"], partner_number = 1, condition = cond2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
+    cpdb_comb[[paste0("mean_b_2_", cond2)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
+      mean <- fetch_mean(partner_id = x["partner_b"], partner_number = 2, condition = cond2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
+      return(mean)
+    })
     return(cpdb_comb)
   }
 }
@@ -367,6 +490,7 @@ create_cpdp_cci <- function(
 #' @param subsampling_log x
 #' @param subsampling_num_pc x
 #' @param subsampling_num_cells x
+#' @param return_full_dt x
 #'
 #' @return Return the results of CellPhoneDB
 #' @export
@@ -393,7 +517,8 @@ run_cpdb_from_seurat <- function(seurat_obj,
                                  subsampling = FALSE,
                                  subsampling_log = FALSE,
                                  subsampling_num_pc = NULL,
-                                 subsampling_num_cells = NULL
+                                 subsampling_num_cells = NULL,
+                                 return_full_dt = TRUE
 ) {
   paths <- create_cpdb_input(seurat_obj = seurat_obj,
                              assay = assay,
@@ -516,6 +641,32 @@ run_cpdb_from_seurat <- function(seurat_obj,
                      count_network_name = paste0("network_", paths$cond2, ".txt"),
                      interaction_count_name = paste0("interaction_count_", paths$cond2, ".txt"),
                      verbose = verbose)
+  }
+
+  if(return_full_dt) {
+    if(method != 'statistical_analysis') {
+      message("Not possible to create the full data.table for the selected method.")
+    } else {
+      full_dt <- create_cpdp_cci(input_dir = input_dir,
+                                 condition_id = condition_id,
+                                 cond1 = paths$cond1,
+                                 cond2 = paths$cond2 )
+      if(is.null(condition_id)) {
+        utils::write.table(full_dt,
+                           file = paste0(input_dir, "/cpdb_full_table_noCond.txt"),
+                           quote = FALSE,
+                           col.names = TRUE,
+                           row.names = FALSE,
+                           sep = '\t')
+      } else {
+        utils::write.table(full_dt,
+                           file = paste0(input_dir, "/cpdb_full_table_withCond.txt"),
+                           quote = FALSE,
+                           col.names = TRUE,
+                           row.names = FALSE,
+                           sep = '\t')
+      }
+    }
   }
 }
 

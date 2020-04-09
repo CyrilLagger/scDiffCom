@@ -25,7 +25,8 @@ run_cpdb_from_seurat(
   subsampling = FALSE,
   subsampling_log = FALSE,
   subsampling_num_pc = NULL,
-  subsampling_num_cells = NULL
+  subsampling_num_cells = NULL,
+  return_full_dt = TRUE
 )
 }
 \arguments{
@@ -70,6 +71,8 @@ run_cpdb_from_seurat(
 \item{subsampling_num_pc}{x}
 
 \item{subsampling_num_cells}{x}
+
+\item{return_full_dt}{x}
 }
 \value{
 Return the results of CellPhoneDB
