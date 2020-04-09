@@ -302,8 +302,8 @@ create_cpdp_cci <- function(
        !identical(colnames(cpdb_means), colnames(cpdb_pvalues))) {
       stop("Non identical columns or interactions in means.txt and pvalues.txt.")
     }
-    long_means <- data.table::melt(setDT(cpdb_means), id.vars = colnames(cpdb_means)[1:11], variable.name = "cell-type_pair", value.name = "score")
-    long_pvalues <- data.table::melt(setDT(cpdb_pvalues), id.vars = colnames(cpdb_pvalues)[1:11], variable.name = "cell-type_pair", value.name = "pvalue")
+    long_means <- data.table::melt(data.table::setDT(cpdb_means), id.vars = colnames(cpdb_means)[1:11], variable.name = "cell_type_pair", value.name = "score")
+    long_pvalues <- data.table::melt(data.table::setDT(cpdb_pvalues), id.vars = colnames(cpdb_pvalues)[1:11], variable.name = "cell_type_pair", value.name = "pvalue")
     cpdb_comb <- data.table::merge.data.table(long_means, long_pvalues)
     return(cpdb_comb)
   } else {
@@ -325,14 +325,21 @@ create_cpdp_cci <- function(
        !identical(colnames(cpdb_means_cond2), colnames(cpdb_pvalues_cond2))) {
       stop("Non identical columns or interactions in means and pvalues files.")
     }
-    long_means_cond1 <- data.table::melt(setDT(cpdb_means_cond1), id.vars = colnames(cpdb_means_cond1)[1:11], variable.name = "cell-type_pair", value.name = "score")
-    long_pvalues_cond1 <- data.table::melt(setDT(cpdb_pvalues_cond1), id.vars = colnames(cpdb_pvalues_cond1)[1:11], variable.name = "cell-type_pair", value.name = "pvalue")
+    long_means_cond1 <- data.table::melt(data.table::setDT(cpdb_means_cond1), id.vars = colnames(cpdb_means_cond1)[1:11], variable.name = "cell_type_pair", value.name = "score")
+    long_pvalues_cond1 <- data.table::melt(data.table::setDT(cpdb_pvalues_cond1), id.vars = colnames(cpdb_pvalues_cond1)[1:11], variable.name = "cell_type_pair", value.name = "pvalue")
     cpdb_comb_cond1 <- data.table::merge.data.table(long_means_cond1, long_pvalues_cond1)
-    long_means_cond2 <- data.table::melt(setDT(cpdb_means_cond2), id.vars = colnames(cpdb_means_cond2)[1:11], variable.name = "cell-type_pair", value.name = "score")
-    long_pvalues_cond2 <- data.table::melt(setDT(cpdb_pvalues_cond2), id.vars = colnames(cpdb_pvalues_cond2)[1:11], variable.name = "cell-type_pair", value.name = "pvalue")
+    long_means_cond2 <- data.table::melt(data.table::setDT(cpdb_means_cond2), id.vars = colnames(cpdb_means_cond2)[1:11], variable.name = "cell_type_pair", value.name = "score")
+    long_pvalues_cond2 <- data.table::melt(data.table::setDT(cpdb_pvalues_cond2), id.vars = colnames(cpdb_pvalues_cond2)[1:11], variable.name = "cell_type_pair", value.name = "pvalue")
     cpdb_comb_cond2 <- data.table::merge.data.table(long_means_cond2, long_pvalues_cond2)
 
-    cpdb_comb <- merge.data.table(cpdb_comb_cond1, cpdb_comb_cond2, suffixes = c(paste0("_", cond1), paste0("_", cond2)), all = TRUE)
+    cpdb_comb <- data.table::merge.data.table(cpdb_comb_cond1, cpdb_comb_cond2, suffixes = c(paste0("_", cond1), paste0("_", cond2)), all = TRUE)
+    for (j in which(grepl("score", colnames(cpdb_comb)))) {
+      data.table::set(cpdb_comb, which(is.na(cpdb_comb[[j]])),j,0)
+    }
+    for (j in which(grepl("pvalue", colnames(cpdb_comb)))) {
+      data.table::set(cpdb_comb, which(is.na(cpdb_comb[[j]])),j,1)
+    }
+
     return(cpdb_comb)
   }
 }
