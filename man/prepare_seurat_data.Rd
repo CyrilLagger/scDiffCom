@@ -27,7 +27,7 @@ prepare_seurat_data(
 \item{return_type}{character indicating the class of the return data (sparse, dense or data.frame)}
 }
 \value{
-a dgCMatrix, a matrix or a data.frame
+A list with data as first argument (a dgCMatrix, a matrix or a data.frame) and the gene mapping if converstion to orthologs
 }
 \description{
 Prepare Seurat data matrix for downstream analysis.

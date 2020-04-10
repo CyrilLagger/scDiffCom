@@ -23,12 +23,14 @@ create_cpdb_input <- function(seurat_obj,
                               condition_id = NULL,
                               input_dir = getwd()
 ) {
-  data <- prepare_seurat_data(seurat_obj = seurat_obj,
+  prep <- prepare_seurat_data(seurat_obj = seurat_obj,
                               assay = assay,
                               slot = slot,
                               log_scale = log_scale,
                               convert_to_human = TRUE,
                               return_type = "data.frame")
+  data <- prep$data
+  gene_mapping <- prep$gene_mapping
   metadata <- prepare_seurat_metadata(seurat_obj = seurat_obj,
                                       seurat_cell_type_id = seurat_cell_type_id,
                                       condition_id = condition_id)
@@ -102,7 +104,8 @@ create_cpdb_input <- function(seurat_obj,
                 data_path1 = paste0(input_dir, "/cpdb_data_" , conds[[1]], ".txt"),
                 metadata_path1 = paste0(input_dir, "/cpdb_metadata_", conds[[1]], ".txt"),
                 data_path2 = paste0(input_dir, "/cpdb_data_" , conds[[2]], ".txt"),
-                metadata_path2 = paste0(input_dir, "/cpdb_metadata_", conds[[2]], ".txt")))
+                metadata_path2 = paste0(input_dir, "/cpdb_metadata_", conds[[2]], ".txt"),
+                gene_mapping = gene_mapping))
   }
 }
 
@@ -750,6 +753,13 @@ run_cpdb_from_seurat <- function(seurat_obj,
       }
     }
   }
+  message(paste0("Write human-mouse orthologs in ", input_dir, "/cpdb_human_mouse_orthologs.txt"))
+  utils::write.table(paths$gene_mapping,
+                     file = paste0(input_dir, "/cpdb_human_mouse_orthologs.txt"),
+                     quote = FALSE,
+                     col.names = TRUE,
+                     row.names = FALSE,
+                     sep = '\t')
 }
 
 

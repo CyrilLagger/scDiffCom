@@ -68,7 +68,7 @@ get_human_orthologs <- function(genes) {
 #' @param convert_to_human logical indicating if gene names have to be converted to human orthologs
 #' @param return_type character indicating the class of the return data (sparse, dense or data.frame)
 #'
-#' @return a dgCMatrix, a matrix or a data.frame
+#' @return A list with data as first argument (a dgCMatrix, a matrix or a data.frame) and the gene mapping if converstion to orthologs
 #' @export
 #'
 #' @examples
@@ -87,6 +87,7 @@ prepare_seurat_data <- function(seurat_obj,
   } else if(!log_scale) {
     message("There is no log option for slot counts and scale.data.")
   }
+  gene_mapping <- NULL
   if(convert_to_human) {
     message("Converting mouse genes to human orthologs.")
     gene_mapping <- get_human_orthologs(rownames(data))
@@ -103,21 +104,21 @@ prepare_seurat_data <- function(seurat_obj,
   if(class(data) == "dgCMatrix") {
     if(return_type == "sparse") {
       message("Initial class (sparse) dgCMatrix, returning dgCMatrix.")
-      return(data)
+      return(list(data = data, gene_mapping = gene_mapping))
     } else if(return_type == "dense") {
       message("Initial class (sparse) dgCMatrix, returning (dense) matrix.")
-      return(as.matrix(data))
+      return(list(data = as.matrix(data), gene_mapping = gene_mapping))
     } else {
       message("Initial class (sparse) dgCMatrix, returning (dense) data.frame.")
-      return(as.data.frame(as.matrix(data)))
+      return(list(data = as.data.frame(as.matrix(data)), gene_mapping = gene_mapping))
     }
   } else if(class(data) == "matrix") {
     if((return_type == "dense") | (return_type == "sparse")) {
       message("Initial class (dense) Matrix, returning (dense) Matrix.")
-      return(data)
+      return(list(data = data, gene_mapping = gene_mapping))
     } else {
       message("Initial class (dense) Matrix, returning (dense) data.frame.")
-      return(as.data.frame(data))
+      return(list(data = as.data.frame(data), gene_mapping = gene_mapping))
     }
   } else {
     stop(paste0("Class ", class(data), " is not recognized."))
