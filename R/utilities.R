@@ -179,3 +179,5 @@ filter_cell_types <- function(metadata,
   cell_type_filt <- names(filt[filt])
   return(cell_type_filt)
 }
+
+

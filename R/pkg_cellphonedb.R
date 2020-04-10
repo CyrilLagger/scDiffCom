@@ -337,6 +337,27 @@ create_cpdp_cci <- function(
                                              cpdb_deconv_comb$cell_type == ct , "mean", with = FALSE ][partner_number]))
       }
     }
+    fetch_name_noCond <- function(partner_id,
+                                  partner_number,
+                                  ct,
+                                  interaction_id
+    ) {
+      if(grepl("simple:", partner_id)) {
+        if (partner_number == 1) {
+          return(as.character(cpdb_deconv_comb[cpdb_deconv_comb$uniprot == substring(partner_id, 8) &
+                                               cpdb_deconv_comb$id_cp_interaction == interaction_id &
+                                               cpdb_deconv_comb$cell_type == ct &
+                                               cpdb_deconv_comb$is_complex == "False", "gene_name", with = FALSE ]))
+        } else {
+          return(NA)
+        }
+
+      } else {
+        return(as.character(cpdb_deconv_comb[cpdb_deconv_comb$complex_name == substring(partner_id, 9) &
+                                             cpdb_deconv_comb$id_cp_interaction == interaction_id &
+                                             cpdb_deconv_comb$cell_type == ct , "gene_name", with = FALSE ][partner_number]))
+      }
+    }
     cpdb_comb$mean_a_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
       mean <- fetch_mean_noCond(partner_id = x["partner_a"], partner_number = 1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
       return(mean)
@@ -353,6 +374,21 @@ create_cpdp_cci <- function(
       mean <- fetch_mean_noCond(partner_id = x["partner_b"], partner_number = 2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
       return(mean)
     })
+
+    cpdb_comb$name_a_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      fetch_name_noCond(partner_id = x["partner_a"], partner_number = 1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
+    })
+    cpdb_comb$name_a_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      fetch_name_noCond(partner_id = x["partner_a"], partner_number = 2, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
+
+    })
+    cpdb_comb$name_b_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      fetch_name_noCond(partner_id = x["partner_b"], partner_number = 1, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
+    })
+    cpdb_comb$name_b_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      fetch_name_noCond(partner_id = x["partner_b"], partner_number = 2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
+    })
+
     return(cpdb_comb)
   } else {
     cpdb_means_cond1 <- utils::read.table(file = paste0(input_dir, "/cpdb_results_", cond1, "/means-", cond1, ".txt"),
@@ -431,6 +467,27 @@ create_cpdp_cci <- function(
                                              cpdb_deconv_comb$cell_type == ct , paste0("mean_", condition), with = FALSE ][partner_number]))
       }
     }
+    fetch_name <- function(partner_id,
+                           partner_number,
+                           ct,
+                           interaction_id
+    ) {
+      if(grepl("simple:", partner_id)) {
+        if (partner_number == 1) {
+          return(as.character(cpdb_deconv_comb[cpdb_deconv_comb$uniprot == substring(partner_id, 8) &
+                                                 cpdb_deconv_comb$id_cp_interaction == interaction_id &
+                                                 cpdb_deconv_comb$cell_type == ct &
+                                                 cpdb_deconv_comb$is_complex == "False", "gene_name", with = FALSE ]))
+        } else {
+          return(NA)
+        }
+
+      } else {
+        return(as.character(cpdb_deconv_comb[cpdb_deconv_comb$complex_name == substring(partner_id, 9) &
+                                               cpdb_deconv_comb$id_cp_interaction == interaction_id &
+                                               cpdb_deconv_comb$cell_type == ct , "gene_name", with = FALSE ][partner_number]))
+      }
+    }
     cpdb_comb[[paste0("mean_a_1_", cond1)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
       mean <- fetch_mean(partner_id = x["partner_a"], partner_number = 1, condition = cond1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
       return(mean)
@@ -463,6 +520,20 @@ create_cpdp_cci <- function(
       mean <- fetch_mean(partner_id = x["partner_b"], partner_number = 2, condition = cond2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
       return(mean)
     })
+
+    cpdb_comb$name_a_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      fetch_name(partner_id = x["partner_a"], partner_number = 1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
+    })
+    cpdb_comb$name_a_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      fetch_name(partner_id = x["partner_a"], partner_number = 2, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
+    })
+    cpdb_comb$name_b_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      fetch_name(partner_id = x["partner_b"], partner_number = 1, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
+    })
+    cpdb_comb$name_b_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
+      fetch_name(partner_id = x["partner_b"], partner_number = 2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
+    })
+
     return(cpdb_comb)
   }
 }
@@ -520,6 +591,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                                  subsampling_num_cells = NULL,
                                  return_full_dt = TRUE
 ) {
+  message("Create input files from Seurat to be used by CellPhoneDB.")
   paths <- create_cpdb_input(seurat_obj = seurat_obj,
                              assay = assay,
                              slot = slot,
@@ -529,6 +601,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                              min_cells = min_cells,
                              input_dir = input_dir)
   if(is.null(condition_id)) {
+    message("Run CellphoneDB once (no condition).")
     run_cpdb_from_files(data_path = paths$data_path,
                         metadata_path = paths$metadata_path,
                         method = method,
@@ -551,6 +624,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                         subsampling_num_pc = subsampling_num_pc,
                         subsampling_num_cells = subsampling_num_cells
     )
+    message("Create dot plot.")
     run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_noCond/means.txt"),
                       pvalues_path = paste0(input_dir, "/cpdb_results_noCond/pvalues.txt"),
                       output_path = paste0(input_dir, "/cpdb_results_noCond"),
@@ -558,6 +632,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                       rows = NULL,
                       columns = NULL,
                       verbose = verbose)
+    message("Create heatmap.")
     run_cpdb_heatmap(metadata_path = paths$metadata_path,
                      pvalues_path = paste0(input_dir, "/cpdb_results_noCond/pvalues.txt"),
                      output_path = paste0(input_dir, "/cpdb_results_noCond"),
@@ -567,6 +642,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                      interaction_count_name = "interaction_count.txt",
                      verbose = verbose)
   } else {
+    message("Run CellPhoneDB on first condition.")
     run_cpdb_from_files(data_path = paths$data_path1,
                         metadata_path = paths$metadata_path1,
                         method = method,
@@ -589,6 +665,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                         subsampling_num_pc = subsampling_num_pc,
                         subsampling_num_cells = subsampling_num_cells
     )
+    message("Create first dot plot.")
     run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/means-", paths$cond1, ".txt"),
                       pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/pvalues-", paths$cond1, ".txt"),
                       output_path = paste0(input_dir, "/cpdb_results_", paths$cond1),
@@ -596,6 +673,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                       rows = NULL,
                       columns = NULL,
                       verbose = verbose)
+    message("Create first heatmap.")
     run_cpdb_heatmap(metadata_path = paths$metadata_path1,
                      pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/pvalues-", paths$cond1, ".txt"),
                      output_path = paste0(input_dir, "/cpdb_results_", paths$cond1),
@@ -604,6 +682,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                      count_network_name = paste0("network_", paths$cond1, ".txt"),
                      interaction_count_name = paste0("interaction_count_", paths$cond1, ".txt"),
                      verbose = verbose)
+    message("Run CellPhoneDB on second condition.")
     run_cpdb_from_files(data_path = paths$data_path2,
                         metadata_path = paths$metadata_path2,
                         method = method,
@@ -626,6 +705,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                         subsampling_num_pc = subsampling_num_pc,
                         subsampling_num_cells = subsampling_num_cells
     )
+    message("Create second dot plot.")
     run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/means-", paths$cond2, ".txt"),
                       pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/pvalues-", paths$cond2, ".txt"),
                       output_path = paste0(input_dir, "/cpdb_results_", paths$cond2),
@@ -633,6 +713,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                       rows = NULL,
                       columns = NULL,
                       verbose = verbose)
+    message("Create second heatmap.")
     run_cpdb_heatmap(metadata_path = paths$metadata_path2,
                      pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/pvalues-", paths$cond2, ".txt"),
                      output_path = paste0(input_dir, "/cpdb_results_", paths$cond2),
@@ -647,6 +728,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
     if(method != 'statistical_analysis') {
       message("Not possible to create the full data.table for the selected method.")
     } else {
+      message("Create and write full data.table.")
       full_dt <- create_cpdp_cci(input_dir = input_dir,
                                  condition_id = condition_id,
                                  cond1 = paths$cond1,
