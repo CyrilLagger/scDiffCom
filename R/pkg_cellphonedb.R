@@ -551,6 +551,7 @@ create_cpdp_cci <- function(
 #' @param condition_id x
 #' @param min_cells x
 #' @param input_dir x
+#' @param create_plots x
 #' @param method x
 #' @param iterations x
 #' @param threshold x
@@ -579,6 +580,7 @@ run_cpdb_from_seurat <- function(seurat_obj,
                                  min_cells = 10,
                                  condition_id = NULL,
                                  input_dir = getwd(),
+                                 create_plots = FALSE,
                                  method = 'statistical_analysis',
                                  iterations = NULL,
                                  threshold = NULL,
@@ -627,23 +629,25 @@ run_cpdb_from_seurat <- function(seurat_obj,
                         subsampling_num_pc = subsampling_num_pc,
                         subsampling_num_cells = subsampling_num_cells
     )
-    message("Create dot plot.")
-    run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_noCond/means.txt"),
-                      pvalues_path = paste0(input_dir, "/cpdb_results_noCond/pvalues.txt"),
-                      output_path = paste0(input_dir, "/cpdb_results_noCond"),
-                      output_name = "dot_plot.pdf",
-                      rows = NULL,
-                      columns = NULL,
-                      verbose = verbose)
-    message("Create heatmap.")
-    run_cpdb_heatmap(metadata_path = paths$metadata_path,
-                     pvalues_path = paste0(input_dir, "/cpdb_results_noCond/pvalues.txt"),
-                     output_path = paste0(input_dir, "/cpdb_results_noCond"),
-                     count_name = "heatmap_count.pdf",
-                     log_name = "heatmap_log_count.pdf",
-                     count_network_name = "network.txt",
-                     interaction_count_name = "interaction_count.txt",
-                     verbose = verbose)
+    if(create_plots) {
+      message("Create dot plot.")
+      run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_noCond/means.txt"),
+                        pvalues_path = paste0(input_dir, "/cpdb_results_noCond/pvalues.txt"),
+                        output_path = paste0(input_dir, "/cpdb_results_noCond"),
+                        output_name = "dot_plot.pdf",
+                        rows = NULL,
+                        columns = NULL,
+                        verbose = verbose)
+      message("Create heatmap.")
+      run_cpdb_heatmap(metadata_path = paths$metadata_path,
+                       pvalues_path = paste0(input_dir, "/cpdb_results_noCond/pvalues.txt"),
+                       output_path = paste0(input_dir, "/cpdb_results_noCond"),
+                       count_name = "heatmap_count.pdf",
+                       log_name = "heatmap_log_count.pdf",
+                       count_network_name = "network.txt",
+                       interaction_count_name = "interaction_count.txt",
+                       verbose = verbose)
+    }
   } else {
     message("Run CellPhoneDB on first condition.")
     run_cpdb_from_files(data_path = paths$data_path1,
@@ -668,23 +672,26 @@ run_cpdb_from_seurat <- function(seurat_obj,
                         subsampling_num_pc = subsampling_num_pc,
                         subsampling_num_cells = subsampling_num_cells
     )
-    message("Create first dot plot.")
-    run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/means-", paths$cond1, ".txt"),
-                      pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/pvalues-", paths$cond1, ".txt"),
-                      output_path = paste0(input_dir, "/cpdb_results_", paths$cond1),
-                      output_name = paste0("dot_plot_", paths$cond1, ".pdf"),
-                      rows = NULL,
-                      columns = NULL,
-                      verbose = verbose)
-    message("Create first heatmap.")
-    run_cpdb_heatmap(metadata_path = paths$metadata_path1,
-                     pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/pvalues-", paths$cond1, ".txt"),
-                     output_path = paste0(input_dir, "/cpdb_results_", paths$cond1),
-                     count_name = paste0("heatmap_count_", paths$cond1, ".pdf"),
-                     log_name = paste0("heatmap_log_count_", paths$cond1, ".pdf"),
-                     count_network_name = paste0("network_", paths$cond1, ".txt"),
-                     interaction_count_name = paste0("interaction_count_", paths$cond1, ".txt"),
-                     verbose = verbose)
+    if(create_plots) {
+      message("Create first dot plot.")
+      run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/means-", paths$cond1, ".txt"),
+                        pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/pvalues-", paths$cond1, ".txt"),
+                        output_path = paste0(input_dir, "/cpdb_results_", paths$cond1),
+                        output_name = paste0("dot_plot_", paths$cond1, ".pdf"),
+                        rows = NULL,
+                        columns = NULL,
+                        verbose = verbose)
+      message("Create first heatmap.")
+      run_cpdb_heatmap(metadata_path = paths$metadata_path1,
+                       pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/pvalues-", paths$cond1, ".txt"),
+                       output_path = paste0(input_dir, "/cpdb_results_", paths$cond1),
+                       count_name = paste0("heatmap_count_", paths$cond1, ".pdf"),
+                       log_name = paste0("heatmap_log_count_", paths$cond1, ".pdf"),
+                       count_network_name = paste0("network_", paths$cond1, ".txt"),
+                       interaction_count_name = paste0("interaction_count_", paths$cond1, ".txt"),
+                       verbose = verbose)
+
+    }
     message("Run CellPhoneDB on second condition.")
     run_cpdb_from_files(data_path = paths$data_path2,
                         metadata_path = paths$metadata_path2,
@@ -708,23 +715,26 @@ run_cpdb_from_seurat <- function(seurat_obj,
                         subsampling_num_pc = subsampling_num_pc,
                         subsampling_num_cells = subsampling_num_cells
     )
-    message("Create second dot plot.")
-    run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/means-", paths$cond2, ".txt"),
-                      pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/pvalues-", paths$cond2, ".txt"),
-                      output_path = paste0(input_dir, "/cpdb_results_", paths$cond2),
-                      output_name = paste0("dot_plot_", paths$cond2, ".pdf"),
-                      rows = NULL,
-                      columns = NULL,
-                      verbose = verbose)
-    message("Create second heatmap.")
-    run_cpdb_heatmap(metadata_path = paths$metadata_path2,
-                     pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/pvalues-", paths$cond2, ".txt"),
-                     output_path = paste0(input_dir, "/cpdb_results_", paths$cond2),
-                     count_name = paste0("heatmap_count_", paths$cond2, ".pdf"),
-                     log_name = paste0("heatmap_log_count_", paths$cond2, ".pdf"),
-                     count_network_name = paste0("network_", paths$cond2, ".txt"),
-                     interaction_count_name = paste0("interaction_count_", paths$cond2, ".txt"),
-                     verbose = verbose)
+    if(create_plots) {
+      message("Create second dot plot.")
+      run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/means-", paths$cond2, ".txt"),
+                        pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/pvalues-", paths$cond2, ".txt"),
+                        output_path = paste0(input_dir, "/cpdb_results_", paths$cond2),
+                        output_name = paste0("dot_plot_", paths$cond2, ".pdf"),
+                        rows = NULL,
+                        columns = NULL,
+                        verbose = verbose)
+      message("Create second heatmap.")
+      run_cpdb_heatmap(metadata_path = paths$metadata_path2,
+                       pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/pvalues-", paths$cond2, ".txt"),
+                       output_path = paste0(input_dir, "/cpdb_results_", paths$cond2),
+                       count_name = paste0("heatmap_count_", paths$cond2, ".pdf"),
+                       log_name = paste0("heatmap_log_count_", paths$cond2, ".pdf"),
+                       count_network_name = paste0("network_", paths$cond2, ".txt"),
+                       interaction_count_name = paste0("interaction_count_", paths$cond2, ".txt"),
+                       verbose = verbose)
+
+    }
   }
 
   if(return_full_dt) {

@@ -13,6 +13,7 @@ run_cpdb_from_seurat(
   min_cells = 10,
   condition_id = NULL,
   input_dir = getwd(),
+  create_plots = FALSE,
   method = "statistical_analysis",
   iterations = NULL,
   threshold = NULL,
@@ -45,6 +46,8 @@ run_cpdb_from_seurat(
 \item{condition_id}{x}
 
 \item{input_dir}{x}
+
+\item{create_plots}{x}
 
 \item{method}{x}
 
