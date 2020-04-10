@@ -596,6 +596,10 @@ run_cpdb_from_seurat <- function(seurat_obj,
                                  subsampling_num_cells = NULL,
                                  return_full_dt = TRUE
 ) {
+  message("Create file directory if not already existing.")
+  if(!dir.exists(input_dir)) {
+    dir.create(input_dir)
+  }
   message("Create input files from Seurat to be used by CellPhoneDB.")
   paths <- create_cpdb_input(seurat_obj = seurat_obj,
                              assay = assay,
