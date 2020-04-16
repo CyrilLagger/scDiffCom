@@ -135,14 +135,14 @@ prepare_seurat_data <- function(seurat_obj,
 #' @export
 #'
 #' @examples
-#' prepare_seurat_metadata(seurat_random_test)
 prepare_seurat_metadata <- function(seurat_obj,
                                     seurat_cell_type_id,
                                     condition_id = NULL
 ) {
   if(is.null(condition_id)) {
     return(data.frame(cell_id = rownames(seurat_obj@meta.data),
-                      cell_type = seurat_obj@meta.data[, seurat_cell_type_id]))
+                      cell_type = as.character(seurat_obj@meta.data[, seurat_cell_type_id]),
+                      stringsAsFactors = FALSE))
   } else {
     cond <- seurat_obj@meta.data[, condition_id]
     if(length(unique(cond)) != 2)
@@ -150,8 +150,9 @@ prepare_seurat_metadata <- function(seurat_obj,
       stop("Comparison is only possible between two conditions.")
     } else {
       return(data.frame(cell_id = rownames(seurat_obj@meta.data),
-                        cell_type = seurat_obj@meta.data[, seurat_cell_type_id],
-                        condition = cond))
+                        cell_type = as.character(seurat_obj@meta.data[, seurat_cell_type_id]),
+                        condition = cond,
+                        stringsAsFactors = FALSE))
     }
   }
 }
@@ -179,6 +180,22 @@ filter_cell_types <- function(metadata,
   }
   cell_type_filt <- names(filt[filt])
   return(cell_type_filt)
+}
+
+#' Compute mean expression per cell-type
+#'
+#' @param data Data matrix
+#' @param group Vector indicating groups
+#'
+#' @return A matrix with the mean expression of each gene for each cell-type
+#' @export
+#'
+#' @examples
+aggregate_means <- function(data,
+                            group) {
+  sums <- rowsum(x = data,
+         group = group)
+  sums/as.vector(table(group))
 }
 
 

@@ -1,15 +1,15 @@
-#' Create text files to be used by CellPhoneDB from a Seurat object
+#' Extract (and write on the disk) a data matrix and a metadata data.frame from a Seurat object.
 #'
-#' @param seurat_obj a Seurat object
-#' @param assay assay to pull data from
-#' @param slot slot to pull data from
-#' @param log_scale logical
-#' @param seurat_cell_type_id xx
-#' @param min_cells xx
-#' @param condition_id xx
-#' @param input_dir xx
+#' @param seurat_obj A Seurat object
+#' @param assay The Seurat assay to pull data from; default is "RNA"
+#' @param slot The Seurat slot to pull data from; default is "data"
+#' @param log_scale Whether to return log-normalized or normalized data (only relevant when slot = "data"); default is TRUE
+#' @param seurat_cell_type_id Name of the column of the metadata data.frame containing the cell-type ids
+#' @param min_cells Minimum number of cells (per condition if relevant) required to keep a cell-type
+#' @param condition_id Name of the column of the metadata data.frame containing the the condition on the cells. Set to NULL for no conditions
+#' @param input_dir Directory path where to save the files that will be used as input for CellPhoneDB analysis
 #'
-#' @return Path where the data and metadata are written.
+#' @return Write the two files and return a list with the paths of the files and the names of the conditions (if relevant).
 #' @export
 #'
 #' @examples
@@ -19,7 +19,7 @@ create_cpdb_input <- function(seurat_obj,
                               slot = "data",
                               log_scale = TRUE,
                               seurat_cell_type_id,
-                              min_cells = 10,
+                              min_cells = 5,
                               condition_id = NULL,
                               input_dir = getwd()
 ) {
@@ -308,7 +308,7 @@ create_cpdp_cci <- function(
     long_means <- data.table::melt(data.table::setDT(cpdb_means), id.vars = colnames(cpdb_means)[1:11], variable.name = "cell_type_pair", value.name = "score")
     long_pvalues <- data.table::melt(data.table::setDT(cpdb_pvalues), id.vars = colnames(cpdb_pvalues)[1:11], variable.name = "cell_type_pair", value.name = "pvalue")
     cpdb_comb <- data.table::merge.data.table(long_means, long_pvalues)
-    cpdb_deconv <- read.table(file = paste0(input_dir, "/cpdb_results_noCond/deconvoluted.txt"),
+    cpdb_deconv <- utils::read.table(file = paste0(input_dir, "/cpdb_results_noCond/deconvoluted.txt"),
                                     header = TRUE,
                                     sep = "\t")
     cpdb_deconv_comb <- data.table::melt(data.table::setDT(cpdb_deconv),
@@ -426,10 +426,10 @@ create_cpdp_cci <- function(
     for (j in which(grepl("pvalue", colnames(cpdb_comb)))) {
       data.table::set(cpdb_comb, which(is.na(cpdb_comb[[j]])),j,1)
     }
-    cpdb_deconv_cond1 <- read.table(file = paste0(input_dir, "/cpdb_results_", cond1, "/deconvoluted-", cond1, ".txt"),
+    cpdb_deconv_cond1 <- utils::read.table(file = paste0(input_dir, "/cpdb_results_", cond1, "/deconvoluted-", cond1, ".txt"),
                                   header = TRUE,
                                   sep = "\t")
-    cpdb_deconv_cond2 <- read.table(file = paste0(input_dir, "/cpdb_results_", cond2, "/deconvoluted-", cond2, ".txt"),
+    cpdb_deconv_cond2 <- utils::read.table(file = paste0(input_dir, "/cpdb_results_", cond2, "/deconvoluted-", cond2, ".txt"),
                                     header = TRUE,
                                     sep = "\t")
     long_deconv_cond1 <- data.table::melt(data.table::setDT(cpdb_deconv_cond1),

@@ -19,6 +19,3 @@ a dataframe
 \description{
 Prepare Seurat metadata for downstream analysis
 }
-\examples{
-prepare_seurat_metadata(seurat_random_test)
-}

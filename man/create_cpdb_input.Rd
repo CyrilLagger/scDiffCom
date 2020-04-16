@@ -2,7 +2,7 @@
 % Please edit documentation in R/pkg_cellphonedb.R
 \name{create_cpdb_input}
 \alias{create_cpdb_input}
-\title{Create text files to be used by CellPhoneDB from a Seurat object}
+\title{Extract (and write on the disk) a data matrix and a metadata data.frame from a Seurat object.}
 \usage{
 create_cpdb_input(
   seurat_obj,
@@ -10,33 +10,33 @@ create_cpdb_input(
   slot = "data",
   log_scale = TRUE,
   seurat_cell_type_id,
-  min_cells = 10,
+  min_cells = 5,
   condition_id = NULL,
   input_dir = getwd()
 )
 }
 \arguments{
-\item{seurat_obj}{a Seurat object}
+\item{seurat_obj}{A Seurat object}
 
-\item{assay}{assay to pull data from}
+\item{assay}{The Seurat assay to pull data from; default is "RNA"}
 
-\item{slot}{slot to pull data from}
+\item{slot}{The Seurat slot to pull data from; default is "data"}
 
-\item{log_scale}{logical}
+\item{log_scale}{Whether to return log-normalized or normalized data (only relevant when slot = "data"); default is TRUE}
 
-\item{seurat_cell_type_id}{xx}
+\item{seurat_cell_type_id}{Name of the column of the metadata data.frame containing the cell-type ids}
 
-\item{min_cells}{xx}
+\item{min_cells}{Minimum number of cells (per condition if relevant) required to keep a cell-type}
 
-\item{condition_id}{xx}
+\item{condition_id}{Name of the column of the metadata data.frame containing the the condition on the cells. Set to NULL for no conditions}
 
-\item{input_dir}{xx}
+\item{input_dir}{Directory path where to save the files that will be used as input for CellPhoneDB analysis}
 }
 \value{
-Path where the data and metadata are written.
+Write the two files and return a list with the paths of the files and the names of the conditions (if relevant).
 }
 \description{
-Create text files to be used by CellPhoneDB from a Seurat object
+Extract (and write on the disk) a data matrix and a metadata data.frame from a Seurat object.
 }
 \examples{
 

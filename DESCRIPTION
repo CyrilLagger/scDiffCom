@@ -20,4 +20,7 @@ Imports:
     dplyr,
     Seurat,
     utils,
-    data.table
+    data.table,
+    tibble,
+    Rfast,
+    Rfast2
