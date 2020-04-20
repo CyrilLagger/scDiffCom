@@ -182,20 +182,36 @@ filter_cell_types <- function(metadata,
   return(cell_type_filt)
 }
 
-#' Compute mean expression per cell-type
-#'
-#' @param data Data matrix
-#' @param group Vector indicating groups
-#'
-#' @return A matrix with the mean expression of each gene for each cell-type
-#' @export
-#'
-#' @examples
-aggregate_means <- function(data,
-                            group) {
-  sums <- rowsum(x = data,
-         group = group)
-  sums/as.vector(table(group))
+
+preprocess_seurat <- function(seurat_obj,
+                              assay,
+                              slot,
+                              log_scale,
+                              convert_to_human,
+                              return_type,
+                              seurat_cell_type_id,
+                              condition_id,
+                              min_cells
+) {
+  prep_data <- prepare_seurat_data(seurat_obj = seurat_obj,
+                              assay = assay,
+                              slot = slot,
+                              log_scale = log_scale,
+                              convert_to_human = convert_to_human,
+                              return_type = return_type)
+  prep_meta <- prepare_seurat_metadata(seurat_obj = seurat_obj,
+                                      seurat_cell_type_id = seurat_cell_type_id,
+                                      condition_id = condition_id)
+  cell_types_filtered <- filter_cell_types(metadata = prep_meta,
+                                      min_cells = min_cells)
+  metadata <- prep_meta[prep_meta$cell_type %in% cell_types_filtered, ]
+  data <- prep_data$data[, colnames(prep_data$data) %in% metadata$cell_id]
+  return(list(data = data,
+              metadata = metadata,
+              cell_types = cell_types_filtered,
+              gene_mapping = prep_data$gene_mapping))
 }
+
+
 
 

@@ -2,29 +2,7 @@
 % Please edit documentation in R/diffcom_analysis.R
 \name{is_detected}
 \alias{is_detected}
-\title{#' Compute arithmetic mean
-#'
-#' @param x
-#' @param y
-#' @param scale_factor
-#'
-#' @return
-#' @export
-#'
-#' @examples
-cci_amean <- Vectorize(function(
-  x,
-  y,
-  scale_factor = 0
-) {
-  m <- (x+y)/2
-  if(!(scale_factor == 0)) {
-    return(m/(m+scale_factor))
-  } else {
-    return(m)
-  }
-})
-Title}
+\title{Determine if two values are bigger than a threshold at the same time.}
 \usage{
 is_detected(x, y, thr)
 }
@@ -39,27 +17,5 @@ is_detected(x, y, thr)
 xxx
 }
 \description{
-#' Compute arithmetic mean
-#'
-#' @param x
-#' @param y
-#' @param scale_factor
-#'
-#' @return
-#' @export
-#'
-#' @examples
-cci_amean <- Vectorize(function(
-  x,
-  y,
-  scale_factor = 0
-) {
-  m <- (x+y)/2
-  if(!(scale_factor == 0)) {
-    return(m/(m+scale_factor))
-  } else {
-    return(m)
-  }
-})
-Title
+Determine if two values are bigger than a threshold at the same time.
 }

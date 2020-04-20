@@ -7,7 +7,7 @@
 #' @export
 #'
 #' @examples
-subset_by_LR <- function(
+preprocess_LR <- function(
   data,
   LR_data
 ) {
@@ -17,5 +17,8 @@ subset_by_LR <- function(
   LR_genes <- unique(c(unique(LR_keep$GENESYMB_L), unique(LR_keep$GENESYMB_R)))
   data_keep <- data[rownames(data) %in% LR_genes, ]
   message(paste0("Number of LR pairs in the dataset: ", length(unique(LR_keep$SYMB_LR)), "."))
-  return(list(data = data_keep, LR_data = LR_keep))
+  #stop("Transform LR data in a universal dataframe")
+  LR_keep$ligand <- LR_keep$GENESYMB_L
+  LR_keep$receptor <- LR_keep$GENESYMB_R
+  return(list(data = data_keep, LR_df = LR_keep))
 }
