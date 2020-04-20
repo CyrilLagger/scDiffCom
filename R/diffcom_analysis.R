@@ -1,5 +1,24 @@
 
 
+#' Title
+#'
+#' @param seurat_obj x
+#' @param LR_data x
+#' @param assay x
+#' @param slot x
+#' @param log_scale x
+#' @param seurat_cell_type_id x
+#' @param condition_id x
+#' @param min_cells x
+#' @param threshold x
+#' @param convert_to_human x
+#' @param statistical_analysis x
+#' @param iterations x
+#'
+#' @return x
+#' @export
+#'
+#' @examples
 run_diffcom_from_seurat <- function(seurat_obj,
                                     LR_data,
                                     assay = "RNA",
@@ -37,6 +56,21 @@ run_diffcom_from_seurat <- function(seurat_obj,
                                    iterations = iterations)
 }
 
+#' Title
+#'
+#' @param expr_tr x
+#' @param metadata x
+#' @param cell_types x
+#' @param LR_df x
+#' @param threshold x
+#' @param condition_id x
+#' @param statistical_analysis x
+#' @param iterations x
+#'
+#' @return x
+#' @export
+#'
+#' @examples
 run_cci_analysis <- function(expr_tr,
                              metadata,
                              cell_types,
@@ -144,6 +178,20 @@ run_cci_analysis <- function(expr_tr,
   return(cci_dt)
 }
 
+#' Title
+#'
+#' @param expr_tr x
+#' @param metadata x
+#' @param cell_types x
+#' @param LR_df x
+#' @param cond1 x
+#' @param cond2 x
+#' @param iterations x
+#'
+#' @return x
+#' @export
+#'
+#' @examples
 run_stat_analysis <- function(expr_tr,
                               metadata,
                               cell_types,
@@ -206,6 +254,19 @@ run_stat_analysis <- function(expr_tr,
   }
 }
 
+#' Title
+#'
+#' @param expr_tr x
+#' @param metadata x
+#' @param cell_types x
+#' @param LR_df x
+#' @param cond1 x
+#' @param cond2 x
+#'
+#' @return x
+#' @export
+#'
+#' @examples
 run_stat_iteration <- function(expr_tr,
                                metadata,
                                cell_types,
@@ -270,6 +331,20 @@ run_stat_iteration <- function(expr_tr,
 }
 
 
+#' Title
+#'
+#' @param expr_tr x
+#' @param metadata x
+#' @param cell_types x
+#' @param cond x
+#' @param LR_df x
+#' @param threshold x
+#' @param compute_fast x
+#'
+#' @return x
+#' @export
+#'
+#' @examples
 run_simple_analysis <- function(expr_tr,
                                 metadata,
                                 cell_types,
