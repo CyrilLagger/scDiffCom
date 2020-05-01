@@ -83,6 +83,3 @@ Return the results of CellPhoneDB
 \description{
 Run CellPhoneDB from a Seurat object
 }
-\examples{
-
-}

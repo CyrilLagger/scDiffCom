@@ -7,10 +7,14 @@
 build_drate_array(detection_rate, detection_thr, LR_df)
 }
 \arguments{
-\item{LR_df}{}
+\item{detection_rate}{x}
+
+\item{detection_thr}{x}
+
+\item{LR_df}{x}
 }
 \value{
-
+x
 }
 \description{
 Title

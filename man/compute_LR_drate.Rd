@@ -7,14 +7,16 @@
 compute_LR_drate(ligand, receptor, detection_rate, detection_thr)
 }
 \arguments{
-\item{ligand}{Name of the ligand}
+\item{ligand}{character indicating the name of the ligand}
 
-\item{receptor}{Name of the receptor}
+\item{receptor}{character indicating the name of the receptor}
 
-\item{average_expression}{A matrix with the detection rate of a each gene per cell-type}
+\item{detection_rate}{x}
+
+\item{detection_thr}{x}
 }
 \value{
-A matrix with the detection rate of LR for each cell-type pair combination
+matrix with the detection rate of LR for each cell-type pair combination
 }
 \description{
 Compute LR detection rate for one LR-pair over all cell-types

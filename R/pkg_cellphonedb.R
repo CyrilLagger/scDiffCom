@@ -1,3 +1,238 @@
+#' Run CellPhoneDB from a Seurat object
+#'
+#' @param seurat_obj x
+#' @param assay x
+#' @param slot x
+#' @param log_scale x
+#' @param seurat_cell_type_id x
+#' @param condition_id x
+#' @param min_cells x
+#' @param input_dir x
+#' @param create_plots x
+#' @param method x
+#' @param iterations x
+#' @param threshold x
+#' @param result_precision x
+#' @param counts_data x
+#' @param output_format x
+#' @param verbose x
+#' @param debug_seed x
+#' @param threads x
+#' @param subsampling x
+#' @param subsampling_log x
+#' @param subsampling_num_pc x
+#' @param subsampling_num_cells x
+#' @param return_full_dt x
+#'
+#' @return Return the results of CellPhoneDB
+#' @export
+run_cpdb_from_seurat <- function(seurat_obj,
+                                 assay = "RNA",
+                                 slot = "data",
+                                 log_scale = TRUE,
+                                 seurat_cell_type_id,
+                                 min_cells = 10,
+                                 condition_id = NULL,
+                                 input_dir = getwd(),
+                                 create_plots = FALSE,
+                                 method = 'statistical_analysis',
+                                 iterations = NULL,
+                                 threshold = NULL,
+                                 result_precision = NULL,
+                                 counts_data = NULL,
+                                 output_format = NULL,
+                                 verbose = TRUE,
+                                 debug_seed = NULL,
+                                 threads = NULL,
+                                 subsampling = FALSE,
+                                 subsampling_log = FALSE,
+                                 subsampling_num_pc = NULL,
+                                 subsampling_num_cells = NULL,
+                                 return_full_dt = TRUE
+) {
+  message("Create file directory if not already existing.")
+  if(!dir.exists(input_dir)) {
+    dir.create(input_dir)
+  }
+  message("Create input files from Seurat to be used by CellPhoneDB.")
+  paths <- create_cpdb_input(seurat_obj = seurat_obj,
+                             assay = assay,
+                             slot = slot,
+                             log_scale = log_scale,
+                             seurat_cell_type_id = seurat_cell_type_id,
+                             condition_id = condition_id,
+                             min_cells = min_cells,
+                             input_dir = input_dir)
+  if(is.null(condition_id)) {
+    message("Run CellphoneDB once (no condition).")
+    run_cpdb_from_files(data_path = paths$data_path,
+                        metadata_path = paths$metadata_path,
+                        method = method,
+                        project_name = "cpdb_results_noCond",
+                        iterations = iterations,
+                        threshold = threshold,
+                        result_precision = result_precision,
+                        counts_data = counts_data,
+                        output_path = input_dir,
+                        output_format = output_format,
+                        means_result_name = NULL,
+                        significant_means_result_name = NULL,
+                        deconvoluted_result_name = NULL,
+                        verbose = verbose,
+                        pvalues_result_name = NULL,
+                        debug_seed = debug_seed,
+                        threads = threads,
+                        subsampling = subsampling,
+                        subsampling_log = subsampling_log,
+                        subsampling_num_pc = subsampling_num_pc,
+                        subsampling_num_cells = subsampling_num_cells
+    )
+    if(create_plots) {
+      message("Create dot plot.")
+      run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_noCond/means.txt"),
+                        pvalues_path = paste0(input_dir, "/cpdb_results_noCond/pvalues.txt"),
+                        output_path = paste0(input_dir, "/cpdb_results_noCond"),
+                        output_name = "dot_plot.pdf",
+                        rows = NULL,
+                        columns = NULL,
+                        verbose = verbose)
+      message("Create heatmap.")
+      run_cpdb_heatmap(metadata_path = paths$metadata_path,
+                       pvalues_path = paste0(input_dir, "/cpdb_results_noCond/pvalues.txt"),
+                       output_path = paste0(input_dir, "/cpdb_results_noCond"),
+                       count_name = "heatmap_count.pdf",
+                       log_name = "heatmap_log_count.pdf",
+                       count_network_name = "network.txt",
+                       interaction_count_name = "interaction_count.txt",
+                       verbose = verbose)
+    }
+  } else {
+    message("Run CellPhoneDB on first condition.")
+    run_cpdb_from_files(data_path = paths$data_path1,
+                        metadata_path = paths$metadata_path1,
+                        method = method,
+                        project_name = paste0("cpdb_results_", paths$cond1),
+                        iterations = iterations,
+                        threshold = threshold,
+                        result_precision = result_precision,
+                        counts_data = counts_data,
+                        output_path = input_dir,
+                        output_format = output_format,
+                        means_result_name = paste0("means-", paths$cond1, ".txt"),
+                        significant_means_result_name = paste0("significant-means-", paths$cond1, ".txt"),
+                        deconvoluted_result_name = paste0("deconvoluted-", paths$cond1, ".txt"),
+                        verbose = verbose,
+                        pvalues_result_name = paste0("pvalues-", paths$cond1, ".txt"),
+                        debug_seed = debug_seed,
+                        threads = threads,
+                        subsampling = subsampling,
+                        subsampling_log = subsampling_log,
+                        subsampling_num_pc = subsampling_num_pc,
+                        subsampling_num_cells = subsampling_num_cells
+    )
+    if(create_plots) {
+      message("Create first dot plot.")
+      run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/means-", paths$cond1, ".txt"),
+                        pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/pvalues-", paths$cond1, ".txt"),
+                        output_path = paste0(input_dir, "/cpdb_results_", paths$cond1),
+                        output_name = paste0("dot_plot_", paths$cond1, ".pdf"),
+                        rows = NULL,
+                        columns = NULL,
+                        verbose = verbose)
+      message("Create first heatmap.")
+      run_cpdb_heatmap(metadata_path = paths$metadata_path1,
+                       pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/pvalues-", paths$cond1, ".txt"),
+                       output_path = paste0(input_dir, "/cpdb_results_", paths$cond1),
+                       count_name = paste0("heatmap_count_", paths$cond1, ".pdf"),
+                       log_name = paste0("heatmap_log_count_", paths$cond1, ".pdf"),
+                       count_network_name = paste0("network_", paths$cond1, ".txt"),
+                       interaction_count_name = paste0("interaction_count_", paths$cond1, ".txt"),
+                       verbose = verbose)
+
+    }
+    message("Run CellPhoneDB on second condition.")
+    run_cpdb_from_files(data_path = paths$data_path2,
+                        metadata_path = paths$metadata_path2,
+                        method = method,
+                        project_name = paste0("cpdb_results_", paths$cond2),
+                        iterations = iterations,
+                        threshold = threshold,
+                        result_precision = result_precision,
+                        counts_data = counts_data,
+                        output_path = input_dir,
+                        output_format = output_format,
+                        means_result_name = paste0("means-", paths$cond2, ".txt"),
+                        significant_means_result_name = paste0("significant-means-", paths$cond2, ".txt"),
+                        deconvoluted_result_name = paste0("deconvoluted-", paths$cond2, ".txt"),
+                        verbose = verbose,
+                        pvalues_result_name = paste0("pvalues-", paths$cond2, ".txt"),
+                        debug_seed = debug_seed,
+                        threads = threads,
+                        subsampling = subsampling,
+                        subsampling_log = subsampling_log,
+                        subsampling_num_pc = subsampling_num_pc,
+                        subsampling_num_cells = subsampling_num_cells
+    )
+    if(create_plots) {
+      message("Create second dot plot.")
+      run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/means-", paths$cond2, ".txt"),
+                        pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/pvalues-", paths$cond2, ".txt"),
+                        output_path = paste0(input_dir, "/cpdb_results_", paths$cond2),
+                        output_name = paste0("dot_plot_", paths$cond2, ".pdf"),
+                        rows = NULL,
+                        columns = NULL,
+                        verbose = verbose)
+      message("Create second heatmap.")
+      run_cpdb_heatmap(metadata_path = paths$metadata_path2,
+                       pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/pvalues-", paths$cond2, ".txt"),
+                       output_path = paste0(input_dir, "/cpdb_results_", paths$cond2),
+                       count_name = paste0("heatmap_count_", paths$cond2, ".pdf"),
+                       log_name = paste0("heatmap_log_count_", paths$cond2, ".pdf"),
+                       count_network_name = paste0("network_", paths$cond2, ".txt"),
+                       interaction_count_name = paste0("interaction_count_", paths$cond2, ".txt"),
+                       verbose = verbose)
+
+    }
+  }
+
+  if(return_full_dt) {
+    if(method != 'statistical_analysis') {
+      message("Not possible to create the full data.table for the selected method.")
+    } else {
+      message("Create and write full data.table.")
+      full_dt <- create_cpdp_cci(input_dir = input_dir,
+                                 condition_id = condition_id,
+                                 cond1 = paths$cond1,
+                                 cond2 = paths$cond2 )
+      if(is.null(condition_id)) {
+        utils::write.table(full_dt,
+                           file = paste0(input_dir, "/cpdb_full_table_noCond.txt"),
+                           quote = FALSE,
+                           col.names = TRUE,
+                           row.names = FALSE,
+                           sep = '\t')
+      } else {
+        utils::write.table(full_dt,
+                           file = paste0(input_dir, "/cpdb_full_table_withCond.txt"),
+                           quote = FALSE,
+                           col.names = TRUE,
+                           row.names = FALSE,
+                           sep = '\t')
+      }
+    }
+  }
+  message(paste0("Write human-mouse orthologs in ", input_dir, "/cpdb_human_mouse_orthologs.txt"))
+  utils::write.table(paths$gene_mapping,
+                     file = paste0(input_dir, "/cpdb_human_mouse_orthologs.txt"),
+                     quote = FALSE,
+                     col.names = TRUE,
+                     row.names = FALSE,
+                     sep = '\t')
+}
+
+
+
+
 #' Extract (and write on the disk) a data matrix and a metadata data.frame from a Seurat object.
 #'
 #' @param seurat_obj A Seurat object
@@ -10,10 +245,6 @@
 #' @param input_dir Directory path where to save the files that will be used as input for CellPhoneDB analysis
 #'
 #' @return Write the two files and return a list with the paths of the files and the names of the conditions (if relevant).
-#' @export
-#'
-#' @examples
-#'
 create_cpdb_input <- function(seurat_obj,
                               assay = "RNA",
                               slot = "data",
@@ -135,10 +366,6 @@ create_cpdb_input <- function(seurat_obj,
 #' @param subsampling_num_cells numeric
 #'
 #' @return Run CellPhoneDB and return results in output directory
-#' @export
-#'
-#' @examples
-#'
 run_cpdb_from_files <- function(data_path,
                                 metadata_path,
                                 method = 'statistical_analysis',
@@ -206,9 +433,6 @@ run_cpdb_from_files <- function(data_path,
 #' @param verbose x
 #'
 #' @return x
-#' @export
-#'
-#' @examples
 run_cpdb_dot_plot <- function(means_path = NULL,
                               pvalues_path = NULL,
                               output_path = NULL,
@@ -246,9 +470,6 @@ run_cpdb_dot_plot <- function(means_path = NULL,
 #' @param verbose x
 #'
 #' @return x
-#' @export
-#'
-#' @examples
 run_cpdb_heatmap <- function(metadata_path,
                              pvalues_path = NULL,
                              output_path = NULL,
@@ -285,9 +506,6 @@ run_cpdb_heatmap <- function(metadata_path,
 #' @param cond2 x
 #'
 #' @return x
-#' @export
-#'
-#' @examples
 create_cpdp_cci <- function(
   input_dir,
   condition_id = NULL,
@@ -540,240 +758,127 @@ create_cpdp_cci <- function(
     return(cpdb_comb)
   }
 }
-
-#' Run CellPhoneDB from a Seurat object
-#'
-#' @param seurat_obj x
-#' @param assay x
-#' @param slot x
-#' @param log_scale x
-#' @param seurat_cell_type_id x
-#' @param condition_id x
-#' @param min_cells x
-#' @param input_dir x
-#' @param create_plots x
-#' @param method x
-#' @param iterations x
-#' @param threshold x
-#' @param result_precision x
-#' @param counts_data x
-#' @param output_format x
-#' @param verbose x
-#' @param debug_seed x
-#' @param threads x
-#' @param subsampling x
-#' @param subsampling_log x
-#' @param subsampling_num_pc x
-#' @param subsampling_num_cells x
-#' @param return_full_dt x
-#'
-#' @return Return the results of CellPhoneDB
-#' @export
-#'
-#' @examples
-#'
-run_cpdb_from_seurat <- function(seurat_obj,
-                                 assay = "RNA",
-                                 slot = "data",
-                                 log_scale = TRUE,
-                                 seurat_cell_type_id,
-                                 min_cells = 10,
-                                 condition_id = NULL,
-                                 input_dir = getwd(),
-                                 create_plots = FALSE,
-                                 method = 'statistical_analysis',
-                                 iterations = NULL,
-                                 threshold = NULL,
-                                 result_precision = NULL,
-                                 counts_data = NULL,
-                                 output_format = NULL,
-                                 verbose = TRUE,
-                                 debug_seed = NULL,
-                                 threads = NULL,
-                                 subsampling = FALSE,
-                                 subsampling_log = FALSE,
-                                 subsampling_num_pc = NULL,
-                                 subsampling_num_cells = NULL,
-                                 return_full_dt = TRUE
+create_cpdb_LR_pairs <- function(
 ) {
-  message("Create file directory if not already existing.")
-  if(!dir.exists(input_dir)) {
-    dir.create(input_dir)
-  }
-  message("Create input files from Seurat to be used by CellPhoneDB.")
-  paths <- create_cpdb_input(seurat_obj = seurat_obj,
-                             assay = assay,
-                             slot = slot,
-                             log_scale = log_scale,
-                             seurat_cell_type_id = seurat_cell_type_id,
-                             condition_id = condition_id,
-                             min_cells = min_cells,
-                             input_dir = input_dir)
-  if(is.null(condition_id)) {
-    message("Run CellphoneDB once (no condition).")
-    run_cpdb_from_files(data_path = paths$data_path,
-                        metadata_path = paths$metadata_path,
-                        method = method,
-                        project_name = "cpdb_results_noCond",
-                        iterations = iterations,
-                        threshold = threshold,
-                        result_precision = result_precision,
-                        counts_data = counts_data,
-                        output_path = input_dir,
-                        output_format = output_format,
-                        means_result_name = NULL,
-                        significant_means_result_name = NULL,
-                        deconvoluted_result_name = NULL,
-                        verbose = verbose,
-                        pvalues_result_name = NULL,
-                        debug_seed = debug_seed,
-                        threads = threads,
-                        subsampling = subsampling,
-                        subsampling_log = subsampling_log,
-                        subsampling_num_pc = subsampling_num_pc,
-                        subsampling_num_cells = subsampling_num_cells
-    )
-    if(create_plots) {
-      message("Create dot plot.")
-      run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_noCond/means.txt"),
-                        pvalues_path = paste0(input_dir, "/cpdb_results_noCond/pvalues.txt"),
-                        output_path = paste0(input_dir, "/cpdb_results_noCond"),
-                        output_name = "dot_plot.pdf",
-                        rows = NULL,
-                        columns = NULL,
-                        verbose = verbose)
-      message("Create heatmap.")
-      run_cpdb_heatmap(metadata_path = paths$metadata_path,
-                       pvalues_path = paste0(input_dir, "/cpdb_results_noCond/pvalues.txt"),
-                       output_path = paste0(input_dir, "/cpdb_results_noCond"),
-                       count_name = "heatmap_count.pdf",
-                       log_name = "heatmap_log_count.pdf",
-                       count_network_name = "network.txt",
-                       interaction_count_name = "interaction_count.txt",
-                       verbose = verbose)
-    }
-  } else {
-    message("Run CellPhoneDB on first condition.")
-    run_cpdb_from_files(data_path = paths$data_path1,
-                        metadata_path = paths$metadata_path1,
-                        method = method,
-                        project_name = paste0("cpdb_results_", paths$cond1),
-                        iterations = iterations,
-                        threshold = threshold,
-                        result_precision = result_precision,
-                        counts_data = counts_data,
-                        output_path = input_dir,
-                        output_format = output_format,
-                        means_result_name = paste0("means-", paths$cond1, ".txt"),
-                        significant_means_result_name = paste0("significant-means-", paths$cond1, ".txt"),
-                        deconvoluted_result_name = paste0("deconvoluted-", paths$cond1, ".txt"),
-                        verbose = verbose,
-                        pvalues_result_name = paste0("pvalues-", paths$cond1, ".txt"),
-                        debug_seed = debug_seed,
-                        threads = threads,
-                        subsampling = subsampling,
-                        subsampling_log = subsampling_log,
-                        subsampling_num_pc = subsampling_num_pc,
-                        subsampling_num_cells = subsampling_num_cells
-    )
-    if(create_plots) {
-      message("Create first dot plot.")
-      run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/means-", paths$cond1, ".txt"),
-                        pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/pvalues-", paths$cond1, ".txt"),
-                        output_path = paste0(input_dir, "/cpdb_results_", paths$cond1),
-                        output_name = paste0("dot_plot_", paths$cond1, ".pdf"),
-                        rows = NULL,
-                        columns = NULL,
-                        verbose = verbose)
-      message("Create first heatmap.")
-      run_cpdb_heatmap(metadata_path = paths$metadata_path1,
-                       pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond1, "/pvalues-", paths$cond1, ".txt"),
-                       output_path = paste0(input_dir, "/cpdb_results_", paths$cond1),
-                       count_name = paste0("heatmap_count_", paths$cond1, ".pdf"),
-                       log_name = paste0("heatmap_log_count_", paths$cond1, ".pdf"),
-                       count_network_name = paste0("network_", paths$cond1, ".txt"),
-                       interaction_count_name = paste0("interaction_count_", paths$cond1, ".txt"),
-                       verbose = verbose)
+  data <- LR_data_cpdb
+  res <- sapply(unique(data$interaction_table$id_cp_interaction), function(id_cp) {
+    multi_id_1 <- data$interaction_table[data$interaction_table$id_cp_interaction == id_cp, "multidata_1_id"]
+    multi_id_2 <- data$interaction_table[data$interaction_table$id_cp_interaction == id_cp, "multidata_2_id"]
 
-    }
-    message("Run CellPhoneDB on second condition.")
-    run_cpdb_from_files(data_path = paths$data_path2,
-                        metadata_path = paths$metadata_path2,
-                        method = method,
-                        project_name = paste0("cpdb_results_", paths$cond2),
-                        iterations = iterations,
-                        threshold = threshold,
-                        result_precision = result_precision,
-                        counts_data = counts_data,
-                        output_path = input_dir,
-                        output_format = output_format,
-                        means_result_name = paste0("means-", paths$cond2, ".txt"),
-                        significant_means_result_name = paste0("significant-means-", paths$cond2, ".txt"),
-                        deconvoluted_result_name = paste0("deconvoluted-", paths$cond2, ".txt"),
-                        verbose = verbose,
-                        pvalues_result_name = paste0("pvalues-", paths$cond2, ".txt"),
-                        debug_seed = debug_seed,
-                        threads = threads,
-                        subsampling = subsampling,
-                        subsampling_log = subsampling_log,
-                        subsampling_num_pc = subsampling_num_pc,
-                        subsampling_num_cells = subsampling_num_cells
-    )
-    if(create_plots) {
-      message("Create second dot plot.")
-      run_cpdb_dot_plot(means_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/means-", paths$cond2, ".txt"),
-                        pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/pvalues-", paths$cond2, ".txt"),
-                        output_path = paste0(input_dir, "/cpdb_results_", paths$cond2),
-                        output_name = paste0("dot_plot_", paths$cond2, ".pdf"),
-                        rows = NULL,
-                        columns = NULL,
-                        verbose = verbose)
-      message("Create second heatmap.")
-      run_cpdb_heatmap(metadata_path = paths$metadata_path2,
-                       pvalues_path = paste0(input_dir, "/cpdb_results_", paths$cond2, "/pvalues-", paths$cond2, ".txt"),
-                       output_path = paste0(input_dir, "/cpdb_results_", paths$cond2),
-                       count_name = paste0("heatmap_count_", paths$cond2, ".pdf"),
-                       log_name = paste0("heatmap_log_count_", paths$cond2, ".pdf"),
-                       count_network_name = paste0("network_", paths$cond2, ".txt"),
-                       interaction_count_name = paste0("interaction_count_", paths$cond2, ".txt"),
-                       verbose = verbose)
-
-    }
-  }
-
-  if(return_full_dt) {
-    if(method != 'statistical_analysis') {
-      message("Not possible to create the full data.table for the selected method.")
+    if(data$multidata_table[data$multidata_table$id_multidata == multi_id_1, "is_complex"] == 0) {
+      id_prot_1 <- data$protein_table[data$protein_table$protein_multidata_id == multi_id_1, "id_protein"]
+      gene_1_a <- data$gene_table[data$gene_table$protein_id == id_prot_1, "hgnc_symbol"][[1]]
+      gene_1_b <- NA
+      gene_1_c <- NA
     } else {
-      message("Create and write full data.table.")
-      full_dt <- create_cpdp_cci(input_dir = input_dir,
-                                 condition_id = condition_id,
-                                 cond1 = paths$cond1,
-                                 cond2 = paths$cond2 )
-      if(is.null(condition_id)) {
-        utils::write.table(full_dt,
-                           file = paste0(input_dir, "/cpdb_full_table_noCond.txt"),
-                           quote = FALSE,
-                           col.names = TRUE,
-                           row.names = FALSE,
-                           sep = '\t')
+      comp_df_1 <- data$complex_composition_table[data$complex_composition_table$complex_multidata_id == multi_id_1,]
+      gene_1_a <- data$gene_table[data$gene_table$protein_id == comp_df_1[1,"protein_multidata_id"], "hgnc_symbol"][[1]]
+      gene_1_b <- data$gene_table[data$gene_table$protein_id == comp_df_1[2,"protein_multidata_id"], "hgnc_symbol"][[1]]
+      if(nrow(comp_df_1) == 3) {
+        gene_1_c <- data$gene_table[data$gene_table$protein_id == comp_df_1[3,"protein_multidata_id"], "hgnc_symbol"]
       } else {
-        utils::write.table(full_dt,
-                           file = paste0(input_dir, "/cpdb_full_table_withCond.txt"),
-                           quote = FALSE,
-                           col.names = TRUE,
-                           row.names = FALSE,
-                           sep = '\t')
+        gene_1_c <- NA
       }
+
     }
-  }
-  message(paste0("Write human-mouse orthologs in ", input_dir, "/cpdb_human_mouse_orthologs.txt"))
-  utils::write.table(paths$gene_mapping,
-                     file = paste0(input_dir, "/cpdb_human_mouse_orthologs.txt"),
-                     quote = FALSE,
-                     col.names = TRUE,
-                     row.names = FALSE,
-                     sep = '\t')
+    if(data$multidata_table[data$multidata_table$id_multidata == multi_id_2, "is_complex"] == 0) {
+      id_prot_2 <- data$protein_table[data$protein_table$protein_multidata_id == multi_id_2, "id_protein"]
+      gene_2_a <- data$gene_table[data$gene_table$protein_id == id_prot_2, "hgnc_symbol"][[1]]
+      gene_2_b <- NA
+      gene_2_c <- NA
+    } else {
+      comp_df_2 <- data$complex_composition_table[data$complex_composition_table$complex_multidata_id == multi_id_2,]
+      gene_2_a <- data$gene_table[data$gene_table$protein_id == comp_df_2[1,"protein_multidata_id"], "hgnc_symbol"][[1]]
+      gene_2_b <- data$gene_table[data$gene_table$protein_id == comp_df_2[2,"protein_multidata_id"], "hgnc_symbol"][[1]]
+      if(nrow(comp_df_2) == 3) {
+        gene_2_c <- data$gene_table[data$gene_table$protein_id == comp_df_2[3,"protein_multidata_id"], "hgnc_symbol"]
+      } else {
+        gene_2_c <- NA
+      }
+
+    }
+    return(c("gene_1_a" = gene_1_a,
+             "gene_1_b" = gene_1_b,
+             "gene_1_c" = gene_1_c,
+             "gene_2_a" = gene_2_a,
+             "gene_2_b" = gene_2_b,
+             "gene_2_c" = gene_2_c))
+
+  })
+  return(t(res))
+
 }
 
+create_cpdb_LR_pairs_2 <- function(
+) {
+  data <- LR_data_cpdb
+  data_interac <- data$interaction_table[, c(1,2,3,4)]
+  data_interac <- merge(data_interac,
+                        data$multidata_table[ ,c(1,2,3,9,10,13)],
+                        by.x = "multidata_1_id",
+                        by.y = "id_multidata",
+                        sort = FALSE)
+  data_interac <- merge(data_interac,
+                        data$multidata_table[ ,c(1,2,3,9,10,13)],
+                        by.x = "multidata_2_id",
+                        by.y = "id_multidata",
+                        sort = FALSE,
+                        suffixes = c("_1", "_2"))
+  data_interac <- merge(data_interac,
+                        data$protein_table[,c(1,2,7)],
+                        by.x = "multidata_1_id",
+                        by.y = "protein_multidata_id",
+                        all.x = TRUE,
+                        sort = FALSE)
+  data_interac <- merge(data_interac,
+                        data$protein_table[,c(1,2,7)],
+                        by.x = "multidata_2_id",
+                        by.y = "protein_multidata_id",
+                        all.x = TRUE,
+                        sort = FALSE,
+                        suffixes = c("_1", "_2"))
+  data_interac <- merge(data_interac,
+                        unique(data$gene_table[,c(4,5)]),
+                        by.x = "id_protein_1",
+                        by.y = "protein_id",
+                        all.x = TRUE,
+                        sort = FALSE)
+  data_interac <- merge(data_interac,
+                        unique(data$gene_table[,c(4,5)]),
+                        by.x = "id_protein_2",
+                        by.y = "protein_id",
+                        all.x = TRUE,
+                        sort = FALSE,
+                        suffixes = c("_1", "_2"))
+  data_interac <- merge(data_interac,
+                        unique(data$complex_composition_table[,c(2,3)]),
+                        by.x = "multidata_1_id",
+                        by.y = "complex_multidata_id",
+                        all.x = TRUE,
+                        all.y = TRUE,
+                        sort = FALSE)
+  data_interac <- merge(data_interac,
+                        unique(data$complex_composition_table[,c(2,3)]),
+                        by.x = "multidata_2_id",
+                        by.y = "complex_multidata_id",
+                        all.x = TRUE,
+                        all.y = TRUE,
+                        sort = FALSE,
+                        suffixes = c("_1", "_2"))
+  data_interac <- merge(data_interac,
+                        data$protein_table[,c(1,2,7)],
+                        by.x = "multidata_1_id",
+                        by.y = "protein_multidata_id",
+                        all.x = TRUE,
+                        sort = FALSE)
+  data_interac <- merge(data_interac,
+                        data$protein_table[,c(1,2,7)],
+                        by.x = "multidata_2_id",
+                        by.y = "protein_multidata_id",
+                        all.x = TRUE,
+                        sort = FALSE,
+                        suffixes = c("_1", "_2"))
+
+  return(data_interac)
+}
 

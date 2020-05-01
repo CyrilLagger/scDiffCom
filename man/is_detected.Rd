@@ -14,7 +14,7 @@ is_detected(x, y, thr)
 \item{thr}{x}
 }
 \value{
-xxx
+x
 }
 \description{
 Determine if two values are bigger than a threshold at the same time.

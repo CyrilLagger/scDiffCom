@@ -4,7 +4,15 @@
 \alias{run_stat_iteration}
 \title{Title}
 \usage{
-run_stat_iteration(expr_tr, metadata, cell_types, LR_df, cond1, cond2)
+run_stat_iteration(
+  expr_tr,
+  metadata,
+  cell_types,
+  LR_df,
+  cond1,
+  cond2,
+  use_case
+)
 }
 \arguments{
 \item{expr_tr}{x}
@@ -18,6 +26,8 @@ run_stat_iteration(expr_tr, metadata, cell_types, LR_df, cond1, cond2)
 \item{cond1}{x}
 
 \item{cond2}{x}
+
+\item{use_case}{x}
 }
 \value{
 x

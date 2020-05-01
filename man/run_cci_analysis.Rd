@@ -12,6 +12,7 @@ run_cci_analysis(
   threshold,
   condition_id,
   statistical_analysis,
+  specificity_analysis,
   iterations
 )
 }
@@ -29,6 +30,8 @@ run_cci_analysis(
 \item{condition_id}{x}
 
 \item{statistical_analysis}{x}
+
+\item{specificity_analysis}{x}
 
 \item{iterations}{x}
 }

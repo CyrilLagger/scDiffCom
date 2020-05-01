@@ -77,6 +77,3 @@ Run CellPhoneDB and return results in output directory
 \description{
 Run CellPhoneDB from text files.
 }
-\examples{
-
-}

@@ -16,13 +16,14 @@ prepare_seurat_data(
 \arguments{
 \item{seurat_obj}{a Seurat object}
 
-\item{assay}{character indicating the assay to choose from}
+\item{assay}{character indicating the assay of the Seurat object where to pull the data from; default is "RNA".}
 
-\item{slot}{character indicating the slot to choose from}
+\item{slot}{character indicating the slot of the Seurat object where to pull the data from; default is "data".}
 
-\item{log_scale}{logical indicating if returning log-normalized value (only for slot data)}
+\item{log_scale}{logical indicating if using log-normalized data (TRUE) or normalized data (FALSE); default is "TRUE".
+Only considered if slot == "data".}
 
-\item{convert_to_human}{logical indicating if gene names have to be converted to human orthologs}
+\item{convert_to_human}{logical indicating if converting mouse gene names to human gene names.}
 
 \item{return_type}{character indicating the class of the return data (sparse, dense or data.frame)}
 }
@@ -31,7 +32,4 @@ A list with data as first argument (a dgCMatrix, a matrix or a data.frame) and t
 }
 \description{
 Prepare Seurat data matrix for downstream analysis.
-}
-\examples{
-prepare_seurat_data(seurat_random_test)
 }

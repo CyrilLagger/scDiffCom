@@ -11,7 +11,8 @@ run_stat_analysis(
   LR_df,
   cond1,
   cond2,
-  iterations
+  iterations,
+  use_case
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ run_stat_analysis(
 \item{cond2}{x}
 
 \item{iterations}{x}
+
+\item{use_case}{x}
 }
 \value{
 x

@@ -18,6 +18,3 @@ and "ortholog_one2one" mapping. The function deals
 with none 1:1 mapping as (to explain). Is it to
 stringent? E.g. CDKN2A is not returned...
 }
-\examples{
-get_human_orthologs(c("Apoe", "Cdkn2a"))
-}

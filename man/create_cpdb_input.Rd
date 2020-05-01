@@ -38,6 +38,3 @@ Write the two files and return a list with the paths of the files and the names 
 \description{
 Extract (and write on the disk) a data matrix and a metadata data.frame from a Seurat object.
 }
-\examples{
-
-}

@@ -7,10 +7,12 @@
 build_cci_array(averaged_expr, LR_df)
 }
 \arguments{
-\item{LR_df}{}
+\item{averaged_expr}{x}
+
+\item{LR_df}{x}
 }
 \value{
-
+x
 }
 \description{
 Title

@@ -7,14 +7,14 @@
 compute_LR_score(ligand, receptor, averaged_expr)
 }
 \arguments{
-\item{ligand}{Name of the ligand}
+\item{ligand}{character indicating the name of the ligand}
 
-\item{receptor}{Name of the receptor}
+\item{receptor}{character indicating the name of the receptor}
 
-\item{average_expression}{A matrix with the mean expression of a each gene per cell-type}
+\item{averaged_expr}{matrix with the mean expression of a each gene per cell-type}
 }
 \value{
-A matrix with the score of LR for each cell-type pair combination
+matrix with the score of LR for each cell-type pair combination
 }
 \description{
 Compute LR scores for one LR-pair over all cell-types
