@@ -5,11 +5,13 @@
 #'
 #' @param genes character vector of the symbols of the genes (mgi_symbol or hgnc_symbol)
 #' @param input_species character indicating the species of the input genes; either "mouse" or "human".
+#' @param one2one, logical indicating if using one2one orthology relationship
 #'
 #' @return 2-column data-frame mouse and human orthologs
 #' @export
 get_orthologs <- function(genes,
-                          input_species) {
+                          input_species,
+                          one2one = TRUE) {
   if(input_species == "mouse") {
     id_in <- "mmusculus"
     id_out <- "hsapiens"
@@ -43,31 +45,40 @@ get_orthologs <- function(genes,
   mart = mart,
   value = ensembl$ensembl_gene_id)
   ensembl_all <- merge(ensembl, ensembl_conv)
-  ensembl_all <- ensembl_all[ensembl_all[[paste0(id_out, "_homolog_orthology_type")]] == 'ortholog_one2one' &
-                               ensembl_all[[paste0(id_out, "_homolog_orthology_confidence")]] == 1, ]
-  ensembl_all <- ensembl_all[,c(id_gene,paste0(id_out, "_homolog_associated_gene_name"))]
+  if(one2one) {
+    ensembl_all <- ensembl_all[ensembl_all[[paste0(id_out, "_homolog_orthology_type")]] == 'ortholog_one2one' &
+                                 ensembl_all[[paste0(id_out, "_homolog_orthology_confidence")]] == 1, ]
+  } else {
+    ensembl_all <- ensembl_all[ensembl_all[[paste0(id_out, "_homolog_orthology_confidence")]] == 1, ]
+  }
+  ensembl_all <- ensembl_all[,c(id_gene, paste0(id_out, "_homolog_associated_gene_name"))]
   ensembl_all <- dplyr::distinct(ensembl_all)
   colnames(ensembl_all) <- c("input", "output")
-  #check for remaining duplicate
-  ensembl_all$inl <- tolower(ensembl_all$input)
-  ensembl_all$outl <- tolower(ensembl_all$output)
-  duplicate_genes <- ensembl_all$input[duplicated(ensembl_all$input)]
-  if(length(duplicate_genes > 0)) {
-    for(i in 1:length(duplicate_genes)) {
-      id <- which(ensembl_all$input == duplicate_genes[[i]])
-      id_keep <- which((ensembl_all$input == duplicate_genes[[i]]) & (ensembl_all$inl == ensembl_all$outl))
-      if(length(id_keep) > 0) { id_keep == id_keep[[1]]} else {id_keep == id[[1]]}
-      id_remove <- id[id!=id_keep]
-      ensembl_all <- ensembl_all[-id_remove,]
+  if(one2one) {
+    #check for remaining duplicate
+    ensembl_all$inl <- tolower(ensembl_all$input)
+    ensembl_all$outl <- tolower(ensembl_all$output)
+    duplicate_genes <- ensembl_all$input[duplicated(ensembl_all$input)]
+    if(length(duplicate_genes > 0)) {
+      for(i in 1:length(duplicate_genes)) {
+        id <- which(ensembl_all$input == duplicate_genes[[i]])
+        id_keep <- which((ensembl_all$input == duplicate_genes[[i]]) & (ensembl_all$inl == ensembl_all$outl))
+        if(length(id_keep) > 0) { id_keep == id_keep[[1]]} else {id_keep == id[[1]]}
+        id_remove <- id[id!=id_keep]
+        ensembl_all <- ensembl_all[-id_remove,]
+      }
     }
-  }
-  ensembl_all <- ensembl_all[,c(1,2)]
-  colnames(ensembl_all) <- c(paste0(name_in, "_symbol"), paste0(name_out, "_symbol"))
-  if(!(length(unique(ensembl_all[,1])) == length(unique(ensembl_all[,2])) &
-       length(unique(ensembl_all[,1])) == dim(ensembl_all)[[1]])) {
-    stop("Problem of ortholog conversion.")
+    ensembl_all <- ensembl_all[,c(1,2)]
+    colnames(ensembl_all) <- c(paste0(name_in, "_symbol"), paste0(name_out, "_symbol"))
+    if(!(length(unique(ensembl_all[,1])) == length(unique(ensembl_all[,2])) &
+         length(unique(ensembl_all[,1])) == dim(ensembl_all)[[1]])) {
+      stop("Problem of ortholog conversion.")
+    } else {
+      message(paste0("Percentage of orthologs returned: ", nrow(ensembl_all)/length(genes)*100), "%")
+      return(ensembl_all)
+    }
   } else {
-    message(paste0("Percentage of orthologs returned: ", nrow(ensembl_all)/length(genes)*100), "%")
+    colnames(ensembl_all) <- c(paste0(name_in, "_symbol"), paste0(name_out, "_symbol"))
     return(ensembl_all)
   }
 }
@@ -158,21 +169,21 @@ prepare_seurat_data <- function(seurat_obj,
   }
   if(class(data) == "dgCMatrix") {
     if(return_type == "sparse") {
-      message("Initial class (sparse) dgCMatrix, returning dgCMatrix.")
+      #message("Initial class (sparse) dgCMatrix, returning dgCMatrix.")
       return(list(data = data, gene_mapping = gene_mapping))
     } else if(return_type == "dense") {
-      message("Initial class (sparse) dgCMatrix, returning (dense) matrix.")
+      #message("Initial class (sparse) dgCMatrix, returning (dense) matrix.")
       return(list(data = as.matrix(data), gene_mapping = gene_mapping))
     } else {
-      message("Initial class (sparse) dgCMatrix, returning (dense) data.frame.")
+      #message("Initial class (sparse) dgCMatrix, returning (dense) data.frame.")
       return(list(data = as.data.frame(as.matrix(data)), gene_mapping = gene_mapping))
     }
   } else if(class(data) == "matrix") {
     if((return_type == "dense") | (return_type == "sparse")) {
-      message("Initial class (dense) Matrix, returning (dense) Matrix.")
+      #message("Initial class (dense) Matrix, returning (dense) Matrix.")
       return(list(data = data, gene_mapping = gene_mapping))
     } else {
-      message("Initial class (dense) Matrix, returning (dense) data.frame.")
+      #message("Initial class (dense) Matrix, returning (dense) data.frame.")
       return(list(data = as.data.frame(data), gene_mapping = gene_mapping))
     }
   } else {
@@ -241,7 +252,7 @@ filter_cell_types <- function(metadata,
 preprocess_LR <- function(data,
                           LR_data
 ) {
-  if(colnames(LR_data) != c("GENESYMB_L", "GENESYMB_R", "SYMB_LR")) {
+  if(!identical(colnames(LR_data), c("GENESYMB_L", "GENESYMB_R", "SYMB_LR"))) {
     stop("Wrong formating of LR_data.")
   }
   message(paste0("Number of considered LR pairs: ", length(unique(LR_data$SYMB_LR)), "."))
@@ -279,64 +290,4 @@ aggregate_cells <- function(expr_tr,
                  group = meta$cell_type)
   aggr <- sums/as.vector(table(meta$cell_type))
   return(aggr[cell_types, ])
-}
-
-
-
-
-################
-
-
-#' Convert mouse gene Symbols to human ortholog Symbols.
-#'
-#' Only keeps genes with orthologogy_confidence == 1
-#' and "ortholog_one2one" mapping. The function deals
-#' with none 1:1 mapping as (to explain). Is it to
-#' stringent? E.g. CDKN2A is not returned...
-#'
-#' @param genes A character vector of mouse gene Symbols.
-#'
-#' @return A dataframe with mouse and human Symbols as columns.
-get_human_orthologs <- function(genes) {
-  mart_mouse <- biomaRt::useMart("ensembl", dataset = "mmusculus_gene_ensembl")
-  ensembl_mouse <- biomaRt::getBM(attributes = c("mgi_symbol", "ensembl_gene_id"),
-                                  filters = "mgi_symbol",
-                                  mart = mart_mouse,
-                                  values = genes)
-  ensembl_conv <-  biomaRt::getBM(attributes = c("ensembl_gene_id",
-                                                 "hsapiens_homolog_associated_gene_name",
-                                                 "hsapiens_homolog_orthology_confidence",
-                                                 "hsapiens_homolog_perc_id_r1",
-                                                 "hsapiens_homolog_orthology_type"),
-                                  filters = "ensembl_gene_id",
-                                  mart = mart_mouse,
-                                  value = ensembl_mouse$ensembl_gene_id)
-
-  ensembl_all <- merge(ensembl_mouse, ensembl_conv)
-  ensembl_all <- ensembl_all[ensembl_all$hsapiens_homolog_orthology_type == 'ortholog_one2one' &
-                               ensembl_all$hsapiens_homolog_orthology_confidence == 1, ]
-  ensembl_all <- ensembl_all[,c('mgi_symbol','hsapiens_homolog_associated_gene_name')]
-  ensembl_all <- dplyr::distinct(ensembl_all)
-  colnames(ensembl_all) <- c('mouse_symbol', 'human_symbol')
-  #check for remaining duplicate
-  ensembl_all$ml <- tolower(ensembl_all$mouse_symbol)
-  ensembl_all$hl <- tolower(ensembl_all$human_symbol)
-  duplicate_mouse <- ensembl_all$mouse_symbol[duplicated(ensembl_all$mouse_symbol)]
-  if(length(duplicate_mouse > 0)) {
-    for(i in 1:length(duplicate_mouse)) {
-      id <- which(ensembl_all$mouse_symbol == duplicate_mouse[[i]])
-      id_keep <- which((ensembl_all$mouse_symbol == duplicate_mouse[[i]]) & (ensembl_all$ml == ensembl_all$hl))
-      if(length(id_keep) > 0) { id_keep == id_keep[[1]]} else {id_keep == id[[1]]}
-      id_remove <- id[id!=id_keep]
-      ensembl_all <- ensembl_all[-id_remove,]
-    }
-  }
-  ensembl_all <- ensembl_all[,c(1,2)]
-  if(!(length(unique(ensembl_all[,1])) == length(unique(ensembl_all[,2])) &
-       length(unique(ensembl_all[,1])) == dim(ensembl_all)[[1]])) {
-    stop("Problem of ortholog conversion.")
-  } else {
-    message(paste0("Percentage of orthologs returned: ", nrow(ensembl_all)/length(genes)*100), "%")
-    return(ensembl_all)
-  }
 }

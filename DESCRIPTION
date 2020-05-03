@@ -25,4 +25,6 @@ Imports:
     tibble,
     Rfast,
     Rfast2,
-    stats
+    stats,
+    LRBase.Mmu.eg.db,
+    AnnotationHub

@@ -4,12 +4,14 @@
 \alias{get_orthologs}
 \title{Conversion between mouse and human genes using orthologs.}
 \usage{
-get_orthologs(genes, input_species)
+get_orthologs(genes, input_species, one2one = TRUE)
 }
 \arguments{
 \item{genes}{character vector of the symbols of the genes (mgi_symbol or hgnc_symbol)}
 
 \item{input_species}{character indicating the species of the input genes; either "mouse" or "human".}
+
+\item{one2one, }{logical indicating if using one2one orthology relationship}
 }
 \value{
 2-column data-frame mouse and human orthologs

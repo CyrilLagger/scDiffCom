@@ -14,7 +14,7 @@ run_diffcom(
   log_scale = TRUE,
   min_cells = 5,
   threshold = 0.1,
-  statistical_analysis = TRUE,
+  differential_analysis = TRUE,
   specificity_analysis = FALSE,
   iterations = 1000
 )
@@ -42,7 +42,7 @@ Only considered if slot == "data".}
 \item{threshold}{numeric indicating the percentage of cells that need to express a gene in a cluster for the gene to be
 considered detected.}
 
-\item{statistical_analysis}{logical indicating if performing the permutation test for the significance of differential
+\item{differential_analysis}{logical indicating if performing the permutation test for the significance of differential
 expression between the conditions. Only considered when condidition_id is not NULL; default is TRUE.}
 
 \item{specificity_analysis}{logical indicating if performing the permutation test for the specificity of each CCI on each condition;

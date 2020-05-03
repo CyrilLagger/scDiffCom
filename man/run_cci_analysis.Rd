@@ -11,7 +11,7 @@ run_cci_analysis(
   LR_df,
   threshold,
   condition_id,
-  statistical_analysis,
+  differential_analysis,
   specificity_analysis,
   iterations
 )
@@ -29,7 +29,7 @@ run_cci_analysis(
 
 \item{condition_id}{x}
 
-\item{statistical_analysis}{x}
+\item{differential_analysis}{x}
 
 \item{specificity_analysis}{x}
 

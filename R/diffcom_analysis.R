@@ -20,7 +20,7 @@
 #' @param min_cells numeric indicating the minimal number of cells each cluster need to contain to be considered in the analysis.
 #' @param threshold numeric indicating the percentage of cells that need to express a gene in a cluster for the gene to be
 #' considered detected.
-#' @param statistical_analysis logical indicating if performing the permutation test for the significance of differential
+#' @param differential_analysis logical indicating if performing the permutation test for the significance of differential
 #' expression between the conditions. Only considered when condidition_id is not NULL; default is TRUE.
 #' @param specificity_analysis logical indicating if performing the permutation test for the specificity of each CCI on each condition;
 #' default is FALSE.
@@ -38,10 +38,11 @@ run_diffcom <- function(seurat_obj,
                         log_scale = TRUE,
                         min_cells = 5,
                         threshold = 0.1,
-                        statistical_analysis = TRUE,
+                        differential_analysis = TRUE,
                         specificity_analysis = FALSE,
                         iterations = 1000
 ) {
+  message("Preprocessing Seurat object.")
   pp_seurat <- preprocess_seurat(seurat_obj = seurat_obj,
                                  assay = assay,
                                  slot = slot,
@@ -51,17 +52,45 @@ run_diffcom <- function(seurat_obj,
                                  seurat_cell_type_id = seurat_cell_type_id,
                                  condition_id = condition_id,
                                  min_cells = min_cells)
+  message("Preprocessing ligand-receptor pairs.")
   pp_LR <- preprocess_LR(data = pp_seurat$data,
                          LR_data = LR_data)
+  message("Start CCI analysis.")
   cci_analysis <- run_cci_analysis(expr_tr = t(pp_LR$data),
                                    metadata = pp_seurat$metadata,
                                    cell_types = pp_seurat$cell_types,
                                    LR_df = pp_LR$LR_df,
                                    threshold = threshold,
                                    condition_id = condition_id,
-                                   statistical_analysis = statistical_analysis,
+                                   differential_analysis = differential_analysis,
                                    specificity_analysis = specificity_analysis,
                                    iterations = iterations)
+  #formatting output data.table
+  if(is.null(condition_id)) {
+    if(!specificity_analysis) {
+      cci_analysis <- cci_analysis[, c(1,2,3,5,4,7,6,9,8)]
+    } else {
+      cci_analysis <- cci_analysis[, c(1,2,3,5,4,10,7,6,9,8)]
+    }
+
+  } else {
+    if(!specificity_analysis) {
+      if(!differential_analysis) {
+        cci_analysis <- cci_analysis[, c(1,2,3,5,11,4,10,7,13,6,12,9,15,8,14)]
+      } else {
+        cci_analysis <- cci_analysis[, c(1,2,3,16,6,7,4,5,10,11,8,9,14,15,12,13)]
+        colnames(cci_analysis)[[4]] <- "pval_diff"
+      }
+    } else {
+      if(!differential_analysis) {
+        cci_analysis <- cci_analysis[, c(1,2,3,6,7,4,5,16,17,10,11,8,9,14,15,12,13)]
+      } else {
+        cci_analysis <- cci_analysis[, c(1,2,3,16,6,7,4,5,18,19,10,11,8,9,14,15,12,13)]
+        colnames(cci_analysis)[[4]] <- "pval_diff"
+      }
+    }
+  }
+  return(cci_analysis)
 }
 
 #' Title
@@ -72,7 +101,7 @@ run_diffcom <- function(seurat_obj,
 #' @param LR_df x
 #' @param threshold x
 #' @param condition_id x
-#' @param statistical_analysis x
+#' @param differential_analysis x
 #' @param specificity_analysis x
 #' @param iterations x
 #'
@@ -83,11 +112,12 @@ run_cci_analysis <- function(expr_tr,
                              LR_df,
                              threshold,
                              condition_id,
-                             statistical_analysis,
+                             differential_analysis,
                              specificity_analysis,
                              iterations
 ) {
   if(is.null(condition_id)) {
+    message("Performing simple analysis without condition.")
     array_noCond <- run_simple_analysis(expr_tr = expr_tr,
                                         metadata = metadata,
                                         cell_types = cell_types,
@@ -100,6 +130,7 @@ run_cci_analysis <- function(expr_tr,
                                              formula = V1 + V2 + V3 ~ V4 ,
                                              value.var = "value")
     } else {
+      message("Performing specificity analysis without condition.")
       stat_res <- run_stat_analysis(expr_tr = expr_tr,
                                     metadata = metadata,
                                     cell_types = cell_types,
@@ -126,6 +157,7 @@ run_cci_analysis <- function(expr_tr,
     if(length(conds) != 2) stop("Wrong number of groups in cell-type conditions (expected 2).")
     cond1 <- conds[[1]]
     cond2 <- conds[[2]]
+    message("Performing simple analysis on the two conditions.")
     array_cond1 <- run_simple_analysis(expr_tr = expr_tr,
                                        metadata = metadata,
                                        cell_types = cell_types,
@@ -140,7 +172,7 @@ run_cci_analysis <- function(expr_tr,
                                        LR_df = LR_df,
                                        threshold = threshold,
                                        compute_fast = FALSE)
-    if(!statistical_analysis) {
+    if(!differential_analysis) {
       if(!specificity_analysis) {
         cci_dt1 <- data.table::dcast.data.table(data.table::as.data.table(array_cond1, sorted = FALSE),
                                                 formula = V1 + V2 + V3  ~ V4 ,
@@ -154,6 +186,7 @@ run_cci_analysis <- function(expr_tr,
                                                sort = FALSE,
                                                suffixes = c(paste0("_",cond1), paste0("_", cond2)))
       } else {
+        message("Performing specificity analysis on the two conditions.")
         stat_res <- run_stat_analysis(expr_tr = expr_tr,
                                       metadata = metadata,
                                       cell_types = cell_types,
@@ -178,6 +211,7 @@ run_cci_analysis <- function(expr_tr,
 
     } else {
       if(!specificity_analysis) {
+        message("Performing differential analysis between the two conditions.")
         stat_res <- run_stat_analysis(expr_tr = expr_tr,
                                       metadata = metadata,
                                       cell_types = cell_types,
@@ -200,6 +234,7 @@ run_cci_analysis <- function(expr_tr,
                                     value.var = "value")
 
       } else {
+        message("Performing differential analysis between the two conditions and specificity analysis.")
         stat_res <- run_stat_analysis(expr_tr = expr_tr,
                                       metadata = metadata,
                                       cell_types = cell_types,
@@ -222,8 +257,6 @@ run_cci_analysis <- function(expr_tr,
         cci_dt <- data.table::dcast(data.table::as.data.table(big_array),
                                     formula = V1 + V2 + V3 ~ V4 + V5,
                                     value.var = "value")
-        #cci_dt$BH <- stats::p.adjust(cci_dt[[paste0("pval_diff_", cond1)]])
-        #cci_dt$log2fc <- log2(cci_dt[[paste0("LR_score_", cond2)]]/cci_dt[[paste0("LR_score_", cond1)]])
 
       }
     }
@@ -535,7 +568,7 @@ run_stat_iteration <- function(expr_tr,
                                                       LR_df = LR_df,
                                                       threshold = 0,
                                                       compute_fast = TRUE))
-    return(cbind(cci_permcond_cond1, cci_permct_cond2))
+    return(cbind(cci_permct_cond1, cci_permct_cond2))
   } else if(use_case == "cond_stat") {
     meta_cond <- metadata
     for(x in cell_types) {
@@ -594,7 +627,7 @@ run_stat_iteration <- function(expr_tr,
                                                       LR_df = LR_df,
                                                       threshold = 0,
                                                       compute_fast = TRUE))
-    return(cbind(diff_permcond, cci_permcond_cond1, cci_permct_cond2))
+    return(cbind(diff_permcond, cci_permct_cond1, cci_permct_cond2))
   } else {
     stop("Case  not supported in function run stat iteration")
   }
