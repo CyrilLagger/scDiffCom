@@ -56,10 +56,12 @@ run_diffcom <- function(seurat_obj,
   pp_LR <- preprocess_LR(data = pp_seurat$data,
                          LR_data = LR_data)
   message("Start CCI analysis.")
+  LR_df <- pp_LR$LR_df
+  LR_df$keep <- TRUE
   cci_analysis <- run_cci_analysis(expr_tr = t(pp_LR$data),
                                    metadata = pp_seurat$metadata,
                                    cell_types = pp_seurat$cell_types,
-                                   LR_df = pp_LR$LR_df,
+                                   LR_df = LR_df,
                                    threshold = threshold,
                                    condition_id = condition_id,
                                    differential_analysis = differential_analysis,
@@ -131,6 +133,9 @@ run_cci_analysis <- function(expr_tr,
                                              value.var = "value")
     } else {
       message("Performing specificity analysis without condition.")
+      LR_df$keep <- filter_detected_LR(array_dr1 = array_noCond[,,,"LR_detection"],
+                                       array_dr2 = NULL,
+                                       LR_df = LR_df)
       stat_res <- run_stat_analysis(expr_tr = expr_tr,
                                     metadata = metadata,
                                     cell_types = cell_types,
@@ -172,6 +177,10 @@ run_cci_analysis <- function(expr_tr,
                                        LR_df = LR_df,
                                        threshold = threshold,
                                        compute_fast = FALSE)
+    LR_df$keep <- filter_detected_LR(array_dr1 = array_cond1[,,,"LR_detection"],
+                                     array_dr2 = array_cond2[,,,"LR_detection"],
+                                     LR_df = LR_df
+                )
     if(!differential_analysis) {
       if(!specificity_analysis) {
         cci_dt1 <- data.table::dcast.data.table(data.table::as.data.table(array_cond1, sorted = FALSE),
@@ -334,6 +343,36 @@ run_simple_analysis <- function(expr_tr,
 
 #' Title
 #'
+#' @param array_dr
+#' @param LR_df
+#' @param cond1
+#' @param cond2
+#'
+#' @return
+filter_detected_LR <- function(array_dr1,
+                               array_dr2,
+                               LR_df
+) {
+  if(is.null(array_dr2)) {
+    sums <- sapply(1:nrow(LR_df), function(i) {
+      sum(array_dr1[i,,])
+    })
+    res <- sums > 0
+  } else {
+    sums_cond1 <- sapply(1:nrow(LR_df), function(i) {
+      sum(array_dr1[i,,])
+    })
+    sums_cond2 <- sapply(1:nrow(LR_df), function(i) {
+      sum(array_dr2[i,,])
+    })
+    res <- (sums_cond1 + sums_cond2) > 0
+  }
+  message(paste0("Number of detected LR pairs: ", sum(res)))
+  return(res)
+}
+
+#' Title
+#'
 #' @param averaged_expr x
 #' @param LR_df x
 #'
@@ -344,9 +383,14 @@ build_cci_array <- function(averaged_expr,
   cci_array <- array(data = 0,
                      dim = c(nrow(LR_df), nrow(averaged_expr), nrow(averaged_expr)))
   for(i in 1:nrow(LR_df)) {
-    cci_array[i, , ] <- compute_LR_score(ligand = LR_df[i, "ligand"],
-                                         receptor = LR_df[i, "receptor"],
-                                         averaged_expr= averaged_expr)
+    if(LR_df[i, "keep"]) {
+      cci_array[i, , ] <- compute_LR_score(ligand = LR_df[i, "ligand"],
+                                           receptor = LR_df[i, "receptor"],
+                                           averaged_expr= averaged_expr)
+    } else {
+      cci_array[i, , ] <- 0
+    }
+
   }
   return(cci_array)
 }
