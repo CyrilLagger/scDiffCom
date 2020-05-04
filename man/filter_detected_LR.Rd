@@ -2,16 +2,20 @@
 % Please edit documentation in R/diffcom_analysis.R
 \name{filter_detected_LR}
 \alias{filter_detected_LR}
-\title{Title}
+\title{Indicates which LR has been detected in at least one CCI}
 \usage{
 filter_detected_LR(array_dr1, array_dr2, LR_df)
 }
 \arguments{
-\item{cond2}{}
+\item{array_dr1}{3D array for noCond or cond1}
+
+\item{array_dr2}{3D array for cond2 (NULL if noCond)}
+
+\item{LR_df}{LR data.frame}
 }
 \value{
-
+logical vector
 }
 \description{
-Title
+Indicates which LR has been detected in at least one CCI
 }

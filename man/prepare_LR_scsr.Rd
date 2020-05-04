@@ -17,3 +17,7 @@ data.frame with 3 LR columns and possibly more detailed information
 \description{
 Create a LR data.frame based on SingleCellSignalR database
 }
+\examples{
+LRdb_one2one <- prepare_LR_scsr(detailed = FALSE, one2one = TRUE)
+LRdb_many2many <- prepare_LR_scsr(detailed = FALSE, one2one = FALSE)
+}

@@ -341,14 +341,13 @@ run_simple_analysis <- function(expr_tr,
   }
 }
 
-#' Title
+#' Indicates which LR has been detected in at least one CCI
 #'
-#' @param array_dr
-#' @param LR_df
-#' @param cond1
-#' @param cond2
+#' @param array_dr1 3D array for noCond or cond1
+#' @param array_dr2 3D array for cond2 (NULL if noCond)
+#' @param LR_df LR data.frame
 #'
-#' @return
+#' @return logical vector
 filter_detected_LR <- function(array_dr1,
                                array_dr2,
                                LR_df

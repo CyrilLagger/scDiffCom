@@ -17,3 +17,7 @@ data.frame with LR pairs and to which sources they belong
 \description{
 Create a dataframe with LR pairs from our 4 sources
 }
+\examples{
+LRall_one2one <- aggregate_LR(one2one = TRUE, cpdb = TRUE)
+LRall_many2many <- aggregate_LR(one2one = FALSE, cpdb = TRUE)
+}

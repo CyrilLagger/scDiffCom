@@ -17,3 +17,7 @@ data.frame with 3 LR columns and possibly more detailed information
 \description{
 Create a LR data.frame based on CellPhoneDB database.
 }
+\examples{
+LRcpdb_one2one <- prepare_LR_cpdb(one2one = TRUE, deconvoluted = TRUE)
+LRcpdb_many2many <- prepare_LR_cpdb(one2one = FALSE, deconvoluted = TRUE)
+}

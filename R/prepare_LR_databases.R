@@ -6,6 +6,10 @@
 #'
 #' @return data.frame with LR pairs and to which sources they belong
 #' @export
+#'
+#' @examples
+#' LRall_one2one <- aggregate_LR(one2one = TRUE, cpdb = TRUE)
+#' LRall_many2many <- aggregate_LR(one2one = FALSE, cpdb = TRUE)
 aggregate_LR <- function(one2one = TRUE,
                          cpdb = FALSE
 ) {
@@ -58,7 +62,6 @@ aggregate_LR <- function(one2one = TRUE,
     df <- df[,-c(7,8)]
   }
   return(df)
-
 }
 
 
@@ -68,6 +71,9 @@ aggregate_LR <- function(one2one = TRUE,
 #'
 #' @return data.frame with 3 or 6 columns
 #' @export
+#'
+#' @examples
+#' LRsct <- prepare_LR_scTensor(detailed = FALSE)
 prepare_LR_scTensor <- function(detailed = FALSE
 ) {
   key <- AnnotationDbi::keys(LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
@@ -116,6 +122,10 @@ prepare_LR_scTensor <- function(detailed = FALSE
 #'
 #' @return data.frame with 3 LR columns and possibly more detailed information
 #' @export
+#'
+#' @examples
+#' LRdb_one2one <- prepare_LR_scsr(detailed = FALSE, one2one = TRUE)
+#' LRdb_many2many <- prepare_LR_scsr(detailed = FALSE, one2one = FALSE)
 prepare_LR_scsr <- function(detailed = FALSE,
                             one2one =TRUE
 ) {
@@ -157,6 +167,10 @@ prepare_LR_scsr <- function(detailed = FALSE,
 #'
 #' @return data.frame with 3 LR columns and possibly more detailed information
 #' @export
+#'
+#' @examples
+#' LRniche_one2one <- prepare_LR_nichenet(detailed = FALSE, one2one = TRUE)
+#' LRniche_many2many <- prepare_LR_nichenet(detailed = FALSE, one2one = FALSE)
 prepare_LR_nichenet <- function(detailed = FALSE,
                                 one2one = TRUE
 ) {
@@ -198,6 +212,11 @@ prepare_LR_nichenet <- function(detailed = FALSE,
 #' @param deconvoluted logical indicating if using 1:1 LR versus complex LR
 #'
 #' @return data.frame with 3 LR columns and possibly more detailed information
+#' @export
+#'
+#' @examples
+#' LRcpdb_one2one <- prepare_LR_cpdb(one2one = TRUE, deconvoluted = TRUE)
+#' LRcpdb_many2many <- prepare_LR_cpdb(one2one = FALSE, deconvoluted = TRUE)
 prepare_LR_cpdb <- function(one2one = TRUE,
                             deconvoluted = TRUE
 ) {

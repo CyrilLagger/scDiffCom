@@ -17,3 +17,7 @@ data.frame with 3 LR columns and possibly more detailed information
 \description{
 Create a LR data.frame based on nicheNet database
 }
+\examples{
+LRniche_one2one <- prepare_LR_nichenet(detailed = FALSE, one2one = TRUE)
+LRniche_many2many <- prepare_LR_nichenet(detailed = FALSE, one2one = FALSE)
+}

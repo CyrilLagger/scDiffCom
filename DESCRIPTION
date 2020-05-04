@@ -27,4 +27,7 @@ Imports:
     Rfast2,
     stats,
     LRBase.Mmu.eg.db,
-    AnnotationHub
+    AnnotationHub,
+    nichenetr,
+    SingleCellSignalR,
+    AnnotationDbi

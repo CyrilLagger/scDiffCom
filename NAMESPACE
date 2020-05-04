@@ -2,6 +2,7 @@
 
 export(aggregate_LR)
 export(get_orthologs)
+export(prepare_LR_cpdb)
 export(prepare_LR_nichenet)
 export(prepare_LR_scTensor)
 export(prepare_LR_scsr)
