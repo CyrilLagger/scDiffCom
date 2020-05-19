@@ -30,4 +30,7 @@ Imports:
     AnnotationHub,
     nichenetr,
     SingleCellSignalR,
-    AnnotationDbi
+    AnnotationDbi,
+    permute,
+    foreach,
+    doParallel

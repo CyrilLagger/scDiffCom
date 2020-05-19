@@ -180,7 +180,7 @@ run_cci_analysis <- function(expr_tr,
     LR_df$keep <- filter_detected_LR(array_dr1 = array_cond1[,,,"LR_detection"],
                                      array_dr2 = array_cond2[,,,"LR_detection"],
                                      LR_df = LR_df
-                )
+    )
     if(!differential_analysis) {
       if(!specificity_analysis) {
         cci_dt1 <- data.table::dcast.data.table(data.table::as.data.table(array_cond1, sorted = FALSE),
@@ -300,11 +300,13 @@ run_simple_analysis <- function(expr_tr,
                                    metadata = metadata,
                                    cell_types = cell_types,
                                    cond = cond)
-  cci <- build_cci_array(averaged_expr = averaged_expr,
-                         LR_df = LR_df)
   if(compute_fast) {
+    cci <- build_cci_array(averaged_expr = averaged_expr,
+                                     LR_df = LR_df)
     return(cci)
   } else {
+    cci <- build_cci_array(averaged_expr = averaged_expr,
+                           LR_df = LR_df)
     detection_rate <- aggregate_cells(expr_tr = 1*(expr_tr > 0),
                                       metadata = metadata,
                                       cell_types = cell_types,
@@ -480,6 +482,7 @@ is_detected <- Vectorize(function(x,
 #' @param cond2 x
 #' @param iterations x
 #' @param use_case x
+#' @param return_distr x
 #'
 #' @return x
 run_stat_analysis <- function(expr_tr,
@@ -489,7 +492,8 @@ run_stat_analysis <- function(expr_tr,
                               cond1,
                               cond2,
                               iterations,
-                              use_case
+                              use_case,
+                              return_distr = FALSE
 ) {
   if(use_case == "no_cond") {
     cci_noCond <- as.vector(run_simple_analysis(expr_tr = expr_tr,
@@ -510,7 +514,11 @@ run_stat_analysis <- function(expr_tr,
                           simplify = "array")
     distr <- cbind(cci_perm, cci_noCond)
     pvals <- rowSums(distr[,1:iterations] >= distr[,(iterations+1)])/iterations
-    return(pvals)
+    if(return_distr) {
+      return(distr)
+    } else {
+      return(pvals)
+    }
   } else {
     cci_cond1 <- as.vector(run_simple_analysis(expr_tr = expr_tr,
                                                metadata = metadata,
@@ -540,12 +548,21 @@ run_stat_analysis <- function(expr_tr,
       pvals_cond1 <- rowSums(distr_cond1[,1:iterations] >= distr_cond1[,(iterations+1)])/iterations
       distr_cond2 <- cbind(array_perm[,2,], cci_cond2)
       pvals_cond2 <- rowSums(distr_cond2[,1:iterations] >= distr_cond2[,(iterations+1)])/iterations
-      return(list(pvals_cond1 = pvals_cond1,
-                  pvals_cond2 = pvals_cond2))
+      if(return_distr) {
+        return(list(distr_cond1 = distr_cond1,
+                    distr_cond2 = distr_cond2))
+      } else {
+        return(list(pvals_cond1 = pvals_cond1,
+                    pvals_cond2 = pvals_cond2))
+      }
     } else if(use_case == "cond_stat") {
       distr_diff <- cbind(array_perm, cci_cond2 - cci_cond1)
       pvals_diff <- rowSums(abs(distr_diff[,1:iterations]) >= abs(distr_diff[,(iterations+1)]))/iterations
-      return(pvals_diff)
+      if(return_distr) {
+        return(distr_diff)
+      } else {
+        return(pvals_diff)
+      }
     } else if(use_case == "cond_stat_spec") {
       distr_diff <- cbind(array_perm[,1,], cci_cond2 - cci_cond1)
       pvals_diff <- rowSums(abs(distr_diff[,1:iterations]) >= abs(distr_diff[,(iterations+1)]))/iterations
@@ -553,10 +570,15 @@ run_stat_analysis <- function(expr_tr,
       pvals_cond1 <- rowSums(distr_cond1[,1:iterations] >= distr_cond1[,(iterations+1)])/iterations
       distr_cond2 <- cbind(array_perm[,3,], cci_cond2)
       pvals_cond2 <- rowSums(distr_cond2[,1:iterations] >= distr_cond2[,(iterations+1)])/iterations
-      return(list(pvals_diff = pvals_diff,
-                  pvals_cond1 = pvals_cond1,
-                  pvals_cond2 = pvals_cond2))
-
+      if(return_distr) {
+        return(list(distr_diff = distr_diff,
+                    distr_cond1 = distr_cond1,
+                    distr_cond2 = distr_cond2))
+      } else {
+        return(list(pvals_diff = pvals_diff,
+                    pvals_cond1 = pvals_cond1,
+                    pvals_cond2 = pvals_cond2))
+      }
     } else {
       stop("Case not supported in function run_stat_analysis.")
     }
