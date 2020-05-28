@@ -9,9 +9,11 @@
 #'
 #' @return 2-column data-frame mouse and human orthologs
 #' @export
-get_orthologs <- function(genes,
-                          input_species,
-                          one2one = TRUE) {
+get_orthologs <- function(
+  genes,
+  input_species,
+  one2one = TRUE
+) {
   if(input_species == "mouse") {
     id_in <- "mmusculus"
     id_out <- "hsapiens"
@@ -98,15 +100,16 @@ get_orthologs <- function(genes,
 #' @param min_cells numeric indicating the minimal number of cells each cluster need to contain to be considered in the analysis.
 #'
 #' @return A list containing data, metadata, cell-types and possibly orthology mapping.
-preprocess_seurat <- function(seurat_obj,
-                              assay,
-                              slot,
-                              log_scale,
-                              convert_to_human,
-                              return_type,
-                              seurat_cell_type_id,
-                              condition_id,
-                              min_cells
+preprocess_seurat <- function(
+  seurat_obj,
+  assay,
+  slot,
+  log_scale,
+  convert_to_human,
+  return_type,
+  seurat_cell_type_id,
+  condition_id,
+  min_cells
 ) {
   prep_data <- prepare_seurat_data(seurat_obj = seurat_obj,
                                    assay = assay,
@@ -138,12 +141,14 @@ preprocess_seurat <- function(seurat_obj,
 #' @param return_type character indicating the class of the return data (sparse, dense or data.frame)
 #'
 #' @return A list with data as first argument (a dgCMatrix, a matrix or a data.frame) and the gene mapping if converstion to orthologs
-prepare_seurat_data <- function(seurat_obj,
-                                assay = "RNA",
-                                slot = "data",
-                                log_scale = TRUE,
-                                convert_to_human = FALSE,
-                                return_type = "dense") {
+prepare_seurat_data <- function(
+  seurat_obj,
+  assay = "RNA",
+  slot = "data",
+  log_scale = TRUE,
+  convert_to_human = FALSE,
+  return_type = "dense"
+) {
   data <- Seurat::GetAssayData(object = seurat_obj,
                                slot = slot,
                                assay = assay)
@@ -198,9 +203,10 @@ prepare_seurat_data <- function(seurat_obj,
 #' @param condition_id a character indicating a column with some condition on the cells
 #'
 #' @return a dataframe
-prepare_seurat_metadata <- function(seurat_obj,
-                                    seurat_cell_type_id,
-                                    condition_id = NULL
+prepare_seurat_metadata <- function(
+  seurat_obj,
+  seurat_cell_type_id,
+  condition_id = NULL
 ) {
   if(is.null(condition_id)) {
     return(data.frame(cell_id = rownames(seurat_obj@meta.data),
@@ -226,8 +232,9 @@ prepare_seurat_metadata <- function(seurat_obj,
 #' @param min_cells Numeric indicating minimal number of cells in cell-types
 #'
 #' @return A vector of cell-types with at least min_cells cells
-filter_cell_types <- function(metadata,
-                              min_cells
+filter_cell_types <- function(
+  metadata,
+  min_cells
 
 ) {
   if("condition" %in% colnames(metadata)) {
@@ -249,8 +256,9 @@ filter_cell_types <- function(metadata,
 #'  satisfying colnames(LR_data) == c("GENESYMB_L", "GENESYMB_R", "SYMB_LR").
 #'
 #' @return A list containing the subsetted data and the subsetted LR-pairs.
-preprocess_LR <- function(data,
-                          LR_data
+preprocess_LR <- function(
+  data,
+  LR_data
 ) {
   if(!identical(colnames(LR_data), c("GENESYMB_L", "GENESYMB_R", "SYMB_LR"))) {
     stop("Wrong formating of LR_data.")
@@ -263,31 +271,29 @@ preprocess_LR <- function(data,
   message(paste0("Number of LR pairs in the dataset: ", length(unique(LR_keep$SYMB_LR)), "."))
   LR_keep$ligand <- LR_keep$GENESYMB_L
   LR_keep$receptor <- LR_keep$GENESYMB_R
+  LR_keep$LR_pair <- LR_keep$SYMB_LR
+  LR_keep$SYMB_LR <- NULL
+  LR_keep$GENESYMB_L <- NULL
+  LR_keep$GENESYMB_R <- NULL
   return(list(data = data_keep, LR_df = LR_keep))
 }
 
-#' Aggregate data per cell-types and conditions
+#' Determine if two values are bigger than a threshold at the same time.
 #'
-#' @param expr_tr (transposed) expression matrix
-#' @param metadata x
-#' @param cell_types x
-#' @param cond x
+#' @param x x
+#' @param y x
+#' @param thr x
 #'
-#' @return A matrix with the mean expression of each gene for each cell-type
-aggregate_cells <- function(expr_tr,
-                            metadata,
-                            cell_types,
-                            cond
+#' @return x
+is_detected <- Vectorize(function(
+  x,
+  y,
+  thr
 ) {
-  if(is.null(cond)) {
-    meta <- metadata
-    expr <- expr_tr
+  if (x >= thr & y >= thr) {
+    return(TRUE)
   } else {
-    meta <- metadata[metadata$condition == cond, ]
-    expr <- expr_tr[rownames(expr_tr) %in% meta$cell_id, ]
+    return(FALSE)
   }
-  sums <- rowsum(x = expr,
-                 group = meta$cell_type)
-  aggr <- sums/as.vector(table(meta$cell_type))
-  return(aggr[cell_types, ])
-}
+})
+

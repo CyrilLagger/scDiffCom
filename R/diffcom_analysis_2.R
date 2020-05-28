@@ -296,7 +296,7 @@ run_simple_analysis_2 <- function(expr_tr,
                                   threshold,
                                   compute_fast
 ) {
-  averaged_expr <- aggregate_cells(expr_tr = expr_tr,
+  averaged_expr <- aggregate_cells_slow(expr_tr = expr_tr,
                                    metadata = metadata,
                                    cell_types = cell_types,
                                    cond = cond)
@@ -305,7 +305,7 @@ run_simple_analysis_2 <- function(expr_tr,
   if(compute_fast) {
     return(cci)
   } else {
-    detection_rate <- aggregate_cells(expr_tr = 1*(expr_tr > 0),
+    detection_rate <- aggregate_cells_slow(expr_tr = 1*(expr_tr > 0),
                                       metadata = metadata,
                                       cell_types = cell_types,
                                       cond = cond)
@@ -448,7 +448,7 @@ compute_LR_drate_2 <- function(ligand,
 ) {
   outer(detection_rate[, ligand],
         detection_rate[, receptor],
-        FUN = is_detected,
+        FUN = is_detected_2,
         detection_thr)
 }
 
@@ -459,7 +459,7 @@ compute_LR_drate_2 <- function(ligand,
 #' @param thr x
 #'
 #' @return x
-is_detected <- Vectorize(function(x,
+is_detected_2 <- Vectorize(function(x,
                                   y,
                                   thr
 ) {
@@ -470,7 +470,7 @@ is_detected <- Vectorize(function(x,
   }
 })
 
-compute_pvalue <- function(expr_tr,
+compute_pvalue_2 <- function(expr_tr,
                            metadata,
                            cell_types,
                            LR_df,
@@ -491,7 +491,7 @@ compute_pvalue <- function(expr_tr,
         expr_tr_sub <- expr_tr[, c(ligand, receptor)]
         distr <- array(data = 0,
                        dim = c(n_ct*n_ct, iterations + 1))
-        averaged_expr <- aggregate_cells(expr_tr = expr_tr_sub,
+        averaged_expr <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                          metadata = metadata,
                                          cell_types = cell_types,
                                          cond = NULL)
@@ -501,7 +501,7 @@ compute_pvalue <- function(expr_tr,
         for(i in 1:iterations) {
           md <- metadata
           md$cell_type <- sample_matrix_spec[i, ]
-          averaged_expr <- aggregate_cells(expr_tr = expr_tr_sub,
+          averaged_expr <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                            metadata = md,
                                            cell_types = cell_types,
                                            cond = NULL)
@@ -528,11 +528,11 @@ compute_pvalue <- function(expr_tr,
                              dim = c(n_ct*n_ct, iterations + 1))
         distr_cond2 <- array(data = 0,
                              dim = c(n_ct*n_ct, iterations + 1))
-        averaged_expr_cond1 <- aggregate_cells(expr_tr = expr_tr_sub,
+        averaged_expr_cond1 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                metadata = metadata,
                                                cell_types = cell_types,
                                                cond = cond1)
-        averaged_expr_cond2 <- aggregate_cells(expr_tr = expr_tr_sub,
+        averaged_expr_cond2 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                metadata = metadata,
                                                cell_types = cell_types,
                                                cond = cond2)
@@ -545,11 +545,11 @@ compute_pvalue <- function(expr_tr,
         for(i in 1:iterations) {
           md <- metadata
           md$cell_type <- sample_matrix_spec[i, ]
-          averaged_expr_cond1 <- aggregate_cells(expr_tr = expr_tr_sub,
+          averaged_expr_cond1 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                  metadata = md,
                                                  cell_types = cell_types,
                                                  cond = cond1)
-          averaged_expr_cond2 <- aggregate_cells(expr_tr = expr_tr_sub,
+          averaged_expr_cond2 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                  metadata = md,
                                                  cell_types = cell_types,
                                                  cond = cond2)
@@ -581,11 +581,11 @@ compute_pvalue <- function(expr_tr,
         expr_tr_sub <- expr_tr[, c(ligand, receptor)]
         distr <- array(data = 0,
                        dim = c(n_ct*n_ct, iterations + 1))
-        averaged_expr_cond1 <- aggregate_cells(expr_tr = expr_tr_sub,
+        averaged_expr_cond1 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                metadata = metadata,
                                                cell_types = cell_types,
                                                cond = cond1)
-        averaged_expr_cond2 <- aggregate_cells(expr_tr = expr_tr_sub,
+        averaged_expr_cond2 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                metadata = metadata,
                                                cell_types = cell_types,
                                                cond = cond2)
@@ -598,11 +598,11 @@ compute_pvalue <- function(expr_tr,
         for(i in 1:iterations) {
           md <- metadata
           md$condition <- sample_matrix_diff[i, ]
-          averaged_expr_cond1 <- aggregate_cells(expr_tr = expr_tr_sub,
+          averaged_expr_cond1 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                            metadata = md,
                                            cell_types = cell_types,
                                            cond = cond1)
-          averaged_expr_cond2 <- aggregate_cells(expr_tr = expr_tr_sub,
+          averaged_expr_cond2 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                  metadata = md,
                                                  cell_types = cell_types,
                                                  cond = cond2)
@@ -635,19 +635,19 @@ compute_pvalue <- function(expr_tr,
                              dim = c(n_ct*n_ct, iterations + 1))
         distr_cond2 <- array(data = 0,
                              dim = c(n_ct*n_ct, iterations + 1))
-        averaged_expr_diff_cond1 <- aggregate_cells(expr_tr = expr_tr_sub,
+        averaged_expr_diff_cond1 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                metadata = metadata,
                                                cell_types = cell_types,
                                                cond = cond1)
-        averaged_expr_diff_cond2 <- aggregate_cells(expr_tr = expr_tr_sub,
+        averaged_expr_diff_cond2 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                metadata = metadata,
                                                cell_types = cell_types,
                                                cond = cond2)
-        averaged_expr_cond1 <- aggregate_cells(expr_tr = expr_tr_sub,
+        averaged_expr_cond1 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                metadata = metadata,
                                                cell_types = cell_types,
                                                cond = cond1)
-        averaged_expr_cond2 <- aggregate_cells(expr_tr = expr_tr_sub,
+        averaged_expr_cond2 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                metadata = metadata,
                                                cell_types = cell_types,
                                                cond = cond2)
@@ -669,19 +669,19 @@ compute_pvalue <- function(expr_tr,
           md_diff$condition <- sample_matrix_diff[i, ]
           md_cond <- metadata
           md_cond$cell_type <- sample_matrix_spec[i, ]
-          averaged_expr_diff_cond1 <- aggregate_cells(expr_tr = expr_tr_sub,
+          averaged_expr_diff_cond1 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                       metadata = md_diff,
                                                       cell_types = cell_types,
                                                       cond = cond1)
-          averaged_expr_diff_cond2 <- aggregate_cells(expr_tr = expr_tr_sub,
+          averaged_expr_diff_cond2 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                       metadata = md_diff,
                                                       cell_types = cell_types,
                                                       cond = cond2)
-          averaged_expr_cond1 <- aggregate_cells(expr_tr = expr_tr_sub,
+          averaged_expr_cond1 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                  metadata = md_cond,
                                                  cell_types = cell_types,
                                                  cond = cond1)
-          averaged_expr_cond2 <- aggregate_cells(expr_tr = expr_tr_sub,
+          averaged_expr_cond2 <- aggregate_cells_slow(expr_tr = expr_tr_sub,
                                                  metadata = md_cond,
                                                  cell_types = cell_types,
                                                  cond = cond2)
@@ -746,7 +746,7 @@ run_stat_analysis_2 <- function(expr_tr,
     sample_matrix <- permute::shuffleSet(seq_along(ct),
                                          nset = iterations)
     sample_matrix[] <- ct[sample_matrix]
-    pvals <- compute_pvalue(expr_tr = expr_tr,
+    pvals <- compute_pvalue_2(expr_tr = expr_tr,
                             metadata = metadata,
                             cell_types = cell_types,
                             LR_df = LR_df,
@@ -773,7 +773,7 @@ run_stat_analysis_2 <- function(expr_tr,
     #  sample_matrix[i,] <- meta_ct$cell_type
     #}
     ##
-    pvals <- compute_pvalue(expr_tr = expr_tr,
+    pvals <- compute_pvalue_2(expr_tr = expr_tr,
                             metadata = metadata,
                             cell_types = cell_types,
                             LR_df = LR_df,
@@ -792,7 +792,7 @@ run_stat_analysis_2 <- function(expr_tr,
                                          nset = iterations,
                                          control = ctrl)
     sample_matrix[] <- cond_diff[sample_matrix]
-    pvals <- compute_pvalue(expr_tr = expr_tr,
+    pvals <- compute_pvalue_2(expr_tr = expr_tr,
                             metadata = metadata,
                             cell_types = cell_types,
                             LR_df = LR_df,
@@ -816,7 +816,7 @@ run_stat_analysis_2 <- function(expr_tr,
                                               nset = iterations,
                                               control = ctrl_cond)
     sample_matrix_cond[] <- ct_cond[sample_matrix_cond]
-    pvals <- compute_pvalue(expr_tr = expr_tr,
+    pvals <- compute_pvalue_2(expr_tr = expr_tr,
                             metadata = metadata,
                             cell_types = cell_types,
                             LR_df = LR_df,
