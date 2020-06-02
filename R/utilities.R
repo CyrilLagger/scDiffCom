@@ -29,23 +29,27 @@ get_orthologs <- function(
   } else {
     stop("Species not supported in function get_orthologs.")
   }
-  mart <- biomaRt::useMart("ensembl",
-                           dataset = paste0(id_in,
-                                            "_gene_ensembl"))
-  ensembl <- biomaRt::getBM(attributes = c(id_gene,
-                                           "ensembl_gene_id"),
-                            filters = id_gene,
-                            mart = mart,
-                            values = genes)
-  ensembl_conv <- biomaRt::getBM(attributes = c("ensembl_gene_id",
-                                                paste0(id_out, "_homolog_associated_gene_name"),
-                                                paste0(id_out, "_homolog_orthology_confidence"),
-                                                paste0(id_out, "_homolog_perc_id_r1"),
-                                                paste0(id_out, "_homolog_orthology_type")
-  ),
-  filters = "ensembl_gene_id",
-  mart = mart,
-  value = ensembl$ensembl_gene_id)
+  mart <- biomaRt::useMart(
+    "ensembl",
+    dataset = paste0(id_in, "_gene_ensembl")
+  )
+  ensembl <- biomaRt::getBM(
+    attributes = c(id_gene,
+                   "ensembl_gene_id"),
+    filters = id_gene,
+    mart = mart,
+    values = genes
+  )
+  ensembl_conv <- biomaRt::getBM(
+    attributes = c("ensembl_gene_id",
+                   paste0(id_out, "_homolog_associated_gene_name"),
+                   paste0(id_out, "_homolog_orthology_confidence"),
+                   paste0(id_out, "_homolog_perc_id_r1"),
+                   paste0(id_out, "_homolog_orthology_type")
+    ),
+    filters = "ensembl_gene_id",
+    mart = mart,
+    value = ensembl$ensembl_gene_id)
   ensembl_all <- merge(ensembl, ensembl_conv)
   if(one2one) {
     ensembl_all <- ensembl_all[ensembl_all[[paste0(id_out, "_homolog_orthology_type")]] == 'ortholog_one2one' &
@@ -111,23 +115,31 @@ preprocess_seurat <- function(
   condition_id,
   min_cells
 ) {
-  prep_data <- prepare_seurat_data(seurat_obj = seurat_obj,
-                                   assay = assay,
-                                   slot = slot,
-                                   log_scale = log_scale,
-                                   convert_to_human = convert_to_human,
-                                   return_type = return_type)
-  prep_meta <- prepare_seurat_metadata(seurat_obj = seurat_obj,
-                                       seurat_cell_type_id = seurat_cell_type_id,
-                                       condition_id = condition_id)
-  cell_types_filtered <- filter_cell_types(metadata = prep_meta,
-                                           min_cells = min_cells)
+  prep_data <- prepare_seurat_data(
+    seurat_obj = seurat_obj,
+    assay = assay,
+    slot = slot,
+    log_scale = log_scale,
+    convert_to_human = convert_to_human,
+    return_type = return_type
+  )
+  prep_meta <- prepare_seurat_metadata(
+    seurat_obj = seurat_obj,
+    seurat_cell_type_id = seurat_cell_type_id,
+    condition_id = condition_id
+  )
+  cell_types_filtered <- filter_cell_types(
+    metadata = prep_meta,
+    min_cells = min_cells
+  )
   metadata <- prep_meta[prep_meta$cell_type %in% cell_types_filtered, ]
   data <- prep_data$data[, colnames(prep_data$data) %in% metadata$cell_id]
-  return(list(data = data,
-              metadata = metadata,
-              cell_types = cell_types_filtered,
-              gene_mapping = prep_data$gene_mapping))
+  return(list(
+    data = data,
+    metadata = metadata,
+    cell_types = cell_types_filtered,
+    gene_mapping = prep_data$gene_mapping)
+  )
 }
 
 #' Prepare Seurat data matrix for downstream analysis.
@@ -149,9 +161,11 @@ prepare_seurat_data <- function(
   convert_to_human = FALSE,
   return_type = "dense"
 ) {
-  data <- Seurat::GetAssayData(object = seurat_obj,
+  data <- Seurat::GetAssayData(
+    object = seurat_obj,
                                slot = slot,
-                               assay = assay)
+                               assay = assay
+    )
   if(slot == "data" & !log_scale) {
     data <- expm1(data)
   } else if(!log_scale) {
@@ -209,9 +223,11 @@ prepare_seurat_metadata <- function(
   condition_id = NULL
 ) {
   if(is.null(condition_id)) {
-    return(data.frame(cell_id = rownames(seurat_obj@meta.data),
+    return(data.frame(
+      cell_id = rownames(seurat_obj@meta.data),
                       cell_type = as.character(seurat_obj@meta.data[, seurat_cell_type_id]),
-                      stringsAsFactors = FALSE))
+                      stringsAsFactors = FALSE)
+      )
   } else {
     cond <- seurat_obj@meta.data[, condition_id]
     if(length(unique(cond)) != 2)

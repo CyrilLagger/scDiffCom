@@ -18,6 +18,8 @@ data.frame with LR pairs and to which sources they belong
 Create a dataframe with LR pairs from our 4 sources
 }
 \examples{
+\dontrun{
 LRall_one2one <- aggregate_LR(one2one = TRUE, cpdb = TRUE)
 LRall_many2many <- aggregate_LR(one2one = FALSE, cpdb = TRUE)
+}
 }

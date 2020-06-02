@@ -26,7 +26,8 @@
 #'
 #' @return Return the results of CellPhoneDB
 #' @export
-run_cpdb_from_seurat <- function(seurat_obj,
+run_cpdb_from_seurat <- function(
+  seurat_obj,
                                  assay = "RNA",
                                  slot = "data",
                                  log_scale = TRUE,
@@ -245,7 +246,8 @@ run_cpdb_from_seurat <- function(seurat_obj,
 #' @param input_dir Directory path where to save the files that will be used as input for CellPhoneDB analysis
 #'
 #' @return Write the two files and return a list with the paths of the files and the names of the conditions (if relevant).
-create_cpdb_input <- function(seurat_obj,
+create_cpdb_input <- function(
+  seurat_obj,
                               assay = "RNA",
                               slot = "data",
                               log_scale = TRUE,

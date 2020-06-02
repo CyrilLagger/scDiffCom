@@ -8,8 +8,10 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' LRall_one2one <- aggregate_LR(one2one = TRUE, cpdb = TRUE)
 #' LRall_many2many <- aggregate_LR(one2one = FALSE, cpdb = TRUE)
+#' }
 aggregate_LR <- function(one2one = TRUE,
                          cpdb = FALSE
 ) {
@@ -73,7 +75,9 @@ aggregate_LR <- function(one2one = TRUE,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' LRsct <- prepare_LR_scTensor(detailed = FALSE)
+#' }
 prepare_LR_scTensor <- function(detailed = FALSE
 ) {
   key <- AnnotationDbi::keys(LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
@@ -124,8 +128,10 @@ prepare_LR_scTensor <- function(detailed = FALSE
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' LRdb_one2one <- prepare_LR_scsr(detailed = FALSE, one2one = TRUE)
 #' LRdb_many2many <- prepare_LR_scsr(detailed = FALSE, one2one = FALSE)
+#' }
 prepare_LR_scsr <- function(detailed = FALSE,
                             one2one =TRUE
 ) {
@@ -169,8 +175,10 @@ prepare_LR_scsr <- function(detailed = FALSE,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' LRniche_one2one <- prepare_LR_nichenet(detailed = FALSE, one2one = TRUE)
 #' LRniche_many2many <- prepare_LR_nichenet(detailed = FALSE, one2one = FALSE)
+#' }
 prepare_LR_nichenet <- function(detailed = FALSE,
                                 one2one = TRUE
 ) {
@@ -215,8 +223,10 @@ prepare_LR_nichenet <- function(detailed = FALSE,
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' LRcpdb_one2one <- prepare_LR_cpdb(one2one = TRUE, deconvoluted = TRUE)
 #' LRcpdb_many2many <- prepare_LR_cpdb(one2one = FALSE, deconvoluted = TRUE)
+#' }
 prepare_LR_cpdb <- function(one2one = TRUE,
                             deconvoluted = TRUE
 ) {

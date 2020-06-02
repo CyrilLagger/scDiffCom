@@ -16,5 +16,7 @@ data.frame with 3 or 6 columns
 Create a LR data.frame based on the scTensor database
 }
 \examples{
+\dontrun{
 LRsct <- prepare_LR_scTensor(detailed = FALSE)
+}
 }
