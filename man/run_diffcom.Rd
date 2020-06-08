@@ -16,7 +16,8 @@ run_diffcom(
   threshold = 0.1,
   differential_analysis = TRUE,
   specificity_analysis = TRUE,
-  iterations = 1000
+  iterations = 1000,
+  return_distr = FALSE
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ expression between the conditions. Only considered when condidition_id is not NU
 default is FALSE.}
 
 \item{iterations}{integer indicating the number of iterations during the permutation test.}
+
+\item{return_distr}{logical indicating if returning the matrix with the distributions obtained from the permutation test.}
 }
 \value{
 A data.table where each row is CCI. The columns vary in functions of the parameters used when calling the function.

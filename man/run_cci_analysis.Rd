@@ -12,7 +12,8 @@ run_cci_analysis(
   condition_id,
   differential_analysis,
   specificity_analysis,
-  iterations
+  iterations,
+  return_distr = FALSE
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ expression between the conditions. Only considered when condidition_id is not NU
 default is FALSE.}
 
 \item{iterations}{integer indicating the number of iterations during the permutation test.}
+
+\item{return_distr}{logical indicating if returning the matrix with the distributions obtained from the permutation test.}
 }
 \value{
 x

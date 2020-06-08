@@ -25,6 +25,7 @@
 #' @param specificity_analysis logical indicating if performing the permutation test for the specificity of each CCI on each condition;
 #' default is FALSE.
 #' @param iterations integer indicating the number of iterations during the permutation test.
+#' @param return_distr logical indicating if returning the matrix with the distributions obtained from the permutation test.
 #'
 #' @return A data.table where each row is CCI. The columns vary in functions of the parameters used when calling the function.
 #' It includes the CCI information and for each condition the scores, detection rates and possibly p-values.
@@ -41,7 +42,8 @@ run_diffcom <- function(
   threshold = 0.1,
   differential_analysis = TRUE,
   specificity_analysis = TRUE,
-  iterations = 1000
+  iterations = 1000,
+  return_distr = FALSE
 ) {
   message("Preprocessing Seurat object.")
   pp_seurat <- preprocess_seurat(
@@ -75,8 +77,12 @@ run_diffcom <- function(
     condition_id = condition_id,
     differential_analysis = differential_analysis,
     specificity_analysis = specificity_analysis,
-    iterations = iterations
+    iterations = iterations,
+    return_distr = return_distr
   )
+  if(return_distr) {
+    return(cci_analysis)
+  }
   if(is.null(condition_id)) {
     if(!specificity_analysis) {
       data.table::setcolorder(
@@ -88,10 +94,9 @@ run_diffcom <- function(
       data.table::setcolorder(
         x = cci_analysis,
         neworder = c("LR_pair", "ligand", "receptor", "Ligand_cell_type", "Receptor_cell_type",
-                     "LR_score", "LR_detec", "pvals", "Ligand_expr", "Ligand_detec_rate", "Receptor_expr", "Receptor_detec_rate")
+                     "LR_score", "LR_detec", "pvals", "BH_pvals", "Ligand_expr", "Ligand_detec_rate", "Receptor_expr", "Receptor_detec_rate")
       )
     }
-
   } else {
     conds <- unique(metadata$condition)
     cond1 <- conds[[1]]
@@ -111,7 +116,7 @@ run_diffcom <- function(
       } else {
         data.table::setcolorder(
           x = cci_analysis,
-          neworder = c("LR_pair", "ligand", "receptor", "Ligand_cell_type", "Receptor_cell_type", "pvals_diff",
+          neworder = c("LR_pair", "ligand", "receptor", "Ligand_cell_type", "Receptor_cell_type", "pvals_diff", "BH_pvals_diff",
                        paste0("LR_score_", cond1), paste0("LR_score_", cond2),
                        paste0("LR_detec_", cond1), paste0("LR_detec_", cond2),
                        paste0("Ligand_expr_", cond1), paste0("Ligand_detec_rate_", cond1),
@@ -126,6 +131,7 @@ run_diffcom <- function(
           x = cci_analysis,
           neworder = c("LR_pair", "ligand", "receptor", "Ligand_cell_type", "Receptor_cell_type",
                        paste0("pvals_", cond1), paste0("pvals_", cond2),
+                       paste0("BH_pvals_", cond1), paste0("BH_pvals_", cond2),
                        paste0("LR_score_", cond1), paste0("LR_score_", cond2),
                        paste0("LR_detec_", cond1), paste0("LR_detec_", cond2),
                        paste0("Ligand_expr_", cond1), paste0("Ligand_detec_rate_", cond1),
@@ -136,8 +142,9 @@ run_diffcom <- function(
       } else {
         data.table::setcolorder(
           x = cci_analysis,
-          neworder = c("LR_pair", "ligand", "receptor", "Ligand_cell_type", "Receptor_cell_type", "pvals_diff",
+          neworder = c("LR_pair", "ligand", "receptor", "Ligand_cell_type", "Receptor_cell_type", "pvals_diff", "BH_pvals_diff",
                        paste0("pvals_", cond1), paste0("pvals_", cond2),
+                       paste0("BH_pvals_", cond1), paste0("BH_pvals_", cond2),
                        paste0("LR_score_", cond1), paste0("LR_score_", cond2),
                        paste0("LR_detec_", cond1), paste0("LR_detec_", cond2),
                        paste0("Ligand_expr_", cond1), paste0("Ligand_detec_rate_", cond1),
@@ -192,6 +199,7 @@ prepare_template_cci <- function(
 #' @param specificity_analysis logical indicating if performing the permutation test for the specificity of each CCI on each condition;
 #' default is FALSE.
 #' @param iterations integer indicating the number of iterations during the permutation test.
+#' @param return_distr logical indicating if returning the matrix with the distributions obtained from the permutation test.
 #'
 #' @return x
 run_cci_analysis <- function(
@@ -202,7 +210,8 @@ run_cci_analysis <- function(
   condition_id,
   differential_analysis,
   specificity_analysis,
-  iterations
+  iterations,
+  return_distr = FALSE
 ) {
   if (is.null(condition_id)) {
     message("Performing simple analysis without condition.")
@@ -215,6 +224,9 @@ run_cci_analysis <- function(
       threshold = threshold,
       compute_fast = FALSE )
     if (!specificity_analysis) {
+      if(return_distr) {
+        stop("No permutation distribution to return!")
+      }
       cci_dt <- cci_dt_simple
     } else {
       message("Performing specificity analysis without condition.")
@@ -226,7 +238,7 @@ run_cci_analysis <- function(
         cond2 = NULL,
         iterations = iterations,
         use_case = "no_cond_spec",
-        return_distr = FALSE
+        return_distr = return_distr
       )
     }
   } else{
@@ -257,7 +269,7 @@ run_cci_analysis <- function(
           cond2 = cond2,
           iterations = iterations,
           use_case = "cond_spec",
-          return_distr = FALSE
+          return_distr = return_distr
         )
       }
     } else {
@@ -271,7 +283,7 @@ run_cci_analysis <- function(
           cond2 = cond2,
           iterations = iterations,
           use_case = "cond_diff",
-          return_distr = FALSE
+          return_distr = return_distr
         )
       } else {
         message("Performing differential analysis between the two conditions and specificity analysis.")
@@ -283,15 +295,13 @@ run_cci_analysis <- function(
           cond2 = cond2,
           iterations = iterations,
           use_case = "cond_diff_spec",
-          return_distr = FALSE
+          return_distr = return_distr
         )
       }
     }
   }
   return(cci_dt)
 }
-
-
 
 #' Compute the score and detection rate of each CCI
 #'
@@ -586,7 +596,7 @@ run_stat_analysis <- function(
   use_case,
   return_distr = FALSE
 ) {
-  LR_detec <- LR_pair <- Ligand_cell_type <- Receptor_cell_type <- ligand <- receptor <- NULL
+  LR_detec <- LR_pair <- Ligand_cell_type <- Receptor_cell_type <- ligand <- receptor <- BH_pvals <- BH_pvals_diff <- NULL
   if (use_case == "no_cond_spec") {
     sub_template_cci_dt <- cci_dt_simple[LR_detec == TRUE]
     sub_expr_tr <- expr_tr[,
@@ -609,8 +619,9 @@ run_stat_analysis <- function(
     pvals <-
       rowSums(distr[, 1:iterations] >= distr[, (iterations + 1)]) / iterations
     sub_template_cci_dt[, pvals := pvals]
+    sub_template_cci_dt[, BH_pvals := stats::p.adjust(p = pvals, method = "BH")]
     sub_template_cci_dt <- sub_template_cci_dt[, list(LR_pair, Ligand_cell_type, Receptor_cell_type, ligand, receptor,
-                                                      pvals)]
+                                                      pvals, BH_pvals)]
     if (return_distr) {
       return(distr)
     } else {
@@ -650,8 +661,18 @@ run_stat_analysis <- function(
       pvals_cond2 <-
         rowSums(distr_cond2[, 1:iterations] >= distr_cond2[, (iterations + 1)]) / iterations
       sub_template_cci_dt[, paste0("pvals_", c(cond1, cond2)) := list(pvals_cond1, pvals_cond2)]
+      sub_template_cci_dt[, paste0("BH_pvals_", c(cond1, cond2)) := list(stats::p.adjust(
+        p = pvals_cond1,
+        method = "BH"
+      ),
+      stats::p.adjust(
+        p = pvals_cond2,
+        method = "BH"
+      )
+      )]
       sub_template_cci_dt <- sub_template_cci_dt[, c("LR_pair", "Ligand_cell_type", "Receptor_cell_type", "ligand", "receptor",
-                                                     paste0("pvals_", cond1), paste0("pvals_", cond2)), with = FALSE]
+                                                     paste0("pvals_", cond1), paste0("pvals_", cond2),
+                                                     paste0("BH_pvals_", cond1), paste0("BH_pvals_", cond2)), with = FALSE]
       if (return_distr) {
         return(list(distr_cond1 = distr_cond1,
                     distr_cond2 = distr_cond2))
@@ -672,8 +693,9 @@ run_stat_analysis <- function(
         rowSums(abs(distr_diff[, 1:iterations]) >= abs(distr_diff[, (iterations +
                                                                        1)])) / iterations
       sub_template_cci_dt[, pvals_diff := pvals_diff]
+      sub_template_cci_dt[, BH_pvals_diff := stats::p.adjust(p = pvals_diff, method = "BH")]
       sub_template_cci_dt <- sub_template_cci_dt[, list(LR_pair, Ligand_cell_type, Receptor_cell_type, ligand, receptor,
-                                                        pvals_diff)]
+                                                        pvals_diff, BH_pvals_diff)]
       if (return_distr) {
         return(distr_diff)
       } else {
@@ -699,9 +721,20 @@ run_stat_analysis <- function(
       pvals_cond2 <-
         rowSums(distr_cond2[, 1:iterations] >= distr_cond2[, (iterations + 1)]) / iterations
       sub_template_cci_dt[, paste0("pvals_", c(cond1, cond2)) := list(pvals_cond1, pvals_cond2)]
+      sub_template_cci_dt[, paste0("BH_pvals_", c(cond1, cond2)) := list(stats::p.adjust(
+        p = pvals_cond1,
+        method = "BH"
+      ),
+      stats::p.adjust(
+        p = pvals_cond2,
+        method = "BH"
+      )
+      )]
       sub_template_cci_dt[, pvals_diff := pvals_diff]
+      sub_template_cci_dt[, BH_pvals_diff := stats::p.adjust(p = pvals_diff, method = "BH")]
       sub_template_cci_dt <- sub_template_cci_dt[, c("LR_pair", "Ligand_cell_type", "Receptor_cell_type", "ligand", "receptor",
-                                                     paste0("pvals_", cond1), paste0("pvals_", cond2), "pvals_diff"), with = FALSE]
+                                                     paste0("pvals_", cond1), paste0("pvals_", cond2), "pvals_diff",
+                                                     paste0("BH_pvals_", cond1), paste0("BH_pvals_", cond2), "BH_pvals_diff"), with = FALSE]
       if (return_distr) {
         return(
           list(
