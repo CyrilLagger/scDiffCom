@@ -13,6 +13,7 @@ run_cci_analysis(
   differential_analysis,
   specificity_analysis,
   iterations,
+  one_sided,
   return_distr = FALSE
 )
 }
@@ -36,6 +37,8 @@ expression between the conditions. Only considered when condidition_id is not NU
 default is FALSE.}
 
 \item{iterations}{integer indicating the number of iterations during the permutation test.}
+
+\item{one_sided}{logical indicating if computing differential p-values from a one-sided or two-sided test.}
 
 \item{return_distr}{logical indicating if returning the matrix with the distributions obtained from the permutation test.}
 }

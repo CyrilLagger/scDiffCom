@@ -16,6 +16,7 @@ run_diffcom(
   threshold = 0.1,
   differential_analysis = TRUE,
   specificity_analysis = TRUE,
+  one_sided = TRUE,
   iterations = 1000,
   return_distr = FALSE
 )
@@ -48,6 +49,8 @@ expression between the conditions. Only considered when condidition_id is not NU
 
 \item{specificity_analysis}{logical indicating if performing the permutation test for the specificity of each CCI on each condition;
 default is FALSE.}
+
+\item{one_sided}{logical indicating if computing differential p-values from a one-sided or two-sided test.}
 
 \item{iterations}{integer indicating the number of iterations during the permutation test.}
 

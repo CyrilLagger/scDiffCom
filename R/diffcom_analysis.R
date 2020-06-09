@@ -25,6 +25,7 @@
 #' @param specificity_analysis logical indicating if performing the permutation test for the specificity of each CCI on each condition;
 #' default is FALSE.
 #' @param iterations integer indicating the number of iterations during the permutation test.
+#' @param one_sided logical indicating if computing differential p-values from a one-sided or two-sided test.
 #' @param return_distr logical indicating if returning the matrix with the distributions obtained from the permutation test.
 #'
 #' @return A data.table where each row is CCI. The columns vary in functions of the parameters used when calling the function.
@@ -42,6 +43,7 @@ run_diffcom <- function(
   threshold = 0.1,
   differential_analysis = TRUE,
   specificity_analysis = TRUE,
+  one_sided = TRUE,
   iterations = 1000,
   return_distr = FALSE
 ) {
@@ -78,6 +80,7 @@ run_diffcom <- function(
     differential_analysis = differential_analysis,
     specificity_analysis = specificity_analysis,
     iterations = iterations,
+    one_sided = one_sided,
     return_distr = return_distr
   )
   if(return_distr) {
@@ -199,6 +202,7 @@ prepare_template_cci <- function(
 #' @param specificity_analysis logical indicating if performing the permutation test for the specificity of each CCI on each condition;
 #' default is FALSE.
 #' @param iterations integer indicating the number of iterations during the permutation test.
+#' @param one_sided logical indicating if computing differential p-values from a one-sided or two-sided test.
 #' @param return_distr logical indicating if returning the matrix with the distributions obtained from the permutation test.
 #'
 #' @return x
@@ -211,6 +215,7 @@ run_cci_analysis <- function(
   differential_analysis,
   specificity_analysis,
   iterations,
+  one_sided,
   return_distr = FALSE
 ) {
   if (is.null(condition_id)) {
@@ -238,6 +243,7 @@ run_cci_analysis <- function(
         cond2 = NULL,
         iterations = iterations,
         use_case = "no_cond_spec",
+        one_sided = one_sided,
         return_distr = return_distr
       )
     }
@@ -269,6 +275,7 @@ run_cci_analysis <- function(
           cond2 = cond2,
           iterations = iterations,
           use_case = "cond_spec",
+          one_sided = one_sided,
           return_distr = return_distr
         )
       }
@@ -283,6 +290,7 @@ run_cci_analysis <- function(
           cond2 = cond2,
           iterations = iterations,
           use_case = "cond_diff",
+          one_sided = one_sided,
           return_distr = return_distr
         )
       } else {
@@ -295,6 +303,7 @@ run_cci_analysis <- function(
           cond2 = cond2,
           iterations = iterations,
           use_case = "cond_diff_spec",
+          one_sided = one_sided,
           return_distr = return_distr
         )
       }
@@ -583,6 +592,7 @@ build_cci_drate_dt <- function(
 #' @param cond2 x
 #' @param iterations x
 #' @param use_case x
+#' @param one_sided logical indicating if computing differential p-values from a one-sided or two-sided test.
 #' @param return_distr x
 #'
 #' @return x
@@ -594,6 +604,7 @@ run_stat_analysis <- function(
   cond2,
   iterations,
   use_case,
+  one_sided,
   return_distr = FALSE
 ) {
   LR_detec <- LR_pair <- Ligand_cell_type <- Receptor_cell_type <- ligand <- receptor <- BH_pvals <- BH_pvals_diff <- NULL
@@ -689,11 +700,19 @@ run_stat_analysis <- function(
       }
     } else if (use_case == "cond_diff") {
       distr_diff <- cbind(cci_perm, sub_template_cci_dt[[paste0("LR_score_", cond2)]] - sub_template_cci_dt[[paste0("LR_score_", cond1)]])
-      pvals_diff <-
-        rowSums(abs(distr_diff[, 1:iterations]) >= abs(distr_diff[, (iterations +
-                                                                       1)])) / iterations
+      if(one_sided) {
+        pvals_diff_cond1 <- rowSums(distr_diff[, 1:iterations] <= distr_diff[, (iterations + 1)]) / iterations
+        pvals_diff_cond2 <- rowSums(distr_diff[, 1:iterations] >= distr_diff[, (iterations + 1)]) / iterations
+        pvasl_diff <- pmin(pvals_diff_cond1, pvals_diff_cond2)
+        BH_pvals_diff_cond1 <- stats::p.adjust(p = pvals_diff_cond1, method = "BH")
+        BH_pvals_diff_cond2 <- stats::p.adjust(p = pvals_diff_cond2, method = "BH")
+        BH_pvasl_diff <- pmin(BH_pvals_diff_cond1, BH_pvals_diff_cond2)
+      } else {
+        pvals_diff <- rowSums(abs(distr_diff[, 1:iterations]) >= abs(distr_diff[, (iterations + 1)])) / iterations
+        BH_pvals_diff <- stats::p.adjust(p = pvals_diff, method = "BH")
+      }
       sub_template_cci_dt[, pvals_diff := pvals_diff]
-      sub_template_cci_dt[, BH_pvals_diff := stats::p.adjust(p = pvals_diff, method = "BH")]
+      sub_template_cci_dt[, BH_pvals_diff := BH_pvals_diff]
       sub_template_cci_dt <- sub_template_cci_dt[, list(LR_pair, Ligand_cell_type, Receptor_cell_type, ligand, receptor,
                                                         pvals_diff, BH_pvals_diff)]
       if (return_distr) {
@@ -711,15 +730,21 @@ run_stat_analysis <- function(
       }
     } else if (use_case == "cond_diff_spec") {
       distr_diff <- cbind(cci_perm[, 1, ], sub_template_cci_dt[[paste0("LR_score_", cond2)]] - sub_template_cci_dt[[paste0("LR_score_", cond1)]])
-      pvals_diff <-
-        rowSums(abs(distr_diff[, 1:iterations]) >= abs(distr_diff[, (iterations +
-                                                                       1)])) / iterations
+      if(one_sided) {
+        pvals_diff_cond1 <- rowSums(distr_diff[, 1:iterations] <= distr_diff[, (iterations + 1)]) / iterations
+        pvals_diff_cond2 <- rowSums(distr_diff[, 1:iterations] >= distr_diff[, (iterations + 1)]) / iterations
+        pvasl_diff <- pmin(pvals_diff_cond1, pvals_diff_cond2)
+        BH_pvals_diff_cond1 <- stats::p.adjust(p = pvals_diff_cond1, method = "BH")
+        BH_pvals_diff_cond2 <- stats::p.adjust(p = pvals_diff_cond2, method = "BH")
+        BH_pvasl_diff <- pmin(BH_pvals_diff_cond1, BH_pvals_diff_cond2)
+      } else {
+        pvals_diff <- rowSums(abs(distr_diff[, 1:iterations]) >= abs(distr_diff[, (iterations + 1)])) / iterations
+        BH_pvals_diff <- stats::p.adjust(p = pvals_diff, method = "BH")
+      }
       distr_cond1 <- cbind(cci_perm[, 2, ], sub_template_cci_dt[[paste0("LR_score_", cond1)]])
-      pvals_cond1 <-
-        rowSums(distr_cond1[, 1:iterations] >= distr_cond1[, (iterations + 1)]) / iterations
+      pvals_cond1 <- rowSums(distr_cond1[, 1:iterations] >= distr_cond1[, (iterations + 1)]) / iterations
       distr_cond2 <- cbind(cci_perm[, 3, ], sub_template_cci_dt[[paste0("LR_score_", cond2)]])
-      pvals_cond2 <-
-        rowSums(distr_cond2[, 1:iterations] >= distr_cond2[, (iterations + 1)]) / iterations
+      pvals_cond2 <- rowSums(distr_cond2[, 1:iterations] >= distr_cond2[, (iterations + 1)]) / iterations
       sub_template_cci_dt[, paste0("pvals_", c(cond1, cond2)) := list(pvals_cond1, pvals_cond2)]
       sub_template_cci_dt[, paste0("BH_pvals_", c(cond1, cond2)) := list(stats::p.adjust(
         p = pvals_cond1,
@@ -731,7 +756,7 @@ run_stat_analysis <- function(
       )
       )]
       sub_template_cci_dt[, pvals_diff := pvals_diff]
-      sub_template_cci_dt[, BH_pvals_diff := stats::p.adjust(p = pvals_diff, method = "BH")]
+      sub_template_cci_dt[, BH_pvals_diff := BH_pvals_diff]
       sub_template_cci_dt <- sub_template_cci_dt[, c("LR_pair", "Ligand_cell_type", "Receptor_cell_type", "ligand", "receptor",
                                                      paste0("pvals_", cond1), paste0("pvals_", cond2), "pvals_diff",
                                                      paste0("BH_pvals_", cond1), paste0("BH_pvals_", cond2), "BH_pvals_diff"), with = FALSE]
