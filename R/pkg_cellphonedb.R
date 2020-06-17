@@ -1,6 +1,6 @@
 #' Run CellPhoneDB from a Seurat object
 #'
-#' @param seurat_obj x
+#' @param seurat_object x
 #' @param assay x
 #' @param slot x
 #' @param log_scale x
@@ -27,7 +27,7 @@
 #' @return Return the results of CellPhoneDB
 #' @export
 run_cpdb_from_seurat <- function(
-  seurat_obj,
+  seurat_object,
                                  assay = "RNA",
                                  slot = "data",
                                  log_scale = TRUE,
@@ -56,7 +56,7 @@ run_cpdb_from_seurat <- function(
     dir.create(input_dir)
   }
   message("Create input files from Seurat to be used by CellPhoneDB.")
-  paths <- create_cpdb_input(seurat_obj = seurat_obj,
+  paths <- create_cpdb_input(seurat_object = seurat_object,
                              assay = assay,
                              slot = slot,
                              log_scale = log_scale,
@@ -236,7 +236,7 @@ run_cpdb_from_seurat <- function(
 
 #' Extract (and write on the disk) a data matrix and a metadata data.frame from a Seurat object.
 #'
-#' @param seurat_obj A Seurat object
+#' @param seurat_object A Seurat object
 #' @param assay The Seurat assay to pull data from; default is "RNA"
 #' @param slot The Seurat slot to pull data from; default is "data"
 #' @param log_scale Whether to return log-normalized or normalized data (only relevant when slot = "data"); default is TRUE
@@ -247,7 +247,7 @@ run_cpdb_from_seurat <- function(
 #'
 #' @return Write the two files and return a list with the paths of the files and the names of the conditions (if relevant).
 create_cpdb_input <- function(
-  seurat_obj,
+  seurat_object,
                               assay = "RNA",
                               slot = "data",
                               log_scale = TRUE,
@@ -256,7 +256,7 @@ create_cpdb_input <- function(
                               condition_id = NULL,
                               input_dir = getwd()
 ) {
-  prep <- prepare_seurat_data(seurat_obj = seurat_obj,
+  prep <- prepare_seurat_data(seurat_object = seurat_object,
                               assay = assay,
                               slot = slot,
                               log_scale = log_scale,
@@ -264,7 +264,7 @@ create_cpdb_input <- function(
                               return_type = "data.frame")
   data <- prep$data
   gene_mapping <- prep$gene_mapping
-  metadata <- prepare_seurat_metadata(seurat_obj = seurat_obj,
+  metadata <- prepare_seurat_metadata(seurat_object = seurat_object,
                                       seurat_cell_type_id = seurat_cell_type_id,
                                       condition_id = condition_id)
   cell_type_filt <- filter_cell_types(metadata = metadata,

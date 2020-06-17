@@ -5,7 +5,7 @@
 \title{Run CellPhoneDB from a Seurat object}
 \usage{
 run_cpdb_from_seurat(
-  seurat_obj,
+  seurat_object,
   assay = "RNA",
   slot = "data",
   log_scale = TRUE,
@@ -31,7 +31,7 @@ run_cpdb_from_seurat(
 )
 }
 \arguments{
-\item{seurat_obj}{x}
+\item{seurat_object}{x}
 
 \item{assay}{x}
 

@@ -5,7 +5,7 @@
 \title{Determine (differential) intercellular communication scores (with significance)}
 \usage{
 run_diffcom(
-  seurat_obj,
+  seurat_object,
   LR_data,
   seurat_cell_type_id = "cell_ontology_class",
   condition_id = NULL,
@@ -14,15 +14,14 @@ run_diffcom(
   log_scale = TRUE,
   min_cells = 5,
   threshold = 0.1,
-  differential_analysis = TRUE,
-  specificity_analysis = TRUE,
-  one_sided = TRUE,
+  permutation_analysis = TRUE,
+  one_sided = FALSE,
   iterations = 1000,
   return_distr = FALSE
 )
 }
 \arguments{
-\item{seurat_obj}{Seurat object of several cell-types and human/mouse genes.}
+\item{seurat_object}{Seurat object of several cell-types and human/mouse genes.}
 
 \item{LR_data}{3-column data.frame of Ligand-Receptor pairs,
 satisfying colnames(LR_data) == c("GENESYMB_L", "GENESYMB_R", "SYMB_LR").}
@@ -44,11 +43,7 @@ Only considered if slot == "data".}
 \item{threshold}{numeric indicating the percentage of cells that need to express a gene in a cluster for the gene to be
 considered detected.}
 
-\item{differential_analysis}{logical indicating if performing the permutation test for the significance of differential
-expression between the conditions. Only considered when condidition_id is not NULL; default is TRUE.}
-
-\item{specificity_analysis}{logical indicating if performing the permutation test for the specificity of each CCI on each condition;
-default is FALSE.}
+\item{permutation_analysis}{logical indicating if performing permutation test; default is TRUE.}
 
 \item{one_sided}{logical indicating if computing differential p-values from a one-sided or two-sided test.}
 

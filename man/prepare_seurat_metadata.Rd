@@ -4,10 +4,14 @@
 \alias{prepare_seurat_metadata}
 \title{Prepare Seurat metadata for downstream analysis}
 \usage{
-prepare_seurat_metadata(seurat_obj, seurat_cell_type_id, condition_id = NULL)
+prepare_seurat_metadata(
+  seurat_object,
+  seurat_cell_type_id,
+  condition_id = NULL
+)
 }
 \arguments{
-\item{seurat_obj}{a Seurat object}
+\item{seurat_object}{a Seurat object}
 
 \item{seurat_cell_type_id}{a character indicating the column of cell-types in the Seurat object}
 

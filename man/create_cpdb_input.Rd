@@ -5,7 +5,7 @@
 \title{Extract (and write on the disk) a data matrix and a metadata data.frame from a Seurat object.}
 \usage{
 create_cpdb_input(
-  seurat_obj,
+  seurat_object,
   assay = "RNA",
   slot = "data",
   log_scale = TRUE,
@@ -16,7 +16,7 @@ create_cpdb_input(
 )
 }
 \arguments{
-\item{seurat_obj}{A Seurat object}
+\item{seurat_object}{A Seurat object}
 
 \item{assay}{The Seurat assay to pull data from; default is "RNA"}
 

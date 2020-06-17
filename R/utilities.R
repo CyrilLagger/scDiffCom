@@ -91,7 +91,7 @@ get_orthologs <- function(
 
 #' Return data and metadata of a Seurat object for downstream analysis.
 #'
-#' @param seurat_obj Seurat object
+#' @param seurat_object Seurat object
 #' @param assay character indicating the assay of the Seurat object where to pull the data from; default is "RNA".
 #' @param slot character indicating the slot of the Seurat object where to pull the data from; default is "data".
 #' @param log_scale logical indicating if using log-normalized data (TRUE) or normalized data (FALSE); default is "TRUE".
@@ -105,7 +105,7 @@ get_orthologs <- function(
 #'
 #' @return A list containing data, metadata, cell-types and possibly orthology mapping.
 preprocess_seurat <- function(
-  seurat_obj,
+  seurat_object,
   assay,
   slot,
   log_scale,
@@ -116,7 +116,7 @@ preprocess_seurat <- function(
   min_cells
 ) {
   prep_data <- prepare_seurat_data(
-    seurat_obj = seurat_obj,
+    seurat_object = seurat_object,
     assay = assay,
     slot = slot,
     log_scale = log_scale,
@@ -124,7 +124,7 @@ preprocess_seurat <- function(
     return_type = return_type
   )
   prep_meta <- prepare_seurat_metadata(
-    seurat_obj = seurat_obj,
+    seurat_object = seurat_object,
     seurat_cell_type_id = seurat_cell_type_id,
     condition_id = condition_id
   )
@@ -144,7 +144,7 @@ preprocess_seurat <- function(
 
 #' Prepare Seurat data matrix for downstream analysis.
 #'
-#' @param seurat_obj a Seurat object
+#' @param seurat_object a Seurat object
 #' @param assay character indicating the assay of the Seurat object where to pull the data from; default is "RNA".
 #' @param slot character indicating the slot of the Seurat object where to pull the data from; default is "data".
 #' @param log_scale logical indicating if using log-normalized data (TRUE) or normalized data (FALSE); default is "TRUE".
@@ -154,7 +154,7 @@ preprocess_seurat <- function(
 #'
 #' @return A list with data as first argument (a dgCMatrix, a matrix or a data.frame) and the gene mapping if converstion to orthologs
 prepare_seurat_data <- function(
-  seurat_obj,
+  seurat_object,
   assay = "RNA",
   slot = "data",
   log_scale = TRUE,
@@ -162,9 +162,9 @@ prepare_seurat_data <- function(
   return_type = "dense"
 ) {
   data <- Seurat::GetAssayData(
-    object = seurat_obj,
-                               slot = slot,
-                               assay = assay
+    object = seurat_object,
+    slot = slot,
+    assay = assay
     )
   if(slot == "data" & !log_scale) {
     data <- expm1(data)
@@ -212,30 +212,30 @@ prepare_seurat_data <- function(
 
 #' Prepare Seurat metadata for downstream analysis
 #'
-#' @param seurat_obj a Seurat object
+#' @param seurat_object a Seurat object
 #' @param seurat_cell_type_id a character indicating the column of cell-types in the Seurat object
 #' @param condition_id a character indicating a column with some condition on the cells
 #'
 #' @return a dataframe
 prepare_seurat_metadata <- function(
-  seurat_obj,
+  seurat_object,
   seurat_cell_type_id,
   condition_id = NULL
 ) {
   if(is.null(condition_id)) {
     return(data.frame(
-      cell_id = rownames(seurat_obj@meta.data),
-                      cell_type = as.character(seurat_obj@meta.data[, seurat_cell_type_id]),
+      cell_id = rownames(seurat_object@meta.data),
+                      cell_type = as.character(seurat_object@meta.data[, seurat_cell_type_id]),
                       stringsAsFactors = FALSE)
       )
   } else {
-    cond <- seurat_obj@meta.data[, condition_id]
+    cond <- seurat_object@meta.data[, condition_id]
     if(length(unique(cond)) != 2)
     {
       stop("Comparison is only possible between two conditions.")
     } else {
-      return(data.frame(cell_id = rownames(seurat_obj@meta.data),
-                        cell_type = as.character(seurat_obj@meta.data[, seurat_cell_type_id]),
+      return(data.frame(cell_id = rownames(seurat_object@meta.data),
+                        cell_type = as.character(seurat_object@meta.data[, seurat_cell_type_id]),
                         condition = cond,
                         stringsAsFactors = FALSE))
     }
@@ -285,9 +285,9 @@ preprocess_LR <- function(
   LR_genes <- unique(c(unique(LR_keep$GENESYMB_L), unique(LR_keep$GENESYMB_R)))
   data_keep <- data[rownames(data) %in% LR_genes, ]
   message(paste0("Number of LR pairs in the dataset: ", length(unique(LR_keep$SYMB_LR)), "."))
-  LR_keep$ligand <- LR_keep$GENESYMB_L
-  LR_keep$receptor <- LR_keep$GENESYMB_R
-  LR_keep$LR_pair <- LR_keep$SYMB_LR
+  LR_keep$L_GENE <- LR_keep$GENESYMB_L
+  LR_keep$R_GENE <- LR_keep$GENESYMB_R
+  LR_keep$LR_GENES <- LR_keep$SYMB_LR
   LR_keep$SYMB_LR <- NULL
   LR_keep$GENESYMB_L <- NULL
   LR_keep$GENESYMB_R <- NULL

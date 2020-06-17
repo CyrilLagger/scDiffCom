@@ -5,7 +5,7 @@
 \title{Return data and metadata of a Seurat object for downstream analysis.}
 \usage{
 preprocess_seurat(
-  seurat_obj,
+  seurat_object,
   assay,
   slot,
   log_scale,
@@ -17,7 +17,7 @@ preprocess_seurat(
 )
 }
 \arguments{
-\item{seurat_obj}{Seurat object}
+\item{seurat_object}{Seurat object}
 
 \item{assay}{character indicating the assay of the Seurat object where to pull the data from; default is "RNA".}
 

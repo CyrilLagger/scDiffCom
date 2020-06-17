@@ -5,7 +5,7 @@
 \title{Prepare Seurat data matrix for downstream analysis.}
 \usage{
 prepare_seurat_data(
-  seurat_obj,
+  seurat_object,
   assay = "RNA",
   slot = "data",
   log_scale = TRUE,
@@ -14,7 +14,7 @@ prepare_seurat_data(
 )
 }
 \arguments{
-\item{seurat_obj}{a Seurat object}
+\item{seurat_object}{a Seurat object}
 
 \item{assay}{character indicating the assay of the Seurat object where to pull the data from; default is "RNA".}
 

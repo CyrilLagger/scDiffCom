@@ -11,7 +11,6 @@ run_stat_analysis(
   cond1,
   cond2,
   iterations,
-  use_case,
   one_sided,
   return_distr = FALSE
 )
@@ -28,8 +27,6 @@ run_stat_analysis(
 \item{cond2}{x}
 
 \item{iterations}{x}
-
-\item{use_case}{x}
 
 \item{one_sided}{logical indicating if computing differential p-values from a one-sided or two-sided test.}
 
