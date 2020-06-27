@@ -629,6 +629,14 @@ clean_colnames <- function(
   return(cci_dt)
 }
 
+#' Title
+#'
+#' @param cci_dt x
+#' @param cond1 x
+#' @param cond2 x
+#' @param metadata x
+#'
+#' @return x
 add_cell_number <- function(
   cci_dt,
   cond1,
