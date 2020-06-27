@@ -108,6 +108,12 @@ run_diffcom <- function(
   if(return_distr) {
     return(cci_analysis)
   }
+  cci_analysis <- add_cell_number(
+    cci_dt = cci_analysis,
+    cond1 = cond1,
+    cond2 = cond2,
+    metadata = metadata
+  )
   cci_analysis <- clean_colnames(
     cci_dt = cci_analysis,
     cond1 = cond1,
@@ -307,7 +313,7 @@ build_cci_drate_dt <- function(
                 "i.EXPRESSION", "i.CELLTYPE", "i.GENE"),
         new = c("R_CELLTYPE", "R_GENE", "R_EXPRESSION",
                 "L_EXPRESSION", "L_CELLTYPE", "L_GENE")
-        )
+      )
       full_dt[, LR_SCORE := (L_EXPRESSION + R_EXPRESSION) / 2]
     } else if(cci_or_drate == "drate") {
       data.table::setnames(
@@ -352,7 +358,7 @@ build_cci_drate_dt <- function(
                 "i.CELLTYPE", "i.GENE", paste0("i.", cond1), paste0("i.", cond2)),
         new = c("R_CELLTYPE", "R_GENE", paste0("R_EXPRESSION_", cond1), paste0("R_EXPRESSION_", cond2),
                 "L_CELLTYPE", "L_GENE", paste0("L_EXPRESSION_", cond1), paste0("L_EXPRESSION_", cond2))
-        )
+      )
       full_dt[, paste0("LR_SCORE_", c(cond1, cond2)) :=
                 .((get(paste0("L_EXPRESSION_", cond1)) + get(paste0("R_EXPRESSION_", cond1))) / 2,
                   (get(paste0("L_EXPRESSION_", cond2)) + get(paste0("R_EXPRESSION_", cond2))) / 2)]
@@ -363,7 +369,7 @@ build_cci_drate_dt <- function(
                 "i.CELLTYPE", "i.GENE", paste0("i.", cond1), paste0("i.", cond2)),
         new = c("R_CELLTYPE", "R_GENE", paste0("R_DETECTED_", cond1), paste0("R_DETECTED_", cond2),
                 "L_CELLTYPE", "L_GENE", paste0("L_DETECTED_", cond1), paste0("L_DETECTED_", cond2))
-        )
+      )
       full_dt[, paste0("LR_DETECTED_", c(cond1, cond2)) :=
                 .(is_detected(get(paste0("L_DETECTED_", cond1)), get(paste0("R_DETECTED_", cond1)), detection_thr),
                   is_detected(get(paste0("L_DETECTED_", cond2)), get(paste0("R_DETECTED_", cond2)), detection_thr))]
@@ -586,7 +592,7 @@ clean_colnames <- function(
 ) {
   first_cols <- c("LR_GENES", "L_GENE", "R_GENE", "L_CELLTYPE", "R_CELLTYPE")
   if(is.null(cond1) | is.null(cond2)) {
-    last_cols <- c("L_EXPRESSION", "L_DETECTED", "R_EXPRESSION", "R_DETECTED")
+    last_cols <- c("L_NCELLS", "L_EXPRESSION", "L_DETECTED", "R_NCELLS", "R_EXPRESSION", "R_DETECTED")
     if(!permutation_analysis) {
       ordered_cols <- c(first_cols,
                         "LR_SCORE", "LR_DETECTED",
@@ -597,10 +603,10 @@ clean_colnames <- function(
                         last_cols)
     }
   } else {
-    last_cols <- c(paste0("L_EXPRESSION_", cond1), paste0("L_DETECTED_", cond1),
-                        paste0("R_EXPRESSION_", cond1), paste0("R_DETECTED_", cond1),
-                        paste0("L_EXPRESSION_", cond2), paste0("L_DETECTED_", cond2),
-                        paste0("R_EXPRESSION_", cond2), paste0("R_DETECTED_", cond2))
+    last_cols <- c(paste0("L_NCELLS_", cond1), paste0("L_EXPRESSION_", cond1), paste0("L_DETECTED_", cond1),
+                   paste0("R_NCELLS_", cond1), paste0("R_EXPRESSION_", cond1), paste0("R_DETECTED_", cond1),
+                   paste0("L_NCELLS_", cond2), paste0("L_EXPRESSION_", cond2), paste0("L_DETECTED_", cond2),
+                   paste0("R_NCELLS_", cond2), paste0("R_EXPRESSION_", cond2), paste0("R_DETECTED_", cond2))
     if(!permutation_analysis) {
       ordered_cols <- c(first_cols,
                         paste0("LR_SCORE_", cond1), paste0("LR_SCORE_", cond2),
@@ -623,4 +629,65 @@ clean_colnames <- function(
   return(cci_dt)
 }
 
-
+add_cell_number <- function(
+  cci_dt,
+  cond1,
+  cond2,
+  metadata
+) {
+  if(is.null(cond1) | is.null(cond2)) {
+    dt_NCELLS <- metadata[, .N, by = "cell_type"]
+    cci_dt <- data.table::merge.data.table(
+      x = cci_dt,
+      y = dt_NCELLS,
+      by.x = "L_CELLTYPE",
+      by.y = "cell_type",
+      all.x = TRUE,
+      sort = FALSE
+    )
+    cci_dt <- data.table::merge.data.table(
+      x = cci_dt,
+      y = dt_NCELLS,
+      by.x = "R_CELLTYPE",
+      by.y = "cell_type",
+      all.x = TRUE,
+      sort = FALSE,
+      suffixes = c("_L", "_R")
+    )
+    data.table::setnames(
+      x = cci_dt,
+      old = c("N_L", "N_R"),
+      new = c("L_NCELLS", "R_NCELLS")
+    )
+  } else {
+    dt_NCELLS <- metadata[, .N, by = c("cell_type", "condition")]
+    dt_NCELLS <- data.table::dcast.data.table(
+      data = dt_NCELLS,
+      formula = cell_type ~ condition,
+      value.var = "N"
+    )
+    cci_dt <- data.table::merge.data.table(
+      x = cci_dt,
+      y = dt_NCELLS,
+      by.x = "L_CELLTYPE",
+      by.y = "cell_type",
+      all.x = TRUE,
+      sort = FALSE
+    )
+    cci_dt <- data.table::merge.data.table(
+      x = cci_dt,
+      y = dt_NCELLS,
+      by.x = "R_CELLTYPE",
+      by.y = "cell_type",
+      all.x = TRUE,
+      sort = FALSE,
+      suffixes = c("_L", "_R")
+    )
+    data.table::setnames(
+      x = cci_dt,
+      old = c(paste0(cond1, "_L"), paste0(cond2, "_L"), paste0(cond1, "_R"), paste0(cond2, "_R")),
+      new = c(paste0("L_NCELLS_", cond1), paste0("L_NCELLS_", cond2), paste0("R_NCELLS_", cond1), paste0("R_NCELLS_", cond2))
+    )
+  }
+  return(cci_dt)
+}
