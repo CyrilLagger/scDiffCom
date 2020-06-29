@@ -56,13 +56,12 @@ aggregate_LR <- function(
     data.table::setDT(cpdb_dt)
     dt <- data.table::merge.data.table(
       dt,
-      cpdb_dt[,c("SYMB_ab", "source_cpdb", "cpdb")],
+      cpdb_dt[,c("SYMB_ab", "cpdb")],
       by.x = c("SYMB_LR"),
       by.y = c( "SYMB_ab"),
       all.x = TRUE,
       sort = FALSE
     )
-    dt[is.na(dt)] <- FALSE
     dt <- data.table::merge.data.table(
       dt,
       cpdb_dt[,c("SYMB_ba", "cpdb")],
@@ -74,20 +73,52 @@ aggregate_LR <- function(
     dt[is.na(dt)] <- FALSE
     dt$cpdb <- dt$cpdb.x | dt$cpdb.y
     dt[,c("cpdb.x", "cpdb.y") := NULL]
-    not_cpdb_dt <- cpdb_dt[!(cpdb_dt$SYMB_ab %in% dt$SYMB_LR) & !(cpdb_dt$SYMB_ba %in% dt$SYMB_LR), ]
+    #There is some uncertainty in the ordering of cpdb LR pairs that are not present in the rest of the data
+    #We order the ones that are inconsistent with the rest of the data
+    all_genes <- unique(c(dt$GENESYMB_L, dt$GENESYMB_R))
+    onlyL_genes <- setdiff(
+      unique(dt$GENESYMB_L),
+      unique(dt$GENESYMB_R)
+    )
+    onlyR_genes <- setdiff(
+      unique(dt$GENESYMB_R),
+      unique(dt$GENESYMB_L)
+    )
+    common_genes <- intersect(
+      unique(dt$GENESYMB_L),
+      unique(dt$GENESYMB_R)
+    )
+    cpdb_only_dt <- cpdb_dt[!(SYMB_ab %in% dt$SYMB_LR) & !(SYMB_ba %in% dt$SYMB_LR), ]
+    cpdb_only_dt$SYMB_LR <- ifelse(
+      (cpdb_only_dt$GENESYMB_a %in% onlyR_genes & !(cpdb_only_dt$GENESYMB_b %in% onlyR_genes) |
+         cpdb_only_dt$GENESYMB_b %in% onlyL_genes & !(cpdb_only_dt$GENESYMB_a %in% onlyL_genes)),
+      cpdb_only_dt$SYMB_ba,
+      cpdb_only_dt$SYMB_ab
+    )
+    cpdb_only_dt$GENESYMB_L <- ifelse(
+      (cpdb_only_dt$GENESYMB_a %in% onlyR_genes & !(cpdb_only_dt$GENESYMB_b %in% onlyR_genes) |
+         cpdb_only_dt$GENESYMB_b %in% onlyL_genes & !(cpdb_only_dt$GENESYMB_a %in% onlyL_genes)),
+      cpdb_only_dt$GENESYMB_b,
+      cpdb_only_dt$GENESYMB_a
+    )
+    cpdb_only_dt$GENESYMB_R <- ifelse(
+      (cpdb_only_dt$GENESYMB_a %in% onlyR_genes & !(cpdb_only_dt$GENESYMB_b %in% onlyR_genes) |
+         cpdb_only_dt$GENESYMB_b %in% onlyL_genes & !(cpdb_only_dt$GENESYMB_a %in% onlyL_genes)),
+      cpdb_only_dt$GENESYMB_a,
+      cpdb_only_dt$GENESYMB_b
+    )
     dt <- data.table::merge.data.table(
       dt,
-      not_cpdb_dt[,c("SYMB_ab","cpdb")],
-      by.x = c("SYMB_LR"),
-      by.y = c("SYMB_ab"),
+      cpdb_only_dt[,c("GENESYMB_L", "GENESYMB_R","SYMB_LR","cpdb")],
+      by= c("GENESYMB_L", "GENESYMB_R", "SYMB_LR"),
       all = TRUE,
       sort = FALSE
     )
     dt[is.na(dt)] <- FALSE
     dt$cpdb <- dt$cpdb.x | dt$cpdb.y
-    dt[,c("cpdb.x", "cpdb.y") := NULL]
+    dt[, c("cpdb.x", "cpdb.y") := NULL]
+    dt$source_cpdb <- ifelse(dt$cpdb == TRUE, "cpdb", FALSE )
   }
-  dt$source_cpdb <- ifelse(dt$cpdb == TRUE, "cpdb", FALSE )
   return(dt)
 }
 

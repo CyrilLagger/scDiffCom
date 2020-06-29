@@ -9,7 +9,7 @@ aggregate_LR(one2one = TRUE, cpdb_usage = TRUE)
 \arguments{
 \item{one2one}{logical indicating the orthology relationship used during conversion}
 
-\item{cpdb}{logical indicating if returning cpdb}
+\item{cpdb_usage}{logical indicating if returning cpdb}
 }
 \value{
 data.frame with LR pairs and to which sources they belong
