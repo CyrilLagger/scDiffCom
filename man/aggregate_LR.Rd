@@ -4,7 +4,7 @@
 \alias{aggregate_LR}
 \title{Create a dataframe with LR pairs from our 4 sources}
 \usage{
-aggregate_LR(one2one = TRUE, cpdb = FALSE)
+aggregate_LR(one2one = TRUE, cpdb_usage = TRUE)
 }
 \arguments{
 \item{one2one}{logical indicating the orthology relationship used during conversion}
