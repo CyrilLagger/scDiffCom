@@ -1,37 +1,47 @@
 #' Create a dataframe with LR pairs from our 4 sources
 #'
 #' @param one2one logical indicating the orthology relationship used during conversion
-#' @param cpdb_usage logical indicating if returning cpdb
 #'
 #' @return data.frame with LR pairs and to which sources they belong
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' LRall_one2one <- aggregate_LR(one2one = TRUE, cpdb = TRUE)
-#' LRall_many2many <- aggregate_LR(one2one = FALSE, cpdb = TRUE)
+#' LRall_one2one <- aggregate_LR(one2one = TRUE)
+#' LRall_many2many <- aggregate_LR(one2one = FALSE)
 #' }
 aggregate_LR <- function(
-  one2one = TRUE,
-  cpdb_usage = TRUE
+  one2one = FALSE
 ) {
+  CONF_L <- CONF_L_nichenet <- CONF_L_scsr <-
+    CONF_R <- CONF_R_nichenet <- CONF_R_scsr <-
+    CONF_L.x <- CONF_R.x <- CONF_L.y <- CONF_R.y <-
+    TYPE_L <- TYPE_L_nichenet <- TYPE_L_scsr <-
+    TYPE_R <- TYPE_R_nichenet <- TYPE_R_scsr <-
+    TYPE_L.x <- TYPE_R.x <- TYPE_L.y <- TYPE_R.y <-
+    sctensor <- cpdb <- nichenet <- scsr <-
+    source_cpdb <- SYMB_ab <- SYMB_ba <-  NULL
+  #load each data.table
   scT_dt <- prepare_LR_scTensor(
     detailed = FALSE
   )
   scT_dt$sctensor <- TRUE
-  data.table::setDT(scT_dt)
   scsr_dt <- prepare_LR_scsr(
     detailed = FALSE,
     one2one = one2one
   )
   scsr_dt$scsr <- TRUE
-  data.table::setDT(scsr_dt)
   niche_dt <- prepare_LR_nichenet(
     detailed = FALSE,
     one2one = one2one
   )
   niche_dt$nichenet <- TRUE
-  data.table::setDT(niche_dt)
+  cpdb_dt <- prepare_LR_cpdb(
+    one2one = one2one,
+    deconvoluted = TRUE
+  )
+  cpdb_dt$cpdb <- TRUE
+  #merge the LR pairs
   dt <- data.table::merge.data.table(
     scT_dt,
     scsr_dt,
@@ -44,81 +54,173 @@ aggregate_LR <- function(
     niche_dt,
     by = c("GENESYMB_L", "GENESYMB_R", "SYMB_LR"),
     all = TRUE,
+    sort = FALSE,
+    suffixes = c("_scsr", "_nichenet")
+  )
+  dt <- data.table::merge.data.table(
+    dt,
+    cpdb_dt[,c("SYMB_ab", "cpdb")],
+    by.x = c("SYMB_LR"),
+    by.y = c( "SYMB_ab"),
+    all.x = TRUE,
     sort = FALSE
   )
-  dt[is.na(dt)] <- FALSE
-  if(cpdb_usage) {
-    cpdb_dt <- prepare_LR_cpdb(
-      one2one = one2one,
-      deconvoluted = TRUE
-    )
-    cpdb_dt$cpdb <- TRUE
-    data.table::setDT(cpdb_dt)
-    dt <- data.table::merge.data.table(
-      dt,
-      cpdb_dt[,c("SYMB_ab", "cpdb")],
-      by.x = c("SYMB_LR"),
-      by.y = c( "SYMB_ab"),
-      all.x = TRUE,
-      sort = FALSE
-    )
-    dt <- data.table::merge.data.table(
-      dt,
-      cpdb_dt[,c("SYMB_ba", "cpdb")],
-      by.x = c("SYMB_LR"),
-      by.y = c("SYMB_ba"),
-      all.x = TRUE,
-      sort = FALSE
-    )
-    dt[is.na(dt)] <- FALSE
-    dt$cpdb <- dt$cpdb.x | dt$cpdb.y
-    dt[,c("cpdb.x", "cpdb.y") := NULL]
-    #There is some uncertainty in the ordering of cpdb LR pairs that are not present in the rest of the data
-    #We order the ones that are inconsistent with the rest of the data
-    all_genes <- unique(c(dt$GENESYMB_L, dt$GENESYMB_R))
-    onlyL_genes <- setdiff(
-      unique(dt$GENESYMB_L),
-      unique(dt$GENESYMB_R)
-    )
-    onlyR_genes <- setdiff(
-      unique(dt$GENESYMB_R),
-      unique(dt$GENESYMB_L)
-    )
-    common_genes <- intersect(
-      unique(dt$GENESYMB_L),
-      unique(dt$GENESYMB_R)
-    )
-    cpdb_only_dt <- cpdb_dt[!(SYMB_ab %in% dt$SYMB_LR) & !(SYMB_ba %in% dt$SYMB_LR), ]
-    cpdb_only_dt$SYMB_LR <- ifelse(
-      (cpdb_only_dt$GENESYMB_a %in% onlyR_genes & !(cpdb_only_dt$GENESYMB_b %in% onlyR_genes) |
-         cpdb_only_dt$GENESYMB_b %in% onlyL_genes & !(cpdb_only_dt$GENESYMB_a %in% onlyL_genes)),
-      cpdb_only_dt$SYMB_ba,
-      cpdb_only_dt$SYMB_ab
-    )
-    cpdb_only_dt$GENESYMB_L <- ifelse(
-      (cpdb_only_dt$GENESYMB_a %in% onlyR_genes & !(cpdb_only_dt$GENESYMB_b %in% onlyR_genes) |
-         cpdb_only_dt$GENESYMB_b %in% onlyL_genes & !(cpdb_only_dt$GENESYMB_a %in% onlyL_genes)),
-      cpdb_only_dt$GENESYMB_b,
-      cpdb_only_dt$GENESYMB_a
-    )
-    cpdb_only_dt$GENESYMB_R <- ifelse(
-      (cpdb_only_dt$GENESYMB_a %in% onlyR_genes & !(cpdb_only_dt$GENESYMB_b %in% onlyR_genes) |
-         cpdb_only_dt$GENESYMB_b %in% onlyL_genes & !(cpdb_only_dt$GENESYMB_a %in% onlyL_genes)),
-      cpdb_only_dt$GENESYMB_a,
-      cpdb_only_dt$GENESYMB_b
-    )
-    dt <- data.table::merge.data.table(
-      dt,
-      cpdb_only_dt[,c("GENESYMB_L", "GENESYMB_R","SYMB_LR","cpdb")],
-      by= c("GENESYMB_L", "GENESYMB_R", "SYMB_LR"),
-      all = TRUE,
-      sort = FALSE
-    )
-    dt[is.na(dt)] <- FALSE
-    dt$cpdb <- dt$cpdb.x | dt$cpdb.y
-    dt[, c("cpdb.x", "cpdb.y") := NULL]
-    dt$source_cpdb <- ifelse(dt$cpdb == TRUE, "cpdb", FALSE )
-  }
+  dt <- data.table::merge.data.table(
+    dt,
+    cpdb_dt[,c("SYMB_ba", "cpdb")],
+    by.x = c("SYMB_LR"),
+    by.y = c("SYMB_ba"),
+    all.x = TRUE,
+    sort = FALSE
+  )
+  dt$cpdb <- dt$cpdb.x | dt$cpdb.y
+  dt[,c("cpdb.x", "cpdb.y") := NULL]
+  dt[, CONF_L := ifelse(
+    !is.na(CONF_L_nichenet),
+    CONF_L_nichenet,
+    ifelse(
+      !is.na(CONF_L_scsr),
+      CONF_L_scsr,
+      ifelse(
+        sctensor == TRUE,
+        1,
+        NA
+      )
+    )) ]
+  dt[, CONF_R := ifelse(
+    !is.na(CONF_R_nichenet),
+    CONF_R_nichenet,
+    ifelse(
+      !is.na(CONF_R_scsr),
+      CONF_R_scsr,
+      ifelse(
+        sctensor == TRUE,
+        1,
+        NA
+      )
+    )) ]
+  dt[, TYPE_L := ifelse(
+    !is.na(TYPE_L_nichenet),
+    TYPE_L_nichenet,
+    ifelse(
+      !is.na(TYPE_L_scsr),
+      TYPE_L_scsr,
+      ifelse(
+        sctensor == TRUE,
+        "sctensor",
+        NA
+      )
+    )) ]
+  dt[, TYPE_R := ifelse(
+    !is.na(TYPE_R_nichenet),
+    TYPE_R_nichenet,
+    ifelse(
+      !is.na(TYPE_R_scsr),
+      TYPE_R_scsr,
+      ifelse(
+        sctensor == TRUE,
+        "sctensor",
+        NA
+      )
+    )) ]
+  dt[,c("CONF_L_nichenet", "CONF_R_nichenet", "CONF_L_scsr", "CONF_R_scsr",
+        "TYPE_L_nichenet", "TYPE_R_nichenet", "TYPE_L_scsr", "TYPE_R_scsr") := NULL]
+  #There is some uncertainty in the ordering of cpdb LR pairs that are not present in the rest of the data
+  #We order the ones that are inconsistent with the rest of the data
+  all_genes <- unique(c(dt$GENESYMB_L, dt$GENESYMB_R))
+  onlyL_genes <- setdiff(
+    unique(dt$GENESYMB_L),
+    unique(dt$GENESYMB_R)
+  )
+  onlyR_genes <- setdiff(
+    unique(dt$GENESYMB_R),
+    unique(dt$GENESYMB_L)
+  )
+  common_genes <- intersect(
+    unique(dt$GENESYMB_L),
+    unique(dt$GENESYMB_R)
+  )
+  cpdb_only_dt <- cpdb_dt[!(SYMB_ab %in% dt$SYMB_LR) & !(SYMB_ba %in% dt$SYMB_LR), ]
+  cond <- cpdb_only_dt$GENESYMB_a %in% onlyR_genes & !(cpdb_only_dt$GENESYMB_b %in% onlyR_genes) |
+               cpdb_only_dt$GENESYMB_b %in% onlyL_genes & !(cpdb_only_dt$GENESYMB_a %in% onlyL_genes)
+  cpdb_only_dt$SYMB_LR <- ifelse(
+    cond,
+    cpdb_only_dt$SYMB_ba,
+    cpdb_only_dt$SYMB_ab
+  )
+  cpdb_only_dt$GENESYMB_L <- ifelse(
+    cond,
+    cpdb_only_dt$GENESYMB_b,
+    cpdb_only_dt$GENESYMB_a
+  )
+  cpdb_only_dt$GENESYMB_R <- ifelse(
+    cond,
+    cpdb_only_dt$GENESYMB_a,
+    cpdb_only_dt$GENESYMB_b
+  )
+  cpdb_only_dt$CONF_L <- ifelse(
+    cond,
+    cpdb_only_dt$CONF_b,
+    cpdb_only_dt$CONF_a
+  )
+  cpdb_only_dt$CONF_R <- ifelse(
+    cond,
+    cpdb_only_dt$CONF_a,
+    cpdb_only_dt$CONF_b
+  )
+  cpdb_only_dt$TYPE_L <- ifelse(
+    cond,
+    cpdb_only_dt$TYPE_b,
+    cpdb_only_dt$TYPE_a
+  )
+  cpdb_only_dt$TYPE_R <- ifelse(
+    cond,
+    cpdb_only_dt$TYPE_a,
+    cpdb_only_dt$TYPE_b
+  )
+  dt <- data.table::merge.data.table(
+    dt,
+    cpdb_only_dt[,c("GENESYMB_L", "GENESYMB_R","SYMB_LR","cpdb", "CONF_L", "CONF_R", "TYPE_L", "TYPE_R")],
+    by= c("GENESYMB_L", "GENESYMB_R", "SYMB_LR"),
+    all = TRUE,
+    sort = FALSE
+  )
+  dt$cpdb <- dt$cpdb.x | dt$cpdb.y
+  dt[, c("cpdb.x", "cpdb.y") := NULL]
+  dt[, CONF_L := ifelse(
+    !is.na(CONF_L.x),
+    CONF_L.x,
+    CONF_L.y
+  )]
+  dt[, CONF_R := ifelse(
+    !is.na(CONF_R.x),
+    CONF_R.x,
+    CONF_R.y
+  )]
+  dt[, TYPE_L := ifelse(
+    !is.na(TYPE_L.x),
+    TYPE_L.x,
+    TYPE_L.y
+  )]
+  dt[, TYPE_R := ifelse(
+    !is.na(TYPE_R.x),
+    TYPE_R.x,
+    TYPE_R.y
+  )]
+  dt[,c("CONF_L.x", "CONF_R.x", "CONF_L.y", "CONF_R.y",
+        "TYPE_L.x", "TYPE_R.x", "TYPE_L.y", "TYPE_R.y") := NULL]
+  dt[, source_cpdb := ifelse(cpdb == TRUE, "cpdb", NA)]
+  dt[, scsr := ifelse(is.na(scsr), FALSE, TRUE)]
+  dt[, nichenet := ifelse(is.na(nichenet), FALSE, TRUE)]
+  dt[, cpdb := ifelse(is.na(cpdb), FALSE, TRUE)]
+  dt[, sctensor := ifelse(is.na(sctensor), FALSE, TRUE)]
+  data.table::setcolorder(
+    x = dt,
+    neworder = c("GENESYMB_L", "GENESYMB_R", "SYMB_LR",
+                 "scsr", "cpdb", "nichenet", "sctensor",
+                 "source_scsr", "source_cpdb", "source_nichenet", "source_sctensor",
+                 "CONF_L", "TYPE_L", "CONF_R", "TYPE_R")
+  )
   return(dt)
 }
 
@@ -154,7 +256,7 @@ prepare_LR_scTensor <- function(
     c("OrgDb", "Mus musculus")
   )[[1]]
 
-  LR_L_match <-AnnotationDbi::select(
+  LR_L_match <- AnnotationDbi::select(
     hs,
     column=c("SYMBOL", "ENTREZID"),
     keytype="ENTREZID",
@@ -182,6 +284,7 @@ prepare_LR_scTensor <- function(
     LR <- LR[!duplicated(LR$SYMB_LR), ]
     colnames(LR)[colnames(LR) == "SOURCEDB"] <- "source_sctensor"
   }
+  data.table::setDT(LR)
   return(LR)
 }
 
@@ -203,6 +306,7 @@ prepare_LR_scsr <- function(
   one2one = TRUE
 ) {
   LR <- SingleCellSignalR::LRdb
+  data.table::setDT(LR)
   L <- get_orthologs(
     unique(LR$ligand),
     input_species = "human",
@@ -215,7 +319,7 @@ prepare_LR_scsr <- function(
     one2one = one2one
   )
   R <- stats::na.omit(R)
-  LR <- merge(
+  LR <- data.table::merge.data.table(
     LR,
     L,
     by.x = "ligand",
@@ -223,7 +327,7 @@ prepare_LR_scsr <- function(
     all.x = TRUE,
     sort = FALSE
   )
-  LR <- merge(
+  LR <- data.table::merge.data.table(
     LR,
     R,
     by.x = "receptor",
@@ -231,13 +335,17 @@ prepare_LR_scsr <- function(
     all.x = TRUE,
     sort = FALSE
   )
-  colnames(LR)[14:15] <- c("GENESYMB_L", "GENESYMB_R")
+  data.table::setnames(
+    x = LR,
+    old = c("mouse_symbol.x", "confidence.x", "type.x", "mouse_symbol.y", "confidence.y", "type.y"),
+    new = c("GENESYMB_L", "CONF_L", "TYPE_L", "GENESYMB_R", "CONF_R", "TYPE_R")
+  )
   if(!detailed) {
     LR <- stats::na.omit(LR)
-    LR <- LR[, c("GENESYMB_L", "GENESYMB_R", "source")]
+    LR <- LR[, c("GENESYMB_L", "GENESYMB_R", "source", "CONF_L", "TYPE_L", "CONF_R", "TYPE_R")]
     LR$SYMB_LR <- paste(LR$GENESYMB_L, LR$GENESYMB_R, sep = "_")
     LR <- LR[!duplicated(LR$SYMB_LR), ]
-    colnames(LR)[colnames(LR) == "source"] <- "source_scsr"
+    data.table::setnames(x = LR, old = "source", new =  "source_scsr")
   }
   return(LR)
 }
@@ -260,6 +368,7 @@ prepare_LR_nichenet <- function(
   one2one = TRUE
 ) {
   niche <- nichenetr::lr_network
+  data.table::setDT(niche)
   L <- get_orthologs(
     genes = unique(niche$from),
     input_species = "human",
@@ -272,7 +381,7 @@ prepare_LR_nichenet <- function(
     one2one = one2one
   )
   R <- stats::na.omit(R)
-  niche <- merge(
+  niche <- data.table::merge.data.table(
     niche,
     L,
     by.x = "from",
@@ -280,7 +389,7 @@ prepare_LR_nichenet <- function(
     all.x = TRUE,
     sort = FALSE
   )
-  niche <- merge(
+  niche <- data.table::merge.data.table(
     niche,
     R,
     by.x = "to",
@@ -288,13 +397,17 @@ prepare_LR_nichenet <- function(
     all.x = TRUE,
     sort = FALSE
   )
-  colnames(niche)[5:6] <- c("GENESYMB_L", "GENESYMB_R")
+  data.table::setnames(
+    x = niche,
+    old = c("mouse_symbol.x", "confidence.x", "type.x", "mouse_symbol.y", "confidence.y", "type.y"),
+    new = c("GENESYMB_L", "CONF_L", "TYPE_L", "GENESYMB_R", "CONF_R", "TYPE_R")
+  )
   if(!detailed) {
     niche <- stats::na.omit(niche)
-    niche <- niche[, c("GENESYMB_L", "GENESYMB_R", "database")]
+    niche <- niche[, c("GENESYMB_L", "GENESYMB_R", "database", "CONF_L", "TYPE_L", "CONF_R", "TYPE_R")]
     niche$SYMB_LR <- paste(niche$GENESYMB_L, niche$GENESYMB_R, sep = "_")
     niche <- niche[!duplicated(niche$SYMB_LR), ]
-    colnames(niche)[colnames(niche) == "database"] <- "source_nichenet"
+    setnames(niche, "database", "source_nichenet")
   }
   return(niche)
 }
@@ -319,6 +432,7 @@ prepare_LR_cpdb <- function(
   LR <- create_LR_cpdb(
     deconvoluted = deconvoluted
   )
+  data.table::setDT(LR)
   if(deconvoluted) {
     Ga <- get_orthologs(
       genes = unique(LR$SYMB_a),
@@ -332,7 +446,7 @@ prepare_LR_cpdb <- function(
       one2one = one2one
     )
     Gb <- stats::na.omit(Gb)
-    LR <- merge(
+    LR <- data.table::merge.data.table(
       LR,
       Ga,
       by.x = "SYMB_a",
@@ -340,7 +454,7 @@ prepare_LR_cpdb <- function(
       all.x = TRUE,
       sort = FALSE
     )
-    LR <- merge(
+    LR <- data.table::merge.data.table(
       LR,
       Gb,
       by.x = "SYMB_b",
@@ -348,9 +462,13 @@ prepare_LR_cpdb <- function(
       all.x = TRUE,
       sort = FALSE
     )
-    colnames(LR)[4:5] <- c("GENESYMB_a", "GENESYMB_b")
+    data.table::setnames(
+      x = LR,
+      old = c("mouse_symbol.x", "confidence.x", "type.x", "mouse_symbol.y", "confidence.y", "type.y"),
+      new = c("GENESYMB_a", "CONF_a", "TYPE_a", "GENESYMB_b", "CONF_b", "TYPE_b")
+    )
     LR <- stats::na.omit(LR)
-    LR <- LR[, c(4:5)]
+    LR <- LR[, c("GENESYMB_a", "GENESYMB_b", "CONF_a", "TYPE_a", "CONF_b", "TYPE_b")]
     LR$SYMB_ab <- paste(LR$GENESYMB_a, LR$GENESYMB_b, sep = "_")
     LR <- LR[!duplicated(LR$SYMB_ab), ]
     LR$SYMB_ba <- paste(LR$GENESYMB_b, LR$GENESYMB_a, sep = "_")

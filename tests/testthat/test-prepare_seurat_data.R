@@ -6,14 +6,3 @@ test_that("prepare_seurat_data returns a data.frame", {
                               return_type = "data.frame")$data
   expect_identical(class(data), "data.frame")
 })
-
-
-test_that("prepare_seurat_data returns correct value when converting to orthologs", {
-  data <- prepare_seurat_data(seurat_random_test,
-                              assay = "RNA",
-                              slot = "data",
-                              convert_to_human = TRUE,
-                              return_type = "sparse")$data
-  expect_identical(seurat_random_test$RNA@data["Chd7", "GCGCGATGTCCAGTGC-1-44-1-0"],
-                   data["CHD7", "GCGCGATGTCCAGTGC-1-44-1-0"])
-})

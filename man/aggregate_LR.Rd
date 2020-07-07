@@ -4,12 +4,10 @@
 \alias{aggregate_LR}
 \title{Create a dataframe with LR pairs from our 4 sources}
 \usage{
-aggregate_LR(one2one = TRUE, cpdb_usage = TRUE)
+aggregate_LR(one2one = FALSE)
 }
 \arguments{
 \item{one2one}{logical indicating the orthology relationship used during conversion}
-
-\item{cpdb_usage}{logical indicating if returning cpdb}
 }
 \value{
 data.frame with LR pairs and to which sources they belong
@@ -19,7 +17,7 @@ Create a dataframe with LR pairs from our 4 sources
 }
 \examples{
 \dontrun{
-LRall_one2one <- aggregate_LR(one2one = TRUE, cpdb = TRUE)
-LRall_many2many <- aggregate_LR(one2one = FALSE, cpdb = TRUE)
+LRall_one2one <- aggregate_LR(one2one = TRUE)
+LRall_many2many <- aggregate_LR(one2one = FALSE)
 }
 }

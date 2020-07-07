@@ -7,13 +7,14 @@
 #' @param input_species character indicating the species of the input genes; either "mouse" or "human".
 #' @param one2one, logical indicating if using one2one orthology relationship
 #'
-#' @return 2-column data-frame mouse and human orthologs
+#' @return 3-column data-frame mouse and human orthologs, with confidence
 #' @export
 get_orthologs <- function(
   genes,
   input_species,
   one2one = TRUE
 ) {
+  ensembl_gene_id <- inl <- outl <- output <- input <- confidence <- NULL
   if(input_species == "mouse") {
     id_in <- "mmusculus"
     id_out <- "hsapiens"
@@ -29,64 +30,94 @@ get_orthologs <- function(
   } else {
     stop("Species not supported in function get_orthologs.")
   }
+  dataset <- paste0(id_in, "_gene_ensembl")
+  gene_name <- paste0(id_out, "_homolog_associated_gene_name")
+  ortho_confidence <- paste0(id_out, "_homolog_orthology_confidence")
+  ortho_type <- paste0(id_out, "_homolog_orthology_type")
   mart <- biomaRt::useMart(
     "ensembl",
-    dataset = paste0(id_in, "_gene_ensembl")
+    dataset = dataset
   )
   ensembl <- biomaRt::getBM(
-    attributes = c(id_gene,
-                   "ensembl_gene_id"),
+    attributes = c(
+      id_gene,
+      "ensembl_gene_id"
+    ),
     filters = id_gene,
     mart = mart,
     values = genes
   )
   ensembl_conv <- biomaRt::getBM(
-    attributes = c("ensembl_gene_id",
-                   paste0(id_out, "_homolog_associated_gene_name"),
-                   paste0(id_out, "_homolog_orthology_confidence"),
-                   paste0(id_out, "_homolog_perc_id_r1"),
-                   paste0(id_out, "_homolog_orthology_type")
+    attributes = c(
+      "ensembl_gene_id",
+      gene_name,
+      ortho_confidence,
+      ortho_type
     ),
     filters = "ensembl_gene_id",
     mart = mart,
     value = ensembl$ensembl_gene_id)
-  ensembl_all <- merge(ensembl, ensembl_conv)
+  data.table::setDT(ensembl)
+  data.table::setDT(ensembl_conv)
+  ensembl_all <- data.table::merge.data.table(
+    x = ensembl,
+    y = ensembl_conv,
+    by = "ensembl_gene_id",
+    all = TRUE,
+    sort = FALSE
+    )
   if(one2one) {
-    ensembl_all <- ensembl_all[ensembl_all[[paste0(id_out, "_homolog_orthology_type")]] == 'ortholog_one2one' &
-                                 ensembl_all[[paste0(id_out, "_homolog_orthology_confidence")]] == 1, ]
+    ensembl_all <- ensembl_all[eval(as.symbol(ortho_type)) == 'ortholog_one2one',]
   } else {
-    ensembl_all <- ensembl_all[ensembl_all[[paste0(id_out, "_homolog_orthology_confidence")]] == 1, ]
+    ensembl_all <- ensembl_all[eval(as.symbol(ortho_type)) %in% c('ortholog_one2one','ortholog_one2many'),]
   }
-  ensembl_all <- ensembl_all[,c(id_gene, paste0(id_out, "_homolog_associated_gene_name"))]
-  ensembl_all <- dplyr::distinct(ensembl_all)
-  colnames(ensembl_all) <- c("input", "output")
-  if(one2one) {
-    #check for remaining duplicate
-    ensembl_all$inl <- tolower(ensembl_all$input)
-    ensembl_all$outl <- tolower(ensembl_all$output)
-    duplicate_genes <- ensembl_all$input[duplicated(ensembl_all$input)]
-    if(length(duplicate_genes > 0)) {
-      for(i in 1:length(duplicate_genes)) {
-        id <- which(ensembl_all$input == duplicate_genes[[i]])
-        id_keep <- which((ensembl_all$input == duplicate_genes[[i]]) & (ensembl_all$inl == ensembl_all$outl))
-        if(length(id_keep) > 0) { id_keep == id_keep[[1]]} else {id_keep == id[[1]]}
-        id_remove <- id[id!=id_keep]
-        ensembl_all <- ensembl_all[-id_remove,]
+  ensembl_all <- ensembl_all[, ensembl_gene_id := NULL]
+  ensembl_all <- unique(ensembl_all)
+  data.table::setnames(
+    x = ensembl_all,
+    old = c(id_gene, gene_name, ortho_confidence, ortho_type),
+    new = c("input", "output", "confidence", "type")
+  )
+  #check for remaining duplicate
+  if(sum(duplicated(ensembl_all[["input"]])) > 0) {
+    ensembl_all[, inl := tolower(input)]
+    ensembl_all[, outl := tolower(output)]
+    dup_input <- unique(ensembl_all$input[duplicated(ensembl_all$input)])
+    for(g in dup_input) {
+      dt_g <- ensembl_all[input == g]
+      dt_gconf <- dt_g[confidence == 1]
+      if(nrow(dt_gconf) == 1) {
+        ensembl_all <- ensembl_all[!(input == g & confidence == 0)]
+      } else if(nrow(dt_gconf) == 0) {
+        dt_gsame <- dt_g[inl == outl]
+        if(nrow(dt_gsame) == 0) {
+          g_keep <- dt_g[1]$output
+        } else {
+          g_keep <- dt_gsame[1]$output
+        }
+        ensembl_all <- ensembl_all[!(input == g & output != g_keep)]
+      } else {
+        dt_gsame <- dt_gconf[inl == outl]
+        if(nrow(dt_gsame) == 0) {
+          g_keep <- dt_gconf[1]$output
+        } else {
+          g_keep <- dt_gsame[1]$output
+        }
+        ensembl_all <- ensembl_all[!(input == g & output != g_keep)]
       }
     }
-    ensembl_all <- ensembl_all[,c(1,2)]
-    colnames(ensembl_all) <- c(paste0(name_in, "_symbol"), paste0(name_out, "_symbol"))
-    if(!(length(unique(ensembl_all[,1])) == length(unique(ensembl_all[,2])) &
-         length(unique(ensembl_all[,1])) == dim(ensembl_all)[[1]])) {
-      stop("Problem of ortholog conversion.")
-    } else {
-      message(paste0("Percentage of orthologs returned: ", nrow(ensembl_all)/length(genes)*100), "%")
-      return(ensembl_all)
+    ensembl_all[, inl := NULL]
+    ensembl_all[, outl := NULL]
+    if(sum(duplicated(ensembl_all[["input"]])) > 0) {
+      stop("Problem in ortholog conversion.")
     }
-  } else {
-    colnames(ensembl_all) <- c(paste0(name_in, "_symbol"), paste0(name_out, "_symbol"))
-    return(ensembl_all)
   }
+  data.table::setnames(
+    x = ensembl_all,
+    old = c("input", "output"),
+    new = c(paste0(name_in, "_symbol"), paste0(name_out, "_symbol"))
+  )
+  return(ensembl_all)
 }
 
 #' Return data and metadata of a Seurat object for downstream analysis.
@@ -173,6 +204,7 @@ prepare_seurat_data <- function(
   }
   gene_mapping <- NULL
   if(convert_to_human) {
+    stop("Deprecated convert_to_human in prepare_seurat_data.")
     message("Converting mouse genes to human orthologs.")
     gene_mapping <- get_orthologs(rownames(data),
                                   input_species = "mouse")

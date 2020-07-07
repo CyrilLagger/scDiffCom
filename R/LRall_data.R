@@ -1,8 +1,6 @@
 #' Ligand-Receptor data.frames based on 4 literature sources.
 #'
-#' LRall_one2one (resp. LRall_many2many) contains LR pairs converted from mouse to human genes based on one2one (resp. many2many)
-#' orthology relationship.
-#'
+#' LRall contains LR pairs converted from mouse to human genes.
 #' @docType data
 #'
 #' @usage data(LRall)

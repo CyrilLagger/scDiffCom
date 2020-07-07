@@ -14,7 +14,7 @@ get_orthologs(genes, input_species, one2one = TRUE)
 \item{one2one, }{logical indicating if using one2one orthology relationship}
 }
 \value{
-2-column data-frame mouse and human orthologs
+3-column data-frame mouse and human orthologs, with confidence
 }
 \description{
 Conversion is based on orthologogy_confidence == 1

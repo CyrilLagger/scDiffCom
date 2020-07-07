@@ -11,8 +11,7 @@ A list of 2 data.frames.
 data(LRall)
 }
 \description{
-LRall_one2one (resp. LRall_many2many) contains LR pairs converted from mouse to human genes based on one2one (resp. many2many)
-orthology relationship.
+LRall contains LR pairs converted from mouse to human genes.
 }
 \references{
 to add
