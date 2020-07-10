@@ -79,6 +79,12 @@ run_diffcom <- function(
     cond2 <- conds[[2]]
     message("Performing simple analysis on the two conditions.")
   }
+  template_cci_dt <- add_cell_number(
+    cci_dt = template_cci_dt,
+    cond1 = cond1,
+    cond2 = cond2,
+    metadata = metadata
+  )
   cci_dt_simple <- run_simple_analysis(
     expr_tr = expr_tr,
     metadata = metadata,
@@ -86,6 +92,7 @@ run_diffcom <- function(
     cond1 = cond1,
     cond2 = cond2,
     threshold = threshold,
+    min_cells = min_cells,
     compute_fast = FALSE
   )
   if (!permutation_analysis) {
@@ -108,12 +115,6 @@ run_diffcom <- function(
   if(return_distr) {
     return(cci_analysis)
   }
-  cci_analysis <- add_cell_number(
-    cci_dt = cci_analysis,
-    cond1 = cond1,
-    cond2 = cond2,
-    metadata = metadata
-  )
   cci_analysis <- clean_colnames(
     cci_dt = cci_analysis,
     cond1 = cond1,
@@ -158,6 +159,7 @@ prepare_template_cci <- function(
 #' @param cond2 character indicating the name of the first condition, or NULL if no condition
 #' @param threshold numeric indicating the percentage of cells that need to express a gene in a cluster for the gene to be
 #' considered detected.
+#' @param min_cells x
 #' @param compute_fast logical indicating if doing a fast computation for the permutation test or a full computation with
 #' detection rate.
 #'
@@ -169,6 +171,7 @@ run_simple_analysis <- function(
   cond1,
   cond2,
   threshold,
+  min_cells = min_cells,
   compute_fast
 ) {
   if(is.null(cond1) | is.null(cond2)) {
@@ -187,6 +190,7 @@ run_simple_analysis <- function(
     cond1 = cond1,
     cond2 = cond2,
     detection_thr = threshold,
+    min_cells = min_cells,
     cci_or_drate = "cci"
   )
   if(compute_fast) {
@@ -211,12 +215,13 @@ run_simple_analysis <- function(
     cond1 = cond1,
     cond2 = cond2,
     detection_thr = threshold,
+    min_cells = min_cells,
     cci_or_drate = "drate"
   )
   dt <- data.table::merge.data.table(
     x = cci_dt,
     y = drate_dt,
-    by = c("LR_GENES", "L_GENE", "R_GENE", "L_CELLTYPE", "R_CELLTYPE"),
+    by = generics::intersect(names(cci_dt), names(drate_dt)),
     sort = FALSE
   )
   return(dt)
@@ -264,6 +269,7 @@ split_cond_string <- function(
 #' @param cond1 x
 #' @param cond2 x
 #' @param detection_thr x
+#' @param min_cells x
 #' @param cci_or_drate x
 #'
 #' @return x
@@ -274,10 +280,11 @@ build_cci_drate_dt <- function(
   cond1,
   cond2,
   detection_thr,
+  min_cells,
   cci_or_drate
 ) {
-  L_GENE <- L_CELLTYPE <- L_EXPRESSION <-  L_DETECTED <-
-    R_GENE <- R_CELLTYPE <- R_EXPRESSION <-  R_DETECTED <-
+  L_GENE <- L_CELLTYPE <- L_EXPRESSION <-  L_DETECTED <- L_NCELLS <-
+    R_GENE <- R_CELLTYPE <- R_EXPRESSION <-  R_DETECTED <- R_NCELLS <-
     CONDITION_CELLTYPE <- LR_SCORE <- LR_DETECTED <- GENE <- CELLTYPE <- NULL
   if(is.null(cond1) | is.null(cond2)) {
     dt <- data.table::as.data.table(
@@ -322,7 +329,14 @@ build_cci_drate_dt <- function(
                 "i.EXPRESSION", "i.CELLTYPE", "i.GENE"),
         new = c("R_CELLTYPE", "R_GENE", "R_DETECTED",
                 "L_DETECTED", "L_CELLTYPE", "L_GENE"))
-      full_dt[, LR_DETECTED := is_detected(L_DETECTED, R_DETECTED, detection_thr)]
+      full_dt[, LR_DETECTED := is_detected_full(
+        x_dr = L_DETECTED,
+        x_ncells = L_NCELLS,
+        y_dr = R_DETECTED,
+        y_ncells = R_NCELLS,
+        dr_thr = detection_thr,
+        min_cells = min_cells
+      )]
     } else {
       stop("Error in build_cci_drate_dt.")
     }
@@ -351,6 +365,7 @@ build_cci_drate_dt <- function(
         template_cci_dt,
         on = c("GENE==L_GENE", "CELLTYPE==L_CELLTYPE")],
       on = c("GENE==R_GENE", "CELLTYPE==R_CELLTYPE") ]
+    full_dt[is.na(full_dt)] <- 0
     if(cci_or_drate == "cci") {
       data.table::setnames(
         x = full_dt,
@@ -371,8 +386,23 @@ build_cci_drate_dt <- function(
                 "L_CELLTYPE", "L_GENE", paste0("L_DETECTED_", cond1), paste0("L_DETECTED_", cond2))
       )
       full_dt[, paste0("LR_DETECTED_", c(cond1, cond2)) :=
-                .(is_detected(get(paste0("L_DETECTED_", cond1)), get(paste0("R_DETECTED_", cond1)), detection_thr),
-                  is_detected(get(paste0("L_DETECTED_", cond2)), get(paste0("R_DETECTED_", cond2)), detection_thr))]
+                .(is_detected_full(
+                  x_dr = get(paste0("L_DETECTED_", cond1)),
+                  x_ncells = get(paste0("L_NCELLS_", cond1)),
+                  y_dr = get(paste0("R_DETECTED_", cond1)),
+                  y_ncells = get(paste0("R_NCELLS_", cond1)),
+                  dr_thr = detection_thr,
+                  min_cells = min_cells
+                ),
+                is_detected_full(
+                  x_dr = get(paste0("L_DETECTED_", cond2)),
+                  x_ncells = get(paste0("L_NCELLS_", cond2)),
+                  y_dr = get(paste0("R_DETECTED_", cond2)),
+                  y_ncells = get(paste0("R_NCELLS_", cond2)),
+                  dr_thr = detection_thr,
+                  min_cells = min_cells
+                )
+                )]
     } else {
       stop("Error in build_cci_drate_dt.")
     }
@@ -518,7 +548,8 @@ run_stat_iteration <- function(
       template_cci_dt = template_cci_dt ,
       cond1 = cond1,
       cond2 = cond2,
-      threshold = 0.1,
+      threshold = NULL,
+      min_cells = NULL,
       compute_fast = TRUE
     ))
   } else {
@@ -532,7 +563,8 @@ run_stat_iteration <- function(
       template_cci_dt = template_cci_dt ,
       cond1 = cond1,
       cond2 = cond2,
-      threshold = 0.1,
+      threshold = NULL,
+      min_cells = NULL,
       compute_fast = TRUE
     )
     meta_ct <- metadata
@@ -544,7 +576,8 @@ run_stat_iteration <- function(
       template_cci_dt = template_cci_dt ,
       cond1 = cond1,
       cond2 = cond2,
-      threshold = 0.1,
+      threshold = NULL,
+      min_cells = NULL,
       compute_fast = TRUE
     )
     return(cbind(permcond_dt$cond2 - permcond_dt$cond1, permct_dt$cond1, permct_dt$cond2))
@@ -564,13 +597,17 @@ aggregate_cells <- function(
   is_cond
 ) {
   if(!is_cond) {
-    sums <- rowsum(x = expr_tr,
-                   group = metadata[["cell_type"]])
+    sums <- rowsum(
+      x = expr_tr,
+      group = metadata[["cell_type"]]
+    )
     aggr <- sums/as.vector(table(metadata[["cell_type"]]))
   } else {
-    group <-paste(metadata[["condition"]], metadata[["cell_type"]], sep = "_")
-    sums <- rowsum(x = expr_tr,
-                   group = group )
+    group <- paste(metadata[["condition"]], metadata[["cell_type"]], sep = "_")
+    sums <- rowsum(
+      x = expr_tr,
+      group = group
+    )
     aggr <- sums/as.vector(table(group))
   }
   return(aggr)
@@ -662,6 +699,7 @@ add_cell_number <- function(
       sort = FALSE,
       suffixes = c("_L", "_R")
     )
+    cci_dt[is.na(cci_dt)] <- 0
     data.table::setnames(
       x = cci_dt,
       old = c("N_L", "N_R"),
@@ -691,6 +729,7 @@ add_cell_number <- function(
       sort = FALSE,
       suffixes = c("_L", "_R")
     )
+    cci_dt[is.na(cci_dt)] <- 0
     data.table::setnames(
       x = cci_dt,
       old = c(paste0(cond1, "_L"), paste0(cond2, "_L"), paste0(cond1, "_R"), paste0(cond2, "_R")),
@@ -699,3 +738,34 @@ add_cell_number <- function(
   }
   return(cci_dt)
 }
+
+
+#' Determine if the CCI interaction is detected or not
+#'
+#' @param x_dr x
+#' @param x_ncells x
+#' @param y_dr x
+#' @param y_ncells x
+#' @param dr_thr x
+#' @param min_cells x
+#'
+#' @return x
+is_detected_full <- Vectorize(function(
+  x_dr,
+  x_ncells,
+  y_dr,
+  y_ncells,
+  dr_thr,
+  min_cells
+) {
+  if (x_dr >= dr_thr &
+      x_dr*x_ncells >= min_cells &
+      y_dr >= dr_thr &
+      y_dr*y_ncells >= min_cells
+  ) {
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}
+)

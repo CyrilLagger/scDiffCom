@@ -11,6 +11,7 @@ run_simple_analysis(
   cond1,
   cond2,
   threshold,
+  min_cells = min_cells,
   compute_fast
 )
 }
@@ -27,6 +28,8 @@ run_simple_analysis(
 
 \item{threshold}{numeric indicating the percentage of cells that need to express a gene in a cluster for the gene to be
 considered detected.}
+
+\item{min_cells}{x}
 
 \item{compute_fast}{logical indicating if doing a fast computation for the permutation test or a full computation with
 detection rate.}

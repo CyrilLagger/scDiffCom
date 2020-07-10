@@ -289,7 +289,7 @@ filter_cell_types <- function(
     filt <- apply(table(metadata$cell_type,
                         metadata$condition) >= min_cells,
                   MARGIN = 1,
-                  FUN = all)
+                  FUN = any)
   } else {
     filt <- table(metadata$cell_type) >= min_cells
   }
@@ -311,7 +311,8 @@ preprocess_LR <- function(
   if(!identical(colnames(LR_data), c("GENESYMB_L", "GENESYMB_R", "SYMB_LR"))) {
     stop("Wrong formating of LR_data.")
   }
-  message(paste0("Number of considered LR pairs: ", length(unique(LR_data$SYMB_LR)), "."))
+  LR_keep <- unique(LR_data)
+  message(paste0("Number of considered LR pairs: ", length(unique(LR_keep$SYMB_LR)), "."))
   LR_keep <- LR_data[LR_data$GENESYMB_L %in% rownames(data) &
                        LR_data$GENESYMB_R %in% rownames(data), ]
   LR_genes <- unique(c(unique(LR_keep$GENESYMB_L), unique(LR_keep$GENESYMB_R)))

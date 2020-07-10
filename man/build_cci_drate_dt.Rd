@@ -10,6 +10,7 @@ build_cci_drate_dt(
   cond1,
   cond2,
   detection_thr,
+  min_cells,
   cci_or_drate
 )
 }
@@ -23,6 +24,8 @@ build_cci_drate_dt(
 \item{cond2}{x}
 
 \item{detection_thr}{x}
+
+\item{min_cells}{x}
 
 \item{cci_or_drate}{x}
 }
