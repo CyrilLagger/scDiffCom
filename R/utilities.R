@@ -336,4 +336,3 @@ is_detected <- Vectorize(function(
     return(FALSE)
   }
 })
-
