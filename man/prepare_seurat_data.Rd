@@ -9,7 +9,6 @@ prepare_seurat_data(
   assay = "RNA",
   slot = "data",
   log_scale = TRUE,
-  convert_to_human = FALSE,
   return_type = "dense"
 )
 }
@@ -22,8 +21,6 @@ prepare_seurat_data(
 
 \item{log_scale}{logical indicating if using log-normalized data (TRUE) or normalized data (FALSE); default is "TRUE".
 Only considered if slot == "data".}
-
-\item{convert_to_human}{logical indicating if converting mouse gene names to human gene names.}
 
 \item{return_type}{character indicating the class of the return data (sparse, dense or data.frame)}
 }

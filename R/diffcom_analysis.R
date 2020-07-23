@@ -49,7 +49,6 @@ run_diffcom <- function(
     assay = assay,
     slot = slot,
     log_scale = log_scale,
-    convert_to_human = FALSE,
     return_type = "dense",
     seurat_cell_type_id = seurat_cell_type_id,
     condition_id = condition_id,
@@ -375,7 +374,7 @@ build_cci_drate_dt <- function(
                 "L_CELLTYPE", "L_GENE", paste0("L_EXPRESSION_", cond1), paste0("L_EXPRESSION_", cond2))
       )
       full_dt[, paste0("LR_SCORE_", c(cond1, cond2)) :=
-                .((get(paste0("L_EXPRESSION_", cond1)) + get(paste0("R_EXPRESSION_", cond1))) / 2,
+                list((get(paste0("L_EXPRESSION_", cond1)) + get(paste0("R_EXPRESSION_", cond1))) / 2,
                   (get(paste0("L_EXPRESSION_", cond2)) + get(paste0("R_EXPRESSION_", cond2))) / 2)]
     } else if(cci_or_drate == "drate") {
       data.table::setnames(
@@ -386,7 +385,7 @@ build_cci_drate_dt <- function(
                 "L_CELLTYPE", "L_GENE", paste0("L_DETECTED_", cond1), paste0("L_DETECTED_", cond2))
       )
       full_dt[, paste0("LR_DETECTED_", c(cond1, cond2)) :=
-                .(is_detected_full(
+                list(is_detected_full(
                   x_dr = get(paste0("L_DETECTED_", cond1)),
                   x_ncells = get(paste0("L_NCELLS_", cond1)),
                   y_dr = get(paste0("R_DETECTED_", cond1)),
@@ -453,7 +452,7 @@ run_stat_analysis <- function(
     expr = run_stat_iteration(
       expr_tr = sub_expr_tr,
       metadata = metadata,
-      template_cci_dt = sub_template_cci_dt[, .(LR_GENES, L_CELLTYPE, R_CELLTYPE, L_GENE, R_GENE)],
+      template_cci_dt = sub_template_cci_dt[, list(LR_GENES, L_CELLTYPE, R_CELLTYPE, L_GENE, R_GENE)],
       cond1 = cond1,
       cond2 = cond2
     ),

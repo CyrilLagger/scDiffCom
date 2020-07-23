@@ -9,7 +9,6 @@ preprocess_seurat(
   assay,
   slot,
   log_scale,
-  convert_to_human,
   return_type,
   seurat_cell_type_id,
   condition_id,
@@ -25,8 +24,6 @@ preprocess_seurat(
 
 \item{log_scale}{logical indicating if using log-normalized data (TRUE) or normalized data (FALSE); default is "TRUE".
 Only considered if slot == "data".}
-
-\item{convert_to_human}{logical indicating if converting mouse gene names to human gene names.}
 
 \item{return_type}{character indicating the class of the returned data (sparse, dense or data.frame)}
 

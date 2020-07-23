@@ -127,7 +127,6 @@ get_orthologs <- function(
 #' @param slot character indicating the slot of the Seurat object where to pull the data from; default is "data".
 #' @param log_scale logical indicating if using log-normalized data (TRUE) or normalized data (FALSE); default is "TRUE".
 #' Only considered if slot == "data".
-#' @param convert_to_human logical indicating if converting mouse gene names to human gene names.
 #' @param return_type character indicating the class of the returned data (sparse, dense or data.frame)
 #' @param seurat_cell_type_id character indicating the column specifying the cell-types of the cells
 #' @param condition_id character indicating the column specifying the conditions on the cells. Set to NULL to run the analysis
@@ -140,7 +139,6 @@ preprocess_seurat <- function(
   assay,
   slot,
   log_scale,
-  convert_to_human,
   return_type,
   seurat_cell_type_id,
   condition_id,
@@ -151,7 +149,6 @@ preprocess_seurat <- function(
     assay = assay,
     slot = slot,
     log_scale = log_scale,
-    convert_to_human = convert_to_human,
     return_type = return_type
   )
   prep_meta <- prepare_seurat_metadata(
@@ -164,12 +161,12 @@ preprocess_seurat <- function(
     min_cells = min_cells
   )
   metadata <- prep_meta[prep_meta$cell_type %in% cell_types_filtered, ]
-  data <- prep_data$data[, colnames(prep_data$data) %in% metadata$cell_id]
+  data <- prep_data[, colnames(prep_data) %in% metadata$cell_id]
   return(list(
     data = data,
     metadata = metadata,
-    cell_types = cell_types_filtered,
-    gene_mapping = prep_data$gene_mapping)
+    cell_types = cell_types_filtered
+    )
   )
 }
 
@@ -180,7 +177,6 @@ preprocess_seurat <- function(
 #' @param slot character indicating the slot of the Seurat object where to pull the data from; default is "data".
 #' @param log_scale logical indicating if using log-normalized data (TRUE) or normalized data (FALSE); default is "TRUE".
 #' Only considered if slot == "data".
-#' @param convert_to_human logical indicating if converting mouse gene names to human gene names.
 #' @param return_type character indicating the class of the return data (sparse, dense or data.frame)
 #'
 #' @return A list with data as first argument (a dgCMatrix, a matrix or a data.frame) and the gene mapping if converstion to orthologs
@@ -189,7 +185,6 @@ prepare_seurat_data <- function(
   assay = "RNA",
   slot = "data",
   log_scale = TRUE,
-  convert_to_human = FALSE,
   return_type = "dense"
 ) {
   data <- Seurat::GetAssayData(
@@ -202,44 +197,40 @@ prepare_seurat_data <- function(
   } else if(!log_scale) {
     message("There is no log option for slot counts and scale.data.")
   }
-  gene_mapping <- NULL
-  if(convert_to_human) {
-    stop("Deprecated convert_to_human in prepare_seurat_data.")
-    message("Converting mouse genes to human orthologs.")
-    gene_mapping <- get_orthologs(rownames(data),
-                                  input_species = "mouse")
-    ng <- nrow(data)
-    data <- data[rownames(data) %in% gene_mapping$mouse_symbol, ]
-    message(paste0("Removing ", ng - nrow(data), " genes with no orthologs."))
-    gene_mapping <- gene_mapping[order(match(gene_mapping$mouse_symbol, rownames(data))),]
-    if(identical(rownames(data), gene_mapping$mouse_symbol)) {
-      rownames(data) <- gene_mapping$human_symbol
-    } else {
-      stop("Problem in ordering of the rows (genes). To solve later on.")
-    }
-  }
   if(class(data) == "dgCMatrix") {
     if(return_type == "sparse") {
-      #message("Initial class (sparse) dgCMatrix, returning dgCMatrix.")
-      return(list(data = data, gene_mapping = gene_mapping))
+      message("Return sparse data matrix from Seurat object.")
+      return(data)
     } else if(return_type == "dense") {
-      #message("Initial class (sparse) dgCMatrix, returning (dense) matrix.")
-      return(list(data = as.matrix(data), gene_mapping = gene_mapping))
+      message("Return dense data matrix from Seurat object.")
+      return(as.matrix(data))
     } else {
-      #message("Initial class (sparse) dgCMatrix, returning (dense) data.frame.")
-      return(list(data = as.data.frame(as.matrix(data)), gene_mapping = gene_mapping))
+      message("Return a data.table from Seurat object.")
+      return(data.table::as.data.table(as.matrix(data)))
     }
   } else if(class(data) == "matrix") {
     if((return_type == "dense") | (return_type == "sparse")) {
-      #message("Initial class (dense) Matrix, returning (dense) Matrix.")
-      return(list(data = data, gene_mapping = gene_mapping))
+      message("Return dense data matrix from Seurat object.")
+      return(data)
     } else {
-      #message("Initial class (dense) Matrix, returning (dense) data.frame.")
-      return(list(data = as.data.frame(data), gene_mapping = gene_mapping))
+      message("Return a data.table from Seurat object.")
+      return(data.table::as.data.table(data))
     }
   } else {
     stop(paste0("Class ", class(data), " is not recognized."))
   }
+  # data <- tryCatch(
+  #   {
+  #     as.matrix(data)
+  #   },
+  #   error = function(cond) {
+  #     message("Cannot convert sparse matrix to dense matrix (probably requires to much memory).")
+  #     message("Here's the original error message:")
+  #     message(cond)
+  #     message("We will try to aggregate the sparse matrix using a slower version of 'rowsum', this might slow the code!")
+  #     return(expr_tr)
+  #   }
+  # )
 }
 
 #' Prepare Seurat metadata for downstream analysis
