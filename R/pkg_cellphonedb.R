@@ -260,7 +260,7 @@ create_cpdb_input <- function(
                               assay = assay,
                               slot = slot,
                               log_scale = log_scale,
-                              convert_to_human = TRUE,
+                              #convert_to_human = TRUE,
                               return_type = "data.frame")
   data <- prep$data
   gene_mapping <- prep$gene_mapping
