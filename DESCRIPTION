@@ -34,4 +34,5 @@ Imports:
     permute,
     foreach,
     doParallel,
-    generics
+    generics,
+    pbapply

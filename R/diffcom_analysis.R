@@ -73,7 +73,7 @@ run_diffcom <- function(
     cond_info <- list(
       is_cond = FALSE
     )
-    message("Performing simple analysis without condition.")
+    message("Performing initial analysis without condition.")
   } else {
     conds <- unique(metadata$condition)
     if (length(conds) != 2)
@@ -83,7 +83,7 @@ run_diffcom <- function(
       cond1 = conds[[1]],
       cond2 = conds[[2]]
     )
-    message("Performing simple analysis on the two conditions.")
+    message("Performing initial analysis on the two conditions.")
   }
   template_cci_dt <- add_cell_number(
     cci_dt = template_cci_dt,
@@ -441,7 +441,7 @@ run_stat_analysis <- function(
                  ". Number of detected genes for permutation test: ",
                  ncol(sub_expr_tr)))
   cols_keep <- c("LR_ID", "L_CELLTYPE", "R_CELLTYPE", LR_names)
-  cci_perm <- replicate(
+  cci_perm <- pbapply::pbreplicate(
     n = iterations,
     expr = run_stat_iteration(
       expr_tr = sub_expr_tr,
@@ -455,8 +455,10 @@ run_stat_analysis <- function(
   if(!cond_info$is_cond) {
     distr <- cbind(cci_perm, sub_template_cci_dt[["LR_SCORE"]])
     if (return_distr) {
+      message("Returning the matrix of distributions from the permutation test.")
       return(distr)
     }
+    message("Computing p-values.")
     pvals <- rowSums(distr[, 1:iterations] >= distr[, (iterations + 1)]) / iterations
     sub_template_cci_dt[, PVAL := pvals]
     sub_template_cci_dt[, BH_PVAL := stats::p.adjust(p = pvals, method = "BH")]
@@ -469,6 +471,7 @@ run_stat_analysis <- function(
     distr_cond1 <- cbind(cci_perm[, 2, ], sub_template_cci_dt[[paste0("LR_SCORE_", cond_info$cond1)]])
     distr_cond2 <- cbind(cci_perm[, 3, ], sub_template_cci_dt[[paste0("LR_SCORE_", cond_info$cond2)]])
     if (return_distr) {
+      message("Returning the matrix of distributions from the permutation test.")
       return(
         list(
           distr_diff = distr_diff,
@@ -477,6 +480,7 @@ run_stat_analysis <- function(
         )
       )
     }
+    message("Computing p-values.")
     if(one_sided) {
       pvals_diff_cond1 <- rowSums(distr_diff[, 1:iterations] <= distr_diff[, (iterations + 1)]) / iterations
       pvals_diff_cond2 <- rowSums(distr_diff[, 1:iterations] >= distr_diff[, (iterations + 1)]) / iterations
