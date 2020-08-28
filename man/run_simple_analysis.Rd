@@ -8,8 +8,8 @@ run_simple_analysis(
   expr_tr,
   metadata,
   template_cci_dt,
-  cond1,
-  cond2,
+  pp_LR,
+  cond_info,
   threshold,
   min_cells = min_cells,
   compute_fast
@@ -22,9 +22,9 @@ run_simple_analysis(
 
 \item{template_cci_dt}{data.table with a template of all CCIs}
 
-\item{cond1}{character indicating the name of the first condition, or NULL if no condition}
+\item{pp_LR}{list of preprocessed data regarding the LR table}
 
-\item{cond2}{character indicating the name of the first condition, or NULL if no condition}
+\item{cond_info}{x}
 
 \item{threshold}{numeric indicating the percentage of cells that need to express a gene in a cluster for the gene to be
 considered detected.}

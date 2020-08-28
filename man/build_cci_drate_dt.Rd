@@ -7,8 +7,8 @@
 build_cci_drate_dt(
   averaged_expr,
   template_cci_dt,
-  cond1,
-  cond2,
+  pp_LR,
+  cond_info,
   detection_thr,
   min_cells,
   cci_or_drate
@@ -19,9 +19,9 @@ build_cci_drate_dt(
 
 \item{template_cci_dt}{x}
 
-\item{cond1}{x}
+\item{pp_LR}{x}
 
-\item{cond2}{x}
+\item{cond_info}{x}
 
 \item{detection_thr}{x}
 

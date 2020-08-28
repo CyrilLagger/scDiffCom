@@ -17,7 +17,8 @@ run_diffcom(
   permutation_analysis = TRUE,
   one_sided = FALSE,
   iterations = 1000,
-  return_distr = FALSE
+  return_distr = FALSE,
+  seed = 42
 )
 }
 \arguments{
@@ -50,6 +51,8 @@ considered detected.}
 \item{iterations}{integer indicating the number of iterations during the permutation test.}
 
 \item{return_distr}{logical indicating if returning the matrix with the distributions obtained from the permutation test.}
+
+\item{seed}{numeric indicating a seeding value for reproducibility.}
 }
 \value{
 A data.table where each row is CCI. The columns vary in functions of the parameters used when calling the function.

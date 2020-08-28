@@ -4,7 +4,7 @@
 \alias{run_stat_iteration}
 \title{Title}
 \usage{
-run_stat_iteration(expr_tr, metadata, template_cci_dt, cond1, cond2)
+run_stat_iteration(expr_tr, metadata, template_cci_dt, pp_LR, cond_info)
 }
 \arguments{
 \item{expr_tr}{x}
@@ -13,9 +13,9 @@ run_stat_iteration(expr_tr, metadata, template_cci_dt, cond1, cond2)
 
 \item{template_cci_dt}{x}
 
-\item{cond1}{x}
+\item{pp_LR}{x}
 
-\item{cond2}{x}
+\item{cond_info}{x}
 }
 \value{
 x

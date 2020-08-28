@@ -4,14 +4,14 @@
 \alias{clean_colnames}
 \title{Title}
 \usage{
-clean_colnames(cci_dt, cond1, cond2, permutation_analysis)
+clean_colnames(cci_dt, cond_info, pp_LR, permutation_analysis)
 }
 \arguments{
 \item{cci_dt}{x}
 
-\item{cond1}{x}
+\item{cond_info}{x}
 
-\item{cond2}{x}
+\item{pp_LR}{x}
 
 \item{permutation_analysis}{x}
 }

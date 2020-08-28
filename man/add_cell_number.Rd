@@ -4,14 +4,12 @@
 \alias{add_cell_number}
 \title{Title}
 \usage{
-add_cell_number(cci_dt, cond1, cond2, metadata)
+add_cell_number(cci_dt, cond_info, metadata)
 }
 \arguments{
 \item{cci_dt}{x}
 
-\item{cond1}{x}
-
-\item{cond2}{x}
+\item{cond_info}{x}
 
 \item{metadata}{x}
 }

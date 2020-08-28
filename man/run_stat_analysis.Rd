@@ -8,8 +8,8 @@ run_stat_analysis(
   cci_dt_simple,
   expr_tr,
   metadata,
-  cond1,
-  cond2,
+  cond_info,
+  pp_LR,
   iterations,
   one_sided,
   return_distr = FALSE
@@ -22,9 +22,9 @@ run_stat_analysis(
 
 \item{metadata}{x}
 
-\item{cond1}{x}
+\item{cond_info}{x}
 
-\item{cond2}{x}
+\item{pp_LR}{x}
 
 \item{iterations}{x}
 

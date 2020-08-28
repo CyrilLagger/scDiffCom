@@ -24,6 +24,7 @@
 #' @param iterations integer indicating the number of iterations during the permutation test.
 #' @param one_sided logical indicating if computing differential p-values from a one-sided or two-sided test.
 #' @param return_distr logical indicating if returning the matrix with the distributions obtained from the permutation test.
+#' @param seed numeric indicating a seeding value for reproducibility.
 #'
 #' @return A data.table where each row is CCI. The columns vary in functions of the parameters used when calling the function.
 #' It includes the CCI information and for each condition the scores, detection rates and possibly p-values.
@@ -41,8 +42,10 @@ run_diffcom <- function(
   permutation_analysis = TRUE,
   one_sided = FALSE,
   iterations = 1000,
-  return_distr = FALSE
+  return_distr = FALSE,
+  seed = 42
 ) {
+  set.seed(seed)
   message("Preprocessing Seurat object.")
   pp_seurat <- preprocess_seurat(
     seurat_object = seurat_object,
@@ -61,35 +64,38 @@ run_diffcom <- function(
   )
   message("Start CCI analysis.")
   template_cci_dt <- prepare_template_cci(
-    LR_df = pp_LR$LR_df,
+    LR_db = pp_LR$LR_db,
     cell_types = pp_seurat$cell_types
   )
   expr_tr <- t(pp_LR$data)
   metadata <- data.table::setDT(pp_seurat$metadata)
   if(is.null(condition_id)) {
-    cond1 <- NULL
-    cond2 <- NULL
+    cond_info <- list(
+      is_cond = FALSE
+    )
     message("Performing simple analysis without condition.")
   } else {
     conds <- unique(metadata$condition)
     if (length(conds) != 2)
-      stop("Wrong number of groups in cell-type conditions (expected 2).")
-    cond1 <- conds[[1]]
-    cond2 <- conds[[2]]
+      stop("Wrong number of groups in cell-type conditions (expected: 2).")
+    cond_info <- list(
+      is_cond = TRUE,
+      cond1 = conds[[1]],
+      cond2 = conds[[2]]
+    )
     message("Performing simple analysis on the two conditions.")
   }
   template_cci_dt <- add_cell_number(
     cci_dt = template_cci_dt,
-    cond1 = cond1,
-    cond2 = cond2,
+    cond_info = cond_info,
     metadata = metadata
   )
   cci_dt_simple <- run_simple_analysis(
     expr_tr = expr_tr,
     metadata = metadata,
     template_cci_dt = template_cci_dt,
-    cond1 = cond1,
-    cond2 = cond2,
+    pp_LR,
+    cond_info,
     threshold = threshold,
     min_cells = min_cells,
     compute_fast = FALSE
@@ -104,8 +110,8 @@ run_diffcom <- function(
       cci_dt_simple = cci_dt_simple,
       expr_tr = expr_tr,
       metadata = metadata,
-      cond1 = cond1,
-      cond2 = cond2,
+      pp_LR = pp_LR,
+      cond_info = cond_info,
       iterations = iterations,
       one_sided = one_sided,
       return_distr = return_distr
@@ -116,8 +122,8 @@ run_diffcom <- function(
   }
   cci_analysis <- clean_colnames(
     cci_dt = cci_analysis,
-    cond1 = cond1,
-    cond2 = cond2,
+    pp_LR = pp_LR,
+    cond_info = cond_info,
     permutation_analysis = permutation_analysis
   )
   return(cci_analysis)
@@ -125,25 +131,25 @@ run_diffcom <- function(
 
 #' Create a template data.table with all the CCIs
 #'
-#' @param LR_df data.frame of LR CCI
+#' @param LR_db data.frame of LR CCI
 #' @param cell_types character of the cell_types present in the Seurat object
 #'
 #' @return a data.table
 prepare_template_cci <- function(
-  LR_df,
+  LR_db,
   cell_types
 ) {
-  setDT(LR_df)
+  setDT(LR_db)
   template <- data.table::CJ(
     L_CELLTYPE = cell_types,
     R_CELLTYPE = cell_types,
-    LR_GENES = LR_df$LR_GENES
+    LR_ID = LR_db$LR_ID
   )
   template <- data.table::merge.data.table(
     x = template,
-    y = LR_df,
-    by.x = "LR_GENES",
-    by.y = "LR_GENES",
+    y = LR_db,
+    by.x = "LR_ID",
+    by.y = "LR_ID",
     all.x = TRUE,
     sort = FALSE
   )
@@ -154,8 +160,8 @@ prepare_template_cci <- function(
 #' @param expr_tr matrix with the (transposed) expression data from the Seurat object
 #' @param metadata data.table with the relevant metadata from the Seurat object
 #' @param template_cci_dt data.table with a template of all CCIs
-#' @param cond1 character indicating the name of the first condition, or NULL if no condition
-#' @param cond2 character indicating the name of the first condition, or NULL if no condition
+#' @param pp_LR list of preprocessed data regarding the LR table
+#' @param cond_info x
 #' @param threshold numeric indicating the percentage of cells that need to express a gene in a cluster for the gene to be
 #' considered detected.
 #' @param min_cells x
@@ -167,38 +173,33 @@ run_simple_analysis <- function(
   expr_tr,
   metadata,
   template_cci_dt,
-  cond1,
-  cond2,
+  pp_LR,
+  cond_info,
   threshold,
   min_cells = min_cells,
   compute_fast
 ) {
-  if(is.null(cond1) | is.null(cond2)) {
-    is_cond = FALSE
-  } else {
-    is_cond = TRUE
-  }
   averaged_expr <- aggregate_cells(
     expr_tr = expr_tr,
     metadata = metadata,
-    is_cond = is_cond
+    is_cond = cond_info$is_cond
   )
   cci_dt <- build_cci_drate_dt(
     averaged_expr = averaged_expr,
     template_cci_dt = template_cci_dt,
-    cond1 = cond1,
-    cond2 = cond2,
+    pp_LR = pp_LR,
+    cond_info = cond_info,
     detection_thr = threshold,
     min_cells = min_cells,
     cci_or_drate = "cci"
   )
   if(compute_fast) {
-    if(!is_cond) {
+    if(!cond_info$is_cond) {
       return(cci_dt[["LR_SCORE"]])
     } else {
       return(list(
-        cond1 = cci_dt[[paste0("LR_SCORE_", cond1)]],
-        cond2 = cci_dt[[paste0("LR_SCORE_", cond2)]]
+        cond1 = cci_dt[[paste0("LR_SCORE_", cond_info$cond1)]],
+        cond2 = cci_dt[[paste0("LR_SCORE_", cond_info$cond2)]]
       )
       )
     }
@@ -206,13 +207,13 @@ run_simple_analysis <- function(
   detection_rate <- aggregate_cells(
     expr_tr = 1 * (expr_tr > 0),
     metadata = metadata,
-    is_cond = is_cond
+    is_cond = cond_info$is_cond
   )
   drate_dt <- build_cci_drate_dt(
     averaged_expr = detection_rate,
     template_cci_dt = template_cci_dt,
-    cond1 = cond1,
-    cond2 = cond2,
+    pp_LR = pp_LR,
+    cond_info = cond_info,
     detection_thr = threshold,
     min_cells = min_cells,
     cci_or_drate = "drate"
@@ -265,8 +266,8 @@ split_cond_string <- function(
 #'
 #' @param averaged_expr x
 #' @param template_cci_dt x
-#' @param cond1 x
-#' @param cond2 x
+#' @param pp_LR x
+#' @param cond_info x
 #' @param detection_thr x
 #' @param min_cells x
 #' @param cci_or_drate x
@@ -276,135 +277,124 @@ split_cond_string <- function(
 build_cci_drate_dt <- function(
   averaged_expr,
   template_cci_dt,
-  cond1,
-  cond2,
+  pp_LR,
+  cond_info,
   detection_thr,
   min_cells,
   cci_or_drate
 ) {
-  L_GENE <- L_CELLTYPE <- L_EXPRESSION <-  L_DETECTED <- L_NCELLS <-
-    R_GENE <- R_CELLTYPE <- R_EXPRESSION <-  R_DETECTED <- R_NCELLS <-
-    CONDITION_CELLTYPE <- LR_SCORE <- LR_DETECTED <- GENE <- CELLTYPE <- NULL
-  if(is.null(cond1) | is.null(cond2)) {
-    dt <- data.table::as.data.table(
-      x = averaged_expr,
-      keep.rownames = "CELLTYPE",
-      sorted = FALSE
-    )
-    long_dt <- data.table::melt.data.table(
-      data = dt,
-      id.vars = "CELLTYPE",
-      variable.name = "GENE",
-      value.name = "EXPRESSION"
-    )
-    col_long_dt <- c("GENE", "CELLTYPE")
-    setkeyv(
-      x = long_dt,
-      cols = col_long_dt
-    )
-    col_template_cci_dt <- c("L_GENE", "L_CELLTYPE", "R_GENE", "R_CELLTYPE")
-    setkeyv(
-      x = template_cci_dt,
-      cols = col_template_cci_dt
-    )
-    full_dt <- long_dt[
-      long_dt[
-        template_cci_dt,
-        on = c("GENE==L_GENE", "CELLTYPE==L_CELLTYPE")],
-      on = c("GENE==R_GENE", "CELLTYPE==R_CELLTYPE") ]
-    if(cci_or_drate == "cci") {
-      data.table::setnames(
-        x = full_dt,
-        old = c("CELLTYPE", "GENE", "EXPRESSION",
-                "i.EXPRESSION", "i.CELLTYPE", "i.GENE"),
-        new = c("R_CELLTYPE", "R_GENE", "R_EXPRESSION",
-                "L_EXPRESSION", "L_CELLTYPE", "L_GENE")
-      )
-      full_dt[, LR_SCORE := (L_EXPRESSION + R_EXPRESSION) / 2]
-    } else if(cci_or_drate == "drate") {
-      data.table::setnames(
-        x = full_dt,
-        old = c("CELLTYPE", "GENE", "EXPRESSION",
-                "i.EXPRESSION", "i.CELLTYPE", "i.GENE"),
-        new = c("R_CELLTYPE", "R_GENE", "R_DETECTED",
-                "L_DETECTED", "L_CELLTYPE", "L_GENE"))
-      full_dt[, LR_DETECTED := is_detected_full(
-        x_dr = L_DETECTED,
-        x_ncells = L_NCELLS,
-        y_dr = R_DETECTED,
-        y_ncells = R_NCELLS,
-        dr_thr = detection_thr,
-        min_cells = min_cells
-      )]
-    } else {
-      stop("Error in build_cci_drate_dt.")
-    }
+  CONDITION_CELLTYPE <- NULL
+  full_dt <- data.table::copy(template_cci_dt)
+  if(cci_or_drate == "cci") {
+    name_tag = "EXPRESSION"
+  } else if(cci_or_drate == "drate") {
+    name_tag = "DETECTED"
   } else {
-    dt <- data.table::as.data.table(
-      x = averaged_expr,
-      keep.rownames = "CONDITION_CELLTYPE",
-      sorted = FALSE
-    )
-    dt[, c("CONDITION", "CELLTYPE") := split_cond_string(CONDITION_CELLTYPE, cond1, cond2)]
+    stop("Error in build_cci_drate_dt.")
+  }
+  if(!cond_info$is_cond) {
+    row_id <- "CELLTYPE"
+    vars_id <- "CELLTYPE"
+    cond1_id <- NULL
+    cond2_id <- NULL
+    merge_id <- name_tag
+    score_id <- "LR_SCORE"
+    dr_id <- "LR_DETECTED"
+    n_id <- 1
+    pmin_id <- NULL
+  } else {
+    row_id <- "CONDITION_CELLTYPE"
+    vars_id <- c("CELLTYPE", "CONDITION")
+    cond1_id <- paste0("_", cond_info$cond1)
+    cond2_id <- paste0("_", cond_info$cond2)
+    merge_id <- c(cond_info$cond1, cond_info$cond2)
+    score_id <- paste0("LR_SCORE_", c(cond_info$cond1, cond_info$cond2))
+    dr_id <- paste0("LR_DETECTED_", c(cond_info$cond1, cond_info$cond2))
+    n_id <- 2
+    pmin_id <- c(cond1_id, cond2_id)
+  }
+  dt <- data.table::as.data.table(
+    x = averaged_expr,
+    keep.rownames = row_id,
+    sorted = FALSE
+  )
+  if(cond_info$is_cond) {
+    dt[, c("CONDITION", "CELLTYPE") := split_cond_string(CONDITION_CELLTYPE, cond_info$cond1, cond_info$cond2)]
     dt[, CONDITION_CELLTYPE := NULL]
-    long_dt <- data.table::melt.data.table(
+  }
+  dt <- data.table::melt.data.table(
+    data = dt,
+    id.vars = vars_id,
+    variable.name = "GENE",
+    value.name = name_tag
+  )
+  if(cond_info$is_cond) {
+    dt <- data.table::dcast.data.table(
       data = dt,
-      id.vars = c("CELLTYPE", "CONDITION"),
-      variable.name = "GENE",
-      value.name = "EXPRESSION"
-    )
-    long_dt <- data.table::dcast.data.table(
-      data = long_dt,
       formula = CELLTYPE + GENE ~ CONDITION,
-      value.var = "EXPRESSION")
-    setkey(long_dt, GENE, CELLTYPE)
-    setkey(template_cci_dt, L_GENE, L_CELLTYPE, R_GENE, R_CELLTYPE)
-    full_dt <- long_dt[
-      long_dt[
-        template_cci_dt,
-        on = c("GENE==L_GENE", "CELLTYPE==L_CELLTYPE")],
-      on = c("GENE==R_GENE", "CELLTYPE==R_CELLTYPE") ]
-    full_dt[is.na(full_dt)] <- 0
-    if(cci_or_drate == "cci") {
-      data.table::setnames(
-        x = full_dt,
-        old = c("CELLTYPE", "GENE", cond1, cond2,
-                "i.CELLTYPE", "i.GENE", paste0("i.", cond1), paste0("i.", cond2)),
-        new = c("R_CELLTYPE", "R_GENE", paste0("R_EXPRESSION_", cond1), paste0("R_EXPRESSION_", cond2),
-                "L_CELLTYPE", "L_GENE", paste0("L_EXPRESSION_", cond1), paste0("L_EXPRESSION_", cond2))
-      )
-      full_dt[, paste0("LR_SCORE_", c(cond1, cond2)) :=
-                list((get(paste0("L_EXPRESSION_", cond1)) + get(paste0("R_EXPRESSION_", cond1))) / 2,
-                  (get(paste0("L_EXPRESSION_", cond2)) + get(paste0("R_EXPRESSION_", cond2))) / 2)]
-    } else if(cci_or_drate == "drate") {
-      data.table::setnames(
-        x = full_dt,
-        old = c("CELLTYPE", "GENE", cond1, cond2,
-                "i.CELLTYPE", "i.GENE", paste0("i.", cond1), paste0("i.", cond2)),
-        new = c("R_CELLTYPE", "R_GENE", paste0("R_DETECTED_", cond1), paste0("R_DETECTED_", cond2),
-                "L_CELLTYPE", "L_GENE", paste0("L_DETECTED_", cond1), paste0("L_DETECTED_", cond2))
-      )
-      full_dt[, paste0("LR_DETECTED_", c(cond1, cond2)) :=
-                list(is_detected_full(
-                  x_dr = get(paste0("L_DETECTED_", cond1)),
-                  x_ncells = get(paste0("L_NCELLS_", cond1)),
-                  y_dr = get(paste0("R_DETECTED_", cond1)),
-                  y_ncells = get(paste0("R_NCELLS_", cond1)),
-                  dr_thr = detection_thr,
-                  min_cells = min_cells
-                ),
+      value.var = name_tag)
+  }
+  dt[is.na(dt)] <- 0
+  out_names <- c(
+    sapply(
+      1:pp_LR$max_nL,
+      function(i) {
+        paste0("L", i, "_", name_tag, pmin_id)
+      }),
+    sapply(
+      1:pp_LR$max_nR,
+      function(i) {
+        paste0("R", i, "_", name_tag, pmin_id)
+      })
+  )
+  full_dt[,
+          c(out_names) :=
+            c(
+              sapply(
+                1:pp_LR$max_nL,
+                function(i) {
+                  as.list(
+                    dt[.SD,
+                       on = c(paste0("GENE==Ligand_", i), "CELLTYPE==L_CELLTYPE"),
+                       mget(paste0("x.", merge_id))
+                       ])
+                }),
+              sapply(
+                1:pp_LR$max_nR,
+                function(i) {
+                  as.list(
+                    dt[.SD,
+                       on = c(paste0("GENE==Receptor_", i), "CELLTYPE==R_CELLTYPE"),
+                       mget(paste0("x.", merge_id))
+                       ])
+                })
+            )
+          ]
+  if(cci_or_drate == "cci") {
+    full_dt[, (score_id) :=
+              lapply(1:n_id, function(x) {
+                (
+                  do.call(pmin,
+                          c(lapply(1:pp_LR$max_nL, function(i) {get(paste0("L", i, "_", name_tag, pmin_id[x]))}), na.rm = TRUE))
+                  +
+                    do.call(pmin,
+                            c(lapply(1:pp_LR$max_nR, function(i) {get(paste0("R", i,"_", name_tag, pmin_id[x]))}), na.rm = TRUE))
+                )/2
+              })
+            ]
+  } else if(cci_or_drate == "drate") {
+    full_dt[, (dr_id) :=
+              lapply(1:n_id, function(x) {
                 is_detected_full(
-                  x_dr = get(paste0("L_DETECTED_", cond2)),
-                  x_ncells = get(paste0("L_NCELLS_", cond2)),
-                  y_dr = get(paste0("R_DETECTED_", cond2)),
-                  y_ncells = get(paste0("R_NCELLS_", cond2)),
+                  x_dr = do.call(pmin, c(lapply(1:pp_LR$max_nL, function(i) {get(paste0("L", i, "_", name_tag, pmin_id[x]))}), na.rm = TRUE)),
+                  x_ncells = get(paste0("L_NCELLS", pmin_id[x])),
+                  y_dr = do.call(pmin, c(lapply(1:pp_LR$max_nR, function(i) {get(paste0("R", i, "_", name_tag, pmin_id[x]))}), na.rm = TRUE)),
+                  y_ncells = get(paste0("R_NCELLS", pmin_id[x])),
                   dr_thr = detection_thr,
                   min_cells = min_cells
                 )
-                )]
-    } else {
-      stop("Error in build_cci_drate_dt.")
-    }
+              })
+            ]
   }
   return(full_dt)
 }
@@ -414,8 +404,8 @@ build_cci_drate_dt <- function(
 #' @param cci_dt_simple x
 #' @param expr_tr x
 #' @param metadata x
-#' @param cond1 x
-#' @param cond2 x
+#' @param cond_info x
+#' @param pp_LR x
 #' @param iterations x
 #' @param one_sided logical indicating if computing differential p-values from a one-sided or two-sided test.
 #' @param return_distr x
@@ -425,40 +415,44 @@ run_stat_analysis <- function(
   cci_dt_simple,
   expr_tr,
   metadata,
-  cond1,
-  cond2,
+  cond_info,
+  pp_LR,
   iterations,
   one_sided,
   return_distr = FALSE
 ) {
-  L_GENE <- L_CELLTYPE <- R_GENE <- R_CELLTYPE <-
-    LR_GENES <- LR_DETECTED <-
-    BH_PVAL <- BH_PVAL_DIFF <- PVAL <- PVAL_DIFF <- NULL
-  if(is.null(cond1) | is.null(cond2)) {
+  PVAL <- BH_PVAL <- PVAL_DIFF <- BH_PVAL_DIFF <- NULL
+  LR_names <- cols_keep <- cols_keep2 <- NULL
+  if(!cond_info$is_cond) {
     message("Performing permutation analysis without conditions.")
-    sub_template_cci_dt <- cci_dt_simple[LR_DETECTED == TRUE]
+    sub_template_cci_dt <- cci_dt_simple[get("LR_DETECTED") == TRUE]
   } else {
     message("Performing permutation analysis on the two conditions.")
-    sub_template_cci_dt <- cci_dt_simple[get(paste0("LR_DETECTED_", cond1)) == TRUE | get(paste0("LR_DETECTED_", cond2)) == TRUE]
+    sub_template_cci_dt <- cci_dt_simple[get(paste0("LR_DETECTED_", cond_info$cond1)) == TRUE | get(paste0("LR_DETECTED_", cond_info$cond2)) == TRUE]
   }
+  LR_names <- c(
+    paste0("Ligand_", 1:pp_LR$max_nL),
+    paste0("Receptor_", 1:pp_LR$max_nR )
+  )
   sub_expr_tr <- expr_tr[, colnames(expr_tr) %in%
-                           unique(c(sub_template_cci_dt[["L_GENE"]], sub_template_cci_dt[["R_GENE"]]))]
+                           unique(unlist(sub_template_cci_dt[, LR_names, with = FALSE]))]
   message(paste0("Initial number of genes: ",
                  ncol(expr_tr),
                  ". Number of detected genes for permutation test: ",
                  ncol(sub_expr_tr)))
+  cols_keep <- c("LR_ID", "L_CELLTYPE", "R_CELLTYPE", LR_names)
   cci_perm <- replicate(
     n = iterations,
     expr = run_stat_iteration(
       expr_tr = sub_expr_tr,
       metadata = metadata,
-      template_cci_dt = sub_template_cci_dt[, list(LR_GENES, L_CELLTYPE, R_CELLTYPE, L_GENE, R_GENE)],
-      cond1 = cond1,
-      cond2 = cond2
+      template_cci_dt = sub_template_cci_dt[, cols_keep, with = FALSE],
+      pp_LR = pp_LR,
+      cond_info = cond_info
     ),
     simplify = "array"
   )
-  if(is.null(cond1) | is.null(cond2)) {
+  if(!cond_info$is_cond) {
     distr <- cbind(cci_perm, sub_template_cci_dt[["LR_SCORE"]])
     if (return_distr) {
       return(distr)
@@ -466,13 +460,14 @@ run_stat_analysis <- function(
     pvals <- rowSums(distr[, 1:iterations] >= distr[, (iterations + 1)]) / iterations
     sub_template_cci_dt[, PVAL := pvals]
     sub_template_cci_dt[, BH_PVAL := stats::p.adjust(p = pvals, method = "BH")]
-    sub_template_cci_dt <- sub_template_cci_dt[, list(LR_GENES, L_CELLTYPE, R_CELLTYPE, L_GENE, R_GENE,
-                                                      PVAL, BH_PVAL)]
+    cols_new <- c("PVAL", "BH_PVAL")
+    cols_keep2 <- c(cols_keep, cols_new)
+    sub_template_cci_dt <- sub_template_cci_dt[, cols_keep2, with = FALSE]
   } else {
-    distr_diff <- cbind(cci_perm[, 1, ], sub_template_cci_dt[[paste0("LR_SCORE_", cond2)]]
-                        - sub_template_cci_dt[[paste0("LR_SCORE_", cond1)]])
-    distr_cond1 <- cbind(cci_perm[, 2, ], sub_template_cci_dt[[paste0("LR_SCORE_", cond1)]])
-    distr_cond2 <- cbind(cci_perm[, 3, ], sub_template_cci_dt[[paste0("LR_SCORE_", cond2)]])
+    distr_diff <- cbind(cci_perm[, 1, ], sub_template_cci_dt[[paste0("LR_SCORE_", cond_info$cond2)]]
+                        - sub_template_cci_dt[[paste0("LR_SCORE_", cond_info$cond1)]])
+    distr_cond1 <- cbind(cci_perm[, 2, ], sub_template_cci_dt[[paste0("LR_SCORE_", cond_info$cond1)]])
+    distr_cond2 <- cbind(cci_perm[, 3, ], sub_template_cci_dt[[paste0("LR_SCORE_", cond_info$cond2)]])
     if (return_distr) {
       return(
         list(
@@ -495,8 +490,8 @@ run_stat_analysis <- function(
     }
     pvals_cond1 <- rowSums(distr_cond1[, 1:iterations] >= distr_cond1[, (iterations + 1)]) / iterations
     pvals_cond2 <- rowSums(distr_cond2[, 1:iterations] >= distr_cond2[, (iterations + 1)]) / iterations
-    sub_template_cci_dt[, paste0("PVAL_", c(cond1, cond2)) := list(pvals_cond1, pvals_cond2)]
-    sub_template_cci_dt[, paste0("BH_PVAL_", c(cond1, cond2)) := list(stats::p.adjust(
+    sub_template_cci_dt[, paste0("PVAL_", c(cond_info$cond1, cond_info$cond2)) := list(pvals_cond1, pvals_cond2)]
+    sub_template_cci_dt[, paste0("BH_PVAL_", c(cond_info$cond1, cond_info$cond2)) := list(stats::p.adjust(
       p = pvals_cond1,
       method = "BH"
     ),
@@ -507,18 +502,21 @@ run_stat_analysis <- function(
     )]
     sub_template_cci_dt[, PVAL_DIFF := pvals_diff]
     sub_template_cci_dt[, BH_PVAL_DIFF := BH_pvals_diff]
-    sub_template_cci_dt <- sub_template_cci_dt[, c("LR_GENES", "L_CELLTYPE", "R_CELLTYPE", "L_GENE", "R_GENE",
-                                                   paste0("PVAL_", cond1), paste0("PVAL_", cond2), "PVAL_DIFF",
-                                                   paste0("BH_PVAL_", cond1), paste0("BH_PVAL_", cond2), "BH_PVAL_DIFF"), with = FALSE]
+    cols_new <- c(paste0("PVAL_", cond_info$cond1), paste0("PVAL_", cond_info$cond2), "PVAL_DIFF",
+                  paste0("BH_PVAL_", cond_info$cond1), paste0("BH_PVAL_", cond_info$cond2), "BH_PVAL_DIFF")
+    cols_keep2 <- c(cols_keep, cols_new)
+    sub_template_cci_dt <- sub_template_cci_dt[, cols_keep2, with = FALSE]
   }
   cci_dt <- data.table::merge.data.table(
     x = cci_dt_simple,
     y = sub_template_cci_dt,
-    by = colnames(cci_dt_simple)[1:5],
+    by = cols_keep,
     all.x = TRUE,
     sort = FALSE
   )
-  cci_dt[is.na(cci_dt)] <- 1
+  for(j in cols_new){
+    data.table::set(cci_dt, i = which(is.na(cci_dt[[j]])), j = j, value = 1)
+  }
   return(cci_dt)
 }
 
@@ -527,26 +525,26 @@ run_stat_analysis <- function(
 #' @param expr_tr x
 #' @param metadata x
 #' @param template_cci_dt x
-#' @param cond1 x
-#' @param cond2 x
+#' @param cond_info x
+#' @param pp_LR x
 #'
 #' @return x
 run_stat_iteration <- function(
   expr_tr,
   metadata,
   template_cci_dt,
-  cond1,
-  cond2
+  pp_LR,
+  cond_info
 ) {
-  if(is.null(cond1) | is.null(cond2)) {
+  if(!cond_info$is_cond) {
     meta_ct <- metadata
     meta_ct$cell_type <- sample(meta_ct$cell_type)
     return(run_simple_analysis(
       expr_tr = expr_tr,
       metadata = meta_ct ,
-      template_cci_dt = template_cci_dt ,
-      cond1 = cond1,
-      cond2 = cond2,
+      template_cci_dt = template_cci_dt,
+      pp_LR = pp_LR,
+      cond_info = cond_info,
       threshold = NULL,
       min_cells = NULL,
       compute_fast = TRUE
@@ -559,22 +557,22 @@ run_stat_iteration <- function(
     permcond_dt <- run_simple_analysis(
       expr_tr = expr_tr,
       metadata = meta_cond ,
-      template_cci_dt = template_cci_dt ,
-      cond1 = cond1,
-      cond2 = cond2,
+      template_cci_dt = template_cci_dt,
+      pp_LR = pp_LR,
+      cond_info = cond_info,
       threshold = NULL,
       min_cells = NULL,
       compute_fast = TRUE
     )
     meta_ct <- metadata
-    meta_ct$cell_type[meta_ct$condition == cond1] <- sample(meta_ct$cell_type[meta_ct$condition == cond1])
-    meta_ct$cell_type[meta_ct$condition == cond2] <- sample(meta_ct$cell_type[meta_ct$condition == cond2])
+    meta_ct$cell_type[meta_ct$condition == cond_info$cond1] <- sample(meta_ct$cell_type[meta_ct$condition == cond_info$cond1])
+    meta_ct$cell_type[meta_ct$condition == cond_info$cond2] <- sample(meta_ct$cell_type[meta_ct$condition == cond_info$cond2])
     permct_dt <- run_simple_analysis(
       expr_tr = expr_tr,
       metadata = meta_ct ,
-      template_cci_dt = template_cci_dt ,
-      cond1 = cond1,
-      cond2 = cond2,
+      template_cci_dt = template_cci_dt,
+      pp_LR = pp_LR,
+      cond_info = cond_info,
       threshold = NULL,
       min_cells = NULL,
       compute_fast = TRUE
@@ -615,47 +613,77 @@ aggregate_cells <- function(
 #' Title
 #'
 #' @param cci_dt x
-#' @param cond1 x
-#' @param cond2 x
+#' @param cond_info x
+#' @param pp_LR x
 #' @param permutation_analysis x
 #'
 #' @return x
 clean_colnames <- function(
   cci_dt,
-  cond1,
-  cond2,
+  cond_info,
+  pp_LR,
   permutation_analysis
 ) {
-  first_cols <- c("LR_GENES", "L_GENE", "R_GENE", "L_CELLTYPE", "R_CELLTYPE")
-  if(is.null(cond1) | is.null(cond2)) {
-    last_cols <- c("L_NCELLS", "L_EXPRESSION", "L_DETECTED", "R_NCELLS", "R_EXPRESSION", "R_DETECTED")
+  first_cols <- c("LR_ID", "L_CELLTYPE", "R_CELLTYPE")
+  LR_names <- c(
+    paste0("Ligand_", 1:pp_LR$max_nL),
+    paste0("Receptor_", 1:pp_LR$max_nR )
+  )
+  first_cols <- c(first_cols, LR_names)
+  if(!cond_info$is_cond) {
+    last_cols <- c(
+      "L_NCELLS",
+      paste0("L", 1:pp_LR$max_nL, "_EXPRESSION"),
+      paste0("L", 1:pp_LR$max_nL, "_DETECTED"),
+      "R_NCELLS",
+      paste0("R", 1:pp_LR$max_nR, "_EXPRESSION"),
+      paste0("R", 1:pp_LR$max_nR, "_DETECTED")
+    )
     if(!permutation_analysis) {
-      ordered_cols <- c(first_cols,
-                        "LR_SCORE", "LR_DETECTED",
-                        last_cols)
+      ordered_cols <- c(
+        first_cols,
+        "LR_SCORE", "LR_DETECTED",
+        last_cols
+      )
     } else {
-      ordered_cols <- c(first_cols,
-                        "LR_SCORE", "LR_DETECTED", "PVAL", "BH_PVAL",
-                        last_cols)
+      ordered_cols <- c(
+        first_cols,
+        "LR_SCORE", "LR_DETECTED", "PVAL", "BH_PVAL",
+        last_cols
+      )
     }
   } else {
-    last_cols <- c(paste0("L_NCELLS_", cond1), paste0("L_EXPRESSION_", cond1), paste0("L_DETECTED_", cond1),
-                   paste0("R_NCELLS_", cond1), paste0("R_EXPRESSION_", cond1), paste0("R_DETECTED_", cond1),
-                   paste0("L_NCELLS_", cond2), paste0("L_EXPRESSION_", cond2), paste0("L_DETECTED_", cond2),
-                   paste0("R_NCELLS_", cond2), paste0("R_EXPRESSION_", cond2), paste0("R_DETECTED_", cond2))
+    last_cols <- c(
+      paste0("L_NCELLS_", cond_info$cond1),
+      paste0("L", 1:pp_LR$max_nL, "_EXPRESSION_", cond_info$cond1),
+      paste0("L", 1:pp_LR$max_nL, "_DETECTED_", cond_info$cond1),
+      paste0("R_NCELLS_", cond_info$cond1),
+      paste0("R", 1:pp_LR$max_nR, "_EXPRESSION_", cond_info$cond1),
+      paste0("R", 1:pp_LR$max_nR, "_DETECTED_", cond_info$cond1),
+      paste0("L_NCELLS_", cond_info$cond2),
+      paste0("L", 1:pp_LR$max_nL, "_EXPRESSION_", cond_info$cond2),
+      paste0("L", 1:pp_LR$max_nL, "_DETECTED_", cond_info$cond2),
+      paste0("R_NCELLS_", cond_info$cond2),
+      paste0("R", 1:pp_LR$max_nR, "_EXPRESSION_", cond_info$cond2),
+      paste0("R", 1:pp_LR$max_nR, "_DETECTED_", cond_info$cond2)
+    )
     if(!permutation_analysis) {
-      ordered_cols <- c(first_cols,
-                        paste0("LR_SCORE_", cond1), paste0("LR_SCORE_", cond2),
-                        paste0("LR_DETECTED_", cond1), paste0("LR_DETECTED_", cond2),
-                        last_cols)
+      ordered_cols <- c(
+        first_cols,
+        paste0("LR_SCORE_", cond_info$cond1), paste0("LR_SCORE_", cond_info$cond2),
+        paste0("LR_DETECTED_", cond_info$cond1), paste0("LR_DETECTED_", cond_info$cond2),
+        last_cols
+      )
     } else {
-      ordered_cols <- c(first_cols,
-                        paste0("LR_SCORE_", cond1), paste0("LR_SCORE_", cond2),
-                        paste0("LR_DETECTED_", cond1), paste0("LR_DETECTED_", cond2),
-                        "PVAL_DIFF", "BH_PVAL_DIFF",
-                        paste0("PVAL_", cond1), paste0("BH_PVAL_", cond1),
-                        paste0("PVAL_", cond2), paste0("BH_PVAL_", cond2),
-                        last_cols)
+      ordered_cols <- c(
+        first_cols,
+        paste0("LR_SCORE_", cond_info$cond1), paste0("LR_SCORE_", cond_info$cond2),
+        paste0("LR_DETECTED_", cond_info$cond1), paste0("LR_DETECTED_", cond_info$cond2),
+        "PVAL_DIFF", "BH_PVAL_DIFF",
+        paste0("PVAL_", cond_info$cond1), paste0("BH_PVAL_", cond_info$cond1),
+        paste0("PVAL_", cond_info$cond2), paste0("BH_PVAL_", cond_info$cond2),
+        last_cols
+      )
     }
   }
   data.table::setcolorder(
@@ -665,21 +693,22 @@ clean_colnames <- function(
   return(cci_dt)
 }
 
+
+
+
 #' Title
 #'
 #' @param cci_dt x
-#' @param cond1 x
-#' @param cond2 x
+#' @param cond_info x
 #' @param metadata x
 #'
 #' @return x
 add_cell_number <- function(
   cci_dt,
-  cond1,
-  cond2,
+  cond_info,
   metadata
 ) {
-  if(is.null(cond1) | is.null(cond2)) {
+  if(!cond_info$is_cond) {
     dt_NCELLS <- metadata[, .N, by = "cell_type"]
     cci_dt <- data.table::merge.data.table(
       x = cci_dt,
@@ -698,11 +727,11 @@ add_cell_number <- function(
       sort = FALSE,
       suffixes = c("_L", "_R")
     )
-    cci_dt[is.na(cci_dt)] <- 0
+    new_cols <- c("L_NCELLS", "R_NCELLS")
     data.table::setnames(
       x = cci_dt,
       old = c("N_L", "N_R"),
-      new = c("L_NCELLS", "R_NCELLS")
+      new = new_cols
     )
   } else {
     dt_NCELLS <- metadata[, .N, by = c("cell_type", "condition")]
@@ -728,12 +757,23 @@ add_cell_number <- function(
       sort = FALSE,
       suffixes = c("_L", "_R")
     )
-    cci_dt[is.na(cci_dt)] <- 0
+    new_cols <- c(
+      paste0("L_NCELLS_", cond_info$cond1),
+      paste0("L_NCELLS_", cond_info$cond2),
+      paste0("R_NCELLS_", cond_info$cond1),
+      paste0("R_NCELLS_", cond_info$cond2))
     data.table::setnames(
       x = cci_dt,
-      old = c(paste0(cond1, "_L"), paste0(cond2, "_L"), paste0(cond1, "_R"), paste0(cond2, "_R")),
-      new = c(paste0("L_NCELLS_", cond1), paste0("L_NCELLS_", cond2), paste0("R_NCELLS_", cond1), paste0("R_NCELLS_", cond2))
+      old = c(
+        paste0(cond_info$cond1, "_L"),
+        paste0(cond_info$cond2, "_L"),
+        paste0(cond_info$cond1, "_R"),
+        paste0(cond_info$cond2, "_R")),
+      new = new_cols
     )
+  }
+  for(j in new_cols){
+    data.table::set(cci_dt, i = which(is.na(cci_dt[[j]])), j = j, value = 0)
   }
   return(cci_dt)
 }
@@ -769,3 +809,651 @@ is_detected_full <- Vectorize(function(
 }
 )
 
+#########
+
+
+#' run_diffcom_old <- function(
+#'   seurat_object,
+#'   LR_data,
+#'   seurat_cell_type_id = "cell_ontology_class",
+#'   condition_id = NULL,
+#'   assay = "RNA",
+#'   slot = "data",
+#'   log_scale = TRUE,
+#'   min_cells = 5,
+#'   threshold = 0.1,
+#'   permutation_analysis = TRUE,
+#'   one_sided = FALSE,
+#'   iterations = 1000,
+#'   return_distr = FALSE
+#' ) {
+#'   message("Preprocessing Seurat object.")
+#'   pp_seurat <- preprocess_seurat(
+#'     seurat_object = seurat_object,
+#'     assay = assay,
+#'     slot = slot,
+#'     log_scale = log_scale,
+#'     return_type = "dense",
+#'     seurat_cell_type_id = seurat_cell_type_id,
+#'     condition_id = condition_id,
+#'     min_cells = min_cells
+#'   )
+#'   message("Preprocessing ligand-receptor pairs.")
+#'   pp_LR <- preprocess_LR(
+#'     data = pp_seurat$data,
+#'     LR_data = LR_data
+#'   )
+#'   message("Start CCI analysis.")
+#'   template_cci_dt <- prepare_template_cci(
+#'     LR_df = pp_LR$LR_df,
+#'     cell_types = pp_seurat$cell_types
+#'   )
+#'   expr_tr <- t(pp_LR$data)
+#'   metadata <- data.table::setDT(pp_seurat$metadata)
+#'   if(is.null(condition_id)) {
+#'     cond1 <- NULL
+#'     cond2 <- NULL
+#'     message("Performing simple analysis without condition.")
+#'   } else {
+#'     conds <- unique(metadata$condition)
+#'     if (length(conds) != 2)
+#'       stop("Wrong number of groups in cell-type conditions (expected 2).")
+#'     cond1 <- conds[[1]]
+#'     cond2 <- conds[[2]]
+#'     message("Performing simple analysis on the two conditions.")
+#'   }
+#'   template_cci_dt <- add_cell_number(
+#'     cci_dt = template_cci_dt,
+#'     cond1 = cond1,
+#'     cond2 = cond2,
+#'     metadata = metadata
+#'   )
+#'   cci_dt_simple <- run_simple_analysis(
+#'     expr_tr = expr_tr,
+#'     metadata = metadata,
+#'     template_cci_dt = template_cci_dt,
+#'     cond1 = cond1,
+#'     cond2 = cond2,
+#'     threshold = threshold,
+#'     min_cells = min_cells,
+#'     compute_fast = FALSE
+#'   )
+#'   if (!permutation_analysis) {
+#'     if(return_distr) {
+#'       stop("No permutation distribution to return!")
+#'     }
+#'     cci_analysis <- cci_dt_simple
+#'   } else {
+#'     cci_analysis <- run_stat_analysis(
+#'       cci_dt_simple = cci_dt_simple,
+#'       expr_tr = expr_tr,
+#'       metadata = metadata,
+#'       cond1 = cond1,
+#'       cond2 = cond2,
+#'       iterations = iterations,
+#'       one_sided = one_sided,
+#'       return_distr = return_distr
+#'     )
+#'   }
+#'   if(return_distr) {
+#'     return(cci_analysis)
+#'   }
+#'   cci_analysis <- clean_colnames(
+#'     cci_dt = cci_analysis,
+#'     cond1 = cond1,
+#'     cond2 = cond2,
+#'     permutation_analysis = permutation_analysis
+#'   )
+#'   return(cci_analysis)
+#' }
+#'
+#' #' Create a template data.table with all the CCIs
+#' #'
+#' #' @param LR_df data.frame of LR CCI
+#' #' @param cell_types character of the cell_types present in the Seurat object
+#' #'
+#' #' @return a data.table
+#' prepare_template_cci_old <- function(
+#'   LR_df,
+#'   cell_types
+#' ) {
+#'   setDT(LR_df)
+#'   template <- data.table::CJ(
+#'     L_CELLTYPE = cell_types,
+#'     R_CELLTYPE = cell_types,
+#'     LR_GENES = LR_df$LR_GENES
+#'   )
+#'   template <- data.table::merge.data.table(
+#'     x = template,
+#'     y = LR_df,
+#'     by.x = "LR_GENES",
+#'     by.y = "LR_GENES",
+#'     all.x = TRUE,
+#'     sort = FALSE
+#'   )
+#' }
+#'
+#' #' Compute the score and detection rate of each CCI
+#' #'
+#' #' @param expr_tr matrix with the (transposed) expression data from the Seurat object
+#' #' @param metadata data.table with the relevant metadata from the Seurat object
+#' #' @param template_cci_dt data.table with a template of all CCIs
+#' #' @param cond1 character indicating the name of the first condition, or NULL if no condition
+#' #' @param cond2 character indicating the name of the first condition, or NULL if no condition
+#' #' @param threshold numeric indicating the percentage of cells that need to express a gene in a cluster for the gene to be
+#' #' considered detected.
+#' #' @param min_cells x
+#' #' @param compute_fast logical indicating if doing a fast computation for the permutation test or a full computation with
+#' #' detection rate.
+#' #'
+#' #' @return a data.table or a (list of) numeric vector(s)
+#' run_simple_analysis_old <- function(
+#'   expr_tr,
+#'   metadata,
+#'   template_cci_dt,
+#'   cond1,
+#'   cond2,
+#'   threshold,
+#'   min_cells = min_cells,
+#'   compute_fast
+#' ) {
+#'   if(is.null(cond1) | is.null(cond2)) {
+#'     is_cond = FALSE
+#'   } else {
+#'     is_cond = TRUE
+#'   }
+#'   averaged_expr <- aggregate_cells(
+#'     expr_tr = expr_tr,
+#'     metadata = metadata,
+#'     is_cond = is_cond
+#'   )
+#'   cci_dt <- build_cci_drate_dt(
+#'     averaged_expr = averaged_expr,
+#'     template_cci_dt = template_cci_dt,
+#'     cond1 = cond1,
+#'     cond2 = cond2,
+#'     detection_thr = threshold,
+#'     min_cells = min_cells,
+#'     cci_or_drate = "cci"
+#'   )
+#'   if(compute_fast) {
+#'     if(!is_cond) {
+#'       return(cci_dt[["LR_SCORE"]])
+#'     } else {
+#'       return(list(
+#'         cond1 = cci_dt[[paste0("LR_SCORE_", cond1)]],
+#'         cond2 = cci_dt[[paste0("LR_SCORE_", cond2)]]
+#'       )
+#'       )
+#'     }
+#'   }
+#'   detection_rate <- aggregate_cells(
+#'     expr_tr = 1 * (expr_tr > 0),
+#'     metadata = metadata,
+#'     is_cond = is_cond
+#'   )
+#'   drate_dt <- build_cci_drate_dt(
+#'     averaged_expr = detection_rate,
+#'     template_cci_dt = template_cci_dt,
+#'     cond1 = cond1,
+#'     cond2 = cond2,
+#'     detection_thr = threshold,
+#'     min_cells = min_cells,
+#'     cci_or_drate = "drate"
+#'   )
+#'   dt <- data.table::merge.data.table(
+#'     x = cci_dt,
+#'     y = drate_dt,
+#'     by = generics::intersect(names(cci_dt), names(drate_dt)),
+#'     sort = FALSE
+#'   )
+#'   return(dt)
+#' }
+#'
+#' #' Title
+#' #'
+#' #' @param averaged_expr x
+#' #' @param template_cci_dt x
+#' #' @param cond1 x
+#' #' @param cond2 x
+#' #' @param detection_thr x
+#' #' @param min_cells x
+#' #' @param cci_or_drate x
+#' #'
+#' #' @return x
+#' #' @import data.table
+#' build_cci_drate_dt_old <- function(
+#'   averaged_expr,
+#'   template_cci_dt,
+#'   cond1,
+#'   cond2,
+#'   detection_thr,
+#'   min_cells,
+#'   cci_or_drate
+#' ) {
+#'   L_GENE <- L_CELLTYPE <- L_EXPRESSION <-  L_DETECTED <- L_NCELLS <-
+#'     R_GENE <- R_CELLTYPE <- R_EXPRESSION <-  R_DETECTED <- R_NCELLS <-
+#'     CONDITION_CELLTYPE <- LR_SCORE <- LR_DETECTED <- GENE <- CELLTYPE <- NULL
+#'   if(is.null(cond1) | is.null(cond2)) {
+#'     dt <- data.table::as.data.table(
+#'       x = averaged_expr,
+#'       keep.rownames = "CELLTYPE",
+#'       sorted = FALSE
+#'     )
+#'     long_dt <- data.table::melt.data.table(
+#'       data = dt,
+#'       id.vars = "CELLTYPE",
+#'       variable.name = "GENE",
+#'       value.name = "EXPRESSION"
+#'     )
+#'     col_long_dt <- c("GENE", "CELLTYPE")
+#'     setkeyv(
+#'       x = long_dt,
+#'       cols = col_long_dt
+#'     )
+#'     col_template_cci_dt <- c("L_GENE", "L_CELLTYPE", "R_GENE", "R_CELLTYPE")
+#'     setkeyv(
+#'       x = template_cci_dt,
+#'       cols = col_template_cci_dt
+#'     )
+#'     full_dt <- long_dt[
+#'       long_dt[
+#'         template_cci_dt,
+#'         on = c("GENE==L_GENE", "CELLTYPE==L_CELLTYPE")],
+#'       on = c("GENE==R_GENE", "CELLTYPE==R_CELLTYPE") ]
+#'     if(cci_or_drate == "cci") {
+#'       data.table::setnames(
+#'         x = full_dt,
+#'         old = c("CELLTYPE", "GENE", "EXPRESSION",
+#'                 "i.EXPRESSION", "i.CELLTYPE", "i.GENE"),
+#'         new = c("R_CELLTYPE", "R_GENE", "R_EXPRESSION",
+#'                 "L_EXPRESSION", "L_CELLTYPE", "L_GENE")
+#'       )
+#'       full_dt[, LR_SCORE := (L_EXPRESSION + R_EXPRESSION) / 2]
+#'     } else if(cci_or_drate == "drate") {
+#'       data.table::setnames(
+#'         x = full_dt,
+#'         old = c("CELLTYPE", "GENE", "EXPRESSION",
+#'                 "i.EXPRESSION", "i.CELLTYPE", "i.GENE"),
+#'         new = c("R_CELLTYPE", "R_GENE", "R_DETECTED",
+#'                 "L_DETECTED", "L_CELLTYPE", "L_GENE"))
+#'       full_dt[, LR_DETECTED := is_detected_full(
+#'         x_dr = L_DETECTED,
+#'         x_ncells = L_NCELLS,
+#'         y_dr = R_DETECTED,
+#'         y_ncells = R_NCELLS,
+#'         dr_thr = detection_thr,
+#'         min_cells = min_cells
+#'       )]
+#'     } else {
+#'       stop("Error in build_cci_drate_dt.")
+#'     }
+#'   } else {
+#'     dt <- data.table::as.data.table(
+#'       x = averaged_expr,
+#'       keep.rownames = "CONDITION_CELLTYPE",
+#'       sorted = FALSE
+#'     )
+#'     dt[, c("CONDITION", "CELLTYPE") := split_cond_string(CONDITION_CELLTYPE, cond1, cond2)]
+#'     dt[, CONDITION_CELLTYPE := NULL]
+#'     long_dt <- data.table::melt.data.table(
+#'       data = dt,
+#'       id.vars = c("CELLTYPE", "CONDITION"),
+#'       variable.name = "GENE",
+#'       value.name = "EXPRESSION"
+#'     )
+#'     long_dt <- data.table::dcast.data.table(
+#'       data = long_dt,
+#'       formula = CELLTYPE + GENE ~ CONDITION,
+#'       value.var = "EXPRESSION")
+#'     setkey(long_dt, GENE, CELLTYPE)
+#'     setkey(template_cci_dt, L_GENE, L_CELLTYPE, R_GENE, R_CELLTYPE)
+#'     full_dt <- long_dt[
+#'       long_dt[
+#'         template_cci_dt,
+#'         on = c("GENE==L_GENE", "CELLTYPE==L_CELLTYPE")],
+#'       on = c("GENE==R_GENE", "CELLTYPE==R_CELLTYPE") ]
+#'     full_dt[is.na(full_dt)] <- 0
+#'     if(cci_or_drate == "cci") {
+#'       data.table::setnames(
+#'         x = full_dt,
+#'         old = c("CELLTYPE", "GENE", cond1, cond2,
+#'                 "i.CELLTYPE", "i.GENE", paste0("i.", cond1), paste0("i.", cond2)),
+#'         new = c("R_CELLTYPE", "R_GENE", paste0("R_EXPRESSION_", cond1), paste0("R_EXPRESSION_", cond2),
+#'                 "L_CELLTYPE", "L_GENE", paste0("L_EXPRESSION_", cond1), paste0("L_EXPRESSION_", cond2))
+#'       )
+#'       full_dt[, paste0("LR_SCORE_", c(cond1, cond2)) :=
+#'                 list((get(paste0("L_EXPRESSION_", cond1)) + get(paste0("R_EXPRESSION_", cond1))) / 2,
+#'                      (get(paste0("L_EXPRESSION_", cond2)) + get(paste0("R_EXPRESSION_", cond2))) / 2)]
+#'     } else if(cci_or_drate == "drate") {
+#'       data.table::setnames(
+#'         x = full_dt,
+#'         old = c("CELLTYPE", "GENE", cond1, cond2,
+#'                 "i.CELLTYPE", "i.GENE", paste0("i.", cond1), paste0("i.", cond2)),
+#'         new = c("R_CELLTYPE", "R_GENE", paste0("R_DETECTED_", cond1), paste0("R_DETECTED_", cond2),
+#'                 "L_CELLTYPE", "L_GENE", paste0("L_DETECTED_", cond1), paste0("L_DETECTED_", cond2))
+#'       )
+#'       full_dt[, paste0("LR_DETECTED_", c(cond1, cond2)) :=
+#'                 list(is_detected_full(
+#'                   x_dr = get(paste0("L_DETECTED_", cond1)),
+#'                   x_ncells = get(paste0("L_NCELLS_", cond1)),
+#'                   y_dr = get(paste0("R_DETECTED_", cond1)),
+#'                   y_ncells = get(paste0("R_NCELLS_", cond1)),
+#'                   dr_thr = detection_thr,
+#'                   min_cells = min_cells
+#'                 ),
+#'                 is_detected_full(
+#'                   x_dr = get(paste0("L_DETECTED_", cond2)),
+#'                   x_ncells = get(paste0("L_NCELLS_", cond2)),
+#'                   y_dr = get(paste0("R_DETECTED_", cond2)),
+#'                   y_ncells = get(paste0("R_NCELLS_", cond2)),
+#'                   dr_thr = detection_thr,
+#'                   min_cells = min_cells
+#'                 )
+#'                 )]
+#'     } else {
+#'       stop("Error in build_cci_drate_dt.")
+#'     }
+#'   }
+#'   return(full_dt)
+#' }
+#'
+#' #' Title
+#' #'
+#' #' @param cci_dt_simple x
+#' #' @param expr_tr x
+#' #' @param metadata x
+#' #' @param cond1 x
+#' #' @param cond2 x
+#' #' @param iterations x
+#' #' @param one_sided logical indicating if computing differential p-values from a one-sided or two-sided test.
+#' #' @param return_distr x
+#' #'
+#' #' @return x
+#' run_stat_analysis_old <- function(
+#'   cci_dt_simple,
+#'   expr_tr,
+#'   metadata,
+#'   cond1,
+#'   cond2,
+#'   iterations,
+#'   one_sided,
+#'   return_distr = FALSE
+#' ) {
+#'   L_GENE <- L_CELLTYPE <- R_GENE <- R_CELLTYPE <-
+#'     LR_GENES <- LR_DETECTED <-
+#'     BH_PVAL <- BH_PVAL_DIFF <- PVAL <- PVAL_DIFF <- NULL
+#'   if(is.null(cond1) | is.null(cond2)) {
+#'     message("Performing permutation analysis without conditions.")
+#'     sub_template_cci_dt <- cci_dt_simple[LR_DETECTED == TRUE]
+#'   } else {
+#'     message("Performing permutation analysis on the two conditions.")
+#'     sub_template_cci_dt <- cci_dt_simple[get(paste0("LR_DETECTED_", cond1)) == TRUE | get(paste0("LR_DETECTED_", cond2)) == TRUE]
+#'   }
+#'   sub_expr_tr <- expr_tr[, colnames(expr_tr) %in%
+#'                            unique(c(sub_template_cci_dt[["L_GENE"]], sub_template_cci_dt[["R_GENE"]]))]
+#'   message(paste0("Initial number of genes: ",
+#'                  ncol(expr_tr),
+#'                  ". Number of detected genes for permutation test: ",
+#'                  ncol(sub_expr_tr)))
+#'   cci_perm <- replicate(
+#'     n = iterations,
+#'     expr = run_stat_iteration(
+#'       expr_tr = sub_expr_tr,
+#'       metadata = metadata,
+#'       template_cci_dt = sub_template_cci_dt[, list(LR_GENES, L_CELLTYPE, R_CELLTYPE, L_GENE, R_GENE)],
+#'       cond1 = cond1,
+#'       cond2 = cond2
+#'     ),
+#'     simplify = "array"
+#'   )
+#'   if(is.null(cond1) | is.null(cond2)) {
+#'     distr <- cbind(cci_perm, sub_template_cci_dt[["LR_SCORE"]])
+#'     if (return_distr) {
+#'       return(distr)
+#'     }
+#'     pvals <- rowSums(distr[, 1:iterations] >= distr[, (iterations + 1)]) / iterations
+#'     sub_template_cci_dt[, PVAL := pvals]
+#'     sub_template_cci_dt[, BH_PVAL := stats::p.adjust(p = pvals, method = "BH")]
+#'     sub_template_cci_dt <- sub_template_cci_dt[, list(LR_GENES, L_CELLTYPE, R_CELLTYPE, L_GENE, R_GENE,
+#'                                                       PVAL, BH_PVAL)]
+#'   } else {
+#'     distr_diff <- cbind(cci_perm[, 1, ], sub_template_cci_dt[[paste0("LR_SCORE_", cond2)]]
+#'                         - sub_template_cci_dt[[paste0("LR_SCORE_", cond1)]])
+#'     distr_cond1 <- cbind(cci_perm[, 2, ], sub_template_cci_dt[[paste0("LR_SCORE_", cond1)]])
+#'     distr_cond2 <- cbind(cci_perm[, 3, ], sub_template_cci_dt[[paste0("LR_SCORE_", cond2)]])
+#'     if (return_distr) {
+#'       return(
+#'         list(
+#'           distr_diff = distr_diff,
+#'           distr_cond1 = distr_cond1,
+#'           distr_cond2 = distr_cond2
+#'         )
+#'       )
+#'     }
+#'     if(one_sided) {
+#'       pvals_diff_cond1 <- rowSums(distr_diff[, 1:iterations] <= distr_diff[, (iterations + 1)]) / iterations
+#'       pvals_diff_cond2 <- rowSums(distr_diff[, 1:iterations] >= distr_diff[, (iterations + 1)]) / iterations
+#'       pvals_diff <- pmin(pvals_diff_cond1, pvals_diff_cond2)
+#'       BH_pvals_diff_cond1 <- stats::p.adjust(p = pvals_diff_cond1, method = "BH")
+#'       BH_pvals_diff_cond2 <- stats::p.adjust(p = pvals_diff_cond2, method = "BH")
+#'       BH_pvals_diff <- pmin(BH_pvals_diff_cond1, BH_pvals_diff_cond2)
+#'     } else {
+#'       pvals_diff <- rowSums(abs(distr_diff[, 1:iterations]) >= abs(distr_diff[, (iterations + 1)])) / iterations
+#'       BH_pvals_diff <- stats::p.adjust(p = pvals_diff, method = "BH")
+#'     }
+#'     pvals_cond1 <- rowSums(distr_cond1[, 1:iterations] >= distr_cond1[, (iterations + 1)]) / iterations
+#'     pvals_cond2 <- rowSums(distr_cond2[, 1:iterations] >= distr_cond2[, (iterations + 1)]) / iterations
+#'     sub_template_cci_dt[, paste0("PVAL_", c(cond1, cond2)) := list(pvals_cond1, pvals_cond2)]
+#'     sub_template_cci_dt[, paste0("BH_PVAL_", c(cond1, cond2)) := list(stats::p.adjust(
+#'       p = pvals_cond1,
+#'       method = "BH"
+#'     ),
+#'     stats::p.adjust(
+#'       p = pvals_cond2,
+#'       method = "BH"
+#'     )
+#'     )]
+#'     sub_template_cci_dt[, PVAL_DIFF := pvals_diff]
+#'     sub_template_cci_dt[, BH_PVAL_DIFF := BH_pvals_diff]
+#'     sub_template_cci_dt <- sub_template_cci_dt[, c("LR_GENES", "L_CELLTYPE", "R_CELLTYPE", "L_GENE", "R_GENE",
+#'                                                    paste0("PVAL_", cond1), paste0("PVAL_", cond2), "PVAL_DIFF",
+#'                                                    paste0("BH_PVAL_", cond1), paste0("BH_PVAL_", cond2), "BH_PVAL_DIFF"), with = FALSE]
+#'   }
+#'   cci_dt <- data.table::merge.data.table(
+#'     x = cci_dt_simple,
+#'     y = sub_template_cci_dt,
+#'     by = colnames(cci_dt_simple)[1:5],
+#'     all.x = TRUE,
+#'     sort = FALSE
+#'   )
+#'   cci_dt[is.na(cci_dt)] <- 1
+#'   return(cci_dt)
+#' }
+#'
+#' #' Title
+#' #'
+#' #' @param expr_tr x
+#' #' @param metadata x
+#' #' @param template_cci_dt x
+#' #' @param cond1 x
+#' #' @param cond2 x
+#' #'
+#' #' @return x
+#' run_stat_iteration_old <- function(
+#'   expr_tr,
+#'   metadata,
+#'   template_cci_dt,
+#'   cond1,
+#'   cond2
+#' ) {
+#'   if(is.null(cond1) | is.null(cond2)) {
+#'     meta_ct <- metadata
+#'     meta_ct$cell_type <- sample(meta_ct$cell_type)
+#'     return(run_simple_analysis(
+#'       expr_tr = expr_tr,
+#'       metadata = meta_ct ,
+#'       template_cci_dt = template_cci_dt ,
+#'       cond1 = cond1,
+#'       cond2 = cond2,
+#'       threshold = NULL,
+#'       min_cells = NULL,
+#'       compute_fast = TRUE
+#'     ))
+#'   } else {
+#'     meta_cond <- metadata
+#'     for(x in unique(meta_cond$cell_type)) {
+#'       meta_cond$condition[meta_cond$cell_type == x] <- sample(meta_cond$condition[meta_cond$cell_type == x])
+#'     }
+#'     permcond_dt <- run_simple_analysis(
+#'       expr_tr = expr_tr,
+#'       metadata = meta_cond ,
+#'       template_cci_dt = template_cci_dt ,
+#'       cond1 = cond1,
+#'       cond2 = cond2,
+#'       threshold = NULL,
+#'       min_cells = NULL,
+#'       compute_fast = TRUE
+#'     )
+#'     meta_ct <- metadata
+#'     meta_ct$cell_type[meta_ct$condition == cond1] <- sample(meta_ct$cell_type[meta_ct$condition == cond1])
+#'     meta_ct$cell_type[meta_ct$condition == cond2] <- sample(meta_ct$cell_type[meta_ct$condition == cond2])
+#'     permct_dt <- run_simple_analysis(
+#'       expr_tr = expr_tr,
+#'       metadata = meta_ct ,
+#'       template_cci_dt = template_cci_dt ,
+#'       cond1 = cond1,
+#'       cond2 = cond2,
+#'       threshold = NULL,
+#'       min_cells = NULL,
+#'       compute_fast = TRUE
+#'     )
+#'     return(cbind(permcond_dt$cond2 - permcond_dt$cond1, permct_dt$cond1, permct_dt$cond2))
+#'   }
+#' }
+#'
+#' #' Title
+#' #'
+#' #' @param cci_dt x
+#' #' @param cond1 x
+#' #' @param cond2 x
+#' #' @param permutation_analysis x
+#' #'
+#' #' @return x
+#' clean_colnames_old <- function(
+#'   cci_dt,
+#'   cond1,
+#'   cond2,
+#'   permutation_analysis
+#' ) {
+#'   first_cols <- c("LR_GENES", "L_GENE", "R_GENE", "L_CELLTYPE", "R_CELLTYPE")
+#'   if(is.null(cond1) | is.null(cond2)) {
+#'     last_cols <- c("L_NCELLS", "L_EXPRESSION", "L_DETECTED", "R_NCELLS", "R_EXPRESSION", "R_DETECTED")
+#'     if(!permutation_analysis) {
+#'       ordered_cols <- c(first_cols,
+#'                         "LR_SCORE", "LR_DETECTED",
+#'                         last_cols)
+#'     } else {
+#'       ordered_cols <- c(first_cols,
+#'                         "LR_SCORE", "LR_DETECTED", "PVAL", "BH_PVAL",
+#'                         last_cols)
+#'     }
+#'   } else {
+#'     last_cols <- c(paste0("L_NCELLS_", cond1), paste0("L_EXPRESSION_", cond1), paste0("L_DETECTED_", cond1),
+#'                    paste0("R_NCELLS_", cond1), paste0("R_EXPRESSION_", cond1), paste0("R_DETECTED_", cond1),
+#'                    paste0("L_NCELLS_", cond2), paste0("L_EXPRESSION_", cond2), paste0("L_DETECTED_", cond2),
+#'                    paste0("R_NCELLS_", cond2), paste0("R_EXPRESSION_", cond2), paste0("R_DETECTED_", cond2))
+#'     if(!permutation_analysis) {
+#'       ordered_cols <- c(first_cols,
+#'                         paste0("LR_SCORE_", cond1), paste0("LR_SCORE_", cond2),
+#'                         paste0("LR_DETECTED_", cond1), paste0("LR_DETECTED_", cond2),
+#'                         last_cols)
+#'     } else {
+#'       ordered_cols <- c(first_cols,
+#'                         paste0("LR_SCORE_", cond1), paste0("LR_SCORE_", cond2),
+#'                         paste0("LR_DETECTED_", cond1), paste0("LR_DETECTED_", cond2),
+#'                         "PVAL_DIFF", "BH_PVAL_DIFF",
+#'                         paste0("PVAL_", cond1), paste0("BH_PVAL_", cond1),
+#'                         paste0("PVAL_", cond2), paste0("BH_PVAL_", cond2),
+#'                         last_cols)
+#'     }
+#'   }
+#'   data.table::setcolorder(
+#'     x = cci_dt,
+#'     neworder = ordered_cols
+#'   )
+#'   return(cci_dt)
+#' }
+#'
+#' #' Title
+#' #'
+#' #' @param cci_dt x
+#' #' @param cond1 x
+#' #' @param cond2 x
+#' #' @param metadata x
+#' #'
+#' #' @return x
+#' add_cell_number_old <- function(
+#'   cci_dt,
+#'   cond1,
+#'   cond2,
+#'   metadata
+#' ) {
+#'   if(is.null(cond1) | is.null(cond2)) {
+#'     dt_NCELLS <- metadata[, .N, by = "cell_type"]
+#'     cci_dt <- data.table::merge.data.table(
+#'       x = cci_dt,
+#'       y = dt_NCELLS,
+#'       by.x = "L_CELLTYPE",
+#'       by.y = "cell_type",
+#'       all.x = TRUE,
+#'       sort = FALSE
+#'     )
+#'     cci_dt <- data.table::merge.data.table(
+#'       x = cci_dt,
+#'       y = dt_NCELLS,
+#'       by.x = "R_CELLTYPE",
+#'       by.y = "cell_type",
+#'       all.x = TRUE,
+#'       sort = FALSE,
+#'       suffixes = c("_L", "_R")
+#'     )
+#'     cci_dt[is.na(cci_dt)] <- 0
+#'     data.table::setnames(
+#'       x = cci_dt,
+#'       old = c("N_L", "N_R"),
+#'       new = c("L_NCELLS", "R_NCELLS")
+#'     )
+#'   } else {
+#'     dt_NCELLS <- metadata[, .N, by = c("cell_type", "condition")]
+#'     dt_NCELLS <- data.table::dcast.data.table(
+#'       data = dt_NCELLS,
+#'       formula = cell_type ~ condition,
+#'       value.var = "N"
+#'     )
+#'     cci_dt <- data.table::merge.data.table(
+#'       x = cci_dt,
+#'       y = dt_NCELLS,
+#'       by.x = "L_CELLTYPE",
+#'       by.y = "cell_type",
+#'       all.x = TRUE,
+#'       sort = FALSE
+#'     )
+#'     cci_dt <- data.table::merge.data.table(
+#'       x = cci_dt,
+#'       y = dt_NCELLS,
+#'       by.x = "R_CELLTYPE",
+#'       by.y = "cell_type",
+#'       all.x = TRUE,
+#'       sort = FALSE,
+#'       suffixes = c("_L", "_R")
+#'     )
+#'     cci_dt[is.na(cci_dt)] <- 0
+#'     data.table::setnames(
+#'       x = cci_dt,
+#'       old = c(paste0(cond1, "_L"), paste0(cond2, "_L"), paste0(cond1, "_R"), paste0(cond2, "_R")),
+#'       new = c(paste0("L_NCELLS_", cond1), paste0("L_NCELLS_", cond2), paste0("R_NCELLS_", cond1), paste0("R_NCELLS_", cond2))
+#'     )
+#'   }
+#'   return(cci_dt)
+#' }

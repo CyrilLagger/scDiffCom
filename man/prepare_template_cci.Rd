@@ -4,10 +4,10 @@
 \alias{prepare_template_cci}
 \title{Create a template data.table with all the CCIs}
 \usage{
-prepare_template_cci(LR_df, cell_types)
+prepare_template_cci(LR_db, cell_types)
 }
 \arguments{
-\item{LR_df}{data.frame of LR CCI}
+\item{LR_db}{data.frame of LR CCI}
 
 \item{cell_types}{character of the cell_types present in the Seurat object}
 }

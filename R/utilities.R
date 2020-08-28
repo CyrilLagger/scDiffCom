@@ -274,7 +274,6 @@ prepare_seurat_metadata <- function(
 filter_cell_types <- function(
   metadata,
   min_cells
-
 ) {
   if("condition" %in% colnames(metadata)) {
     filt <- apply(table(metadata$cell_type,
@@ -299,23 +298,51 @@ preprocess_LR <- function(
   data,
   LR_data
 ) {
-  if(!identical(colnames(LR_data), c("GENESYMB_L", "GENESYMB_R", "SYMB_LR"))) {
+  Ligand_2 <- Receptor_2 <- Receptor_3 <- NULL
+  if(!identical(colnames(LR_data), c("Ligand_1", "Ligand_2", "Receptor_1", "Receptor_2", "Receptor_3", "LR_ID"))) {
     stop("Wrong formating of LR_data.")
   }
   LR_keep <- unique(LR_data)
-  message(paste0("Number of considered LR pairs: ", length(unique(LR_keep$SYMB_LR)), "."))
-  LR_keep <- LR_data[LR_data$GENESYMB_L %in% rownames(data) &
-                       LR_data$GENESYMB_R %in% rownames(data), ]
-  LR_genes <- unique(c(unique(LR_keep$GENESYMB_L), unique(LR_keep$GENESYMB_R)))
+  message(paste0("Number of considered LR interactions: ", length(unique(LR_keep$LR_ID)), "."))
+  LR_keep <- LR_data[LR_data$Ligand_1 %in% rownames(data) &
+                       LR_data$Receptor_1 %in% rownames(data) &
+                       LR_data$Ligand_2 %in% c(rownames(data), NA) &
+                       LR_data$Receptor_2 %in% c(rownames(data), NA) &
+                       LR_data$Receptor_3 %in% c(rownames(data), NA), ]
+  LR_genes <- unique(c(unique(LR_keep$Ligand_1),
+                       unique(LR_keep$Ligand_2),
+                       unique(LR_keep$Receptor_1),
+                       unique(LR_keep$Receptor_2),
+                       unique(LR_keep$Receptor_3)))
   data_keep <- data[rownames(data) %in% LR_genes, ]
-  message(paste0("Number of LR pairs in the dataset: ", length(unique(LR_keep$SYMB_LR)), "."))
-  LR_keep$L_GENE <- LR_keep$GENESYMB_L
-  LR_keep$R_GENE <- LR_keep$GENESYMB_R
-  LR_keep$LR_GENES <- LR_keep$SYMB_LR
-  LR_keep$SYMB_LR <- NULL
-  LR_keep$GENESYMB_L <- NULL
-  LR_keep$GENESYMB_R <- NULL
-  return(list(data = data_keep, LR_df = LR_keep))
+  n_ID <- length(unique(LR_keep$LR_ID))
+  if(n_ID == 0) {
+    stop("There are no LR interactions in the dataset.")
+  } else {
+    message(paste0("Number of LR interactions in the dataset: ", n_ID, "."))
+  }
+  if(all(is.na(LR_keep$Receptor_1)) | all(is.na(LR_keep$Ligand_1))) {
+    stop("Error of formatting in the LR database: only NA's in Ligand_1 or Receptor_1.")
+  } else {
+    if(all(is.na(LR_keep$Ligand_2))) {
+      max_nL <- 1
+      LR_keep <- base::subset(LR_keep, select = -c(Ligand_2))
+    } else {
+      max_nL <- 2
+    }
+    if(all(is.na(LR_keep$Receptor_2)) & all(is.na(LR_keep$Receptor_3))) {
+      max_nR <- 1
+      LR_keep <- base::subset(LR_keep, select = -c(Receptor_2, Receptor_3))
+    } else if(all(is.na(LR_keep$Receptor_2))) {
+      stop("Error of formatting in the LR database: only NA's in Receptor_2 but not in Receptor_3.")
+    } else if(all(is.na(LR_keep$Receptor_3))) {
+      max_nR <- 2
+      LR_keep <- base::subset(LR_keep, select = -c(Receptor_3))
+    } else {
+      max_nR <- 3
+    }
+  }
+  return(list(data = data_keep, LR_db = LR_keep, max_nR = max_nL, max_nL = max_nR))
 }
 
 #' Determine if two values are bigger than a threshold at the same time.
@@ -336,3 +363,26 @@ is_detected <- Vectorize(function(
     return(FALSE)
   }
 })
+
+# preprocess_LR_old <- function(
+#   data,
+#   LR_data
+# ) {
+#   if(!identical(colnames(LR_data), c("GENESYMB_L", "GENESYMB_R", "SYMB_LR"))) {
+#     stop("Wrong formating of LR_data.")
+#   }
+#   LR_keep <- unique(LR_data)
+#   message(paste0("Number of considered LR pairs: ", length(unique(LR_keep$SYMB_LR)), "."))
+#   LR_keep <- LR_data[LR_data$GENESYMB_L %in% rownames(data) &
+#                        LR_data$GENESYMB_R %in% rownames(data), ]
+#   LR_genes <- unique(c(unique(LR_keep$GENESYMB_L), unique(LR_keep$GENESYMB_R)))
+#   data_keep <- data[rownames(data) %in% LR_genes, ]
+#   message(paste0("Number of LR pairs in the dataset: ", length(unique(LR_keep$SYMB_LR)), "."))
+#   LR_keep$L_GENE <- LR_keep$GENESYMB_L
+#   LR_keep$R_GENE <- LR_keep$GENESYMB_R
+#   LR_keep$LR_GENES <- LR_keep$SYMB_LR
+#   LR_keep$SYMB_LR <- NULL
+#   LR_keep$GENESYMB_L <- NULL
+#   LR_keep$GENESYMB_R <- NULL
+#   return(list(data = data_keep, LR_df = LR_keep))
+# }
