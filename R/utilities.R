@@ -103,6 +103,7 @@ get_orthologs <- function(
         } else {
           g_keep <- dt_gsame[1]$output
         }
+        ensembl_all <- ensembl_all[!(input == g & confidence == 0)]
         ensembl_all <- ensembl_all[!(input == g & output != g_keep)]
       }
     }
