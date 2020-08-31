@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepare_LR_databases.R
 \name{prepare_LR_scTensor}
 \alias{prepare_LR_scTensor}
-\title{Create a LR data.frame based on the scTensor database}
+\title{Create a LR data.table based on the scTensor mouse database}
 \usage{
 prepare_LR_scTensor(detailed = FALSE)
 }
@@ -13,7 +13,7 @@ prepare_LR_scTensor(detailed = FALSE)
 data.frame with 3 or 6 columns
 }
 \description{
-Create a LR data.frame based on the scTensor database
+Create a LR data.table based on the scTensor mouse database
 }
 \examples{
 \dontrun{

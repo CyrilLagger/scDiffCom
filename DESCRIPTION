@@ -13,26 +13,17 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 2.10)
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Suggests: 
     testthat (>= 2.1.0)
 Imports: 
     biomaRt,
-    dplyr,
     Seurat,
-    utils,
     data.table,
-    tibble,
-    Rfast,
-    Rfast2,
-    stats,
-    LRBase.Mmu.eg.db,
-    AnnotationHub,
-    nichenetr,
-    SingleCellSignalR,
     AnnotationDbi,
-    permute,
-    foreach,
-    doParallel,
+    AnnotationHub,
+    LRBase.Mmu.eg.db,
+    SingleCellSignalR,
     generics,
+    nichenetr,
     pbapply

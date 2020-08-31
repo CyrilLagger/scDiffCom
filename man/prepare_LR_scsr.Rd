@@ -4,7 +4,7 @@
 \alias{prepare_LR_scsr}
 \title{Create a LR data.frame based on SingleCellSignalR database}
 \usage{
-prepare_LR_scsr(detailed = FALSE, one2one = TRUE)
+prepare_LR_scsr(detailed = FALSE, one2one = FALSE)
 }
 \arguments{
 \item{detailed}{logical indicating if returning only 3 columns or the more detailed data.frame.}

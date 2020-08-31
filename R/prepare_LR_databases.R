@@ -224,7 +224,7 @@ aggregate_LR <- function(
   return(dt)
 }
 
-#' Create a LR data.frame based on the scTensor database
+#' Create a LR data.table based on the scTensor mouse database
 #'
 #' @param detailed logical indicating if returning only 3 columns or the more detailed data.frame.
 #'
@@ -255,7 +255,6 @@ prepare_LR_scTensor <- function(
     ah,
     c("OrgDb", "Mus musculus")
   )[[1]]
-
   LR_L_match <- AnnotationDbi::select(
     hs,
     column=c("SYMBOL", "ENTREZID"),
@@ -269,22 +268,22 @@ prepare_LR_scTensor <- function(
     keys= as.character(LR$GENEID_R)
   )
   if(identical(LR_L_match$ENTREZID, as.character(LR$GENEID_L))) {
-    LR$GENESYMB_L <- LR_L_match$SYMBOL
+    LR$LIGAND <- LR_L_match$SYMBOL
   } else {
     stop("Matching not possible.")
   }
   if(identical(LR_R_match$ENTREZID, as.character(LR$GENEID_R))) {
-    LR$GENESYMB_R <- LR_R_match$SYMBOL
+    LR$RECEPTOR <- LR_R_match$SYMBOL
   } else {
     stop("Matching not possible.")
   }
-  LR$SYMB_LR <- paste(LR$GENESYMB_L, LR$GENESYMB_R, sep = "_")
-  if(!detailed) {
-    LR <- LR[, c("GENESYMB_L", "GENESYMB_R", "SYMB_LR", "SOURCEDB")]
-    LR <- LR[!duplicated(LR$SYMB_LR), ]
-    colnames(LR)[colnames(LR) == "SOURCEDB"] <- "source_sctensor"
-  }
   data.table::setDT(LR)
+  LR$LR_ID <- paste(LR$LIGAND, LR$RECEPTOR, sep = "_")
+  if(!detailed) {
+    LR <- LR[, c("LR_ID", "LIGAND", "RECEPTOR", "SOURCEDB")]
+    LR <- LR[!duplicated(LR$LR_ID), ]
+    data.table::setnames(LR, old = "SOURCEDB", new = "SOURCE_SCTENSOR")
+  }
   return(LR)
 }
 
@@ -303,7 +302,7 @@ prepare_LR_scTensor <- function(
 #' }
 prepare_LR_scsr <- function(
   detailed = FALSE,
-  one2one = TRUE
+  one2one = FALSE
 ) {
   LR <- SingleCellSignalR::LRdb
   data.table::setDT(LR)
@@ -338,13 +337,13 @@ prepare_LR_scsr <- function(
   data.table::setnames(
     x = LR,
     old = c("mouse_symbol.x", "confidence.x", "type.x", "mouse_symbol.y", "confidence.y", "type.y"),
-    new = c("GENESYMB_L", "CONF_L", "TYPE_L", "GENESYMB_R", "CONF_R", "TYPE_R")
+    new = c("LIGAND", "CONF_L", "TYPE_L", "RECEPTOR", "CONF_R", "TYPE_R")
   )
   if(!detailed) {
     LR <- stats::na.omit(LR)
-    LR <- LR[, c("GENESYMB_L", "GENESYMB_R", "source", "CONF_L", "TYPE_L", "CONF_R", "TYPE_R")]
-    LR$SYMB_LR <- paste(LR$GENESYMB_L, LR$GENESYMB_R, sep = "_")
-    LR <- LR[!duplicated(LR$SYMB_LR), ]
+    LR <- LR[, c("LIGAND", "RECEPTOR", "source", "CONF_L", "TYPE_L", "CONF_R", "TYPE_R")]
+    LR$LR_ID <- paste(LR$LIGAND, LR$RECEPTOR, sep = "_")
+    LR <- LR[!duplicated(LR$LR_ID), ]
     data.table::setnames(x = LR, old = "source", new =  "source_scsr")
   }
   return(LR)
