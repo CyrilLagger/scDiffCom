@@ -143,13 +143,13 @@ prepare_template_cci <- function(
   template <- data.table::CJ(
     L_CELLTYPE = cell_types,
     R_CELLTYPE = cell_types,
-    LR_ID = LR_db$LR_ID
+    LR_SORTED = LR_db$LR_SORTED
   )
   template <- data.table::merge.data.table(
     x = template,
     y = LR_db,
-    by.x = "LR_ID",
-    by.y = "LR_ID",
+    by.x = "LR_SORTED",
+    by.y = "LR_SORTED",
     all.x = TRUE,
     sort = FALSE
   )
@@ -355,7 +355,7 @@ build_cci_drate_dt <- function(
                 function(i) {
                   as.list(
                     dt[.SD,
-                       on = c(paste0("GENE==Ligand_", i), "CELLTYPE==L_CELLTYPE"),
+                       on = c(paste0("GENE==LIGAND_", i), "CELLTYPE==L_CELLTYPE"),
                        mget(paste0("x.", merge_id))
                        ])
                 }),
@@ -364,7 +364,7 @@ build_cci_drate_dt <- function(
                 function(i) {
                   as.list(
                     dt[.SD,
-                       on = c(paste0("GENE==Receptor_", i), "CELLTYPE==R_CELLTYPE"),
+                       on = c(paste0("GENE==RECEPTOR_", i), "CELLTYPE==R_CELLTYPE"),
                        mget(paste0("x.", merge_id))
                        ])
                 })
@@ -431,8 +431,8 @@ run_stat_analysis <- function(
     sub_template_cci_dt <- cci_dt_simple[get(paste0("LR_DETECTED_", cond_info$cond1)) == TRUE | get(paste0("LR_DETECTED_", cond_info$cond2)) == TRUE]
   }
   LR_names <- c(
-    paste0("Ligand_", 1:pp_LR$max_nL),
-    paste0("Receptor_", 1:pp_LR$max_nR )
+    paste0("LIGAND_", 1:pp_LR$max_nL),
+    paste0("RECEPTOR_", 1:pp_LR$max_nR )
   )
   sub_expr_tr <- expr_tr[, colnames(expr_tr) %in%
                            unique(unlist(sub_template_cci_dt[, LR_names, with = FALSE]))]
@@ -440,7 +440,7 @@ run_stat_analysis <- function(
                  ncol(expr_tr),
                  ". Number of detected genes for permutation test: ",
                  ncol(sub_expr_tr)))
-  cols_keep <- c("LR_ID", "L_CELLTYPE", "R_CELLTYPE", LR_names)
+  cols_keep <- c("LR_SORTED", "L_CELLTYPE", "R_CELLTYPE", LR_names)
   cci_perm <- pbapply::pbreplicate(
     n = iterations,
     expr = run_stat_iteration(
@@ -628,10 +628,10 @@ clean_colnames <- function(
   pp_LR,
   permutation_analysis
 ) {
-  first_cols <- c("LR_ID", "L_CELLTYPE", "R_CELLTYPE")
+  first_cols <- c("LR_SORTED", "L_CELLTYPE", "R_CELLTYPE")
   LR_names <- c(
-    paste0("Ligand_", 1:pp_LR$max_nL),
-    paste0("Receptor_", 1:pp_LR$max_nR )
+    paste0("LIGAND_", 1:pp_LR$max_nL),
+    paste0("RECEPTOR_", 1:pp_LR$max_nR )
   )
   first_cols <- c(first_cols, LR_names)
   if(!cond_info$is_cond) {

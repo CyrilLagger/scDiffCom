@@ -7,10 +7,9 @@
 preprocess_LR(data, LR_data)
 }
 \arguments{
-\item{data}{matrix or data.frame with genes as rows and cells as columns.}
+\item{data}{x}
 
-\item{LR_data}{3-column data.frame of Ligand-Receptor pairs,
-satisfying colnames(LR_data) == c("GENESYMB_L", "GENESYMB_R", "SYMB_LR").}
+\item{LR_data}{x}
 }
 \value{
 A list containing the subsetted data and the subsetted LR-pairs.

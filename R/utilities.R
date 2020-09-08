@@ -290,55 +290,53 @@ filter_cell_types <- function(
 
 #' Correspondance between dataset genes and LR-pairs
 #'
-#' @param data matrix or data.frame with genes as rows and cells as columns.
-#' @param LR_data 3-column data.frame of Ligand-Receptor pairs,
-#'  satisfying colnames(LR_data) == c("GENESYMB_L", "GENESYMB_R", "SYMB_LR").
+#' @param data x
+#' @param LR_data x
 #'
 #' @return A list containing the subsetted data and the subsetted LR-pairs.
 preprocess_LR <- function(
   data,
   LR_data
 ) {
-  Ligand_2 <- Receptor_2 <- Receptor_3 <- NULL
-  if(!identical(colnames(LR_data), c("Ligand_1", "Ligand_2", "Receptor_1", "Receptor_2", "Receptor_3", "LR_ID"))) {
-    stop("Wrong formating of LR_data.")
-  }
-  LR_keep <- unique(LR_data)
-  message(paste0("Number of considered LR interactions: ", length(unique(LR_keep$LR_ID)), "."))
-  LR_keep <- LR_data[LR_data$Ligand_1 %in% rownames(data) &
-                       LR_data$Receptor_1 %in% rownames(data) &
-                       LR_data$Ligand_2 %in% c(rownames(data), NA) &
-                       LR_data$Receptor_2 %in% c(rownames(data), NA) &
-                       LR_data$Receptor_3 %in% c(rownames(data), NA), ]
-  LR_genes <- unique(c(unique(LR_keep$Ligand_1),
-                       unique(LR_keep$Ligand_2),
-                       unique(LR_keep$Receptor_1),
-                       unique(LR_keep$Receptor_2),
-                       unique(LR_keep$Receptor_3)))
+  LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <- RECEPTOR_3 <- col_compulsory <- NULL
+  col_compulsory <- c("LR_SORTED", "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")
+  LR_keep <- LR_data[, col_compulsory, with = FALSE]
+  LR_keep <- unique(LR_keep)
+  message(paste0("Number of considered LR interactions: ", length(unique(LR_keep$LR_SORTED)), "."))
+  LR_keep <- LR_keep[LIGAND_1 %in% rownames(data) &
+                       RECEPTOR_1 %in% rownames(data) &
+                       LIGAND_2 %in% c(rownames(data), NA) &
+                       RECEPTOR_2 %in% c(rownames(data), NA) &
+                       RECEPTOR_3 %in% c(rownames(data), NA), ]
+  LR_genes <- unique(c(unique(LR_keep$LIGAND_1),
+                       unique(LR_keep$LIGAND_2),
+                       unique(LR_keep$RECEPTOR_1),
+                       unique(LR_keep$RECEPTOR_2),
+                       unique(LR_keep$RECEPTOR_3)))
   data_keep <- data[rownames(data) %in% LR_genes, ]
-  n_ID <- length(unique(LR_keep$LR_ID))
+  n_ID <- length(unique(LR_keep$LR_SORTED))
   if(n_ID == 0) {
     stop("There are no LR interactions in the dataset.")
   } else {
     message(paste0("Number of LR interactions in the dataset: ", n_ID, "."))
   }
-  if(all(is.na(LR_keep$Receptor_1)) | all(is.na(LR_keep$Ligand_1))) {
-    stop("Error of formatting in the LR database: only NA's in Ligand_1 or Receptor_1.")
+  if(all(is.na(LR_keep$RECEPTOR_1)) | all(is.na(LR_keep$LIGAND_1))) {
+    stop("Error of formatting in the LR database: only NA's in LIGAND_1 or RECEPTOR_1.")
   } else {
-    if(all(is.na(LR_keep$Ligand_2))) {
+    if(all(is.na(LR_keep$LIGAND_2))) {
       max_nL <- 1
-      LR_keep <- base::subset(LR_keep, select = -c(Ligand_2))
+      LR_keep <- base::subset(LR_keep, select = -c(LIGAND_2))
     } else {
       max_nL <- 2
     }
-    if(all(is.na(LR_keep$Receptor_2)) & all(is.na(LR_keep$Receptor_3))) {
+    if(all(is.na(LR_keep$RECEPTOR_2)) & all(is.na(LR_keep$RECEPTOR_3))) {
       max_nR <- 1
-      LR_keep <- base::subset(LR_keep, select = -c(Receptor_2, Receptor_3))
-    } else if(all(is.na(LR_keep$Receptor_2))) {
-      stop("Error of formatting in the LR database: only NA's in Receptor_2 but not in Receptor_3.")
-    } else if(all(is.na(LR_keep$Receptor_3))) {
+      LR_keep <- base::subset(LR_keep, select = -c(RECEPTOR_2, RECEPTOR_3))
+    } else if(all(is.na(LR_keep$RECEPTOR_2))) {
+      stop("Error of formatting in the LR database: only NA's in RECEPTOR_2 but not in RECEPTOR_3.")
+    } else if(all(is.na(LR_keep$RECEPTOR_3))) {
       max_nR <- 2
-      LR_keep <- base::subset(LR_keep, select = -c(Receptor_3))
+      LR_keep <- base::subset(LR_keep, select = -c(RECEPTOR_3))
     } else {
       max_nR <- 3
     }
