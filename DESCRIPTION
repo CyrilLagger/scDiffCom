@@ -26,4 +26,6 @@ Imports:
     SingleCellSignalR,
     generics,
     nichenetr,
-    pbapply
+    pbapply,
+    curl,
+    CellChat

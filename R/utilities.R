@@ -12,7 +12,7 @@
 get_orthologs <- function(
   genes,
   input_species,
-  one2one = TRUE
+  one2one = FALSE
 ) {
   ensembl_gene_id <- inl <- outl <- output <- input <- confidence <- NULL
   if(input_species == "mouse") {
@@ -69,7 +69,7 @@ get_orthologs <- function(
   if(one2one) {
     ensembl_all <- ensembl_all[eval(as.symbol(ortho_type)) == 'ortholog_one2one',]
   } else {
-    ensembl_all <- ensembl_all[eval(as.symbol(ortho_type)) %in% c('ortholog_one2one','ortholog_one2many'),]
+    #ensembl_all <- ensembl_all[eval(as.symbol(ortho_type)) %in% c('ortholog_one2one','ortholog_one2many'),]
   }
   ensembl_all <- ensembl_all[, ensembl_gene_id := NULL]
   ensembl_all <- unique(ensembl_all)
@@ -343,7 +343,7 @@ preprocess_LR <- function(
       max_nR <- 3
     }
   }
-  return(list(data = data_keep, LR_db = LR_keep, max_nR = max_nL, max_nL = max_nR))
+  return(list(data = data_keep, LR_db = LR_keep, max_nL = max_nL, max_nR = max_nR))
 }
 
 #' Determine if two values are bigger than a threshold at the same time.

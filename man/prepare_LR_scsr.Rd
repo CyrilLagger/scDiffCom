@@ -2,24 +2,16 @@
 % Please edit documentation in R/prepare_LR_databases.R
 \name{prepare_LR_scsr}
 \alias{prepare_LR_scsr}
-\title{Create a LR data.frame based on SingleCellSignalR database}
+\title{Create a data.table with the ligand-receptor interactions from SingleCellSignalR.}
 \usage{
-prepare_LR_scsr(detailed = FALSE, one2one = FALSE)
+prepare_LR_scsr(one2one = FALSE)
 }
 \arguments{
-\item{detailed}{logical indicating if returning only 3 columns or the more detailed data.frame.}
-
-\item{one2one}{logical indicating if using one2one orthology relationship}
+\item{one2one}{logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.}
 }
 \value{
-data.frame with 3 LR columns and possibly more detailed information
+data.table with ligand-receptor interactions and their relevant properties obtained from SingleCellSignalR.
 }
 \description{
-Create a LR data.frame based on SingleCellSignalR database
-}
-\examples{
-\dontrun{
-LRdb_one2one <- prepare_LR_scsr(detailed = FALSE, one2one = TRUE)
-LRdb_many2many <- prepare_LR_scsr(detailed = FALSE, one2one = FALSE)
-}
+Create a data.table with the ligand-receptor interactions from SingleCellSignalR.
 }

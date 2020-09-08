@@ -4,7 +4,7 @@
 \alias{get_orthologs}
 \title{Conversion between mouse and human genes using orthologs.}
 \usage{
-get_orthologs(genes, input_species, one2one = TRUE)
+get_orthologs(genes, input_species, one2one = FALSE)
 }
 \arguments{
 \item{genes}{character vector of the symbols of the genes (mgi_symbol or hgnc_symbol)}

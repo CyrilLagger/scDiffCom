@@ -2,24 +2,18 @@
 % Please edit documentation in R/prepare_LR_databases.R
 \name{prepare_LR_cpdb}
 \alias{prepare_LR_cpdb}
-\title{Create a LR data.frame based on CellPhoneDB database.}
+\title{Create a data.table with the ligand-receptor interactions from CELLPHONEDB.}
 \usage{
-prepare_LR_cpdb(one2one = TRUE, deconvoluted = TRUE)
+prepare_LR_cpdb(one2one = FALSE, deconvoluted = FALSE)
 }
 \arguments{
-\item{one2one}{logical indicating if using one2one orthology relationship}
+\item{one2one}{logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.}
 
-\item{deconvoluted}{logical indicating if using 1:1 LR versus complex LR}
+\item{deconvoluted}{logical indiciating if the interactions are deconvoluted when complex; default is FALSE}
 }
 \value{
-data.frame with 3 LR columns and possibly more detailed information
+data.table with ligand-receptor interactions and their relevant properties obtained from CELLPHONEDB.
 }
 \description{
-Create a LR data.frame based on CellPhoneDB database.
-}
-\examples{
-\dontrun{
-LRcpdb_one2one <- prepare_LR_cpdb(one2one = TRUE, deconvoluted = TRUE)
-LRcpdb_many2many <- prepare_LR_cpdb(one2one = FALSE, deconvoluted = TRUE)
-}
+Create a data.table with the ligand-receptor interactions from CELLPHONEDB.
 }

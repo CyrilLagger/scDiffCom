@@ -2,16 +2,16 @@
 % Please edit documentation in R/prepare_LR_databases.R
 \name{create_LR_cpdb}
 \alias{create_LR_cpdb}
-\title{Convert CellphoneDB database in a dataframe either complex or deconvoluted}
+\title{Convert CellphoneDB database in a dataframe either complex or deconvoluted.}
 \usage{
-create_LR_cpdb(deconvoluted = TRUE)
+create_LR_cpdb(deconvoluted = FALSE)
 }
 \arguments{
 \item{deconvoluted}{logical indicating if returning the complex LR with 1 to 3 genes per category or the 1:1 deconvoluted data.frame.}
 }
 \value{
-data.frame
+data.table with ligand-receptor interactions and their relevant properties obtained from CELLPHONEDB.
 }
 \description{
-Convert CellphoneDB database in a dataframe either complex or deconvoluted
+Convert CellphoneDB database in a dataframe either complex or deconvoluted.
 }

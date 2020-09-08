@@ -2,21 +2,13 @@
 % Please edit documentation in R/prepare_LR_databases.R
 \name{prepare_LR_scTensor}
 \alias{prepare_LR_scTensor}
-\title{Create a LR data.table based on the scTensor mouse database}
+\title{Create a data.table with the ligand-receptor interactions from scTensor.}
 \usage{
-prepare_LR_scTensor(detailed = FALSE)
-}
-\arguments{
-\item{detailed}{logical indicating if returning only 3 columns or the more detailed data.frame.}
+prepare_LR_scTensor()
 }
 \value{
-data.frame with 3 or 6 columns
+data.table with ligand-receptor interactions and their relevant properties obtained from scTensor.
 }
 \description{
-Create a LR data.table based on the scTensor mouse database
-}
-\examples{
-\dontrun{
-LRsct <- prepare_LR_scTensor(detailed = FALSE)
-}
+Create a data.table with the ligand-receptor interactions from scTensor.
 }

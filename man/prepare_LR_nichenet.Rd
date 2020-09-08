@@ -2,24 +2,16 @@
 % Please edit documentation in R/prepare_LR_databases.R
 \name{prepare_LR_nichenet}
 \alias{prepare_LR_nichenet}
-\title{Create a LR data.frame based on nicheNet database}
+\title{Create a data.table with the ligand-receptor interactions from NICHENET.}
 \usage{
-prepare_LR_nichenet(detailed = FALSE, one2one = TRUE)
+prepare_LR_nichenet(one2one = FALSE)
 }
 \arguments{
-\item{detailed}{logical indicating if returning only 3 columns or the more detailed data.frame.}
-
-\item{one2one}{logical indicating if using one2one orthology relationship}
+\item{one2one}{logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.}
 }
 \value{
-data.frame with 3 LR columns and possibly more detailed information
+data.table with ligand-receptor interactions and their relevant properties obtained from NICHENET.
 }
 \description{
-Create a LR data.frame based on nicheNet database
-}
-\examples{
-\dontrun{
-LRniche_one2one <- prepare_LR_nichenet(detailed = FALSE, one2one = TRUE)
-LRniche_many2many <- prepare_LR_nichenet(detailed = FALSE, one2one = FALSE)
-}
+Create a data.table with the ligand-receptor interactions from NICHENET.
 }
