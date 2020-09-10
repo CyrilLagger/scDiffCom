@@ -4,10 +4,12 @@
 \alias{combine_LR_db}
 \title{Create a data.table with the ligand-receptor interactions from 6 databases.}
 \usage{
-combine_LR_db(one2one = FALSE)
+combine_LR_db(one2one = FALSE, curated = TRUE)
 }
 \arguments{
 \item{one2one}{logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.}
+
+\item{curated}{logical indicating if only the curated LR interactions should be returned.}
 }
 \value{
 data.table with ligand-receptor interactions and relevant properties from 6 databases.

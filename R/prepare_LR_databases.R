@@ -2,10 +2,12 @@
 #' Create a data.table with the ligand-receptor interactions from 6 databases.
 #'
 #' @param one2one logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.
+#' @param curated logical indicating if only the curated LR interactions should be returned.
 #'
 #' @return data.table with ligand-receptor interactions and relevant properties from 6 databases.
 combine_LR_db <- function(
-  one2one = FALSE
+  one2one = FALSE,
+  curated = TRUE
 ) {
   DATABASE <- SOURCE <- ANNOTATION <- FAMILY <- SUBFAMILY <- keep_subLR <- NULL
   LR_sct <- prepare_LR_scTensor()
@@ -124,6 +126,44 @@ combine_LR_db <- function(
     paste0("RECEPTOR_", 1:3, "_CONF"), paste0("RECEPTOR_", 1:3, "_TYPE")
   )
   LR_full <- LR_full[, cols_to_keep, with = FALSE]
+
+
+  if(curated) {
+    LR_rm_sctensor <- c("SWISSPROT_STRING", "TREMBL_STRING")
+    LR_rm_nichenet <- c("ppi_bidir_bidir", "ppi_bidir_bidir_go", "ppi_bidir_r",
+                        "ppi_bidir_r_go", "ppi_l_bidir", "ppi_l_bidir_go",
+                        "ppi_lr", "ppi_lr_go")
+    LR_rm_scsr <- c("uniprot")
+    LR_rm <- c(
+      LR_rm_sctensor,
+      LR_rm_nichenet,
+      LR_rm_scsr,
+      sapply(LR_rm_sctensor, function(i) {
+        sapply(LR_rm_nichenet, function(j) {
+          c(paste(i,j, sep = ","), paste(j, i, sep = ","))
+        })
+      }),
+      sapply(LR_rm_sctensor, function(i) {
+        sapply(LR_rm_scsr, function(j) {
+          c(paste(i,j, sep = ","), paste(j, i, sep = ","))
+        })
+      }),
+      sapply(LR_rm_scsr, function(i) {
+        sapply(LR_rm_nichenet, function(j) {
+          c(paste(i,j, sep = ","), paste(j, i, sep = ","))
+        })
+      }),
+      sapply(LR_rm_sctensor, function(i) {
+        sapply(LR_rm_nichenet, function(j) {
+          sapply(LR_rm_scsr, function(k) {
+            c(paste(i,j,k, sep = ","), paste(i,k,j, sep = ","), paste(j, i,k, sep = ","), paste(j, k, i, sep = ","),
+              paste(k, i, j, sep = ","), paste(k, j, i, sep = ","))
+          })
+        })
+      })
+    )
+    LR_full <- LR_full[!(SOURCE %in% LR_rm)]
+  }
   return(LR_full)
 }
 
