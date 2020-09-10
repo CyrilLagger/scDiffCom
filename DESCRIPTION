@@ -27,5 +27,4 @@ Imports:
     generics,
     nichenetr,
     pbapply,
-    curl,
-    CellChat
+    curl
