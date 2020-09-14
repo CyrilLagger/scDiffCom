@@ -78,6 +78,7 @@ get_orthologs <- function(
     old = c(id_gene, gene_name, ortho_confidence, ortho_type),
     new = c("input", "output", "confidence", "type")
   )
+  ensembl_all <- stats::na.omit(ensembl_all)
   #check for remaining duplicate
   if(sum(duplicated(ensembl_all[["input"]])) > 0) {
     ensembl_all[, inl := tolower(input)]
@@ -110,7 +111,8 @@ get_orthologs <- function(
     ensembl_all[, inl := NULL]
     ensembl_all[, outl := NULL]
     if(sum(duplicated(ensembl_all[["input"]])) > 0) {
-      stop("Problem in ortholog conversion.")
+      warning("There are some duplicates from orthology conversion. Removing them by using 'unique'.")
+      ensembl_all <- unique(ensembl_all, by = "input")
     }
   }
   data.table::setnames(
@@ -207,7 +209,7 @@ prepare_seurat_data <- function(
       return(as.matrix(data))
     } else {
       message("Return a data.table from Seurat object.")
-      return(data.table::as.data.table(as.matrix(data)))
+      return(data.table::as.data.table(as.matrix(data), keep.rownames = TRUE))
     }
   } else if(class(data) == "matrix") {
     if((return_type == "dense") | (return_type == "sparse")) {
@@ -215,23 +217,11 @@ prepare_seurat_data <- function(
       return(data)
     } else {
       message("Return a data.table from Seurat object.")
-      return(data.table::as.data.table(data))
+      return(data.table::as.data.table(data, keep.rownames = TRUE))
     }
   } else {
     stop(paste0("Class ", class(data), " is not recognized."))
   }
-  # data <- tryCatch(
-  #   {
-  #     as.matrix(data)
-  #   },
-  #   error = function(cond) {
-  #     message("Cannot convert sparse matrix to dense matrix (probably requires to much memory).")
-  #     message("Here's the original error message:")
-  #     message(cond)
-  #     message("We will try to aggregate the sparse matrix using a slower version of 'rowsum', this might slow the code!")
-  #     return(expr_tr)
-  #   }
-  # )
 }
 
 #' Prepare Seurat metadata for downstream analysis
