@@ -697,9 +697,6 @@ clean_colnames <- function(
   return(cci_dt)
 }
 
-
-
-
 #' Title
 #'
 #' @param cci_dt x
