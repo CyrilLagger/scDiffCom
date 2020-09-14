@@ -4,12 +4,14 @@
 \alias{prepare_LR_cpdb}
 \title{Create a data.table with the ligand-receptor interactions from CELLPHONEDB.}
 \usage{
-prepare_LR_cpdb(one2one = FALSE, deconvoluted = FALSE)
+prepare_LR_cpdb(one2one = FALSE, deconvoluted = FALSE, keep_id = FALSE)
 }
 \arguments{
 \item{one2one}{logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.}
 
 \item{deconvoluted}{logical indiciating if the interactions are deconvoluted when complex; default is FALSE}
+
+\item{keep_id}{logical indicating if keeping the column with the CELLPHONEDB interaction id}
 }
 \value{
 data.table with ligand-receptor interactions and their relevant properties obtained from CELLPHONEDB.

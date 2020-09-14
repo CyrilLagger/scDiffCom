@@ -4,7 +4,7 @@
 \alias{create_cpdb_cci}
 \title{Title}
 \usage{
-create_cpdb_cci(input_dir, condition_id = NULL, conds = NULL)
+create_cpdb_cci(input_dir, conds = NULL)
 }
 \arguments{
 \item{input_dir}{x}
