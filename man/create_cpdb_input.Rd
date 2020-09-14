@@ -2,14 +2,15 @@
 % Please edit documentation in R/pkg_cellphonedb.R
 \name{create_cpdb_input}
 \alias{create_cpdb_input}
-\title{Extract (and write on the disk) a data matrix and a metadata data.frame from a Seurat object.}
+\title{Extract a data matrix and a metadata data.frame from a Seurat object.}
 \usage{
 create_cpdb_input(
   seurat_object,
   assay = "RNA",
   slot = "data",
-  log_scale = TRUE,
+  log_scale = FALSE,
   seurat_cell_type_id,
+  input_species = "mouse",
   min_cells = 5,
   condition_id = NULL,
   input_dir = getwd()
@@ -36,5 +37,5 @@ create_cpdb_input(
 Write the two files and return a list with the paths of the files and the names of the conditions (if relevant).
 }
 \description{
-Extract (and write on the disk) a data matrix and a metadata data.frame from a Seurat object.
+Extract a data matrix and a metadata data.frame from a Seurat object.
 }
