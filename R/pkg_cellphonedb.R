@@ -468,289 +468,69 @@ create_cpdb_cci <- function(
   input_dir,
   conds = NULL
 ) {
-
   if(is.null(conds)) {
     path_res <- list(
       paste0(input_dir, '/cpdb_results_noCond/means.txt'),
-      paste0(input_dir, '/cpdb_results_noCond/pvalues.txt'),
-      paste0(input_dir, "/cpdb_results_noCond/deconvoluted.txt")
+      paste0(input_dir, '/cpdb_results_noCond/pvalues.txt')#,
+      #paste0(input_dir, "/cpdb_results_noCond/deconvoluted.txt")
     )
-    names(path_res) <- c("means_noCond", "pvalues_noCond", "deconv_noCond")
+    names(path_res) <- c("means_noCond", "pvalues_noCond")#, "deconv_noCond")
   } else {
     path_res <- list(
       paste0(input_dir, "/cpdb_results_", conds[[1]], "/means-", conds[[1]], ".txt"),
       paste0(input_dir, "/cpdb_results_", conds[[2]], "/means-", conds[[2]], ".txt"),
       paste0(input_dir, "/cpdb_results_", conds[[1]], "/pvalues-", conds[[1]], ".txt"),
-      paste0(input_dir, "/cpdb_results_", conds[[2]], "/pvalues-", conds[[2]], ".txt"),
-      paste0(input_dir, "/cpdb_results_", conds[[1]], "/deconvoluted-", conds[[1]], ".txt"),
-      paste0(input_dir, "/cpdb_results_", conds[[2]], "/deconvoluted-", conds[[2]], ".txt")
+      paste0(input_dir, "/cpdb_results_", conds[[2]], "/pvalues-", conds[[2]], ".txt")#,
+     # paste0(input_dir, "/cpdb_results_", conds[[1]], "/deconvoluted-", conds[[1]], ".txt"),
+      #paste0(input_dir, "/cpdb_results_", conds[[2]], "/deconvoluted-", conds[[2]], ".txt")
     )
-    names(path_res) <- c(paste0("means_", conds), paste0("pvalues_", conds), paste0("deconv_", conds))
+    names(path_res) <- c(paste0("means_", conds), paste0("pvalues_", conds))#, paste0("deconv_", conds))
   }
-  cpdb_res <- sapply(
-    path_res,
+  cols_to_rm <- c("interacting_pair", "partner_a", "partner_b", "gene_a", "gene_b",
+                  "secreted", "receptor_a", "receptor_b", "annotation_strategy", "is_integrin")
+  cpdb_res <- lapply(
+    seq_along(path_res),
     function(i) {
       temp <- utils::read.table(
-        i,
+        path_res[[i]],
         header = TRUE,
         sep = "\t")
       data.table::setDT(temp)
+      temp <- temp[, (cols_to_rm) := NULL]
       temp <- data.table::melt.data.table(
         temp,
-        id.vars = a,
-        variable.name = b,
-        value.name = c
+        id.vars = "id_cp_interaction",
+        variable.name = "cell_type_pair",
+        value.name = names(path_res)[[i]]
       )
       return(temp)
-    },
-    simplify = FALSE,
-    USE.NAMES = TRUE
+    }
   )
-
-  if(!identical(cpdb_means[, 1:11], cpdb_pvalues[, 1:11]) |
-     !identical(colnames(cpdb_means), colnames(cpdb_pvalues))) {
-    stop("Non identical columns or interactions in means.txt and pvalues.txt.")
-  }
-  if(!identical(cpdb_means_cond1[, 1:11], cpdb_pvalues_cond1[, 1:11]) |
-     !identical(colnames(cpdb_means_cond1), colnames(cpdb_pvalues_cond1)) |
-     !identical(cpdb_means_cond2[, 1:11], cpdb_pvalues_cond2[, 1:11]) |
-     !identical(colnames(cpdb_means_cond2), colnames(cpdb_pvalues_cond2))) {
-    stop("Non identical columns or interactions in means and pvalues files.")
-  }
-
-
-  long_means_cond1 <- data.table::melt(data.table::setDT(cpdb_means_cond1), id.vars = colnames(cpdb_means_cond1)[1:11], variable.name = "cell_type_pair", value.name = "score")
-  long_pvalues_cond1 <- data.table::melt(data.table::setDT(cpdb_pvalues_cond1), id.vars = colnames(cpdb_pvalues_cond1)[1:11], variable.name = "cell_type_pair", value.name = "pvalue")
-  cpdb_comb_cond1 <- data.table::merge.data.table(long_means_cond1, long_pvalues_cond1)
-  long_means_cond2 <- data.table::melt(data.table::setDT(cpdb_means_cond2), id.vars = colnames(cpdb_means_cond2)[1:11], variable.name = "cell_type_pair", value.name = "score")
-  long_pvalues_cond2 <- data.table::melt(data.table::setDT(cpdb_pvalues_cond2), id.vars = colnames(cpdb_pvalues_cond2)[1:11], variable.name = "cell_type_pair", value.name = "pvalue")
-  cpdb_comb_cond2 <- data.table::merge.data.table(long_means_cond2, long_pvalues_cond2)
-
-
-
-
-  if(is.null(condition_id)) {
-
-    long_means <- data.table::melt(
-      cpdb_means,
-      id.vars = colnames(cpdb_means)[1:11],
-      variable.name = "cell_type_pair",
-      value.name = "score"
-      )
-    long_pvalues <- data.table::melt(
-      cpdb_pvalues,
-      id.vars = colnames(cpdb_pvalues)[1:11],
-      variable.name = "cell_type_pair",
-      value.name = "pvalue"
-      )
-    cpdb_deconv_comb <- data.table::melt(
-      data.table::setDT(cpdb_deconv),
-      id.vars = colnames(cpdb_deconv)[1:6],
-      variable.name = "cell_type", value.name = "mean"
+  names(cpdb_res) <- names(path_res)
+  if(is.null(conds)) {
+    full_res <- data.table::merge.data.table(
+      cpdb_res[[1]],
+      cpdb_res[[2]],
+      by = c("id_cp_interaction", "cell_type_pair")
     )
-
-
-
-    cpdb_comb <- data.table::merge.data.table(long_means, long_pvalues)
-
-    ct <- as.character(unique(cpdb_deconv_comb$cell_type))
-    df_ct <- data.table::data.table(cell_type_pair = as.vector(outer(ct, ct, FUN = paste, sep = ".")),
-                                    cell_type_a = rep(ct, times = length(ct)),
-                                    cell_type_b = rep(ct, each = length(ct)))
-    cpdb_comb <- data.table::merge.data.table(cpdb_comb, df_ct, by = "cell_type_pair")
-    fetch_mean_noCond <- function(partner_id,
-                           partner_number,
-                           ct,
-                           interaction_id
-    ) {
-      if(grepl("simple:", partner_id)) {
-        if (partner_number == 1) {
-          return(as.numeric(cpdb_deconv_comb[cpdb_deconv_comb$uniprot == substring(partner_id, 8) &
-                                               cpdb_deconv_comb$id_cp_interaction == interaction_id &
-                                               cpdb_deconv_comb$cell_type == ct &
-                                               cpdb_deconv_comb$is_complex == "False", "mean", with = FALSE ]))
-        } else {
-          return(NA)
-        }
-
-      } else {
-        return(as.numeric(cpdb_deconv_comb[cpdb_deconv_comb$complex_name == substring(partner_id, 9) &
-                                             cpdb_deconv_comb$id_cp_interaction == interaction_id &
-                                             cpdb_deconv_comb$cell_type == ct , "mean", with = FALSE ][partner_number]))
-      }
-    }
-    fetch_name_noCond <- function(partner_id,
-                                  partner_number,
-                                  ct,
-                                  interaction_id
-    ) {
-      if(grepl("simple:", partner_id)) {
-        if (partner_number == 1) {
-          return(as.character(cpdb_deconv_comb[cpdb_deconv_comb$uniprot == substring(partner_id, 8) &
-                                               cpdb_deconv_comb$id_cp_interaction == interaction_id &
-                                               cpdb_deconv_comb$cell_type == ct &
-                                               cpdb_deconv_comb$is_complex == "False", "gene_name", with = FALSE ]))
-        } else {
-          return(NA)
-        }
-
-      } else {
-        return(as.character(cpdb_deconv_comb[cpdb_deconv_comb$complex_name == substring(partner_id, 9) &
-                                             cpdb_deconv_comb$id_cp_interaction == interaction_id &
-                                             cpdb_deconv_comb$cell_type == ct , "gene_name", with = FALSE ][partner_number]))
-      }
-    }
-    cpdb_comb$mean_a_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean_noCond(partner_id = x["partner_a"], partner_number = 1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-    cpdb_comb$mean_a_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean_noCond(partner_id = x["partner_a"], partner_number = 2, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-    cpdb_comb$mean_b_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean_noCond(partner_id = x["partner_b"], partner_number = 1, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-    cpdb_comb$mean_b_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean_noCond(partner_id = x["partner_b"], partner_number = 2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-
-    cpdb_comb$name_a_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      fetch_name_noCond(partner_id = x["partner_a"], partner_number = 1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
-    })
-    cpdb_comb$name_a_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      fetch_name_noCond(partner_id = x["partner_a"], partner_number = 2, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
-
-    })
-    cpdb_comb$name_b_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      fetch_name_noCond(partner_id = x["partner_b"], partner_number = 1, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
-    })
-    cpdb_comb$name_b_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      fetch_name_noCond(partner_id = x["partner_b"], partner_number = 2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
-    })
-
-    return(cpdb_comb)
   } else {
-
-
-
-
-    cpdb_comb <- data.table::merge.data.table(cpdb_comb_cond1, cpdb_comb_cond2, suffixes = c(paste0("_", cond1), paste0("_", cond2)), all = TRUE)
-    for (j in which(grepl("score", colnames(cpdb_comb)))) {
-      data.table::set(cpdb_comb, which(is.na(cpdb_comb[[j]])),j,0)
-    }
-    for (j in which(grepl("pvalue", colnames(cpdb_comb)))) {
-      data.table::set(cpdb_comb, which(is.na(cpdb_comb[[j]])),j,1)
-    }
-
-    long_deconv_cond1 <- data.table::melt(data.table::setDT(cpdb_deconv_cond1),
-                                          id.vars = colnames(cpdb_deconv_cond1)[1:6],
-                                          variable.name = "cell_type", value.name = "mean")
-    long_deconv_cond2 <- data.table::melt(data.table::setDT(cpdb_deconv_cond2),
-                                          id.vars = colnames(cpdb_deconv_cond2)[1:6],
-                                          variable.name = "cell_type", value.name = "mean")
-    cpdb_deconv_comb <- data.table::merge.data.table(long_deconv_cond1, long_deconv_cond2,
-                                          by = colnames(long_deconv_cond1)[1:7], suffixes = c("_young", "_old"), all = TRUE)
-    for (j in which(grepl("mean", colnames(cpdb_deconv_comb)))) {
-      data.table::set(cpdb_deconv_comb, which(is.na(cpdb_deconv_comb[[j]])),j,0)
-    }
-    ct <- as.character(unique(cpdb_deconv_comb$cell_type))
-    df_ct <- data.table::data.table(cell_type_pair = as.vector(outer(ct, ct, FUN = paste, sep = ".")),
-                                    cell_type_a = rep(ct, times = length(ct)),
-                                    cell_type_b = rep(ct, each = length(ct)))
-    cpdb_comb <- data.table::merge.data.table(cpdb_comb, df_ct, by = "cell_type_pair")
-    fetch_mean <- function(partner_id,
-                           partner_number,
-                           condition,
-                           ct,
-                           interaction_id
-    ) {
-      if(grepl("simple:", partner_id)) {
-        if (partner_number == 1) {
-          return(as.numeric(cpdb_deconv_comb[cpdb_deconv_comb$uniprot == substring(partner_id, 8) &
-                                               cpdb_deconv_comb$id_cp_interaction == interaction_id &
-                                               cpdb_deconv_comb$cell_type == ct &
-                                               cpdb_deconv_comb$is_complex == "False", paste0("mean_", condition), with = FALSE ]))
-        } else {
-          return(NA)
-        }
-
-      } else {
-        return(as.numeric(cpdb_deconv_comb[cpdb_deconv_comb$complex_name == substring(partner_id, 9) &
-                                             cpdb_deconv_comb$id_cp_interaction == interaction_id &
-                                             cpdb_deconv_comb$cell_type == ct , paste0("mean_", condition), with = FALSE ][partner_number]))
-      }
-    }
-    fetch_name <- function(partner_id,
-                           partner_number,
-                           ct,
-                           interaction_id
-    ) {
-      if(grepl("simple:", partner_id)) {
-        if (partner_number == 1) {
-          return(as.character(cpdb_deconv_comb[cpdb_deconv_comb$uniprot == substring(partner_id, 8) &
-                                                 cpdb_deconv_comb$id_cp_interaction == interaction_id &
-                                                 cpdb_deconv_comb$cell_type == ct &
-                                                 cpdb_deconv_comb$is_complex == "False", "gene_name", with = FALSE ]))
-        } else {
-          return(NA)
-        }
-
-      } else {
-        return(as.character(cpdb_deconv_comb[cpdb_deconv_comb$complex_name == substring(partner_id, 9) &
-                                               cpdb_deconv_comb$id_cp_interaction == interaction_id &
-                                               cpdb_deconv_comb$cell_type == ct , "gene_name", with = FALSE ][partner_number]))
-      }
-    }
-    cpdb_comb[[paste0("mean_a_1_", cond1)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean(partner_id = x["partner_a"], partner_number = 1, condition = cond1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-    cpdb_comb[[paste0("mean_a_2_", cond1)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean(partner_id = x["partner_a"], partner_number = 2, condition = cond1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-    cpdb_comb[[paste0("mean_b_1_", cond1)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean(partner_id = x["partner_b"], partner_number = 1, condition = cond1, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-    cpdb_comb[[paste0("mean_b_2_", cond1)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean(partner_id = x["partner_b"], partner_number = 2, condition = cond1, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-    cpdb_comb[[paste0("mean_a_1_", cond2)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean(partner_id = x["partner_a"], partner_number = 1, condition = cond2, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-    cpdb_comb[[paste0("mean_a_2_", cond2)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean(partner_id = x["partner_a"], partner_number = 2, condition = cond2, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-    cpdb_comb[[paste0("mean_b_1_", cond2)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean(partner_id = x["partner_b"], partner_number = 1, condition = cond2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-    cpdb_comb[[paste0("mean_b_2_", cond2)]] <- apply(cpdb_comb, MARGIN = 1, function(x){
-      mean <- fetch_mean(partner_id = x["partner_b"], partner_number = 2, condition = cond2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
-      return(mean)
-    })
-
-    cpdb_comb$name_a_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      fetch_name(partner_id = x["partner_a"], partner_number = 1, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
-    })
-    cpdb_comb$name_a_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      fetch_name(partner_id = x["partner_a"], partner_number = 2, ct = x["cell_type_a"], interaction_id = x["id_cp_interaction"])
-    })
-    cpdb_comb$name_b_1 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      fetch_name(partner_id = x["partner_b"], partner_number = 1, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
-    })
-    cpdb_comb$name_b_2 <- apply(cpdb_comb, MARGIN = 1, function(x){
-      fetch_name(partner_id = x["partner_b"], partner_number = 2, ct = x["cell_type_b"], interaction_id = x["id_cp_interaction"])
-    })
-
-    return(cpdb_comb)
+    res_1 <- data.table::merge.data.table(
+      cpdb_res[[1]],
+      cpdb_res[[3]],
+      by = c("id_cp_interaction", "cell_type_pair")
+    )
+    res_2 <- data.table::merge.data.table(
+      cpdb_res[[2]],
+      cpdb_res[[4]],
+      by = c("id_cp_interaction", "cell_type_pair")
+    )
+    full_res <- data.table::merge.data.table(
+      res_1,
+      res_2,
+      by = c("id_cp_interaction", "cell_type_pair"),
+      all = TRUE
+    )
   }
+  return(full_res)
 }
 

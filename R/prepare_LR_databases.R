@@ -455,7 +455,7 @@ create_LR_cpdb <- function(
       )
     )
   })]
-  dt_full <- dt_full[, c(paste0("L_", 1:3), paste0("R_", 1:3))]
+  dt_full <- dt_full[, c("id_cp_interaction", paste0("L_", 1:3), paste0("R_", 1:3))]
   dt_full[, L_3 := NULL]
   if(deconvoluted) {
     dt_full <- do.call("rbind", lapply(1:2, function(i) {
@@ -477,11 +477,13 @@ create_LR_cpdb <- function(
 #'
 #' @param one2one logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.
 #' @param deconvoluted logical indiciating if the interactions are deconvoluted when complex; default is FALSE
+#' @param keep_id logical indicating if keeping the column with the CELLPHONEDB interaction id
 #'
 #' @return data.table with ligand-receptor interactions and their relevant properties obtained from CELLPHONEDB.
 prepare_LR_cpdb <- function(
   one2one = FALSE,
-  deconvoluted = FALSE
+  deconvoluted = FALSE,
+  keep_id = FALSE
 ) {
   LR <- create_LR_cpdb(
     deconvoluted = deconvoluted
@@ -514,6 +516,9 @@ prepare_LR_cpdb <- function(
       "LIGAND_1_CONF", "LIGAND_2_CONF", "RECEPTOR_1_CONF", "RECEPTOR_2_CONF", "RECEPTOR_3_CONF",
       "LIGAND_1_TYPE", "LIGAND_2_TYPE", "RECEPTOR_1_TYPE", "RECEPTOR_2_TYPE", "RECEPTOR_3_TYPE"
     )
+    if(keep_id){
+      cols_to_keep <- c("id_cp_interaction", cols_to_keep)
+    }
   }
   LR <- merge_LR_orthologs(
     LR_dt = LR,
