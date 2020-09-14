@@ -88,7 +88,7 @@ run_cpdb_from_seurat <- function(
   for(i in 1:n_run) {
     run_cpdb_from_files(
       data_path = paths$data_path[[i]],
-      metadata_path = paths$metadata_path[[i]],
+      metadata_path = paths$md_path[[i]],
       method = method,
       project_name = project_name[[i]],
       iterations = iterations,
@@ -377,7 +377,6 @@ run_cpdb_from_files <- function(
   } else {
     command_cpdb <- paste0(command_cpdb, " --quiet")
   }
-  print(command_cpdb)
   system(command = command_cpdb)
 }
 
