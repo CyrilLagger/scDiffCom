@@ -9,9 +9,7 @@ create_cpdb_cci(input_dir, conds = NULL)
 \arguments{
 \item{input_dir}{x}
 
-\item{conds}{}
-
-\item{condition_id}{x}
+\item{conds}{x}
 }
 \value{
 x

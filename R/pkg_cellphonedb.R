@@ -462,8 +462,7 @@ run_cpdb_heatmap <- function(metadata_path,
 #' Title
 #'
 #' @param input_dir x
-#' @param condition_id x
-#' @param conds
+#' @param conds x
 #'
 #' @return x
 create_cpdb_cci <- function(
