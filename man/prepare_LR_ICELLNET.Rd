@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepare_LR_databases.R
 \name{prepare_LR_ICELLNET}
 \alias{prepare_LR_ICELLNET}
-\title{Create a data.table with the ligand-receptor interactions from CellChat.}
+\title{Create a data.table with the ligand-receptor interactions from ICELLNET.}
 \usage{
 prepare_LR_ICELLNET(one2one = FALSE)
 }
@@ -10,11 +10,8 @@ prepare_LR_ICELLNET(one2one = FALSE)
 \item{one2one}{logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.}
 }
 \value{
-data.table with ligand-receptor interactions and their relevant properties obtained from CELLCHAT.
-Create a data.table with the ligand-receptor interactions from ICELLNET.
-
 data.table with ligand-receptor interactions and their relevant properties obtained from ICELLNET.
 }
 \description{
-Create a data.table with the ligand-receptor interactions from CellChat.
+Create a data.table with the ligand-receptor interactions from ICELLNET.
 }

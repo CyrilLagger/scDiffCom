@@ -42,6 +42,8 @@ run_cpdb_from_seurat(
 
 \item{seurat_cell_type_id}{x}
 
+\item{input_species}{x}
+
 \item{min_cells}{x}
 
 \item{condition_id}{x}

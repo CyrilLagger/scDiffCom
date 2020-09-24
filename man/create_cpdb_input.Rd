@@ -27,6 +27,8 @@ create_cpdb_input(
 
 \item{seurat_cell_type_id}{Name of the column of the metadata data.frame containing the cell-type ids}
 
+\item{input_species}{x}
+
 \item{min_cells}{Minimum number of cells (per condition if relevant) required to keep a cell-type}
 
 \item{condition_id}{Name of the column of the metadata data.frame containing the the condition on the cells. Set to NULL for no conditions}

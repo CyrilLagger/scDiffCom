@@ -5,6 +5,7 @@
 #' @param slot x
 #' @param log_scale x
 #' @param seurat_cell_type_id x
+#' @param input_species x
 #' @param condition_id x
 #' @param min_cells x
 #' @param input_dir x
@@ -154,6 +155,7 @@ run_cpdb_from_seurat <- function(
 #' @param slot The Seurat slot to pull data from; default is "data"
 #' @param log_scale Whether to return log-normalized or normalized data (only relevant when slot = "data"); default is TRUE
 #' @param seurat_cell_type_id Name of the column of the metadata data.frame containing the cell-type ids
+#' @param input_species x
 #' @param min_cells Minimum number of cells (per condition if relevant) required to keep a cell-type
 #' @param condition_id Name of the column of the metadata data.frame containing the the condition on the cells. Set to NULL for no conditions
 #' @param input_dir Directory path where to save the files that will be used as input for CellPhoneDB analysis
@@ -170,6 +172,7 @@ create_cpdb_input <- function(
   condition_id = NULL,
   input_dir = getwd()
 ) {
+  Gene <- NULL
   data <- prepare_seurat_data(
     seurat_object = seurat_object,
     assay = assay,
@@ -460,8 +463,7 @@ run_cpdb_heatmap <- function(metadata_path,
 #'
 #' @param input_dir x
 #' @param condition_id x
-#' @param cond1 x
-#' @param cond2 x
+#' @param conds
 #'
 #' @return x
 create_cpdb_cci <- function(
