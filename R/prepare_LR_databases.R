@@ -14,7 +14,7 @@ combine_LR_db <- function(
   LR_scsr <- prepare_LR_scsr(one2one = one2one)
   LR_niche <- prepare_LR_nichenet(one2one = one2one)
   LR_cpdb <- prepare_LR_cpdb(one2one = one2one, deconvoluted = FALSE)
-  LR_cc <- prepare_LR_CellChat()
+  #LR_cc <- prepare_LR_CellChat()
   LR_ic <- prepare_LR_ICELLNET(one2one = one2one)
   LR_full <- rbindlist(
     list(
@@ -534,53 +534,53 @@ prepare_LR_cpdb <- function(
 ##' Create a data.table with the ligand-receptor interactions from CellChat.
 ##'
 ##' @return data.table with ligand-receptor interactions and their relevant properties obtained from CELLCHAT.
-prepare_LR_CellChat <- function(
-) {
-  LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_2 <- LR_SORTED <- interaction_name_2 <- temp <- new <- NULL
-  LR <- CellChat::CellChatDB.mouse$interaction
-  setDT(LR)
-  data.table::setnames(
-    x = LR,
-    old = c("evidence", "annotation"),
-    new = c("SOURCE", "ANNOTATION")
-  )
-  LR[, LIGAND_1 := sub(" - .*", "", interaction_name_2) ]
-  LR[, temp := sub(".* - ", "", interaction_name_2) ]
-  LR[, RECEPTOR_1 := ifelse(grepl("+", temp, fixed = TRUE), gsub(".*\\((.+)\\+.*", "\\1", temp), temp)]
-  LR[, RECEPTOR_2 := ifelse(grepl("+", temp, fixed = TRUE), gsub(".*\\+(.+)\\).*", "\\1", temp), NA)]
-  LR[, temp := NULL]
-  LR[, LIGAND_1 := gsub(" ", "", LIGAND_1)]
-  LR[, RECEPTOR_1 := gsub(" ", "", RECEPTOR_1)]
-  LR[, RECEPTOR_2 := gsub(" ", "", RECEPTOR_2)]
-  #some CELLCHAT gene names (70) are not mgi_symbols and we need to convert them manually...
-  convert_table <- scDiffCom::CellChat_converted_genes
-  genes_to_rm <- convert_table[new == "remove"]
-  genes_to_change <- convert_table[new != "remove"]
-  LR <- LR[!(LIGAND_1 %in% genes_to_rm$old) & !(RECEPTOR_1 %in% genes_to_rm$old) & !(RECEPTOR_2 %in% genes_to_rm$old)]
-  LR[genes_to_change,
-        `:=`(LIGAND_1 = new),
-        on = "LIGAND_1==old"][
-          genes_to_change,
-          `:=`(RECEPTOR_1 = new),
-          on = "RECEPTOR_1==old"][
-            genes_to_change,
-            `:=`(RECEPTOR_2 = new),
-            on = "RECEPTOR_2==old"]
-  LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
-    temp <- c(LIGAND_1[[i]], RECEPTOR_1[[i]], RECEPTOR_2[[i]])
-    temp <- temp[!is.na(temp)]
-    temp <- sort(temp)
-    temp <- paste0(temp, collapse = "_")
-  }))]
-  LR <- LR[!duplicated(LR_SORTED)]
-  cols_to_keep <- c(
-    "LR_SORTED",
-    "ANNOTATION", "SOURCE",
-    "LIGAND_1", "RECEPTOR_1", "RECEPTOR_2"
-  )
-  LR <- LR[, cols_to_keep, with = FALSE]
-  return(LR)
-}
+# prepare_LR_CellChat <- function(
+# ) {
+#   LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_2 <- LR_SORTED <- interaction_name_2 <- temp <- new <- NULL
+#   LR <- CellChat::CellChatDB.mouse$interaction
+#   setDT(LR)
+#   data.table::setnames(
+#     x = LR,
+#     old = c("evidence", "annotation"),
+#     new = c("SOURCE", "ANNOTATION")
+#   )
+#   LR[, LIGAND_1 := sub(" - .*", "", interaction_name_2) ]
+#   LR[, temp := sub(".* - ", "", interaction_name_2) ]
+#   LR[, RECEPTOR_1 := ifelse(grepl("+", temp, fixed = TRUE), gsub(".*\\((.+)\\+.*", "\\1", temp), temp)]
+#   LR[, RECEPTOR_2 := ifelse(grepl("+", temp, fixed = TRUE), gsub(".*\\+(.+)\\).*", "\\1", temp), NA)]
+#   LR[, temp := NULL]
+#   LR[, LIGAND_1 := gsub(" ", "", LIGAND_1)]
+#   LR[, RECEPTOR_1 := gsub(" ", "", RECEPTOR_1)]
+#   LR[, RECEPTOR_2 := gsub(" ", "", RECEPTOR_2)]
+#   #some CELLCHAT gene names (70) are not mgi_symbols and we need to convert them manually...
+#   convert_table <- scDiffCom::CellChat_converted_genes
+#   genes_to_rm <- convert_table[new == "remove"]
+#   genes_to_change <- convert_table[new != "remove"]
+#   LR <- LR[!(LIGAND_1 %in% genes_to_rm$old) & !(RECEPTOR_1 %in% genes_to_rm$old) & !(RECEPTOR_2 %in% genes_to_rm$old)]
+#   LR[genes_to_change,
+#         `:=`(LIGAND_1 = new),
+#         on = "LIGAND_1==old"][
+#           genes_to_change,
+#           `:=`(RECEPTOR_1 = new),
+#           on = "RECEPTOR_1==old"][
+#             genes_to_change,
+#             `:=`(RECEPTOR_2 = new),
+#             on = "RECEPTOR_2==old"]
+#   LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
+#     temp <- c(LIGAND_1[[i]], RECEPTOR_1[[i]], RECEPTOR_2[[i]])
+#     temp <- temp[!is.na(temp)]
+#     temp <- sort(temp)
+#     temp <- paste0(temp, collapse = "_")
+#   }))]
+#   LR <- LR[!duplicated(LR_SORTED)]
+#   cols_to_keep <- c(
+#     "LR_SORTED",
+#     "ANNOTATION", "SOURCE",
+#     "LIGAND_1", "RECEPTOR_1", "RECEPTOR_2"
+#   )
+#   LR <- LR[, cols_to_keep, with = FALSE]
+#   return(LR)
+# }
 
 #' Create a data.table with the ligand-receptor interactions from ICELLNET.
 #'
