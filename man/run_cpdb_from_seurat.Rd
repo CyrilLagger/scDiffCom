@@ -9,10 +9,10 @@ run_cpdb_from_seurat(
   assay = "RNA",
   slot = "data",
   log_scale = FALSE,
-  seurat_cell_type_id,
+  celltype_col_id,
   input_species = "mouse",
   min_cells = 5,
-  condition_id = NULL,
+  condition_col_id = NULL,
   input_dir = getwd(),
   create_plots = FALSE,
   method = "statistical_analysis",
@@ -40,13 +40,13 @@ run_cpdb_from_seurat(
 
 \item{log_scale}{x}
 
-\item{seurat_cell_type_id}{x}
+\item{celltype_col_id}{x}
 
 \item{input_species}{x}
 
 \item{min_cells}{x}
 
-\item{condition_id}{x}
+\item{condition_col_id}{x}
 
 \item{input_dir}{x}
 

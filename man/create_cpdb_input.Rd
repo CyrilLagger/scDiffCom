@@ -9,10 +9,10 @@ create_cpdb_input(
   assay = "RNA",
   slot = "data",
   log_scale = FALSE,
-  seurat_cell_type_id,
+  celltype_col_id,
   input_species = "mouse",
   min_cells = 5,
-  condition_id = NULL,
+  condition_col_id = NULL,
   input_dir = getwd()
 )
 }
@@ -25,13 +25,13 @@ create_cpdb_input(
 
 \item{log_scale}{Whether to return log-normalized or normalized data (only relevant when slot = "data"); default is TRUE}
 
-\item{seurat_cell_type_id}{Name of the column of the metadata data.frame containing the cell-type ids}
+\item{celltype_col_id}{Name of the column of the metadata data.frame containing the cell-type ids}
 
 \item{input_species}{x}
 
 \item{min_cells}{Minimum number of cells (per condition if relevant) required to keep a cell-type}
 
-\item{condition_id}{Name of the column of the metadata data.frame containing the the condition on the cells. Set to NULL for no conditions}
+\item{condition_col_id}{Name of the column of the metadata data.frame containing the the condition on the cells. Set to NULL for no conditions}
 
 \item{input_dir}{Directory path where to save the files that will be used as input for CellPhoneDB analysis}
 }

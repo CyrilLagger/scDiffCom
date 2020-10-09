@@ -1,4 +1,3 @@
-
 #' Create a data.table with the ligand-receptor interactions from 6 databases.
 #'
 #' @param one2one logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.
@@ -698,3 +697,118 @@ merge_LR_orthologs <- function(
   LR_temp <- LR_temp[!duplicated(LR_SORTED)]
   return(LR_temp)
 }
+
+get_orthologs <- function(
+  genes,
+  input_species,
+  one2one = FALSE
+) {
+  ensembl_gene_id <- inl <- outl <- output <- input <- confidence <- NULL
+  if(input_species == "mouse") {
+    id_in <- "mmusculus"
+    id_out <- "hsapiens"
+    id_gene <- "mgi_symbol"
+    name_in <- "mouse"
+    name_out <- "human"
+  } else if(input_species == "human") {
+    id_in <- "hsapiens"
+    id_out <- "mmusculus"
+    id_gene <- "hgnc_symbol"
+    name_in <- "human"
+    name_out <- "mouse"
+  } else {
+    stop("Species not supported in function get_orthologs.")
+  }
+  dataset <- paste0(id_in, "_gene_ensembl")
+  gene_name <- paste0(id_out, "_homolog_associated_gene_name")
+  ortho_confidence <- paste0(id_out, "_homolog_orthology_confidence")
+  ortho_type <- paste0(id_out, "_homolog_orthology_type")
+  mart <- biomaRt::useMart(
+    "ensembl",
+    dataset = dataset
+  )
+  ensembl <- biomaRt::getBM(
+    attributes = c(
+      id_gene,
+      "ensembl_gene_id"
+    ),
+    filters = id_gene,
+    mart = mart,
+    values = genes
+  )
+  ensembl_conv <- biomaRt::getBM(
+    attributes = c(
+      "ensembl_gene_id",
+      gene_name,
+      ortho_confidence,
+      ortho_type
+    ),
+    filters = "ensembl_gene_id",
+    mart = mart,
+    value = ensembl$ensembl_gene_id)
+  data.table::setDT(ensembl)
+  data.table::setDT(ensembl_conv)
+  ensembl_all <- data.table::merge.data.table(
+    x = ensembl,
+    y = ensembl_conv,
+    by = "ensembl_gene_id",
+    all = TRUE,
+    sort = FALSE
+  )
+  if(one2one) {
+    ensembl_all <- ensembl_all[eval(as.symbol(ortho_type)) == 'ortholog_one2one',]
+  } else {
+    #ensembl_all <- ensembl_all[eval(as.symbol(ortho_type)) %in% c('ortholog_one2one','ortholog_one2many'),]
+  }
+  ensembl_all <- ensembl_all[, ensembl_gene_id := NULL]
+  ensembl_all <- unique(ensembl_all)
+  data.table::setnames(
+    x = ensembl_all,
+    old = c(id_gene, gene_name, ortho_confidence, ortho_type),
+    new = c("input", "output", "confidence", "type")
+  )
+  ensembl_all <- stats::na.omit(ensembl_all)
+  #check for remaining duplicate
+  if(sum(duplicated(ensembl_all[["input"]])) > 0) {
+    ensembl_all[, inl := tolower(input)]
+    ensembl_all[, outl := tolower(output)]
+    dup_input <- unique(ensembl_all$input[duplicated(ensembl_all$input)])
+    for(g in dup_input) {
+      dt_g <- ensembl_all[input == g]
+      dt_gconf <- dt_g[confidence == 1]
+      if(nrow(dt_gconf) == 1) {
+        ensembl_all <- ensembl_all[!(input == g & confidence == 0)]
+      } else if(nrow(dt_gconf) == 0) {
+        dt_gsame <- dt_g[inl == outl]
+        if(nrow(dt_gsame) == 0) {
+          g_keep <- dt_g[1]$output
+        } else {
+          g_keep <- dt_gsame[1]$output
+        }
+        ensembl_all <- ensembl_all[!(input == g & output != g_keep)]
+      } else {
+        dt_gsame <- dt_gconf[inl == outl]
+        if(nrow(dt_gsame) == 0) {
+          g_keep <- dt_gconf[1]$output
+        } else {
+          g_keep <- dt_gsame[1]$output
+        }
+        ensembl_all <- ensembl_all[!(input == g & confidence == 0)]
+        ensembl_all <- ensembl_all[!(input == g & output != g_keep)]
+      }
+    }
+    ensembl_all[, inl := NULL]
+    ensembl_all[, outl := NULL]
+    if(sum(duplicated(ensembl_all[["input"]])) > 0) {
+      warning("There are some duplicates from orthology conversion. Removing them by using 'unique'.")
+      ensembl_all <- unique(ensembl_all, by = "input")
+    }
+  }
+  data.table::setnames(
+    x = ensembl_all,
+    old = c("input", "output"),
+    new = c(paste0(name_in, "_symbol"), paste0(name_out, "_symbol"))
+  )
+  return(ensembl_all)
+}
+

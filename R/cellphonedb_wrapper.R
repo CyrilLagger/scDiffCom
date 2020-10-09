@@ -4,9 +4,9 @@
 #' @param assay x
 #' @param slot x
 #' @param log_scale x
-#' @param seurat_cell_type_id x
+#' @param celltype_col_id x
 #' @param input_species x
-#' @param condition_id x
+#' @param condition_col_id x
 #' @param min_cells x
 #' @param input_dir x
 #' @param create_plots x
@@ -32,10 +32,10 @@ run_cpdb_from_seurat <- function(
   assay = "RNA",
   slot = "data",
   log_scale = FALSE,
-  seurat_cell_type_id,
+  celltype_col_id,
   input_species = "mouse",
   min_cells = 5,
-  condition_id = NULL,
+  condition_col_id = NULL,
   input_dir = getwd(),
   create_plots = FALSE,
   method = 'statistical_analysis',
@@ -63,13 +63,13 @@ run_cpdb_from_seurat <- function(
     assay = assay,
     slot = slot,
     log_scale = log_scale,
-    seurat_cell_type_id = seurat_cell_type_id,
+    celltype_col_id = celltype_col_id,
     input_species = input_species,
-    condition_id = condition_id,
+    condition_col_id = condition_col_id,
     min_cells = min_cells,
     input_dir = input_dir
   )
-  if(is.null(condition_id)) {
+  if(is.null(condition_col_id)) {
     n_run = 1
     project_name <- "cpdb_results_noCond"
     means_result_name <- NULL
@@ -120,7 +120,7 @@ run_cpdb_from_seurat <- function(
         input_dir = input_dir,
         conds = paths$conds
         )
-      if(is.null(condition_id)) {
+      if(is.null(condition_col_id)) {
         output_dir_full <-  paste0(input_dir, "/cpdb_full_table_noCond.txt")
       } else {
         output_dir_full <-  paste0(input_dir, "/cpdb_full_table_withCond.txt")
@@ -154,10 +154,10 @@ run_cpdb_from_seurat <- function(
 #' @param assay The Seurat assay to pull data from; default is "RNA"
 #' @param slot The Seurat slot to pull data from; default is "data"
 #' @param log_scale Whether to return log-normalized or normalized data (only relevant when slot = "data"); default is TRUE
-#' @param seurat_cell_type_id Name of the column of the metadata data.frame containing the cell-type ids
+#' @param celltype_col_id Name of the column of the metadata data.frame containing the cell-type ids
 #' @param input_species x
 #' @param min_cells Minimum number of cells (per condition if relevant) required to keep a cell-type
-#' @param condition_id Name of the column of the metadata data.frame containing the the condition on the cells. Set to NULL for no conditions
+#' @param condition_col_id Name of the column of the metadata data.frame containing the the condition on the cells. Set to NULL for no conditions
 #' @param input_dir Directory path where to save the files that will be used as input for CellPhoneDB analysis
 #'
 #' @return Write the two files and return a list with the paths of the files and the names of the conditions (if relevant).
@@ -166,33 +166,33 @@ create_cpdb_input <- function(
   assay = "RNA",
   slot = "data",
   log_scale = FALSE,
-  seurat_cell_type_id,
+  celltype_col_id,
   input_species = "mouse",
   min_cells = 5,
-  condition_id = NULL,
+  condition_col_id = NULL,
   input_dir = getwd()
 ) {
-  Gene <- NULL
-  data <- prepare_seurat_data(
+  Gene <- cell_type <- NULL
+  data <- extract_seurat_data(
     seurat_object = seurat_object,
     assay = assay,
     slot = slot,
     log_scale = log_scale,
-    return_type = "data.table"
+    return_type = "data.table",
+    verbose = TRUE
   )
-  md <- prepare_seurat_metadata(
+  md <- extract_seurat_metadata(
     seurat_object = seurat_object,
-    seurat_cell_type_id = seurat_cell_type_id,
-    condition_id = condition_id
+    celltype_col_id = celltype_col_id,
+    condition_col_id = condition_col_id
   )
-  cell_type_filt <- filter_cell_types(
+  cell_type_filt <- filter_celltypes(
     metadata = md,
     min_cells = min_cells
     )
-  md <- md[md$cell_type %in% cell_type_filt, ]
+  md <- md[cell_type %in% cell_type_filt, ]
   cols <- colnames(data)[colnames(data) %in% c("rn", md$cell_id)]
   data <- data[, cols, with = FALSE]
-  data.table::setDT(md)
   data.table::setnames(data, old = "rn", new = "Gene")
   data.table::setnames(md, old = c("cell_id"), new = c("Cell"))
   if(input_species == "mouse") {
@@ -219,7 +219,7 @@ create_cpdb_input <- function(
   } else {
     stop("Species not supported: 'input_species' can be either 'human' or 'mouse'.")
   }
-  if(is.null(condition_id)) {
+  if(is.null(condition_col_id)) {
     output_dir_data <- paste0(input_dir, "/cpdb_data_noCond.txt")
     output_dir_md <- paste0(input_dir, "/cpdb_metadata_noCond.txt")
     message(paste0("Writing CellPhoneDB input data to ", output_dir_data))
