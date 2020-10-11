@@ -47,6 +47,12 @@ run_stat_analysis <- function(
     cols_new <- c("PVAL")
     cols_keep2 <- c(cols_keep, cols_new)
     sub_template_cci_dt <- sub_template_cci_dt[, cols_keep2, with = FALSE]
+    rownames(distr) <- paste(
+      sub_template_cci_dt[["LR_SORTED"]],
+      sub_template_cci_dt[["L_CELLTYPE"]],
+      sub_template_cci_dt[["R_CELLTYPE"]],
+      sep = "_"
+      )
   } else {
     distr_diff <- cbind(cci_perm[, 1, ], sub_template_cci_dt[[paste0("LR_SCORE_", condition_info$cond2)]]
                         - sub_template_cci_dt[[paste0("LR_SCORE_", condition_info$cond1)]])
@@ -61,6 +67,12 @@ run_stat_analysis <- function(
     cols_new <- c(paste0("PVAL_", condition_info$cond1), paste0("PVAL_", condition_info$cond2), "PVAL_DIFF")
     cols_keep2 <- c(cols_keep, cols_new)
     sub_template_cci_dt <- sub_template_cci_dt[, cols_keep2, with = FALSE]
+    rownames(distr_diff) <- rownames(distr_cond1) <- rownames(distr_cond2) <- paste(
+      sub_template_cci_dt[["LR_SORTED"]],
+      sub_template_cci_dt[["L_CELLTYPE"]],
+      sub_template_cci_dt[["R_CELLTYPE"]],
+      sep = "_"
+    )
   }
   cci_dt <- data.table::merge.data.table(
     x = cci_dt_simple,
