@@ -207,12 +207,16 @@ assign_regulation <- function(
     REGULATION %in% c("UP", "UP_APPEARS"),
     "UP",
     ifelse(
-      REGULATION %in% c("DOWN", "DOWN_APPEARS"),
+      REGULATION %in% c("DOWN", "DOWN_DISAPPEARS"),
       "DOWN",
       ifelse(
         REGULATION == "FLAT",
         "FLAT",
-        "NON_DETECTED"
+        ifelse(
+          REGULATION_SIMPLE == "NON_DETECTED",
+          "NON_DETECTED",
+          stop("Problem of classification.")
+        )
       )
     )
   )]
