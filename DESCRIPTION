@@ -27,4 +27,6 @@ Imports:
     generics,
     nichenetr,
     pbapply,
-    curl
+    curl,
+    future,
+    future.apply

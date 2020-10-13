@@ -28,7 +28,8 @@ run_stat_analysis <- function(
                               ". Number of detected genes for permutation test: ",
                               ncol(sub_expr_tr)))
   cols_keep <- c("LR_SORTED", "L_CELLTYPE", "R_CELLTYPE", LR_names)
-  cci_perm <- pbapply::pbreplicate(
+  #cci_perm <- pbapply::pbreplicate(
+  cci_perm <- future.apply::future_replicate(
     n = iterations,
     expr = run_stat_iteration(
       expr_tr = sub_expr_tr,
