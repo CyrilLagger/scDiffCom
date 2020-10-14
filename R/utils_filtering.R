@@ -215,10 +215,12 @@ assign_regulation <- function(
         ifelse(
           REGULATION == "NON_DETECTED",
           "NON_DETECTED",
-          stop("Problem of classification.")
+          "OTHER"
+          #stop("Problem of classification.")
         )
       )
     )
   )]
+  if("OTHER" %in% cci_dt$REGULATION_SIMPLE) stop("Problem of classification.")
   return(cci_dt)
 }
