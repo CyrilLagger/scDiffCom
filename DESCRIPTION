@@ -29,4 +29,5 @@ Imports:
     pbapply,
     curl,
     future,
-    future.apply
+    future.apply,
+    progressr

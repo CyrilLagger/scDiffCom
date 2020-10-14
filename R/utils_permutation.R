@@ -28,18 +28,37 @@ run_stat_analysis <- function(
                               ". Number of detected genes for permutation test: ",
                               ncol(sub_expr_tr)))
   cols_keep <- c("LR_SORTED", "L_CELLTYPE", "R_CELLTYPE", LR_names)
-  #cci_perm <- pbapply::pbreplicate(
-  cci_perm <- future.apply::future_replicate(
-    n = iterations,
-    expr = run_stat_iteration(
-      expr_tr = sub_expr_tr,
-      metadata = metadata,
-      template_cci_dt = sub_template_cci_dt[, cols_keep, with = FALSE],
-      pp_LR = pp_LR,
-      condition_info = condition_info
-    ),
-    simplify = "array"
-  )
+  progressr::with_progress({
+    prog <- progressr::progressor(steps = iterations)
+    #cci_perm <- pbapply::pbreplicate(
+    cci_perm <- future.apply::future_sapply(
+      X = integer(iterations),
+      FUN = function(iter) {
+        prog(sprintf("iter=%g", iter))
+        run_stat_iteration(
+          expr_tr = sub_expr_tr,
+          metadata = metadata,
+          template_cci_dt = sub_template_cci_dt[, cols_keep, with = FALSE],
+          pp_LR = pp_LR,
+          condition_info = condition_info
+        )
+      },
+      simplify = "array",
+      future.seed = TRUE,
+      future.label = "future_replicate-%d"
+    )
+    # cci_perm <- future.apply::future_replicate(
+    #   n = iterations,
+    #   expr = run_stat_iteration(
+    #     expr_tr = sub_expr_tr,
+    #     metadata = metadata,
+    #     template_cci_dt = sub_template_cci_dt[, cols_keep, with = FALSE],
+    #     pp_LR = pp_LR,
+    #     condition_info = condition_info
+    #   ),
+    #   simplify = "array"
+    # )
+  })
   if(!condition_info$is_cond) {
     distr <- cbind(cci_perm, sub_template_cci_dt[["LR_SCORE"]])
     if(verbose) message("Computing p-values.")
