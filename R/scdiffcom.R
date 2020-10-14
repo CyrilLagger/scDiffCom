@@ -202,11 +202,17 @@ run_filtering_and_ORA <- function(
     condition_info = scdiffcom_result$parameters$condition_info,
     permutation_analysis = scdiffcom_result$parameters$permutation_analysis
   )
-  scdiffcom_result[["scdiffcom_dt_filtered"]] <- cci_dt
-  scdiffcom_result <- run_ORA(
-    scdiffcom_result = scdiffcom_result,
-    verbose = TRUE
-  )
+  if(nrow(cci_dt) == 0) {
+    if (verbose) message("No detected interactions for this dataset.")
+    scdiffcom_result[["scdiffcom_dt_filtered"]] <- NA
+    scdiffcom_result[["ORA"]] <- NA
+  } else {
+    scdiffcom_result[["scdiffcom_dt_filtered"]] <- cci_dt
+    scdiffcom_result <- run_ORA(
+      scdiffcom_result = scdiffcom_result,
+      verbose = TRUE
+    )
+  }
   return(scdiffcom_result)
 }
 

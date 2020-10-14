@@ -213,7 +213,7 @@ assign_regulation <- function(
         REGULATION == "FLAT",
         "FLAT",
         ifelse(
-          REGULATION_SIMPLE == "NON_DETECTED",
+          REGULATION == "NON_DETECTED",
           "NON_DETECTED",
           stop("Problem of classification.")
         )

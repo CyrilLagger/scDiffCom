@@ -34,7 +34,7 @@ run_stat_analysis <- function(
     cci_perm <- future.apply::future_sapply(
       X = integer(iterations),
       FUN = function(iter) {
-        prog(sprintf("iter=%g", iter))
+        if (iter %% 10 == 0) prog(sprintf("iter=%g", iter))
         run_stat_iteration(
           expr_tr = sub_expr_tr,
           metadata = metadata,
