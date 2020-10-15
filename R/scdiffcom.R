@@ -54,7 +54,7 @@ run_scdiffcom <- function(
     assay = assay,
     slot = slot,
     log_scale = log_scale,
-    return_type = "dense",
+    return_type = "sparse",
     celltype_col_id = celltype_col_id,
     condition_col_id = condition_col_id,
     min_cells = min_cells,
@@ -76,12 +76,12 @@ run_scdiffcom <- function(
     LR_db = pp_LR$LR_db,
     cell_types = pp_seurat$cell_types
   )
-  expr_tr <- t(pp_LR$data)
   template_cci_dt <- add_cell_number(
     cci_dt = template_cci_dt,
     condition_info = condition_info,
     metadata = pp_seurat$metadata
   )
+  expr_tr <- DelayedArray::t(pp_LR$data)
   cci_dt_simple <- run_simple_cci_analysis(
     expr_tr = expr_tr,
     metadata = pp_seurat$metadata,

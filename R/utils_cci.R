@@ -156,19 +156,16 @@ aggregate_cells <- function(
   is_cond
 ) {
   if(!is_cond) {
-    sums <- rowsum(
-      x = expr_tr,
-      group = metadata[["cell_type"]]
-    )
-    aggr <- sums/as.vector(table(metadata[["cell_type"]]))
+    group <- metadata[["cell_type"]]
   } else {
     group <- paste(metadata[["condition"]], metadata[["cell_type"]], sep = "_")
-    sums <- rowsum(
-      x = expr_tr,
-      group = group
-    )
-    aggr <- sums/as.vector(table(group))
   }
+  sums <- DelayedArray::rowsum(
+    x = expr_tr,
+    group = group,
+    reorder = TRUE
+  )
+  aggr <- sums/as.vector(table(group))
   return(aggr)
 }
 
@@ -429,15 +426,3 @@ split_cond_string <- function(
   return(list(cond = cond, cell_type = cell_type))
 }
 
-# is_detected <- Vectorize(function(
-#   x,
-#   y,
-#   thr
-# ) {
-#   if (x >= thr & y >= thr) {
-#     return(TRUE)
-#   } else {
-#     return(FALSE)
-#   }
-# })
-#

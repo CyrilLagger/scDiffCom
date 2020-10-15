@@ -30,4 +30,5 @@ Imports:
     curl,
     future,
     future.apply,
-    progressr
+    progressr,
+    DelayedArray
