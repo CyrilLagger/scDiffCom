@@ -24,7 +24,8 @@ run_scdiffcom(
   cutoff_logfc = log(1.1),
   return_distr = FALSE,
   seed = 42,
-  verbose = TRUE
+  verbose = TRUE,
+  sparse = TRUE
 )
 }
 \arguments{
@@ -70,6 +71,8 @@ During differential expression, LOGFC is positive when score(cond1) > score(cond
 \item{seed}{A seed for replicability}
 
 \item{verbose}{Print messages}
+
+\item{sparse}{Using sparse or dense data from Seurat}
 }
 \value{
 A data.table with the CCI interactions.

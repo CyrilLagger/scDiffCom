@@ -23,6 +23,7 @@
 #' @param return_distr Logical indicating if returning the distributions of the permutation test.
 #' @param seed A seed for replicability
 #' @param verbose Print messages
+#' @param sparse Using sparse or dense data from Seurat
 #'
 #' @return A data.table with the CCI interactions.
 #' @export
@@ -46,15 +47,21 @@ run_scdiffcom <- function(
   cutoff_logfc = log(1.1),
   return_distr = FALSE,
   seed = 42,
-  verbose = TRUE
+  verbose = TRUE,
+  sparse = TRUE
 ) {
   set.seed(seed)
+  if(sparse) {
+    return_type <- "sparse"
+  } else {
+    retur_type <- "dense"
+  }
   pp_seurat <- preprocess_seurat(
     seurat_object = seurat_object,
     assay = assay,
     slot = slot,
     log_scale = log_scale,
-    return_type = "sparse",
+    return_type = return_type,
     celltype_col_id = celltype_col_id,
     condition_col_id = condition_col_id,
     min_cells = min_cells,
