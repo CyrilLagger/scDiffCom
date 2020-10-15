@@ -54,7 +54,7 @@ run_scdiffcom <- function(
   if(sparse) {
     return_type <- "sparse"
   } else {
-    retur_type <- "dense"
+    return_type <- "dense"
   }
   pp_seurat <- preprocess_seurat(
     seurat_object = seurat_object,
