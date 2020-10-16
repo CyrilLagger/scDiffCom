@@ -25,7 +25,6 @@ Imports:
     LRBase.Mmu.eg.db,
     SingleCellSignalR,
     generics,
-    nichenetr,
     pbapply,
     curl,
     future,

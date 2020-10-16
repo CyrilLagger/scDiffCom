@@ -11,7 +11,7 @@ combine_LR_db <- function(
   DATABASE <- SOURCE <- ANNOTATION <- FAMILY <- SUBFAMILY <- keep_subLR <- NULL
   LR_sct <- prepare_LR_scTensor()
   LR_scsr <- prepare_LR_scsr(one2one = one2one)
-  LR_niche <- prepare_LR_nichenet(one2one = one2one)
+  #LR_niche <- prepare_LR_nichenet(one2one = one2one)
   LR_cpdb <- prepare_LR_cpdb(one2one = one2one, deconvoluted = FALSE)
   #LR_cc <- prepare_LR_CellChat()
   LR_ic <- prepare_LR_ICELLNET(one2one = one2one)
@@ -267,43 +267,43 @@ prepare_LR_scsr <- function(
   return(LR[, cols_to_keep, with = FALSE])
 }
 
-#' Create a data.table with the ligand-receptor interactions from NICHENET.
-#'
-#' @param one2one logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.
-#'
-#' @return data.table with ligand-receptor interactions and their relevant properties obtained from NICHENET.
-prepare_LR_nichenet <- function(
-  one2one = FALSE
-) {
-  LR <- nichenetr::lr_network
-  data.table::setDT(LR)
-  data.table::setnames(
-    x = LR,
-    old = c("from", "to", "source"),
-    new = c("L1", "R1", "SOURCE")
-  )
-  ortho <- get_orthologs(
-    genes = unique(c(LR$L1, LR$R1)),
-    input_species = "human",
-    one2one = one2one
-  )
-  ortho <- stats::na.omit(ortho)
-  LR <- merge_LR_orthologs(
-    LR_dt = LR,
-    ortho_dt = ortho,
-    nL = 1,
-    charL = "L",
-    nR = 1,
-    charR = "R"
-  )
-  cols_to_keep <- c(
-    "LR_SORTED", "SOURCE",
-    "LIGAND_1", "RECEPTOR_1",
-    "LIGAND_1_CONF", "RECEPTOR_1_CONF",
-    "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
-  )
-  return(LR[, cols_to_keep, with = FALSE])
-}
+#' #' Create a data.table with the ligand-receptor interactions from NICHENET.
+#' #'
+#' #' @param one2one logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.
+#' #'
+#' #' @return data.table with ligand-receptor interactions and their relevant properties obtained from NICHENET.
+#' prepare_LR_nichenet <- function(
+#'   one2one = FALSE
+#' ) {
+#'   LR <- nichenetr::lr_network
+#'   data.table::setDT(LR)
+#'   data.table::setnames(
+#'     x = LR,
+#'     old = c("from", "to", "source"),
+#'     new = c("L1", "R1", "SOURCE")
+#'   )
+#'   ortho <- get_orthologs(
+#'     genes = unique(c(LR$L1, LR$R1)),
+#'     input_species = "human",
+#'     one2one = one2one
+#'   )
+#'   ortho <- stats::na.omit(ortho)
+#'   LR <- merge_LR_orthologs(
+#'     LR_dt = LR,
+#'     ortho_dt = ortho,
+#'     nL = 1,
+#'     charL = "L",
+#'     nR = 1,
+#'     charR = "R"
+#'   )
+#'   cols_to_keep <- c(
+#'     "LR_SORTED", "SOURCE",
+#'     "LIGAND_1", "RECEPTOR_1",
+#'     "LIGAND_1_CONF", "RECEPTOR_1_CONF",
+#'     "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
+#'   )
+#'   return(LR[, cols_to_keep, with = FALSE])
+#' }
 
 #' Convert CellphoneDB database in a dataframe either complex or deconvoluted.
 #'
