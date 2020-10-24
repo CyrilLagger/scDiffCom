@@ -142,30 +142,51 @@ extract_seurat_data <- function(
   return_type,
   verbose
 ) {
+  if(slot == "data") {
+    if(verbose) message(
+      paste0(
+        "Extracting data from array ",
+        assay,
+        " and slot 'data' (assuming normalized log-transformed values)."
+      )
+    )
+  } else if(slot == "counts") {
+    if(verbose) message(
+      paste0("Extracting data from array ",
+             assay,
+             " and slot 'counts' (assuming normalized non-log-transformed values)."
+      )
+    )
+  } else {
+    stop("The slot should be 'counts' or 'data'.")
+  }
   temp_data <- Seurat::GetAssayData(
     object = seurat_object,
     slot = slot,
     assay = assay
   )
   if(slot == "data" & !log_scale) {
+    if(verbose) message("Converting values from log-transformed to non-log-transformed.")
     temp_data <- expm1(temp_data)
-  } else if(!log_scale) {
-    message("There is no log option for the slots counts and scale.data.")
+  }
+  if(slot == "counts" & log_scale) {
+    if(verbose) message("Converting values from non-log-transformed to log-transformed.")
+    temp_data <- log1p(temp_data)
   }
   if(class(temp_data) == "dgCMatrix") {
     if(return_type == "sparse") {
-      if(verbose) message("Return a sparse data matrix from the Seurat object.")
+      if(verbose) message("Returning a sparse data matrix from the Seurat object.")
       return(temp_data)
     } else if(return_type == "dense") {
-      if(verbose) message("Return a dense data matrix from the Seurat object.")
+      if(verbose) message("Returning a dense data matrix from the Seurat object.")
       return(as.matrix(temp_data))
     } else {
-      if(verbose) message("Return a data.table from the Seurat object.")
+      if(verbose) message("Returning a data.table from the Seurat object.")
       return(data.table::as.data.table(as.matrix(temp_data), keep.rownames = TRUE))
     }
   } else if(class(temp_data) == "matrix") {
     if((return_type == "dense") | (return_type == "sparse")) {
-      if(verbose) message("Return a dense data matrix from the Seurat object.")
+      if(verbose) message("Returning a dense data matrix from the Seurat object.")
       return(temp_data)
     } else {
       if(verbose) message("Return a data.table from the Seurat object.")
