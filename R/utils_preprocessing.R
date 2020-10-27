@@ -145,14 +145,14 @@ extract_seurat_data <- function(
   if(slot == "data") {
     if(verbose) message(
       paste0(
-        "Extracting data from array ",
+        "Extracting data from assay ",
         assay,
         " and slot 'data' (assuming normalized log-transformed values)."
       )
     )
   } else if(slot == "counts") {
     if(verbose) message(
-      paste0("Extracting data from array ",
+      paste0("Extracting data from assay ",
              assay,
              " and slot 'counts' (assuming normalized non-log-transformed values)."
       )
