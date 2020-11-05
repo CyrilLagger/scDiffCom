@@ -1,9 +1,91 @@
-#' Create a data.table with the ligand-receptor interactions from 6 databases.
-#'
-#' @param one2one logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.
-#' @param curated logical indicating if only the curated LR interactions should be returned.
-#'
-#' @return data.table with ligand-receptor interactions and relevant properties from 6 databases.
+
+get_GO_interactions <- function(
+  LR_db
+) {
+  mgi_symbol <- NULL
+  LR_genes <- unique(unlist(LR_db[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]))
+  LR_genes <- LR_genes[!is.na(LR_genes)]
+  mart <- biomaRt::useMart(
+    "ensembl",
+    dataset = "mmusculus_gene_ensembl"
+  )
+  LR_genes_info <- biomaRt::getBM(
+    attributes = c(
+      "mgi_symbol",
+      "go_id",
+      "name_1006"
+    ),
+    filters = "mgi_symbol",
+    mart = mart,
+    values = LR_genes
+  )
+  setDT(LR_genes_info)
+  onto_go_terms <- ontoProc::getGeneOnto()
+  go_names <- onto_go_terms$name
+  LR_genes_go <- sapply(
+    LR_genes,
+    function(gene) {
+      temp_go <- unique(LR_genes_info[mgi_symbol == gene]$name_1006)
+      ontologyIndex::get_ancestors(onto_go_terms, names(go_names[go_names %in% temp_go]))
+    },
+    USE.NAMES = TRUE,
+    simplify = FALSE
+  )
+  LR_interactions_go_union <- data.table::rbindlist(
+    apply(
+      LR_db,
+      MARGIN = 1,
+      function(row) {
+        LIGAND_GO <- unique(c(
+          LR_genes_go[[row[["LIGAND_1"]]]],
+          LR_genes_go[[row[["LIGAND_2"]]]]
+        ))
+        RECEPTOR_GO <- unique(c(
+          LR_genes_go[[row[["RECEPTOR_1"]]]],
+          LR_genes_go[[row[["RECEPTOR_2"]]]],
+          LR_genes_go[[row[["RECEPTOR_3"]]]]
+        ))
+        res_union <- unique(c(LIGAND_GO, RECEPTOR_GO))
+        res_union <- data.table::data.table(
+          LR_SORTED = rep(row[["LR_SORTED"]], length(res_union)),
+          GO_union = res_union
+        )
+      }
+    )
+  )
+  LR_interactions_go_intersection <- data.table::rbindlist(
+    apply(
+      LR_db,
+      MARGIN = 1,
+      function(row) {
+        LIGAND_GO <- unique(c(
+          LR_genes_go[[row[["LIGAND_1"]]]],
+          LR_genes_go[[row[["LIGAND_2"]]]]
+        ))
+        RECEPTOR_GO <- unique(c(
+          LR_genes_go[[row[["RECEPTOR_1"]]]],
+          LR_genes_go[[row[["RECEPTOR_2"]]]],
+          LR_genes_go[[row[["RECEPTOR_3"]]]]
+        ))
+        res_inter <- intersect(LIGAND_GO, RECEPTOR_GO)
+        if(length(res_inter) > 0) {
+          res_inter <- data.table::data.table(
+            LR_SORTED = rep(row[["LR_SORTED"]], length(res_inter)),
+            GO_intersection = res_inter
+          )
+        } else {
+          res_inter <- NULL
+        }
+        return(res_inter)
+      }
+    )
+  )
+  return(list(
+    LR_GO_union = LR_interactions_go_union,
+    LR_GO_intersection = LR_interactions_go_intersection
+  ))
+}
+
 combine_LR_db <- function(
   one2one = FALSE,
   curated = TRUE
@@ -11,9 +93,9 @@ combine_LR_db <- function(
   DATABASE <- SOURCE <- ANNOTATION <- FAMILY <- SUBFAMILY <- keep_subLR <- NULL
   LR_sct <- prepare_LR_scTensor()
   LR_scsr <- prepare_LR_scsr(one2one = one2one)
-  #LR_niche <- prepare_LR_nichenet(one2one = one2one)
+  LR_niche <- prepare_LR_nichenet(one2one = one2one)
   LR_cpdb <- prepare_LR_cpdb(one2one = one2one, deconvoluted = FALSE)
-  #LR_cc <- prepare_LR_CellChat()
+  LR_cc <- prepare_LR_CellChat()
   LR_ic <- prepare_LR_ICELLNET(one2one = one2one)
   LR_full <- rbindlist(
     list(
@@ -166,9 +248,6 @@ combine_LR_db <- function(
   return(LR_full)
 }
 
-#' Create a data.table with the ligand-receptor interactions from scTensor.
-#'
-#' @return data.table with ligand-receptor interactions and their relevant properties obtained from scTensor.
 prepare_LR_scTensor <- function(
 ) {
   LR_SORTED <- LIGAND_1 <- RECEPTOR_1 <- NULL
@@ -227,11 +306,6 @@ prepare_LR_scTensor <- function(
   return(LR[, cols_to_keep, with = FALSE])
 }
 
-#' Create a data.table with the ligand-receptor interactions from SingleCellSignalR.
-#'
-#' @param one2one logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.
-#'
-#' @return data.table with ligand-receptor interactions and their relevant properties obtained from SingleCellSignalR.
 prepare_LR_scsr <- function(
   one2one = FALSE
 ) {
@@ -267,48 +341,39 @@ prepare_LR_scsr <- function(
   return(LR[, cols_to_keep, with = FALSE])
 }
 
-#' #' Create a data.table with the ligand-receptor interactions from NICHENET.
-#' #'
-#' #' @param one2one logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.
-#' #'
-#' #' @return data.table with ligand-receptor interactions and their relevant properties obtained from NICHENET.
-#' prepare_LR_nichenet <- function(
-#'   one2one = FALSE
-#' ) {
-#'   LR <- nichenetr::lr_network
-#'   data.table::setDT(LR)
-#'   data.table::setnames(
-#'     x = LR,
-#'     old = c("from", "to", "source"),
-#'     new = c("L1", "R1", "SOURCE")
-#'   )
-#'   ortho <- get_orthologs(
-#'     genes = unique(c(LR$L1, LR$R1)),
-#'     input_species = "human",
-#'     one2one = one2one
-#'   )
-#'   ortho <- stats::na.omit(ortho)
-#'   LR <- merge_LR_orthologs(
-#'     LR_dt = LR,
-#'     ortho_dt = ortho,
-#'     nL = 1,
-#'     charL = "L",
-#'     nR = 1,
-#'     charR = "R"
-#'   )
-#'   cols_to_keep <- c(
-#'     "LR_SORTED", "SOURCE",
-#'     "LIGAND_1", "RECEPTOR_1",
-#'     "LIGAND_1_CONF", "RECEPTOR_1_CONF",
-#'     "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
-#'   )
-#'   return(LR[, cols_to_keep, with = FALSE])
-#' }
+prepare_LR_nichenet <- function(
+  one2one = FALSE
+) {
+  LR <- nichenetr::lr_network
+  data.table::setDT(LR)
+  data.table::setnames(
+    x = LR,
+    old = c("from", "to", "source"),
+    new = c("L1", "R1", "SOURCE")
+  )
+  ortho <- get_orthologs(
+    genes = unique(c(LR$L1, LR$R1)),
+    input_species = "human",
+    one2one = one2one
+  )
+  ortho <- stats::na.omit(ortho)
+  LR <- merge_LR_orthologs(
+    LR_dt = LR,
+    ortho_dt = ortho,
+    nL = 1,
+    charL = "L",
+    nR = 1,
+    charR = "R"
+  )
+  cols_to_keep <- c(
+    "LR_SORTED", "SOURCE",
+    "LIGAND_1", "RECEPTOR_1",
+    "LIGAND_1_CONF", "RECEPTOR_1_CONF",
+    "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
+  )
+  return(LR[, cols_to_keep, with = FALSE])
+}
 
-#' Convert CellphoneDB database in a dataframe either complex or deconvoluted.
-#'
-#' @param deconvoluted logical indicating if returning the complex LR with 1 to 3 genes per category or the 1:1 deconvoluted data.frame.
-#' @return data.table with ligand-receptor interactions and their relevant properties obtained from CELLPHONEDB.
 create_LR_cpdb <- function(
   deconvoluted = FALSE
 ) {
@@ -472,13 +537,6 @@ create_LR_cpdb <- function(
   return(dt_full)
 }
 
-#' Create a data.table with the ligand-receptor interactions from CELLPHONEDB.
-#'
-#' @param one2one logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.
-#' @param deconvoluted logical indiciating if the interactions are deconvoluted when complex; default is FALSE
-#' @param keep_id logical indicating if keeping the column with the CELLPHONEDB interaction id
-#'
-#' @return data.table with ligand-receptor interactions and their relevant properties obtained from CELLPHONEDB.
 prepare_LR_cpdb <- function(
   one2one = FALSE,
   deconvoluted = FALSE,
@@ -530,62 +588,54 @@ prepare_LR_cpdb <- function(
   return(LR[, cols_to_keep, with = FALSE])
 }
 
-#' #' Create a data.table with the ligand-receptor interactions from CellChat.
-#' #'
-#' #' @return data.table with ligand-receptor interactions and their relevant properties obtained from CELLCHAT.
-#' prepare_LR_CellChat <- function(
-#' ) {
-#'   LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_2 <- LR_SORTED <- interaction_name_2 <- temp <- new <- NULL
-#'   LR <- CellChat::CellChatDB.mouse$interaction
-#'   setDT(LR)
-#'   data.table::setnames(
-#'     x = LR,
-#'     old = c("evidence", "annotation"),
-#'     new = c("SOURCE", "ANNOTATION")
-#'   )
-#'   LR[, LIGAND_1 := sub(" - .*", "", interaction_name_2) ]
-#'   LR[, temp := sub(".* - ", "", interaction_name_2) ]
-#'   LR[, RECEPTOR_1 := ifelse(grepl("+", temp, fixed = TRUE), gsub(".*\\((.+)\\+.*", "\\1", temp), temp)]
-#'   LR[, RECEPTOR_2 := ifelse(grepl("+", temp, fixed = TRUE), gsub(".*\\+(.+)\\).*", "\\1", temp), NA)]
-#'   LR[, temp := NULL]
-#'   LR[, LIGAND_1 := gsub(" ", "", LIGAND_1)]
-#'   LR[, RECEPTOR_1 := gsub(" ", "", RECEPTOR_1)]
-#'   LR[, RECEPTOR_2 := gsub(" ", "", RECEPTOR_2)]
-#'   #some CELLCHAT gene names (70) are not mgi_symbols and we need to convert them manually...
-#'   convert_table <- CellChat_conversion
-#'   genes_to_rm <- convert_table[new == "remove"]
-#'   genes_to_change <- convert_table[new != "remove"]
-#'   LR <- LR[!(LIGAND_1 %in% genes_to_rm$old) & !(RECEPTOR_1 %in% genes_to_rm$old) & !(RECEPTOR_2 %in% genes_to_rm$old)]
-#'   LR[genes_to_change,
-#'         `:=`(LIGAND_1 = new),
-#'         on = "LIGAND_1==old"][
-#'           genes_to_change,
-#'           `:=`(RECEPTOR_1 = new),
-#'           on = "RECEPTOR_1==old"][
-#'             genes_to_change,
-#'             `:=`(RECEPTOR_2 = new),
-#'             on = "RECEPTOR_2==old"]
-#'   LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
-#'     temp <- c(LIGAND_1[[i]], RECEPTOR_1[[i]], RECEPTOR_2[[i]])
-#'     temp <- temp[!is.na(temp)]
-#'     temp <- sort(temp)
-#'     temp <- paste0(temp, collapse = "_")
-#'   }))]
-#'   LR <- LR[!duplicated(LR_SORTED)]
-#'   cols_to_keep <- c(
-#'     "LR_SORTED",
-#'     "ANNOTATION", "SOURCE",
-#'     "LIGAND_1", "RECEPTOR_1", "RECEPTOR_2"
-#'   )
-#'   LR <- LR[, cols_to_keep, with = FALSE]
-#'   return(LR)
-#' }
+prepare_LR_CellChat <- function(
+) {
+  LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_2 <- LR_SORTED <- interaction_name_2 <- temp <- new <- NULL
+  LR <- CellChat::CellChatDB.mouse$interaction
+  setDT(LR)
+  data.table::setnames(
+    x = LR,
+    old = c("evidence", "annotation"),
+    new = c("SOURCE", "ANNOTATION")
+  )
+  LR[, LIGAND_1 := sub(" - .*", "", interaction_name_2) ]
+  LR[, temp := sub(".* - ", "", interaction_name_2) ]
+  LR[, RECEPTOR_1 := ifelse(grepl("+", temp, fixed = TRUE), gsub(".*\\((.+)\\+.*", "\\1", temp), temp)]
+  LR[, RECEPTOR_2 := ifelse(grepl("+", temp, fixed = TRUE), gsub(".*\\+(.+)\\).*", "\\1", temp), NA)]
+  LR[, temp := NULL]
+  LR[, LIGAND_1 := gsub(" ", "", LIGAND_1)]
+  LR[, RECEPTOR_1 := gsub(" ", "", RECEPTOR_1)]
+  LR[, RECEPTOR_2 := gsub(" ", "", RECEPTOR_2)]
+  #some CELLCHAT gene names (70) are not mgi_symbols and we need to convert them manually...
+  convert_table <- CellChat_conversion
+  genes_to_rm <- convert_table[new == "remove"]
+  genes_to_change <- convert_table[new != "remove"]
+  LR <- LR[!(LIGAND_1 %in% genes_to_rm$old) & !(RECEPTOR_1 %in% genes_to_rm$old) & !(RECEPTOR_2 %in% genes_to_rm$old)]
+  LR[genes_to_change,
+        `:=`(LIGAND_1 = new),
+        on = "LIGAND_1==old"][
+          genes_to_change,
+          `:=`(RECEPTOR_1 = new),
+          on = "RECEPTOR_1==old"][
+            genes_to_change,
+            `:=`(RECEPTOR_2 = new),
+            on = "RECEPTOR_2==old"]
+  LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
+    temp <- c(LIGAND_1[[i]], RECEPTOR_1[[i]], RECEPTOR_2[[i]])
+    temp <- temp[!is.na(temp)]
+    temp <- sort(temp)
+    temp <- paste0(temp, collapse = "_")
+  }))]
+  LR <- LR[!duplicated(LR_SORTED)]
+  cols_to_keep <- c(
+    "LR_SORTED",
+    "ANNOTATION", "SOURCE",
+    "LIGAND_1", "RECEPTOR_1", "RECEPTOR_2"
+  )
+  LR <- LR[, cols_to_keep, with = FALSE]
+  return(LR)
+}
 
-#' Create a data.table with the ligand-receptor interactions from ICELLNET.
-#'
-#' @param one2one logical indicating if the orthology conversion has to be limited to one2one homology; default is FALSE.
-#'
-#' @return data.table with ligand-receptor interactions and their relevant properties obtained from ICELLNET.
 prepare_LR_ICELLNET <- function(
   one2one = FALSE
 ) {
@@ -631,16 +681,6 @@ prepare_LR_ICELLNET <- function(
   return(LR[, cols_to_keep, with = FALSE])
 }
 
-#' Take a LR data.table of human genes and convert it with mouse genes.
-#'
-#' @param LR_dt data.table of human ligand-recetpor interactions.
-#' @param ortho_dt data.table of human-mouse homologues.
-#' @param nL numeric indicating the number of ligand columns in LR_dt.
-#' @param charL character indicating the prefix name of the ligand columns in LR_dt.
-#' @param nR numeric indicating the number of receptor columns in LR_dt.
-#' @param charR character indicating the prefix name of the receptor columns in LR_dt.
-#'
-#' @return data.table with the mouse ligand-receptor interactions. Filtering of duplicated is also performed.
 merge_LR_orthologs <- function(
   LR_dt,
   ortho_dt,
@@ -811,4 +851,5 @@ get_orthologs <- function(
   )
   return(ensembl_all)
 }
+
 

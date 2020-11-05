@@ -5,13 +5,16 @@
 \alias{LR6db}
 \title{Ligand-receptor interactions from 6 databases.}
 \format{
-A list of 2 data.tables and one list.
+A list of 2 data.tables and one list of GO terms.
 }
 \usage{
 data(LR6db)
 }
 \description{
-LR6db contains two data.tables of LR interactions and a list of the sources from each database.
+LR6db contains two data.tables of LR interactions and etc
+}
+\details{
+Can be obtained by running scDiffCom::build_LR6db()
 }
 \references{
 to add
