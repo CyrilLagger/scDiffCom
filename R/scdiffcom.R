@@ -238,117 +238,19 @@ run_ORA <- function(
   scdiffcom_result,
   verbose = TRUE,
   logfc_threshold = scdiffcom_result$parameters$cutoff_logfc,
-  categories = c("L_CELLTYPE", "R_CELLTYPE", "LR_CELLTYPE", "LR_NAME"),
+  categories = c("L_CELLTYPE", "R_CELLTYPE", "LR_CELLTYPE", "LR_NAME", "GO"),
   ora_types = c("UP", "DOWN", "DIFF", "FLAT")
 ) {
-  Counts_value_significant <- Counts_notvalue_significant <-
-    Counts_notvalue_notsignificant <- Counts_value_notsignificant <-
-    Val_sig <- Val_notsig <- Category <-  NULL
   if(scdiffcom_result$parameters$permutation_analysis &
      scdiffcom_result$parameters$condition_info$is_cond) {
     if(verbose) message("Performing ORA analysis.")
-    cci_dt <- data.table::copy(
-      scdiffcom_result$scdiffcom_dt_filtered
-      )
-    ora_tables <- lapply(
-      X = ora_types,
-      FUN = function(ora_type) {
-        if("GO" %in% categories) {
-          counts_go_dt <- extract_category_counts(
-            scdiffcom_dt = cci_dt,
-            categories = "LR_SORTED",
-            ora_type = ora_type,
-            logfc_threshold = logfc_threshold
-          )
-          go_union_dt <- LR6db$LR6db_GO$LR_GO_union
-          counts_go_union_dt <- data.table::merge.data.table(
-            go_union_dt,
-            counts_go_dt,
-            by.x = "LR_SORTED",
-            by.y = "Value"
-          )
-          counts_go_union_dt[, c("Val_sig", "Val_notsig") :=
-                               list(
-                                 sum(Counts_value_significant),
-                                 sum(Counts_value_notsignificant)),
-                             by = "GO_union"]
-          counts_go_union_dt[, c("NotVal_sig", "NotVal_notsig") := list(
-            Counts_notvalue_significant + Counts_value_significant - Val_sig,
-            Counts_notvalue_notsignificant + Counts_value_notsignificant - Val_notsig
-          )]
-          counts_go_union_dt[, Category := "GO_UNION" ]
-          counts_go_union_dt[, c("Counts_value_significant", "Counts_value_notsignificant",
-                                 "Counts_notvalue_significant", "Counts_notvalue_notsignificant",
-                                 "LR_SORTED") := NULL]
-          counts_go_union_dt <- unique(counts_go_union_dt)
-          data.table::setnames(
-            counts_go_union_dt,
-            old = c("GO_union", "Val_sig", "Val_notsig", "NotVal_sig", "NotVal_notsig"),
-            new = c("Value", "Counts_value_significant", "Counts_value_notsignificant",
-                    "Counts_notvalue_significant", "Counts_notvalue_notsignificant")
-          )
-          go_intersection_dt <- LR6db$LR6db_GO$LR_GO_intersection
-          counts_go_intersection_dt <- data.table::merge.data.table(
-            go_intersection_dt,
-            counts_go_dt,
-            by.x = "LR_SORTED",
-            by.y = "Value"
-          )
-          counts_go_intersection_dt[, c("Val_sig", "Val_notsig") :=
-                               list(
-                                 sum(Counts_value_significant),
-                                 sum(Counts_value_notsignificant)),
-                             by = "GO_intersection"]
-          counts_go_intersection_dt[, c("NotVal_sig", "NotVal_notsig") := list(
-            Counts_notvalue_significant + Counts_value_significant - Val_sig,
-            Counts_notvalue_notsignificant + Counts_value_notsignificant - Val_notsig
-          )]
-          counts_go_intersection_dt[, Category := "GO_intersection" ]
-          counts_go_intersection_dt[, c("Counts_value_significant", "Counts_value_notsignificant",
-                                 "Counts_notvalue_significant", "Counts_notvalue_notsignificant",
-                                 "LR_SORTED") := NULL]
-          counts_go_intersection_dt <- unique(counts_go_intersection_dt)
-          data.table::setnames(
-            counts_go_intersection_dt,
-            old = c("GO_intersection", "Val_sig", "Val_notsig", "NotVal_sig", "NotVal_notsig"),
-            new = c("Value", "Counts_value_significant", "Counts_value_notsignificant",
-                    "Counts_notvalue_significant", "Counts_notvalue_notsignificant")
-          )
-          counts_go_dt <- data.table::rbindlist(
-            list(counts_go_union_dt, counts_go_intersection_dt)
-          )
-        } else {
-         counts_go_dt <- NULL
-        }
-        categories <- categories[categories != "GO"]
-        if(length(categories) >=1 ) {
-          counts_dt <- extract_category_counts(
-            scdiffcom_dt = cci_dt,
-            categories = categories,
-            ora_type = ora_type,
-            logfc_threshold = logfc_threshold
-          )
-        } else {
-          counts_dt <- NULL
-        }
-        counts_dt <- rbindlist(
-          list(counts_dt, counts_go_dt)
-        )
-        counts_dt <- perform_ora_from_counts(
-          counts_dt = counts_dt
-        )
-        cols_to_rename <- colnames(counts_dt)
-        cols_to_rename <- cols_to_rename[!(cols_to_rename %in% c("Value", "Category"))]
-        data.table::setnames(
-          x = counts_dt,
-          old = cols_to_rename,
-          new = paste0(cols_to_rename, "_", ora_type)
-        )
-        return(counts_dt)
-      }
+    ora_dt <- build_ora_dt(
+      scdiffcom_dt = scdiffcom_result$scdiffcom_dt_filtered,
+      logfc_threshold = logfc_threshold,
+      ora_types = ora_types,
+      categories = categories
     )
-    ora_full <- Reduce(merge, ora_tables)
-    scdiffcom_result[["ORA"]] <- ora_full
+    scdiffcom_result[["ORA"]] <- ora_dt
   } else {
     if (verbose) message("No ORA analysis available for the selected parameters.")
     scdiffcom_result[["ORA"]] <- NA
