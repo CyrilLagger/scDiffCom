@@ -1,18 +1,19 @@
 extract_category_counts <- function(
   scdiffcom_dt,
   categories,
-  ora_type
+  ora_type,
+  logfc_threshold
   ) {
-  REGULATION_SIMPLE <- Counts_value_significant <- Counts_value_notsignificant <- NULL
+  REGULATION_SIMPLE <- Counts_value_significant <- Counts_value_notsignificant <- LOGFC <- NULL
   if(ora_type == "UP") {
-    dt_significant <- scdiffcom_dt[REGULATION_SIMPLE == "UP"]
-    dt_notsignificant <- scdiffcom_dt[REGULATION_SIMPLE != "UP"]
+    dt_significant <- scdiffcom_dt[REGULATION_SIMPLE == "UP" & LOGFC >= logfc_threshold]
+    dt_notsignificant <- scdiffcom_dt[!(REGULATION_SIMPLE == "UP" & LOGFC >= logfc_threshold)]
   } else if(ora_type == "DOWN") {
-    dt_significant <- scdiffcom_dt[REGULATION_SIMPLE == "DOWN"]
-    dt_notsignificant <- scdiffcom_dt[REGULATION_SIMPLE != "DOWN"]
+    dt_significant <- scdiffcom_dt[REGULATION_SIMPLE == "DOWN" & LOGFC <= -logfc_threshold]
+    dt_notsignificant <- scdiffcom_dt[!(REGULATION_SIMPLE == "DOWN" & LOGFC <= -logfc_threshold)]
   } else if(ora_type == "DIFF") {
-    dt_significant <- scdiffcom_dt[REGULATION_SIMPLE %in% c("UP", "DOWN") ]
-    dt_notsignificant <- scdiffcom_dt[!(REGULATION_SIMPLE %in% c("UP", "DOWN"))]
+    dt_significant <- scdiffcom_dt[REGULATION_SIMPLE %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold ]
+    dt_notsignificant <- scdiffcom_dt[!(REGULATION_SIMPLE %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold)]
   } else if(ora_type == "FLAT") {
     dt_significant <- scdiffcom_dt[REGULATION_SIMPLE == "FLAT"]
     dt_notsignificant <- scdiffcom_dt[REGULATION_SIMPLE != "FLAT"]

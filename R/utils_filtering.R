@@ -18,6 +18,21 @@ add_convenience_cols <- function(
       cci_dt[, LOGFC := get(paste0("LR_SCORE_", condition_info$cond2)) - get(paste0("LR_SCORE_", condition_info$cond1))]
     } else {
       cci_dt[, LOGFC := log(get(paste0("LR_SCORE_", condition_info$cond2)) / get(paste0("LR_SCORE_", condition_info$cond1)))]
+      max_logfc <- max(cci_dt[is.finite(LOGFC)][["LOGFC"]])
+      min_logfc <- min(cci_dt[is.finite(LOGFC)][["LOGFC"]])
+      cci_dt[, LOGFC := ifelse(
+        is.finite(LOGFC),
+        LOGFC,
+        ifelse(
+          is.nan(LOGFC),
+          0,
+          ifelse(
+            LOGFC > 0,
+            max_logfc,
+            min_logfc
+          )
+        )
+      )]
     }
     cci_dt[, LOGFC_ABS := abs(LOGFC)]
     if(permutation_analysis) {

@@ -30,4 +30,9 @@ Imports:
     future,
     future.apply,
     progressr,
-    DelayedArray
+    DelayedArray,
+    arules,
+    ontoProc,
+    ontologyIndex,
+    CellChat,
+    nichenetr

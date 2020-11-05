@@ -36,7 +36,7 @@ run_scdiffcom <- function(
   cond2_name,
   assay = "RNA",
   slot = "data",
-  log_scale = TRUE,
+  log_scale = FALSE,
   min_cells = 5,
   pct_threshold = 0.1,
   permutation_analysis = TRUE,
@@ -227,6 +227,8 @@ run_filtering_and_ORA <- function(
 #'
 #' @param scdiffcom_result The list of results returned by run_scdiffcom
 #' @param verbose Print messages
+#' @param logfc_threshold Log fold-change threshold (in absolute value) to be used to define the categories of interest.
+#' Default to cutoff_logfc used for the filtering analysis.
 #' @param categories The categories over which the test is done
 #' @param ora_types The type of regulation. Can be one or several of c("UP", "DOWN", "DIFF", "FLAT")
 #'
@@ -234,22 +236,107 @@ run_filtering_and_ORA <- function(
 #' @export
 run_ORA <- function(
   scdiffcom_result,
-  verbose,
+  verbose = TRUE,
+  logfc_threshold = scdiffcom_result$parameters$cutoff_logfc,
   categories = c("L_CELLTYPE", "R_CELLTYPE", "LR_CELLTYPE", "LR_NAME"),
   ora_types = c("UP", "DOWN", "DIFF", "FLAT")
 ) {
-  if(scdiffcom_result$parameters$permutation_analysis & scdiffcom_result$parameters$condition_info$is_cond) {
+  Counts_value_significant <- Counts_notvalue_significant <-
+    Counts_notvalue_notsignificant <- Counts_value_notsignificant <-
+    Val_sig <- Val_notsig <- Category <-  NULL
+  if(scdiffcom_result$parameters$permutation_analysis &
+     scdiffcom_result$parameters$condition_info$is_cond) {
     if(verbose) message("Performing ORA analysis.")
-    cci_dt <- data.table::copy(scdiffcom_result$scdiffcom_dt_filtered)
+    cci_dt <- data.table::copy(
+      scdiffcom_result$scdiffcom_dt_filtered
+      )
     ora_tables <- lapply(
       X = ora_types,
       FUN = function(ora_type) {
-        counts_dt <- extract_category_counts(
-          scdiffcom_dt = cci_dt,
-          categories = categories,
-          ora_type = ora_type
+        if("GO" %in% categories) {
+          counts_go_dt <- extract_category_counts(
+            scdiffcom_dt = cci_dt,
+            categories = "LR_SORTED",
+            ora_type = ora_type,
+            logfc_threshold = logfc_threshold
+          )
+          go_union_dt <- LR6db$LR6db_GO$LR_GO_union
+          counts_go_union_dt <- data.table::merge.data.table(
+            go_union_dt,
+            counts_go_dt,
+            by.x = "LR_SORTED",
+            by.y = "Value"
+          )
+          counts_go_union_dt[, c("Val_sig", "Val_notsig") :=
+                               list(
+                                 sum(Counts_value_significant),
+                                 sum(Counts_value_notsignificant)),
+                             by = "GO_union"]
+          counts_go_union_dt[, c("NotVal_sig", "NotVal_notsig") := list(
+            Counts_notvalue_significant + Counts_value_significant - Val_sig,
+            Counts_notvalue_notsignificant + Counts_value_notsignificant - Val_notsig
+          )]
+          counts_go_union_dt[, Category := "GO_UNION" ]
+          counts_go_union_dt[, c("Counts_value_significant", "Counts_value_notsignificant",
+                                 "Counts_notvalue_significant", "Counts_notvalue_notsignificant",
+                                 "LR_SORTED") := NULL]
+          counts_go_union_dt <- unique(counts_go_union_dt)
+          data.table::setnames(
+            counts_go_union_dt,
+            old = c("GO_union", "Val_sig", "Val_notsig", "NotVal_sig", "NotVal_notsig"),
+            new = c("Value", "Counts_value_significant", "Counts_value_notsignificant",
+                    "Counts_notvalue_significant", "Counts_notvalue_notsignificant")
+          )
+          go_intersection_dt <- LR6db$LR6db_GO$LR_GO_intersection
+          counts_go_intersection_dt <- data.table::merge.data.table(
+            go_intersection_dt,
+            counts_go_dt,
+            by.x = "LR_SORTED",
+            by.y = "Value"
+          )
+          counts_go_intersection_dt[, c("Val_sig", "Val_notsig") :=
+                               list(
+                                 sum(Counts_value_significant),
+                                 sum(Counts_value_notsignificant)),
+                             by = "GO_intersection"]
+          counts_go_intersection_dt[, c("NotVal_sig", "NotVal_notsig") := list(
+            Counts_notvalue_significant + Counts_value_significant - Val_sig,
+            Counts_notvalue_notsignificant + Counts_value_notsignificant - Val_notsig
+          )]
+          counts_go_intersection_dt[, Category := "GO_intersection" ]
+          counts_go_intersection_dt[, c("Counts_value_significant", "Counts_value_notsignificant",
+                                 "Counts_notvalue_significant", "Counts_notvalue_notsignificant",
+                                 "LR_SORTED") := NULL]
+          counts_go_intersection_dt <- unique(counts_go_intersection_dt)
+          data.table::setnames(
+            counts_go_intersection_dt,
+            old = c("GO_intersection", "Val_sig", "Val_notsig", "NotVal_sig", "NotVal_notsig"),
+            new = c("Value", "Counts_value_significant", "Counts_value_notsignificant",
+                    "Counts_notvalue_significant", "Counts_notvalue_notsignificant")
+          )
+          counts_go_dt <- data.table::rbindlist(
+            list(counts_go_union_dt, counts_go_intersection_dt)
+          )
+        } else {
+         counts_go_dt <- NULL
+        }
+        categories <- categories[categories != "GO"]
+        if(length(categories) >=1 ) {
+          counts_dt <- extract_category_counts(
+            scdiffcom_dt = cci_dt,
+            categories = categories,
+            ora_type = ora_type,
+            logfc_threshold = logfc_threshold
+          )
+        } else {
+          counts_dt <- NULL
+        }
+        counts_dt <- rbindlist(
+          list(counts_dt, counts_go_dt)
         )
-        perform_ora_from_counts(counts_dt = counts_dt)
+        counts_dt <- perform_ora_from_counts(
+          counts_dt = counts_dt
+        )
         cols_to_rename <- colnames(counts_dt)
         cols_to_rename <- cols_to_rename[!(cols_to_rename %in% c("Value", "Category"))]
         data.table::setnames(
@@ -269,3 +356,26 @@ run_ORA <- function(
   return(scdiffcom_result)
 }
 
+#' Build a data.table of curated ligand-receptor interactions obtained from 6 databases.
+#'
+#' @return A data.table with ligands, receptors and some annotations (database of origin and source of curation).
+#' @export
+build_LR6db <- function(
+) {
+  LR6db_all <- combine_LR_db(
+    one2one = FALSE,
+    curated = FALSE
+  )
+  LR6db_curated <- combine_LR_db(
+    one2one = FALSE,
+    curated = TRUE
+  )
+  LR6db_GO <- get_GO_interactions(
+    LR_db = LR6db_curated
+  )
+  return(list(
+    LR6db_all = LR6db_all,
+    LR6db_curated = LR6db_curated,
+    LR6db_GO = LR6db_GO
+  ))
+}

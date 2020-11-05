@@ -13,7 +13,7 @@ run_scdiffcom(
   cond2_name,
   assay = "RNA",
   slot = "data",
-  log_scale = TRUE,
+  log_scale = FALSE,
   min_cells = 5,
   pct_threshold = 0.1,
   permutation_analysis = TRUE,

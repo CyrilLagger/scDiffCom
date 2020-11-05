@@ -6,7 +6,8 @@
 \usage{
 run_ORA(
   scdiffcom_result,
-  verbose,
+  verbose = TRUE,
+  logfc_threshold = scdiffcom_result$parameters$cutoff_logfc,
   categories = c("L_CELLTYPE", "R_CELLTYPE", "LR_CELLTYPE", "LR_NAME"),
   ora_types = c("UP", "DOWN", "DIFF", "FLAT")
 )
@@ -15,6 +16,9 @@ run_ORA(
 \item{scdiffcom_result}{The list of results returned by run_scdiffcom}
 
 \item{verbose}{Print messages}
+
+\item{logfc_threshold}{Log fold-change threshold (in absolute value) to be used to define the categories of interest.
+Default to cutoff_logfc used for the filtering analysis.}
 
 \item{categories}{The categories over which the test is done}
 
