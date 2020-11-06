@@ -4,9 +4,9 @@
 #' @param assay x
 #' @param slot x
 #' @param log_scale x
-#' @param celltype_col_id x
+#' @param celltype_column_id x
 #' @param input_species x
-#' @param condition_col_id x
+#' @param condition_column_id x
 #' @param min_cells x
 #' @param input_dir x
 #' @param create_plots x
@@ -32,10 +32,10 @@ run_cpdb_from_seurat <- function(
   assay = "RNA",
   slot = "data",
   log_scale = FALSE,
-  celltype_col_id,
+  celltype_column_id,
   input_species = "mouse",
   min_cells = 5,
-  condition_col_id = NULL,
+  condition_column_id = NULL,
   input_dir = getwd(),
   create_plots = FALSE,
   method = 'statistical_analysis',
@@ -63,13 +63,13 @@ run_cpdb_from_seurat <- function(
     assay = assay,
     slot = slot,
     log_scale = log_scale,
-    celltype_col_id = celltype_col_id,
+    celltype_column_id = celltype_column_id,
     input_species = input_species,
-    condition_col_id = condition_col_id,
+    condition_column_id = condition_column_id,
     min_cells = min_cells,
     input_dir = input_dir
   )
-  if(is.null(condition_col_id)) {
+  if(is.null(condition_column_id)) {
     n_run = 1
     project_name <- "cpdb_results_noCond"
     means_result_name <- NULL
@@ -120,7 +120,7 @@ run_cpdb_from_seurat <- function(
         input_dir = input_dir,
         conds = paths$conds
         )
-      if(is.null(condition_col_id)) {
+      if(is.null(condition_column_id)) {
         output_dir_full <-  paste0(input_dir, "/cpdb_full_table_noCond.txt")
       } else {
         output_dir_full <-  paste0(input_dir, "/cpdb_full_table_withCond.txt")
