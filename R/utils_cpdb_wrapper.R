@@ -3,10 +3,10 @@ create_cpdb_input <- function(
   assay = "RNA",
   slot = "data",
   log_scale = FALSE,
-  celltype_col_id,
+  celltype_column_id,
   input_species = "mouse",
   min_cells = 5,
-  condition_col_id = NULL,
+  condition_column_id = NULL,
   input_dir = getwd()
 ) {
   Gene <- cell_type <- NULL
@@ -20,8 +20,8 @@ create_cpdb_input <- function(
   )
   md <- extract_seurat_metadata(
     seurat_object = seurat_object,
-    celltype_col_id = celltype_col_id,
-    condition_col_id = condition_col_id
+    celltype_column_id = celltype_column_id,
+    condition_column_id = condition_column_id
   )
   cell_type_filt <- filter_celltypes(
     metadata = md,
@@ -56,7 +56,7 @@ create_cpdb_input <- function(
   } else {
     stop("Species not supported: 'input_species' can be either 'human' or 'mouse'.")
   }
-  if(is.null(condition_col_id)) {
+  if(is.null(condition_column_id)) {
     output_dir_data <- paste0(input_dir, "/cpdb_data_noCond.txt")
     output_dir_md <- paste0(input_dir, "/cpdb_metadata_noCond.txt")
     message(paste0("Writing CellPhoneDB input data to ", output_dir_data))

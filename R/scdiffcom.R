@@ -2,13 +2,14 @@
 #'
 #' @param seurat_object A Seurat object
 #' @param LR_object A data.table with ligand-receptor interactions
-#' @param celltype_col_id The column of the Seurat meta.data that contains the cell-type of each cell
-#' @param condition_col_id The column of the Seurat meta.data that contains the group of each cell (only 2 groups allowed).
+#' @param celltype_column_id The column of the Seurat meta.data that contains the cell-type of each cell
+#' @param condition_column_id The column of the Seurat meta.data that contains the group of each cell (only 2 groups allowed).
 #'  Use NULL to run the analysis without conditions.
 #' @param cond1_name Name of the first condition. Use NULL if no condition,
-#'  otherwise it should corresponds to one of the groups contained in Celltype_col_id.
+#'  otherwise it should corresponds to one of the groups contained in celltype_column_id.
 #'  During differential expression, LOGFC is positive when score(cond1) > score(cond1).
 #' @param cond2_name Name of the second condition. Similar as cond1_name.
+#' @param object_name Name of the scDiffCom object that will be returned.
 #' @param assay Seurat assay from which the data are extracted.
 #' @param slot Seurat slot from which the data are extracted.
 #' @param log_scale Logical indicating if working in log-space or not.
@@ -27,13 +28,14 @@
 #'
 #' @return A data.table with the CCI interactions.
 #' @export
-run_scdiffcom <- function(
+run_interaction_analysis <- function(
   seurat_object,
   LR_object,
-  celltype_col_id,
-  condition_col_id,
+  celltype_column_id,
+  condition_column_id,
   cond1_name,
   cond2_name,
+  object_name = "scDiffCom_object",
   assay = "RNA",
   slot = "data",
   log_scale = FALSE,
@@ -62,8 +64,8 @@ run_scdiffcom <- function(
     slot = slot,
     log_scale = log_scale,
     return_type = return_type,
-    celltype_col_id = celltype_col_id,
-    condition_col_id = condition_col_id,
+    celltype_column_id = celltype_column_id,
+    condition_column_id = condition_column_id,
     min_cells = min_cells,
     verbose = verbose
   )
@@ -73,7 +75,7 @@ run_scdiffcom <- function(
     verbose = verbose
   )
   condition_info <- preprocess_condition(
-    condition_col_id = condition_col_id,
+    condition_column_id = condition_column_id,
     cond1_name = cond1_name,
     cond2_name = cond2_name,
     metadata = pp_seurat$metadata,
@@ -100,12 +102,10 @@ run_scdiffcom <- function(
     compute_fast = FALSE
   )
   if (!permutation_analysis) {
-    analysis_result <- list(
-      scdiffcom_dt_raw = cci_dt_simple,
-      scdiffcom_distributions = NA
-    )
+    cci_table_raw <- cci_dt_simple
+    distributions <- list()
   } else {
-    analysis_result <- run_stat_analysis(
+    res_stat_analysis <- run_stat_analysis(
       cci_dt_simple = cci_dt_simple,
       expr_tr = expr_tr,
       metadata = pp_seurat$metadata,
@@ -115,9 +115,12 @@ run_scdiffcom <- function(
       return_distr = return_distr,
       verbose = verbose
     )
+    cci_table_raw <- res_stat_analysis$cci_table_raw
+    distributions <- res_stat_analysis$distributions
   }
-  analysis_result[["parameters"]] <- list(
-    celltype_col_id = celltype_col_id,
+  parameters <- list(
+    object_name = object_name,
+    celltype_column_id = celltype_column_id,
     LR_info = list(max_nL = pp_LR$max_nL, max_nR = pp_LR$max_nR),
     condition_info = condition_info,
     assay = assay,
@@ -133,16 +136,24 @@ run_scdiffcom <- function(
     cutoff_logfc = cutoff_logfc,
     return_distr = return_distr
   )
-  analysis_result <- run_filtering_and_ORA(
-    scdiffcom_result = analysis_result,
+  object <- methods::new(
+    "scDiffCom",
+    parameters = parameters,
+    cci_table_raw = cci_table_raw,
+    cci_table_filtered = list(),
+    distributions = distributions,
+    ORA = list()
+  )
+  object <- run_filtering_and_ORA(
+    object = object,
     verbose = verbose
   )
-  return(analysis_result)
+  return(object)
 }
 
 #' Run filtering analysis on the result of scDiffCom
 #'
-#' @param scdiffcom_result The list of results returned by run_scdiffcom
+#' @param object The list of results returned by run_scdiffcom
 #' @param verbose Print messages
 #' @param new_cutoff_quantile_score New quantile used to define the threshold of detection regarding the score of an interaction.
 #' @param new_cutoff_pval_specificity New P-value threshold that indicates when an interaction is specific
@@ -152,7 +163,7 @@ run_scdiffcom <- function(
 #' @return Return a list of result in the scDiffCom format with new filtering analysis.
 #' @export
 run_filtering_and_ORA <- function(
-  scdiffcom_result,
+  object,
   verbose = TRUE,
   new_cutoff_quantile_score = NULL,
   new_cutoff_pval_specificity = NULL,
@@ -161,101 +172,138 @@ run_filtering_and_ORA <- function(
 ) {
   REGULATION_SIMPLE <- NULL
   if(verbose) message("Filtering and cleaning results.")
+  temp_param <- parameters(object)
   if(!is.null(new_cutoff_quantile_score)) {
-    scdiffcom_result$parameters$cutoff_quantile_score <- new_cutoff_quantile_score
+    temp_param$cutoff_quantile_score <- new_cutoff_quantile_score
   }
   if(!is.null(new_cutoff_pval_specificity)) {
-    scdiffcom_result$parameters$cutoff_pval_specificity <- new_cutoff_pval_specificity
+    temp_param$cutoff_pval_specificity <- new_cutoff_pval_specificity
   }
   if(!is.null(new_cutoff_pval_de)) {
-    scdiffcom_result$parameters$cutoff_pval_de <- new_cutoff_pval_de
+    temp_param$cutoff_pval_de <- new_cutoff_pval_de
   }
   if(!is.null(new_cutoff_logfc)) {
-    scdiffcom_result$parameters$cutoff_logfc <- new_cutoff_logfc
+    temp_param$cutoff_logfc <- new_cutoff_logfc
   }
+  parameters(object) <- temp_param
   cci_dt <- data.table::copy(
-    x = scdiffcom_result$scdiffcom_dt_raw
+    x = get_cci_table_raw(object)
     )
   cci_dt <- add_convenience_cols(
     cci_dt = cci_dt,
-    condition_info = scdiffcom_result$parameters$condition_info,
-    log_scale = scdiffcom_result$parameters$log_scale,
-    permutation_analysis = scdiffcom_result$parameters$permutation_analysis,
+    condition_info = temp_param$condition_info,
+    log_scale = temp_param$log_scale,
+    permutation_analysis = temp_param$permutation_analysis,
     pre_filtering = TRUE
   )
-  if(scdiffcom_result$parameters$permutation_analysis) {
+  if(temp_param$permutation_analysis) {
     cci_dt <- find_detected_cci(
       cci_dt = cci_dt,
-      condition_info = scdiffcom_result$parameters$condition_info,
-      cutoff_quantile_score = scdiffcom_result$parameters$cutoff_quantile_score,
-      cutoff_pval_specificity = scdiffcom_result$parameters$cutoff_pval_specificity,
-      cutoff_pval_de = scdiffcom_result$parameters$cutoff_pval_de,
-      cutoff_logfc = scdiffcom_result$parameters$cutoff_logfc
+      condition_info = temp_param$condition_info,
+      cutoff_quantile_score = temp_param$cutoff_quantile_score,
+      cutoff_pval_specificity = temp_param$cutoff_pval_specificity,
+      cutoff_pval_de = temp_param$cutoff_pval_de,
+      cutoff_logfc = temp_param$cutoff_logfc
     )
-    if(scdiffcom_result$parameters$condition_info$is_cond) {
+    if(temp_param$condition_info$is_cond) {
       cci_dt <- assign_regulation(
         cci_dt = cci_dt,
-        condition_info = scdiffcom_result$parameters$condition_info,
-        cutoff_quantile_score = scdiffcom_result$parameters$cutoff_quantile_score,
-        cutoff_pval_specificity = scdiffcom_result$parameters$cutoff_pval_specificity
+        condition_info = temp_param$condition_info,
+        cutoff_quantile_score = temp_param$cutoff_quantile_score,
+        cutoff_pval_specificity = temp_param$cutoff_pval_specificity
       )
       cci_dt <- cci_dt[REGULATION_SIMPLE != "NON_DETECTED"]
     }
   }
   cci_dt <- clean_colnames(
     cci_dt = cci_dt,
-    max_nL = scdiffcom_result$parameters$LR_info$max_nL,
-    max_nR = scdiffcom_result$parameters$LR_info$max_nR,
-    condition_info = scdiffcom_result$parameters$condition_info,
-    permutation_analysis = scdiffcom_result$parameters$permutation_analysis
+    max_nL = temp_param$LR_info$max_nL,
+    max_nR = temp_param$LR_info$max_nR,
+    condition_info = temp_param$condition_info,
+    permutation_analysis = temp_param$permutation_analysis
   )
   if(nrow(cci_dt) == 0) {
     if (verbose) message("No detected interactions for this dataset.")
-    scdiffcom_result[["scdiffcom_dt_filtered"]] <- NA
-    scdiffcom_result[["ORA"]] <- NA
+    object <- set_cci_table_filtered(object, list())
+    object <- set_ora_tables(object, list())
   } else {
-    scdiffcom_result[["scdiffcom_dt_filtered"]] <- cci_dt
-    scdiffcom_result <- run_ORA(
-      scdiffcom_result = scdiffcom_result,
+    object <- set_cci_table_filtered(object, cci_dt)
+    object <- run_ORA(
+      object = object,
       verbose = TRUE
     )
   }
-  return(scdiffcom_result)
+  return(object)
 }
 
 #' Run over-representation analysis on the results from scDiffCom
 #'
-#' @param scdiffcom_result The list of results returned by run_scdiffcom
+#' @param object The list of results returned by run_scdiffcom
 #' @param verbose Print messages
 #' @param logfc_threshold Log fold-change threshold (in absolute value) to be used to define the categories of interest.
 #' Default to cutoff_logfc used for the filtering analysis.
 #' @param categories The categories over which the test is done
-#' @param ora_types The type of regulation. Can be one or several of c("UP", "DOWN", "DIFF", "FLAT")
+#' @param overwrite Should existing categories be overwriten in case they match with new categories?
 #'
 #' @return A data.table
 #' @export
 run_ORA <- function(
-  scdiffcom_result,
+  object,
   verbose = TRUE,
-  logfc_threshold = scdiffcom_result$parameters$cutoff_logfc,
+  logfc_threshold = NULL,
   categories = c("L_CELLTYPE", "R_CELLTYPE", "LR_CELLTYPE", "LR_NAME", "GO"),
-  ora_types = c("UP", "DOWN", "DIFF", "FLAT")
+  overwrite = FALSE
 ) {
-  if(scdiffcom_result$parameters$permutation_analysis &
-     scdiffcom_result$parameters$condition_info$is_cond) {
-    if(verbose) message("Performing ORA analysis.")
-    ora_dt <- build_ora_dt(
-      scdiffcom_dt = scdiffcom_result$scdiffcom_dt_filtered,
-      logfc_threshold = logfc_threshold,
-      ora_types = ora_types,
-      categories = categories
+  ora_types <- c("UP", "DOWN", "DIFF", "FLAT")
+  temp_param <- parameters(object)
+  if(is.null(logfc_threshold)) {
+    logfc_threshold <- temp_param$cutoff_logfc
+  }
+  if(temp_param$permutation_analysis &
+     temp_param$condition_info$is_cond) {
+    temp_ora <- get_ora_tables(object)
+    categories_old <- names(temp_ora)
+
+    if(is.null(categories_old)) {
+      if(verbose) message("Performing ORA analysis on the specified categories.")
+      categories_to_keep <- categories
+    } else {
+      if(overwrite) {
+        if(verbose) message("Performing ORA analysis on the specified categories (and erasing any previous ORA results).")
+        categories_to_keep <- categories
+      } else {
+        if(verbose) message("Performing ORA analysis only on the new specified categories (and keeping previous results).")
+        categories_to_keep <- setdiff(categories, categories_old)
+      }
+    }
+    ora_tables <- sapply(
+      categories_to_keep,
+      function(category) {
+        build_ora_dt(
+          cci_table_filtered = get_cci_table_filtered(object),
+          logfc_threshold = logfc_threshold,
+          ora_types = ora_types,
+          category = category
+        )
+      },
+      USE.NAMES = TRUE,
+      simplify = FALSE
     )
-    scdiffcom_result[["ORA"]] <- ora_dt
+    if(is.null(categories_old)) {
+      res_ora <- ora_tables
+    } else {
+      if(overwrite) {
+        res_ora <- ora_tables
+      } else {
+        res_ora <- c(temp_ora, ora_tables)
+      }
+    }
+    object <- set_ora_tables(object, res_ora)
   } else {
     if (verbose) message("No ORA analysis available for the selected parameters.")
-    scdiffcom_result[["ORA"]] <- NA
+    object <- set_ora_tables(object, list())
   }
-  return(scdiffcom_result)
+  return(object)
 }
 
 #' Build a data.table of curated ligand-receptor interactions obtained from 6 databases.

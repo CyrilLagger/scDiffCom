@@ -2,12 +2,12 @@ create_template_cci <- function(
   LR_db,
   cell_types
 ) {
-  template <- data.table::CJ(
+  template <- CJ(
     L_CELLTYPE = cell_types,
     R_CELLTYPE = cell_types,
     LR_SORTED = LR_db$LR_SORTED
   )
-  template <- data.table::merge.data.table(
+  template <- merge.data.table(
     x = template,
     y = LR_db,
     by.x = "LR_SORTED",
@@ -24,7 +24,7 @@ add_cell_number <- function(
 ) {
   if(!condition_info$is_cond) {
     dt_NCELLS <- metadata[, .N, by = "cell_type"]
-    cci_dt <- data.table::merge.data.table(
+    cci_dt <- merge.data.table(
       x = cci_dt,
       y = dt_NCELLS,
       by.x = "L_CELLTYPE",
@@ -32,7 +32,7 @@ add_cell_number <- function(
       all.x = TRUE,
       sort = FALSE
     )
-    cci_dt <- data.table::merge.data.table(
+    cci_dt <- merge.data.table(
       x = cci_dt,
       y = dt_NCELLS,
       by.x = "R_CELLTYPE",
@@ -42,19 +42,19 @@ add_cell_number <- function(
       suffixes = c("_L", "_R")
     )
     new_cols <- c("L_NCELLS", "R_NCELLS")
-    data.table::setnames(
+    setnames(
       x = cci_dt,
       old = c("N_L", "N_R"),
       new = new_cols
     )
   } else {
     dt_NCELLS <- metadata[, .N, by = c("cell_type", "condition")]
-    dt_NCELLS <- data.table::dcast.data.table(
+    dt_NCELLS <- dcast.data.table(
       data = dt_NCELLS,
       formula = cell_type ~ condition,
       value.var = "N"
     )
-    cci_dt <- data.table::merge.data.table(
+    cci_dt <- merge.data.table(
       x = cci_dt,
       y = dt_NCELLS,
       by.x = "L_CELLTYPE",
@@ -62,7 +62,7 @@ add_cell_number <- function(
       all.x = TRUE,
       sort = FALSE
     )
-    cci_dt <- data.table::merge.data.table(
+    cci_dt <- merge.data.table(
       x = cci_dt,
       y = dt_NCELLS,
       by.x = "R_CELLTYPE",
@@ -76,7 +76,7 @@ add_cell_number <- function(
       paste0("L_NCELLS_", condition_info$cond2),
       paste0("R_NCELLS_", condition_info$cond1),
       paste0("R_NCELLS_", condition_info$cond2))
-    data.table::setnames(
+    setnames(
       x = cci_dt,
       old = c(
         paste0(condition_info$cond1, "_L"),
@@ -87,7 +87,7 @@ add_cell_number <- function(
     )
   }
   for(j in new_cols){
-    data.table::set(cci_dt, i = which(is.na(cci_dt[[j]])), j = j, value = 0)
+    set(cci_dt, i = which(is.na(cci_dt[[j]])), j = j, value = 0)
   }
   return(cci_dt)
 }
@@ -141,10 +141,10 @@ run_simple_cci_analysis <- function(
     min_cells = min_cells,
     cci_or_drate = "drate"
   )
-  dt <- data.table::merge.data.table(
+  dt <- merge.data.table(
     x = cci_dt,
     y = drate_dt,
-    by = generics::intersect(names(cci_dt), names(drate_dt)),
+    by = intersect(names(cci_dt), names(drate_dt)),
     sort = FALSE
   )
   return(dt)
@@ -160,7 +160,7 @@ aggregate_cells <- function(
   } else {
     group <- paste(metadata[["condition"]], metadata[["cell_type"]], sep = "_")
   }
-  sums <- DelayedArray::rowsum(
+  sums <- rowsum(
     x = expr_tr,
     group = group,
     reorder = TRUE
@@ -179,7 +179,7 @@ build_cci_or_drate <- function(
   cci_or_drate
 ) {
   CONDITION_CELLTYPE <- NULL
-  full_dt <- data.table::copy(template_cci_dt)
+  full_dt <- copy(template_cci_dt)
   if(cci_or_drate == "cci") {
     name_tag = "EXPRESSION"
   } else if(cci_or_drate == "drate") {
@@ -208,7 +208,7 @@ build_cci_or_drate <- function(
     n_id <- 2
     pmin_id <- c(cond1_id, cond2_id)
   }
-  dt <- data.table::as.data.table(
+  dt <- as.data.table(
     x = averaged_expr,
     keep.rownames = row_id,
     sorted = FALSE
@@ -217,14 +217,14 @@ build_cci_or_drate <- function(
     dt[, c("CONDITION", "CELLTYPE") := split_cond_string(CONDITION_CELLTYPE, condition_info$cond1, condition_info$cond2)]
     dt[, CONDITION_CELLTYPE := NULL]
   }
-  dt <- data.table::melt.data.table(
+  dt <- melt.data.table(
     data = dt,
     id.vars = vars_id,
     variable.name = "GENE",
     value.name = name_tag
   )
   if(condition_info$is_cond) {
-    dt <- data.table::dcast.data.table(
+    dt <- dcast.data.table(
       data = dt,
       formula = CELLTYPE + GENE ~ CONDITION,
       value.var = name_tag)
@@ -370,7 +370,7 @@ clean_colnames <- function(
       )
     }
   }
-  data.table::setcolorder(
+  setcolorder(
     x = cci_dt,
     neworder = ordered_cols
   )

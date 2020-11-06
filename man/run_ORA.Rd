@@ -5,15 +5,15 @@
 \title{Run over-representation analysis on the results from scDiffCom}
 \usage{
 run_ORA(
-  scdiffcom_result,
+  object,
   verbose = TRUE,
-  logfc_threshold = scdiffcom_result$parameters$cutoff_logfc,
-  categories = c("L_CELLTYPE", "R_CELLTYPE", "LR_CELLTYPE", "LR_NAME"),
-  ora_types = c("UP", "DOWN", "DIFF", "FLAT")
+  logfc_threshold = NULL,
+  categories = c("L_CELLTYPE", "R_CELLTYPE", "LR_CELLTYPE", "LR_NAME", "GO"),
+  overwrite = FALSE
 )
 }
 \arguments{
-\item{scdiffcom_result}{The list of results returned by run_scdiffcom}
+\item{object}{The list of results returned by run_scdiffcom}
 
 \item{verbose}{Print messages}
 
@@ -22,7 +22,7 @@ Default to cutoff_logfc used for the filtering analysis.}
 
 \item{categories}{The categories over which the test is done}
 
-\item{ora_types}{The type of regulation. Can be one or several of c("UP", "DOWN", "DIFF", "FLAT")}
+\item{overwrite}{Should existing categories be overwriten in case they match with new categories?}
 }
 \value{
 A data.table

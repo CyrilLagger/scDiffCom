@@ -1,7 +1,18 @@
-
 get_GO_interactions <- function(
   LR_db
 ) {
+  if (!requireNamespace("biomaRt", quietly = TRUE)) {
+    stop("Package \"biomaRt\" needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
+  if (!requireNamespace("ontoProc", quietly = TRUE)) {
+    stop("Package \"ontoProc\" needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
+  if (!requireNamespace("ontologyIndex", quietly = TRUE)) {
+    stop("Package \"ontologyIndex\" needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
   mgi_symbol <- NULL
   LR_genes <- unique(unlist(LR_db[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]))
   LR_genes <- LR_genes[!is.na(LR_genes)]
@@ -31,7 +42,7 @@ get_GO_interactions <- function(
     USE.NAMES = TRUE,
     simplify = FALSE
   )
-  LR_interactions_go_union <- data.table::rbindlist(
+  LR_interactions_go_union <- rbindlist(
     apply(
       LR_db,
       MARGIN = 1,
@@ -46,14 +57,14 @@ get_GO_interactions <- function(
           LR_genes_go[[row[["RECEPTOR_3"]]]]
         ))
         res_union <- unique(c(LIGAND_GO, RECEPTOR_GO))
-        res_union <- data.table::data.table(
+        res_union <- data.table(
           LR_SORTED = rep(row[["LR_SORTED"]], length(res_union)),
           GO_union = res_union
         )
       }
     )
   )
-  LR_interactions_go_intersection <- data.table::rbindlist(
+  LR_interactions_go_intersection <- rbindlist(
     apply(
       LR_db,
       MARGIN = 1,
@@ -69,7 +80,7 @@ get_GO_interactions <- function(
         ))
         res_inter <- intersect(LIGAND_GO, RECEPTOR_GO)
         if(length(res_inter) > 0) {
-          res_inter <- data.table::data.table(
+          res_inter <- data.table(
             LR_SORTED = rep(row[["LR_SORTED"]], length(res_inter)),
             GO_intersection = res_inter
           )
@@ -112,7 +123,7 @@ combine_LR_db <- function(
   col_md <- colnames(LR_full)
   col_md <- col_md[col_md != "LR_SORTED"]
   db_names <- c("CELLCHAT", "CELLPHONEDB", "SCSR", "SCTENSOR", "ICELLNET", "NICHENET")
-  LR_full <- data.table::dcast.data.table(
+  LR_full <- dcast.data.table(
     LR_full,
     formula = LR_SORTED ~ DATABASE,
     value.var = col_md
@@ -250,6 +261,18 @@ combine_LR_db <- function(
 
 prepare_LR_scTensor <- function(
 ) {
+  if (!requireNamespace("AnnotationDbi", quietly = TRUE)) {
+    stop("Package \"AnnotationDbi\" needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
+  if (!requireNamespace("LRBase.Mmu.eg.db", quietly = TRUE)) {
+    stop("Package \"LRBase.Mmu.eg.db\" needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
+  if (!requireNamespace("AnnotationHub", quietly = TRUE)) {
+    stop("Package \"AnnotationHub\" needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
   LR_SORTED <- LIGAND_1 <- RECEPTOR_1 <- NULL
   key <- AnnotationDbi::keys(
     LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
@@ -289,9 +312,9 @@ prepare_LR_scTensor <- function(
   } else {
     stop("Matching not possible.")
   }
-  data.table::setDT(LR)
+  setDT(LR)
   LR[, c("GENEID_L", "GENEID_R") := list(NULL, NULL)]
-  data.table::setnames(LR, old = "SOURCEDB", new = "SOURCE")
+  setnames(LR, old = "SOURCEDB", new = "SOURCE")
   LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
     temp <- c(LIGAND_1[[i]], RECEPTOR_1[[i]])
     temp <- temp[!is.na(temp)]
@@ -309,9 +332,13 @@ prepare_LR_scTensor <- function(
 prepare_LR_scsr <- function(
   one2one = FALSE
 ) {
+  if (!requireNamespace("SingleCellSignalR", quietly = TRUE)) {
+    stop("Package \"SingleCellSignalR\" needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
   LR <- SingleCellSignalR::LRdb
-  data.table::setDT(LR)
-  data.table::setnames(
+  setDT(LR)
+  setnames(
     x = LR,
     old = c("ligand", "receptor"),
     new = c("L1", "R1")
@@ -344,9 +371,13 @@ prepare_LR_scsr <- function(
 prepare_LR_nichenet <- function(
   one2one = FALSE
 ) {
+  if (!requireNamespace("nichenetr", quietly = TRUE)) {
+    stop("Package \"nichenetr\" needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
   LR <- nichenetr::lr_network
-  data.table::setDT(LR)
-  data.table::setnames(
+  setDT(LR)
+  setnames(
     x = LR,
     old = c("from", "to", "source"),
     new = c("L1", "R1", "SOURCE")
@@ -380,12 +411,12 @@ create_LR_cpdb <- function(
   id_protein_multi_1_1 <- id_protein_multi_1_2 <- id_protein_1 <- id_protein_2 <- temp_id <-
      receptor_1 <- receptor_2 <- secreted_1 <- secreted_2 <- L_3 <- LR_ID <-  NULL
   data <- LRcp_raw
-  dt_interac <- data.table::setDT(data$interaction_table)
-  dt_multi <- data.table::setDT(data$multidata_table)
-  dt_prot <- data.table::setDT(data$protein_table)
-  dt_gene <- data.table::setDT(data$gene_table)
-  dt_comp <- data.table::setDT(data$complex_composition_table)
-  dt_full <- data.table::merge.data.table(
+  dt_interac <- setDT(data$interaction_table)
+  dt_multi <- setDT(data$multidata_table)
+  dt_prot <- setDT(data$protein_table)
+  dt_gene <- setDT(data$gene_table)
+  dt_comp <- setDT(data$complex_composition_table)
+  dt_full <- merge.data.table(
     x = dt_interac,
     y = dt_multi,
     by.x = "multidata_1_id",
@@ -393,7 +424,7 @@ create_LR_cpdb <- function(
     all.x = TRUE,
     sort = FALSE
   )
-  dt_full <- data.table::merge.data.table(
+  dt_full <- merge.data.table(
     x = dt_full,
     y = dt_multi,
     by.x = "multidata_2_id",
@@ -402,7 +433,7 @@ create_LR_cpdb <- function(
     sort = FALSE,
     suffixes = c("_1", "_2")
   )
-  dt_full <- data.table::merge.data.table(
+  dt_full <- merge.data.table(
     x = dt_full,
     y = dt_prot,
     by.x = "multidata_1_id",
@@ -410,7 +441,7 @@ create_LR_cpdb <- function(
     all.x = TRUE,
     sort = FALSE
   )
-  dt_full <- data.table::merge.data.table(
+  dt_full <- merge.data.table(
     x = dt_full,
     y = dt_prot,
     by.x = "multidata_2_id",
@@ -425,7 +456,7 @@ create_LR_cpdb <- function(
     formula = complex_multidata_id ~ id_comp,
     value.var = "protein_multidata_id"
   )
-  dt_full <- data.table::merge.data.table(
+  dt_full <- merge.data.table(
     x = dt_full,
     y = dt_comp_dc,
     by.x = "multidata_1_id",
@@ -433,7 +464,7 @@ create_LR_cpdb <- function(
     all.x = TRUE,
     sort = FALSE
   )
-  dt_full <- data.table::merge.data.table(
+  dt_full <- merge.data.table(
     x = dt_full,
     y = dt_comp_dc,
     by.x = "multidata_2_id",
@@ -445,7 +476,7 @@ create_LR_cpdb <- function(
   dt_full[, id_protein_multi_1_1 := ifelse(is.na(id_protein_1), id_protein_multi_1_1, id_protein_1)]
   dt_full[, id_protein_multi_1_2 := ifelse(is.na(id_protein_2), id_protein_multi_1_2, id_protein_2)]
   dt_gene <- stats::na.omit(unique(dt_gene[, c("protein_id", "hgnc_symbol")]))
-  dt_gene$temp_id <- data.table::rowid(dt_gene$protein_id)
+  dt_gene$temp_id <- rowid(dt_gene$protein_id)
   dt_gene <- dt_gene[temp_id == 1,]
   dt_gene[, temp_id := NULL]
   dt_full[, c(paste0("id_gene_multi_", 1:3, "_1"), paste0("id_gene_multi_", 1:3, "_2")) := c(
@@ -590,10 +621,14 @@ prepare_LR_cpdb <- function(
 
 prepare_LR_CellChat <- function(
 ) {
+  if (!requireNamespace("CellChat", quietly = TRUE)) {
+    stop("Package \"CellChat\" needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
   LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_2 <- LR_SORTED <- interaction_name_2 <- temp <- new <- NULL
   LR <- CellChat::CellChatDB.mouse$interaction
   setDT(LR)
-  data.table::setnames(
+  setnames(
     x = LR,
     old = c("evidence", "annotation"),
     new = c("SOURCE", "ANNOTATION")
@@ -639,6 +674,10 @@ prepare_LR_CellChat <- function(
 prepare_LR_ICELLNET <- function(
   one2one = FALSE
 ) {
+  if (!requireNamespace("curl", quietly = TRUE)) {
+    stop("Package \"curl\" needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
   LR <- utils::read.csv(
     file = curl::curl(url = "https://raw.githubusercontent.com/soumelis-lab/ICELLNET/master/database.tsv"),
     sep = "\t",
@@ -647,8 +686,8 @@ prepare_LR_ICELLNET <- function(
     stringsAsFactors = FALSE,
     na.strings = ""
   )
-  data.table::setDT(LR)
-  data.table::setnames(
+  setDT(LR)
+  setnames(
     x = LR,
     old = c("Ligand 1", "Ligand 2",
             "Receptor 1", "Receptor 2", "Receptor 3",
@@ -695,7 +734,7 @@ merge_LR_orthologs <- function(
     sapply(1:nR, function(i) {paste0("RECEPTOR_", i, c("", "_CONF", "_TYPE"))})
   )
   merge_id <- c("mouse_symbol", "confidence", "type")
-  LR_temp <- data.table::copy(LR_dt)
+  LR_temp <- copy(LR_dt)
   LR_temp[, c(out_names) :=
        c(
          sapply(
@@ -743,6 +782,10 @@ get_orthologs <- function(
   input_species,
   one2one = FALSE
 ) {
+  if (!requireNamespace("biomaRt", quietly = TRUE)) {
+    stop("Package \"biomaRt\" needed for this function to work. Please install it.",
+         call. = FALSE)
+  }
   ensembl_gene_id <- inl <- outl <- output <- input <- confidence <- NULL
   if(input_species == "mouse") {
     id_in <- "mmusculus"
@@ -786,9 +829,9 @@ get_orthologs <- function(
     filters = "ensembl_gene_id",
     mart = mart,
     value = ensembl$ensembl_gene_id)
-  data.table::setDT(ensembl)
-  data.table::setDT(ensembl_conv)
-  ensembl_all <- data.table::merge.data.table(
+  setDT(ensembl)
+  setDT(ensembl_conv)
+  ensembl_all <- merge.data.table(
     x = ensembl,
     y = ensembl_conv,
     by = "ensembl_gene_id",
@@ -802,7 +845,7 @@ get_orthologs <- function(
   }
   ensembl_all <- ensembl_all[, ensembl_gene_id := NULL]
   ensembl_all <- unique(ensembl_all)
-  data.table::setnames(
+  setnames(
     x = ensembl_all,
     old = c(id_gene, gene_name, ortho_confidence, ortho_type),
     new = c("input", "output", "confidence", "type")
@@ -844,7 +887,7 @@ get_orthologs <- function(
       ensembl_all <- unique(ensembl_all, by = "input")
     }
   }
-  data.table::setnames(
+  setnames(
     x = ensembl_all,
     old = c("input", "output"),
     new = c(paste0(name_in, "_symbol"), paste0(name_out, "_symbol"))

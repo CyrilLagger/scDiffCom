@@ -5,7 +5,7 @@
 \title{Run filtering analysis on the result of scDiffCom}
 \usage{
 run_filtering_and_ORA(
-  scdiffcom_result,
+  object,
   verbose = TRUE,
   new_cutoff_quantile_score = NULL,
   new_cutoff_pval_specificity = NULL,
@@ -14,7 +14,7 @@ run_filtering_and_ORA(
 )
 }
 \arguments{
-\item{scdiffcom_result}{The list of results returned by run_scdiffcom}
+\item{object}{The list of results returned by run_scdiffcom}
 
 \item{verbose}{Print messages}
 

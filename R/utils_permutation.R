@@ -106,26 +106,26 @@ run_stat_analysis <- function(
   }
   if(!return_distr) {
     return(list(
-      scdiffcom_dt_raw = cci_dt,
-      scdiffcom_distributions = NA
+      cci_table_raw = cci_dt,
+      distributions = list()
     ))
   } else {
     if(verbose) message("Storing the matrix of distributions from the permutation test.")
     if(!condition_info$is_cond) {
       return(list(
-        scdiffcom_dt_raw = cci_dt,
-        scdiffcom_distributions = distr
+        cci_table_raw = cci_dt,
+        distributions = list(distr)
       ))
     } else {
       res <- list(
-        scdiffcom_dt_raw = cci_dt,
-        scdiffcom_distributions = list(
+        cci_table_raw = cci_dt,
+        distributions = list(
           distr_diff,
           distr_cond1,
           distr_cond2
         )
       )
-      names(res$scdiffcom_distributions) <- c(
+      names(res$distributions) <- c(
         "distr_diff",
         paste0("distr_", condition_info$cond1),
         paste0("distr_", condition_info$cond2)

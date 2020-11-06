@@ -1,11 +1,11 @@
 preprocess_condition <- function(
-  condition_col_id,
+  condition_column_id,
   cond1_name,
   cond2_name,
   metadata,
   verbose
 ) {
-  if(is.null(condition_col_id)) {
+  if(is.null(condition_column_id)) {
     if(!is.null(cond1_name) | !is.null(cond1_name)) {
       warning("You specified at least one condition name, but no corresponding column name. Performing the analysis without condition.")
     }
@@ -95,8 +95,8 @@ preprocess_LR <- function(
 
 preprocess_seurat <- function(
   seurat_object,
-  celltype_col_id,
-  condition_col_id,
+  celltype_column_id,
+  condition_column_id,
   assay,
   slot,
   log_scale,
@@ -116,8 +116,8 @@ preprocess_seurat <- function(
   )
   prep_meta <- extract_seurat_metadata(
     seurat_object = seurat_object,
-    celltype_col_id = celltype_col_id,
-    condition_col_id = condition_col_id
+    celltype_column_id = celltype_column_id,
+    condition_column_id = condition_column_id
   )
   celltypes_filtered <- filter_celltypes(
     metadata = prep_meta,
@@ -199,10 +199,10 @@ extract_seurat_data <- function(
 
 extract_seurat_metadata <- function(
   seurat_object,
-  celltype_col_id,
-  condition_col_id
+  celltype_column_id,
+  condition_column_id
 ) {
-  cols_to_keep <- c("cell_id", celltype_col_id, condition_col_id)
+  cols_to_keep <- c("cell_id", celltype_column_id, condition_column_id)
   temp_md <- data.table::copy(x = seurat_object[[]])
   temp_md <- data.table::setDT(
     x = temp_md,
@@ -210,9 +210,9 @@ extract_seurat_metadata <- function(
   )
   temp_md <- temp_md[, cols_to_keep, with = FALSE]
   temp_md[, names(temp_md) := lapply(.SD, as.character)]
-  if(!is.null(condition_col_id)) {
-    if(length(unique(temp_md[[condition_col_id]])) != 2) {
-      stop(paste0("The column ", condition_col_id, " of the Seurat object does not contain exactly 2 conditions."))
+  if(!is.null(condition_column_id)) {
+    if(length(unique(temp_md[[condition_column_id]])) != 2) {
+      stop(paste0("The column ", condition_column_id, " of the Seurat object does not contain exactly 2 conditions."))
     } else {
       new_colnames <- c("cell_id", "cell_type", "condition")
     }
