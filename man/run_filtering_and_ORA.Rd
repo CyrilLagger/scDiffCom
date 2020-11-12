@@ -10,7 +10,8 @@ run_filtering_and_ORA(
   new_cutoff_quantile_score = NULL,
   new_cutoff_pval_specificity = NULL,
   new_cutoff_pval_de = NULL,
-  new_cutoff_logfc = NULL
+  new_cutoff_logfc = NULL,
+  skip_ORA = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ run_filtering_and_ORA(
 \item{new_cutoff_pval_de}{New P-value threshold that indicates when an interaction is differentially expressed}
 
 \item{new_cutoff_logfc}{New LOGFC threshold to filter interactions}
+
+\item{skip_ORA}{x}
 }
 \value{
 Return a list of result in the scDiffCom format with new filtering analysis.

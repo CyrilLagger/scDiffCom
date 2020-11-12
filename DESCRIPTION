@@ -35,4 +35,24 @@ Imports:
     progressr,
     Seurat,
     stats,
-    utils
+    utils,
+    ggplot2,
+    igraph,
+    purrr,
+    scales
+Collate: 
+    'cellphonedb_wrapper.R'
+    'data.R'
+    'objects.R'
+    'generics.R'
+    'scdiffcom.R'
+    'utils_LR6db.R'
+    'utils_bipartite_graph.R'
+    'utils_cci.R'
+    'utils_cpdb_wrapper.R'
+    'utils_filtering.R'
+    'utils_fpm.R'
+    'utils_ora.R'
+    'utils_permutation.R'
+    'utils_preprocessing.R'
+    'utils_visualization.R'

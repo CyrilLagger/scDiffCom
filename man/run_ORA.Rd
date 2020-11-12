@@ -8,7 +8,7 @@ run_ORA(
   object,
   verbose = TRUE,
   logfc_threshold = NULL,
-  categories = c("L_CELLTYPE", "R_CELLTYPE", "LR_CELLTYPE", "LR_NAME", "GO"),
+  categories = c("LR_CELLTYPE", "LR_NAME", "GO"),
   overwrite = FALSE
 )
 }

@@ -42,28 +42,28 @@ get_GO_interactions <- function(
     USE.NAMES = TRUE,
     simplify = FALSE
   )
-  LR_interactions_go_union <- rbindlist(
-    apply(
-      LR_db,
-      MARGIN = 1,
-      function(row) {
-        LIGAND_GO <- unique(c(
-          LR_genes_go[[row[["LIGAND_1"]]]],
-          LR_genes_go[[row[["LIGAND_2"]]]]
-        ))
-        RECEPTOR_GO <- unique(c(
-          LR_genes_go[[row[["RECEPTOR_1"]]]],
-          LR_genes_go[[row[["RECEPTOR_2"]]]],
-          LR_genes_go[[row[["RECEPTOR_3"]]]]
-        ))
-        res_union <- unique(c(LIGAND_GO, RECEPTOR_GO))
-        res_union <- data.table(
-          LR_SORTED = rep(row[["LR_SORTED"]], length(res_union)),
-          GO_union = res_union
-        )
-      }
-    )
-  )
+  # LR_interactions_go_union <- rbindlist(
+  #   apply(
+  #     LR_db,
+  #     MARGIN = 1,
+  #     function(row) {
+  #       LIGAND_GO <- unique(c(
+  #         LR_genes_go[[row[["LIGAND_1"]]]],
+  #         LR_genes_go[[row[["LIGAND_2"]]]]
+  #       ))
+  #       RECEPTOR_GO <- unique(c(
+  #         LR_genes_go[[row[["RECEPTOR_1"]]]],
+  #         LR_genes_go[[row[["RECEPTOR_2"]]]],
+  #         LR_genes_go[[row[["RECEPTOR_3"]]]]
+  #       ))
+  #       res_union <- unique(c(LIGAND_GO, RECEPTOR_GO))
+  #       res_union <- data.table(
+  #         LR_SORTED = rep(row[["LR_SORTED"]], length(res_union)),
+  #         GO_ID = res_union
+  #       )
+  #     }
+  #   )
+  # )
   LR_interactions_go_intersection <- rbindlist(
     apply(
       LR_db,
@@ -82,7 +82,7 @@ get_GO_interactions <- function(
         if(length(res_inter) > 0) {
           res_inter <- data.table(
             LR_SORTED = rep(row[["LR_SORTED"]], length(res_inter)),
-            GO_intersection = res_inter
+            GO_ID = res_inter
           )
         } else {
           res_inter <- NULL
@@ -91,8 +91,22 @@ get_GO_interactions <- function(
       }
     )
   )
+  go_id_name_dt <- data.table(
+    GO_name = go_names,
+    ID = names(go_names)
+  )
+  # LR_interactions_go_union[
+  #   go_id_name_dt,
+  #   on = "GO_ID==ID",
+  #   GO_NAME := i.GO_name
+  #   ]
+  LR_interactions_go_intersection[
+    go_id_name_dt,
+    on = "GO_ID==ID",
+    GO_NAME := i.GO_name
+    ]
   return(list(
-    LR_GO_union = LR_interactions_go_union,
+    #LR_GO_union = LR_interactions_go_union,
     LR_GO_intersection = LR_interactions_go_intersection
   ))
 }
@@ -218,8 +232,6 @@ combine_LR_db <- function(
     paste0("RECEPTOR_", 1:3, "_CONF"), paste0("RECEPTOR_", 1:3, "_TYPE")
   )
   LR_full <- LR_full[, cols_to_keep, with = FALSE]
-
-
   if(curated) {
     LR_rm_sctensor <- c("SWISSPROT_STRING", "TREMBL_STRING")
     LR_rm_nichenet <- c("ppi_bidir_bidir", "ppi_bidir_bidir_go", "ppi_bidir_r",
@@ -255,6 +267,18 @@ combine_LR_db <- function(
       })
     )
     LR_full <- LR_full[!(SOURCE %in% LR_rm)]
+    LR_full[, SOURCE_CLEAN := gsub(paste0(c(LR_rm_nichenet, LR_rm_sctensor, "uniprot"), collapse = "|"), "PPI", SOURCE)]
+    LR_full[, SOURCE_CLEAN := gsub("pharmacology", "IUPHAR", SOURCE_CLEAN)]
+    LR_full[, SOURCE_CLEAN := gsub("kegg", "KEGG", SOURCE_CLEAN)]
+    LR_full[, SOURCE_CLEAN := gsub("fantom5", "Ramilowski", SOURCE_CLEAN)]
+    LR_full[, SOURCE_no_digit := gsub(" ", "", gsub('[[:digit:]]+', '', SOURCE))]
+    LR_full[SOURCE_no_digit %in% c("", "; ", " ;", ";") | nchar(SOURCE_no_digit) <= 2, SOURCE_CLEAN := paste0("PMID:", SOURCE_CLEAN)]
+    LR_full[, SOURCE_no_digit := NULL]
+    setnames(
+      LR_full,
+      old = c("SOURCE", "SOURCE_CLEAN"),
+      new = c("SOURCE_MESSY", "SOURCE")
+    )
   }
   return(LR_full)
 }

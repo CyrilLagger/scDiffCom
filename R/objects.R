@@ -4,7 +4,6 @@
 #'
 NULL
 
-
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class definitions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,7 +33,7 @@ setValidity(
   method = function(
     object
   ) {
-    ## add check about ORA duplicated
+    ## add various checks here
     parameters_expected <- c(
       object_name = "character",
       celltype_column_id = "character",
@@ -79,48 +78,4 @@ scDiffCom <- function(
   )
 }
 
-setGeneric("parameters", function(x) standardGeneric("parameters"))
-setMethod("parameters", "scDiffCom", function(x) x@parameters)
-setGeneric("parameters<-", function(x, value) standardGeneric("parameters<-"))
-setMethod("parameters<-", "scDiffCom", function(x, value) {
-  x@parameters <- value
-  validObject(x)
-  return(x)
-})
-
-setGeneric("get_cci_table_raw", function(x) standardGeneric("get_cci_table_raw"))
-setMethod("get_cci_table_raw", "scDiffCom", function(x) x@cci_table_raw)
-setGeneric("set_cci_table_raw", function(x, new_cci_table_raw) standardGeneric("set_cci_table_raw"))
-setMethod("set_cci_table_raw", "scDiffCom", function(x, new_cci_table_raw) {
-  x@cci_table_raw <- new_cci_table_raw
-  validObject(x)
-  return(x)
-})
-
-setGeneric("get_cci_table_filtered", function(x) standardGeneric("get_cci_table_filtered"))
-setMethod("get_cci_table_filtered", "scDiffCom", function(x) x@cci_table_filtered)
-setGeneric("set_cci_table_filtered", function(x, new_cci_table_filtered) standardGeneric("set_cci_table_filtered"))
-setMethod("set_cci_table_filtered", "scDiffCom", function(x, new_cci_table_filtered) {
-  x@cci_table_filtered <- new_cci_table_filtered
-  validObject(x)
-  return(x)
-})
-
-setGeneric("distributions", function(x) standardGeneric("distributions"))
-setMethod("distributions", "scDiffCom", function(x) x@distributions)
-setGeneric("distributions<-", function(x, value) standardGeneric("distributions<-"))
-setMethod("distributions<-", "scDiffCom", function(x, value) {
-  x@distributions <- value
-  validObject(x)
-  return(x)
-})
-
-setGeneric("get_ora_tables", function(x) standardGeneric("get_ora_tables"))
-setMethod("get_ora_tables", "scDiffCom", function(x) x@ORA)
-setGeneric("set_ora_tables", function(x, new_ora_tables) standardGeneric("set_ora_tables"))
-setMethod("set_ora_tables", "scDiffCom", function(x, new_ora_tables) {
-  x@ORA <- new_ora_tables
-  validObject(x)
-  return(x)
-})
 

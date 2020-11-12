@@ -159,6 +159,7 @@ run_interaction_analysis <- function(
 #' @param new_cutoff_pval_specificity New P-value threshold that indicates when an interaction is specific
 #' @param new_cutoff_pval_de New P-value threshold that indicates when an interaction is differentially expressed
 #' @param new_cutoff_logfc New LOGFC threshold to filter interactions
+#' @param skip_ORA x
 #'
 #' @return Return a list of result in the scDiffCom format with new filtering analysis.
 #' @export
@@ -168,7 +169,8 @@ run_filtering_and_ORA <- function(
   new_cutoff_quantile_score = NULL,
   new_cutoff_pval_specificity = NULL,
   new_cutoff_pval_de = NULL,
-  new_cutoff_logfc = NULL
+  new_cutoff_logfc = NULL,
+  skip_ORA = FALSE
 ) {
   REGULATION_SIMPLE <- NULL
   if(verbose) message("Filtering and cleaning results.")
@@ -228,10 +230,17 @@ run_filtering_and_ORA <- function(
     object <- set_ora_tables(object, list())
   } else {
     object <- set_cci_table_filtered(object, cci_dt)
-    object <- run_ORA(
+    if(skip_ORA) {
+      object <- set_ora_tables(object, list())
+    } else {
+      object <- run_ORA(
       object = object,
-      verbose = TRUE
+      verbose = TRUE,
+      logfc_threshold = NULL,
+      categories = c("LR_CELLTYPE", "LR_NAME", "GO"),
+      overwrite = TRUE
     )
+    }
   }
   return(object)
 }
@@ -251,10 +260,10 @@ run_ORA <- function(
   object,
   verbose = TRUE,
   logfc_threshold = NULL,
-  categories = c("L_CELLTYPE", "R_CELLTYPE", "LR_CELLTYPE", "LR_NAME", "GO"),
+  categories = c("LR_CELLTYPE", "LR_NAME", "GO"),
   overwrite = FALSE
 ) {
-  ora_types <- c("UP", "DOWN", "DIFF", "FLAT")
+  ora_types <- c("UP", "DOWN", "FLAT", "DIFF")
   temp_param <- parameters(object)
   if(is.null(logfc_threshold)) {
     logfc_threshold <- temp_param$cutoff_logfc
@@ -263,7 +272,6 @@ run_ORA <- function(
      temp_param$condition_info$is_cond) {
     temp_ora <- get_ora_tables(object)
     categories_old <- names(temp_ora)
-
     if(is.null(categories_old)) {
       if(verbose) message("Performing ORA analysis on the specified categories.")
       categories_to_keep <- categories
@@ -328,4 +336,145 @@ build_LR6db <- function(
     LR6db_curated = LR6db_curated,
     LR6db_GO = LR6db_GO
   ))
+}
+
+#' Title
+#'
+#' @param object x
+#' @param category x
+#' @param OR_val x
+#' @param pval_val x
+#' @param ORA_score_val x
+#' @param max_value x
+#' @param OR_cutoff x
+#' @param pval_cutoff x
+#'
+#' @return x
+#' @export
+plot_ORA <- function(
+  object,
+  category,
+  OR_val,
+  pval_val,
+  ORA_score_val,
+  max_value,
+  OR_cutoff = 1,
+  pval_cutoff = 0.05
+) {
+  ##add test if category and ora types are empty
+  ORA_tables <- get_ora_tables(object)
+  ORA_table <- ORA_tables[[category]]
+  if(category == "GO") {
+    Value_val <- "Value_NAME"
+  } else{
+    Value_val <- "Value"
+  }
+  # if(ORA_type == "UP") {
+  #   OR_val <- "OR_UP"
+  #   pval_val <- "pval_adjusted_UP"
+  #   ORA_score_val <- "ORA_score_UP"
+  # } else if(ORA_type == "DOWN") {
+  #   OR_val <- "OR_DOWN"
+  #   pval_val <- "pval_adjusted_DOWN"
+  #   ORA_score_val <- "ORA_score_DOWN"
+  #
+  # } else if(ORA_table == "FLAT") {
+  #   OR_val <- "OR_FLAT"
+  #   pval_val <- "pval_adjusted_FLAT"
+  #   ORA_score_val <- "ORA_score_FLAT"
+  # } else {
+  #   stop("ORA_type not supported.")
+  # }
+  dt <- ORA_table[get(OR_val) > OR_cutoff & get(pval_val) <= pval_cutoff][order(-get(ORA_score_val))]
+  n_row_tokeep <- min(max_value, nrow(dt))
+  dt <- dt[1:n_row_tokeep]
+  ggplot2::ggplot(dt, aes(get(ORA_score_val), reorder(get(Value_val), get(ORA_score_val)))) +
+    geom_point(aes(size = -log10(get(pval_val)), color = log2(get(OR_val)))) +
+    scale_color_gradient(low = "orange", high = "red") +
+    xlab("ORA score") +
+    ylab(category) +
+    labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
+    theme(text = element_text(size = 16))
+}
+
+#' Title
+#'
+#' @param object x
+#' @param disperse x
+#' @param dir x
+#'
+#' @return x
+#' @export
+build_celltype_bipartite_graph <- function(
+  object,
+  disperse = FALSE,
+  dir = NULL,
+  from_shiny = FALSE
+) {
+  ORA_tables <- get_ora_tables(object)
+  if("LR_CELLTYPE" %in% names(ORA_tables)) {
+    ORA_ct <- ORA_tables[["LR_CELLTYPE"]]
+  } else {
+    temp_object <- run_ORA(
+      object = object,
+      categories = "LR_CELLTYPE",
+      overwrite = TRUE
+    )
+    ORA_ct <- get_ora_tables(temp_object)[["LR_CELLTYPE"]]
+  }
+  graph_name <- parameters(object)$object_name
+  G <- construct_graph(
+    ORA_ct = ORA_ct,
+    cci_table_filtered = get_cci_table_filtered(object),
+    graph_name = graph_name
+  )
+  config <- define_graph_config()
+  G <- setup_graph(
+    G,
+    config = config,
+    use_adjpval = TRUE,
+    disperse = disperse
+  )
+  plot_graph(
+    G,
+    config = config,
+    path=NULL,
+    show_legend = TRUE
+  )
+  #dir = NULL
+  #analysis_name = NULL
+  #ORA_ct$Tissue <- tissue
+  # if ( !is.null(dir) ) {
+  #   if ( is.null(analysis_name) ) {
+  #     stop('analyze_Graph: Analysis name not provided.')
+  #   }
+  #   subdirs = c('edge_tables', 'plots')
+  #   create_analysis_dirs(dir, analysis_name, subdirs)
+  #   write_as_edge_table(
+  #     G,
+  #     path = file.path(dir, analysis_name, 'edge_tables', paste0(tissue, '.tsv'))
+  #   )
+  #   plot_graph(
+  #     G,
+  #     path = file.path(dir, analysis_name, 'plots', paste0(tissue, '.pdf'))
+  #   )
+  # } else {
+  #   if ( !is.null(analysis_name) ) {
+  #     stop('analyze_Graph: Analysis name not null.')
+  #   }
+  #   plot_graph(
+  #     G,
+  #     path=NULL)
+  # }
+  # ora_has_tissue = 'Tissue' %in% names(dt_ora)
+  # filt_has_tissue = 'Tissue' %in% names(dt_filtered)
+  # if( !(ora_has_tissue & filt_has_tissue) ) {
+  #   stop(paste0('analyze_Graph: Filtered and ORA must have a tissue specified.',
+  #               ' Insert a dummy tissue for compatibility with current code.'))
+  # }
+  # message('Solve the low statistical power issue by controlling num interactions
+  #         in the BH adjustment.')
+  # if( is.null(dt_filtered) ) {stop('analyze_Graph: dt_filtered is NULL.')}
+
+  # Process ORA results and construct graph
 }

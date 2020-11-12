@@ -31,7 +31,7 @@ build_ora_dt <- function(
         #                      list(
         #                        sum(Counts_value_significant),
         #                        sum(Counts_value_notsignificant)),
-        #                    by = "GO_union"]
+        #                    by = "GO_ID"]
         # counts_union_dt[, c("NotVal_sig", "NotVal_notsig") := list(
         #   Counts_notvalue_significant + Counts_value_significant - Val_sig,
         #   Counts_notvalue_notsignificant + Counts_value_notsignificant - Val_notsig
@@ -43,8 +43,8 @@ build_ora_dt <- function(
         # counts_union_dt <- unique(counts_union_dt)
         # data.table::setnames(
         #   counts_union_dt,
-        #   old = c("GO_union", "Val_sig", "Val_notsig", "NotVal_sig", "NotVal_notsig"),
-        #   new = c("Value", "Counts_value_significant", "Counts_value_notsignificant",
+        #   old = c("GO_ID", "GO_NAME", "Val_sig", "Val_notsig", "NotVal_sig", "NotVal_notsig"),
+        #   new = c("Value", "Value_NAME", "Counts_value_significant", "Counts_value_notsignificant",
         #           "Counts_notvalue_significant", "Counts_notvalue_notsignificant")
         # )
         go_intersection_dt <- LR6db$LR6db_GO$LR_GO_intersection
@@ -58,7 +58,7 @@ build_ora_dt <- function(
                                     list(
                                       sum(Counts_value_significant),
                                       sum(Counts_value_notsignificant)),
-                                  by = "GO_intersection"]
+                                  by = "GO_ID"]
         counts_intersection_dt[, c("NotVal_sig", "NotVal_notsig") := list(
           Counts_notvalue_significant + Counts_value_significant - Val_sig,
           Counts_notvalue_notsignificant + Counts_value_notsignificant - Val_notsig
@@ -70,8 +70,8 @@ build_ora_dt <- function(
         counts_intersection_dt <- unique(counts_intersection_dt)
         data.table::setnames(
           counts_intersection_dt,
-          old = c("GO_intersection", "Val_sig", "Val_notsig", "NotVal_sig", "NotVal_notsig"),
-          new = c("Value", "Counts_value_significant", "Counts_value_notsignificant",
+          old = c("GO_ID", "GO_NAME", "Val_sig", "Val_notsig", "NotVal_sig", "NotVal_notsig"),
+          new = c("Value", "Value_NAME", "Counts_value_significant", "Counts_value_notsignificant",
                   "Counts_notvalue_significant", "Counts_notvalue_notsignificant")
         )
         # counts_dt <- data.table::rbindlist(
@@ -90,7 +90,7 @@ build_ora_dt <- function(
         counts_dt = counts_dt
       )
       cols_to_rename <- colnames(counts_dt)
-      cols_to_rename <- cols_to_rename[!(cols_to_rename %in% c("Value", "Category"))]
+      cols_to_rename <- cols_to_rename[!(cols_to_rename %in% c("Value", "Value_NAME", "Category"))]
       data.table::setnames(
         x = counts_dt,
         old = cols_to_rename,
@@ -188,22 +188,28 @@ perform_ora_from_counts <- function(
   counts_dt <- clip_infinite_OR(
     ORA_dt = counts_dt
   )
+  counts_dt[, ORA_score := -log10(pval_adjusted)*log10(OR)]
   return(counts_dt)
 }
 
 clip_infinite_OR <- function(
   ORA_dt
 ) {
-  if(sum(is.finite(ORA_dt$OR)) == 0) {
-    ORA_dt$OR <- 10
-  } else {
-    ORA_dt$OR[is.infinite(ORA_dt$OR)] <- ceiling(max(ORA_dt$OR[is.finite(ORA_dt$OR)]))
-  }
-  if(sum(ORA_dt$OR > 0) == 0) {
-    ORA_dt$OR <- 0.1
-  } else {
-    ORA_dt$OR[ORA_dt$OR == 0] <- min(ORA_dt$OR[ORA_dt$OR > 0])
-  }
+  # if(sum(is.finite(ORA_dt$OR)) == 0) {
+  #   ORA_dt$OR <- 10
+  # } else {
+  #   ORA_dt$OR[is.infinite(ORA_dt$OR)] <- ceiling(max(ORA_dt$OR[is.finite(ORA_dt$OR)]))
+  # }
+  # if(sum(ORA_dt$OR > 0) == 0) {
+  #   ORA_dt$OR <- 0.1
+  # } else {
+  #   ORA_dt$OR[ORA_dt$OR == 0] <- min(ORA_dt$OR[ORA_dt$OR > 0])
+  # }
+  ORA_dt[, OR := ifelse(
+    is.infinite(OR),
+    (Counts_value_significant+1)*(Counts_notvalue_notsignificant+1)/((Counts_value_notsignificant+1)*(Counts_notvalue_significant+1)),
+    OR
+  )]
   return(ORA_dt)
 }
 
@@ -256,7 +262,6 @@ kulc <- function(
   avg <- (P_AB + P_BA) / 2
   return(avg)
 }
-
 
 imbalance_ratio <- function(
   Counts_value_significant,
