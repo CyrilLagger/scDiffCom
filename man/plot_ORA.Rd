@@ -7,7 +7,9 @@
 plot_ora(
   object,
   category,
-  ora_type,
+  OR_val,
+  pval_val,
+  ORA_score_val,
   max_value,
   OR_cutoff = 1,
   pval_cutoff = 0.05
@@ -18,17 +20,17 @@ plot_ora(
 
 \item{category}{x}
 
-\item{max_value}{x}
-
-\item{OR_cutoff}{x}
-
-\item{pval_cutoff}{x}
-
 \item{OR_val}{x}
 
 \item{pval_val}{x}
 
 \item{ORA_score_val}{x}
+
+\item{max_value}{x}
+
+\item{OR_cutoff}{x}
+
+\item{pval_cutoff}{x}
 }
 \value{
 x

@@ -160,7 +160,7 @@ aggregate_cells <- function(
   } else {
     group <- paste(metadata[["condition"]], metadata[["cell_type"]], sep = "_")
   }
-  sums <- rowsum(
+  sums <- DelayedArray::rowsum(
     x = expr_tr,
     group = group,
     reorder = TRUE
