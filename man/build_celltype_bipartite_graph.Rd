@@ -4,7 +4,12 @@
 \alias{build_celltype_bipartite_graph}
 \title{Title}
 \usage{
-build_celltype_bipartite_graph(object, disperse = FALSE, dir = NULL)
+build_celltype_bipartite_graph(
+  object,
+  disperse = FALSE,
+  dir = NULL,
+  from_shiny = FALSE
+)
 }
 \arguments{
 \item{object}{x}
@@ -12,6 +17,8 @@ build_celltype_bipartite_graph(object, disperse = FALSE, dir = NULL)
 \item{disperse}{x}
 
 \item{dir}{x}
+
+\item{from_shiny}{}
 }
 \value{
 x

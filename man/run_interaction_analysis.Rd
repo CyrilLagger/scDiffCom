@@ -22,7 +22,7 @@ run_interaction_analysis(
   cutoff_quantile_score = 0.25,
   cutoff_pval_specificity = 0.05,
   cutoff_pval_de = 0.05,
-  cutoff_logfc = log(1.1),
+  cutoff_logfc = log(1.2),
   return_distr = FALSE,
   seed = 42,
   verbose = TRUE,

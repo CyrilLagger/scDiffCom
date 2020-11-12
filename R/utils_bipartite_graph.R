@@ -1,11 +1,11 @@
 ######
 
 construct_graph <- function(
-  ORA_ct,
+  ora_ct,
   cci_table_filtered,
   graph_name
 ) {
-  dt_edge <- get_celltypes_enrichment(ORA_ct)
+  dt_edge <- get_celltypes_enrichment(ora_ct)
   dt_edge <- dt_edge[, list(
     'Ligand_cell' = paste0(Ligand_cell, ' (L)'),
     'Receptor_cell' = paste0(Receptor_cell, ' (R)'),
@@ -26,7 +26,7 @@ construct_graph <- function(
     vertices = NULL
   )
   G$graph_name <- graph_name
-  G$ora <- ORA_ct
+  G$ora <- ora_ct
   G$dt <- cci_table_filtered
   G$interacts_counts <- count_interactions_cellpairs_tissue(cci_table_filtered)
   G$celltype_counts <- count_celltypes_tissue(cci_table_filtered)
@@ -317,7 +317,7 @@ add_edge_width <- function(
   WIDTH_MAX = 10
   # or_max = mapply(max, igraph::E(G)$OR_UP, igraph::E(G)$OR_DOWN)
   edge_dt = data.table(
-    as_data_frame(G)[, c('from', 'to')]
+    igraph::as_data_frame(G)[, c('from', 'to')]
   )
   names(edge_dt) = c('Ligand_celltype', 'Receptor_celltype')
   edge_dt[, Ligand_celltype :=
@@ -335,7 +335,7 @@ add_edge_width <- function(
   #message('add_edge_width: Some NAs occur, unclear reason. For now NA->0.')
   # Correct order is accomplished by the merge.
   num_interacts = edge_dt[, num_interacts]
-  igraph::E(G)$width = rescale(
+  igraph::E(G)$width = scales::rescale(
     sqrt(num_interacts),
     to = c(WIDTH_MIN, WIDTH_MAX)
   )
@@ -480,14 +480,14 @@ get_edges_from_vertex = function(
   G
 ) {
   # return(igraph::E(G)[from(v_name)])
-  return(incident(G, v_name, mode='out'))
+  return(igraph::incident(G, v_name, mode='out'))
 }
 
 get_edges_to_vertex = function(
   v_name,
   G
 ) {
-  return(incident(G, v_name, mode='in'))
+  return(igraph::incident(G, v_name, mode='in'))
 }
 
 count_up_and_down_edges = function(
@@ -531,7 +531,7 @@ vertex_sort_keys = function(
   G,
   config
 ) {
-  sort_keys = map_dbl(
+  sort_keys = purrr::map_dbl(
     v_names,
     ~ vertex_sort_key_atomic(.x, from, G, config)
   )

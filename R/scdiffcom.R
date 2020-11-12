@@ -46,7 +46,7 @@ run_interaction_analysis <- function(
   cutoff_quantile_score = 0.25,
   cutoff_pval_specificity = 0.05,
   cutoff_pval_de = 0.05,
-  cutoff_logfc = log(1.1),
+  cutoff_logfc = log(1.2),
   return_distr = FALSE,
   seed = 42,
   verbose = TRUE,
@@ -142,9 +142,9 @@ run_interaction_analysis <- function(
     cci_table_raw = cci_table_raw,
     cci_table_filtered = list(),
     distributions = distributions,
-    ORA = list()
+    ora_tables = list()
   )
-  object <- run_filtering_and_ORA(
+  object <- run_filtering_and_ora(
     object = object,
     verbose = verbose
   )
@@ -159,18 +159,18 @@ run_interaction_analysis <- function(
 #' @param new_cutoff_pval_specificity New P-value threshold that indicates when an interaction is specific
 #' @param new_cutoff_pval_de New P-value threshold that indicates when an interaction is differentially expressed
 #' @param new_cutoff_logfc New LOGFC threshold to filter interactions
-#' @param skip_ORA x
+#' @param skip_ora x
 #'
 #' @return Return a list of result in the scDiffCom format with new filtering analysis.
 #' @export
-run_filtering_and_ORA <- function(
+run_filtering_and_ora <- function(
   object,
   verbose = TRUE,
   new_cutoff_quantile_score = NULL,
   new_cutoff_pval_specificity = NULL,
   new_cutoff_pval_de = NULL,
   new_cutoff_logfc = NULL,
-  skip_ORA = FALSE
+  skip_ora = FALSE
 ) {
   REGULATION_SIMPLE <- NULL
   if(verbose) message("Filtering and cleaning results.")
@@ -230,10 +230,10 @@ run_filtering_and_ORA <- function(
     object <- set_ora_tables(object, list())
   } else {
     object <- set_cci_table_filtered(object, cci_dt)
-    if(skip_ORA) {
+    if(skip_ora) {
       object <- set_ora_tables(object, list())
     } else {
-      object <- run_ORA(
+      object <- run_ora(
       object = object,
       verbose = TRUE,
       logfc_threshold = NULL,
@@ -256,7 +256,7 @@ run_filtering_and_ORA <- function(
 #'
 #' @return A data.table
 #' @export
-run_ORA <- function(
+run_ora <- function(
   object,
   verbose = TRUE,
   logfc_threshold = NULL,
@@ -351,9 +351,10 @@ build_LR6db <- function(
 #'
 #' @return x
 #' @export
-plot_ORA <- function(
+plot_ora <- function(
   object,
   category,
+  #ora_type,
   OR_val,
   pval_val,
   ORA_score_val,
@@ -361,31 +362,30 @@ plot_ORA <- function(
   OR_cutoff = 1,
   pval_cutoff = 0.05
 ) {
-  ##add test if category and ora types are empty
-  ORA_tables <- get_ora_tables(object)
-  ORA_table <- ORA_tables[[category]]
+  ora_tables <- get_ora_tables(object)
+  ora_table <- ora_tables[[category]]
   if(category == "GO") {
     Value_val <- "Value_NAME"
   } else{
     Value_val <- "Value"
   }
-  # if(ORA_type == "UP") {
+  # if(ora_type == "UP") {
   #   OR_val <- "OR_UP"
   #   pval_val <- "pval_adjusted_UP"
   #   ORA_score_val <- "ORA_score_UP"
-  # } else if(ORA_type == "DOWN") {
+  # } else if(ora_type == "DOWN") {
   #   OR_val <- "OR_DOWN"
   #   pval_val <- "pval_adjusted_DOWN"
   #   ORA_score_val <- "ORA_score_DOWN"
   #
-  # } else if(ORA_table == "FLAT") {
+  # } else if(ora_type == "FLAT") {
   #   OR_val <- "OR_FLAT"
   #   pval_val <- "pval_adjusted_FLAT"
   #   ORA_score_val <- "ORA_score_FLAT"
   # } else {
   #   stop("ORA_type not supported.")
   # }
-  dt <- ORA_table[get(OR_val) > OR_cutoff & get(pval_val) <= pval_cutoff][order(-get(ORA_score_val))]
+  dt <- ora_table[get(OR_val) > OR_cutoff & get(pval_val) <= pval_cutoff][order(-get(ORA_score_val))]
   n_row_tokeep <- min(max_value, nrow(dt))
   dt <- dt[1:n_row_tokeep]
   ggplot2::ggplot(dt, aes(get(ORA_score_val), reorder(get(Value_val), get(ORA_score_val)))) +
@@ -402,6 +402,7 @@ plot_ORA <- function(
 #' @param object x
 #' @param disperse x
 #' @param dir x
+#' @param from_shiny
 #'
 #' @return x
 #' @export
@@ -411,20 +412,20 @@ build_celltype_bipartite_graph <- function(
   dir = NULL,
   from_shiny = FALSE
 ) {
-  ORA_tables <- get_ora_tables(object)
-  if("LR_CELLTYPE" %in% names(ORA_tables)) {
-    ORA_ct <- ORA_tables[["LR_CELLTYPE"]]
+  ora_tables <- get_ora_tables(object)
+  if("LR_CELLTYPE" %in% names(ora_tables)) {
+    ora_ct <- ora_tables[["LR_CELLTYPE"]]
   } else {
-    temp_object <- run_ORA(
+    temp_object <- run_ora(
       object = object,
       categories = "LR_CELLTYPE",
       overwrite = TRUE
     )
-    ORA_ct <- get_ora_tables(temp_object)[["LR_CELLTYPE"]]
+    ora_ct <- get_ora_tables(temp_object)[["LR_CELLTYPE"]]
   }
   graph_name <- parameters(object)$object_name
   G <- construct_graph(
-    ORA_ct = ORA_ct,
+    ora_ct = ora_ct,
     cci_table_filtered = get_cci_table_filtered(object),
     graph_name = graph_name
   )
@@ -443,7 +444,7 @@ build_celltype_bipartite_graph <- function(
   )
   #dir = NULL
   #analysis_name = NULL
-  #ORA_ct$Tissue <- tissue
+  #ora_ct$Tissue <- tissue
   # if ( !is.null(dir) ) {
   #   if ( is.null(analysis_name) ) {
   #     stop('analyze_Graph: Analysis name not provided.')
@@ -469,12 +470,12 @@ build_celltype_bipartite_graph <- function(
   # ora_has_tissue = 'Tissue' %in% names(dt_ora)
   # filt_has_tissue = 'Tissue' %in% names(dt_filtered)
   # if( !(ora_has_tissue & filt_has_tissue) ) {
-  #   stop(paste0('analyze_Graph: Filtered and ORA must have a tissue specified.',
+  #   stop(paste0('analyze_Graph: Filtered and ora must have a tissue specified.',
   #               ' Insert a dummy tissue for compatibility with current code.'))
   # }
   # message('Solve the low statistical power issue by controlling num interactions
   #         in the BH adjustment.')
   # if( is.null(dt_filtered) ) {stop('analyze_Graph: dt_filtered is NULL.')}
 
-  # Process ORA results and construct graph
+  # Process ora results and construct graph
 }
