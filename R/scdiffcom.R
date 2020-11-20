@@ -402,7 +402,7 @@ plot_ora <- function(
 #' @param object x
 #' @param disperse x
 #' @param dir x
-#' @param from_shiny
+#' @param from_shiny x
 #'
 #' @return x
 #' @export

@@ -18,13 +18,14 @@ setClassUnion(
 #' The scDiffCom Class
 #'
 #' The scDiffCom Class is the class that stores the results of the
-#' cell-cell interaction (CCI) analysis.
+#' cell-cell interaction (CCI) analysis. Each object of this class is intended
+#' to store the results of a single "tissue".
 #'
 #' @slot parameters List of the parameters used to perform the CCI analysis.
 #' @slot cci_table_raw Data.table of all possible CCIs inferred from the single-cell data and Ligand-Receptor database.
 #' @slot cci_table_filtered Data.table of all detected CCIs obtained from the raw data.table after filtering.
 #' @slot distributions A list of matrices with the distributions returned by the permutation test(s).
-#' @slot ora_tables A list of data.tables with the results of the over-representation analysis for each category.
+#' @slot ora_tables A list of data.tables with the results of the over-representation analysis for each specified category.
 #'
 #' @name scDiffCom-class
 #' @export scDiffCom

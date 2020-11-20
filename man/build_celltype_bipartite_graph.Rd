@@ -18,7 +18,7 @@ build_celltype_bipartite_graph(
 
 \item{dir}{x}
 
-\item{from_shiny}{}
+\item{from_shiny}{x}
 }
 \value{
 x

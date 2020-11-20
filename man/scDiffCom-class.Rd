@@ -15,7 +15,8 @@ scDiffCom(
 }
 \description{
 The scDiffCom Class is the class that stores the results of the
-cell-cell interaction (CCI) analysis.
+cell-cell interaction (CCI) analysis. Each object of this class is intended
+to store the results of a single "tissue".
 }
 \section{Slots}{
 
@@ -28,6 +29,6 @@ cell-cell interaction (CCI) analysis.
 
 \item{\code{distributions}}{A list of matrices with the distributions returned by the permutation test(s).}
 
-\item{\code{ora_tables}}{A list of data.tables with the results of the over-representation analysis for each category.}
+\item{\code{ora_tables}}{A list of data.tables with the results of the over-representation analysis for each specified category.}
 }}
 
