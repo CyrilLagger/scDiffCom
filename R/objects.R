@@ -6,9 +6,9 @@
 #'
 NULL
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Class definitions
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 setClassUnion(
   name = "list_or_dt",
@@ -49,12 +49,11 @@ scDiffCom <- setClass(
 )
 
 scDiffCom <- function(
-  parameters,
-  cci_table_raw,
-  cci_table_filtered,
-  distributions,
-  ora_tables
-) {
+                      parameters,
+                      cci_table_raw,
+                      cci_table_filtered,
+                      distributions,
+                      ora_tables) {
   new(
     "scDiffCom",
     parameters = parameters,
@@ -65,15 +64,14 @@ scDiffCom <- function(
   )
 }
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Validity functions
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 setValidity(
   Class = "scDiffCom",
   method = function(
-    object
-  ) {
+                    object) {
     validity_check <- c(
       validity_parameters(
         parameters = object@parameters
@@ -95,7 +93,7 @@ setValidity(
         ora_tables = object@cci_ora_tables
       )
     )
-    if(is.null(validity_check)) {
+    if (is.null(validity_check)) {
       TRUE
     } else {
       paste0(validity_check, collapse = " AND ")
@@ -104,8 +102,7 @@ setValidity(
 )
 
 validity_parameters <- function(
-  parameters
-) {
+                                parameters) {
   parameters_expected <- c(
     object_name = "character",
     celltype_column_id = "character",
@@ -125,7 +122,7 @@ validity_parameters <- function(
     return_distr = "logical"
   )
   parameters_actual <- sapply(parameters, typeof)
-  if(identical(parameters_expected, parameters_actual)) {
+  if (identical(parameters_expected, parameters_actual)) {
     NULL
   } else {
     "@parameters is not formatted the correct way"
@@ -133,30 +130,25 @@ validity_parameters <- function(
 }
 
 validity_cci_table_raw <- function(
-  parameters,
-  cci_table_raw
-) {
+                                   parameters,
+                                   cci_table_raw) {
   NULL
 }
 
 validity_cci_table_filtered <- function(
-  parameters,
-  cci_table_filtered
-) {
+                                        parameters,
+                                        cci_table_filtered) {
   NULL
 }
 
 validity_distributions <- function(
-  parameters,
-  distributions
-) {
+                                   parameters,
+                                   distributions) {
   NULL
 }
 
 validity_ora_tables <- function(
-  parameters,
-  ora_tables
-) {
+                                parameters,
+                                ora_tables) {
   NULL
 }
-

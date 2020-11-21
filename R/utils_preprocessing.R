@@ -1,51 +1,50 @@
 preprocess_condition <- function(
-  condition_column_id,
-  cond1_name,
-  cond2_name,
-  metadata,
-  verbose
-) {
-  if(is.null(condition_column_id)) {
-    if(!is.null(cond1_name) | !is.null(cond1_name)) {
+                                 condition_column_id,
+                                 cond1_name,
+                                 cond2_name,
+                                 metadata,
+                                 verbose) {
+  if (is.null(condition_column_id)) {
+    if (!is.null(cond1_name) | !is.null(cond1_name)) {
       warning("You specified at least one condition name, but no corresponding column name. Performing the analysis without condition.")
     }
     cond_info <- list(
       is_cond = FALSE
     )
-    if(verbose) message("Starting CCI analysis without condition.")
+    if (verbose) message("Starting CCI analysis without condition.")
   } else {
     conds <- unique(metadata$condition)
-    if(cond1_name == conds[[1]] & cond2_name == conds[[2]]) {
+    if (cond1_name == conds[[1]] & cond2_name == conds[[2]]) {
       cond_info <- list(
         is_cond = TRUE,
         cond1 = conds[[1]],
         cond2 = conds[[2]]
       )
-      if(verbose) message(paste0("Starting CCI analysis with conditions ", conds[[1]], " and ", conds[[2]], "."))
-    } else if(cond1_name == conds[[2]] & cond2_name == conds[[1]]) {
+      if (verbose) message(paste0("Starting CCI analysis with conditions ", conds[[1]], " and ", conds[[2]], "."))
+    } else if (cond1_name == conds[[2]] & cond2_name == conds[[1]]) {
       cond_info <- list(
         is_cond = TRUE,
         cond1 = conds[[2]],
         cond2 = conds[[1]]
       )
-      if(verbose) message(paste0("Starting CCI analysis with conditions ", conds[[2]], " and ", conds[[1]], "."))
+      if (verbose) message(paste0("Starting CCI analysis with conditions ", conds[[2]], " and ", conds[[1]], "."))
     } else {
       stop(paste0(
         "The names of the conditions do not match with the Seurat metadata: ",
         conds[[1]],
         " and ",
         conds[[2]],
-        "."))
+        "."
+      ))
     }
   }
   return(cond_info)
 }
 
 preprocess_LR <- function(
-  data,
-  LR_object,
-  verbose
-) {
+                          data,
+                          LR_object,
+                          verbose) {
   if (verbose) message("Preprocessing LR interactions.")
   LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <- RECEPTOR_3 <- NULL
   cols_compulsory <- c("LR_SORTED", "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")
@@ -53,37 +52,39 @@ preprocess_LR <- function(
   LR_keep <- unique(LR_keep)
   if (verbose) message(paste0("Number of interactions in the LR database: ", length(unique(LR_keep$LR_SORTED)), "."))
   LR_keep <- LR_keep[LIGAND_1 %in% rownames(data) &
-                       RECEPTOR_1 %in% rownames(data) &
-                       LIGAND_2 %in% c(rownames(data), NA) &
-                       RECEPTOR_2 %in% c(rownames(data), NA) &
-                       RECEPTOR_3 %in% c(rownames(data), NA), ]
-  LR_genes <- unique(c(unique(LR_keep$LIGAND_1),
-                       unique(LR_keep$LIGAND_2),
-                       unique(LR_keep$RECEPTOR_1),
-                       unique(LR_keep$RECEPTOR_2),
-                       unique(LR_keep$RECEPTOR_3)))
+    RECEPTOR_1 %in% rownames(data) &
+    LIGAND_2 %in% c(rownames(data), NA) &
+    RECEPTOR_2 %in% c(rownames(data), NA) &
+    RECEPTOR_3 %in% c(rownames(data), NA), ]
+  LR_genes <- unique(c(
+    unique(LR_keep$LIGAND_1),
+    unique(LR_keep$LIGAND_2),
+    unique(LR_keep$RECEPTOR_1),
+    unique(LR_keep$RECEPTOR_2),
+    unique(LR_keep$RECEPTOR_3)
+  ))
   data_keep <- data[rownames(data) %in% LR_genes, ]
   n_ID <- length(unique(LR_keep$LR_SORTED))
-  if(n_ID == 0) {
+  if (n_ID == 0) {
     stop("There are no LR interactions in the Seurat dataset.")
   } else {
     if (verbose) message(paste0("Number of LR interactions in the Seurat dataset: ", n_ID, "."))
   }
-  if(all(is.na(LR_keep$RECEPTOR_1)) | all(is.na(LR_keep$LIGAND_1))) {
+  if (all(is.na(LR_keep$RECEPTOR_1)) | all(is.na(LR_keep$LIGAND_1))) {
     stop("Error of formatting in the LR database: only NA's in LIGAND_1 or RECEPTOR_1.")
   } else {
-    if(all(is.na(LR_keep$LIGAND_2))) {
+    if (all(is.na(LR_keep$LIGAND_2))) {
       max_nL <- 1
       LR_keep <- base::subset(LR_keep, select = -c(LIGAND_2))
     } else {
       max_nL <- 2
     }
-    if(all(is.na(LR_keep$RECEPTOR_2)) & all(is.na(LR_keep$RECEPTOR_3))) {
+    if (all(is.na(LR_keep$RECEPTOR_2)) & all(is.na(LR_keep$RECEPTOR_3))) {
       max_nR <- 1
       LR_keep <- base::subset(LR_keep, select = -c(RECEPTOR_2, RECEPTOR_3))
-    } else if(all(is.na(LR_keep$RECEPTOR_2))) {
+    } else if (all(is.na(LR_keep$RECEPTOR_2))) {
       stop("Error of formatting in the LR database: only NA's in RECEPTOR_2 but not in RECEPTOR_3.")
-    } else if(all(is.na(LR_keep$RECEPTOR_3))) {
+    } else if (all(is.na(LR_keep$RECEPTOR_3))) {
       max_nR <- 2
       LR_keep <- base::subset(LR_keep, select = -c(RECEPTOR_3))
     } else {
@@ -94,16 +95,15 @@ preprocess_LR <- function(
 }
 
 preprocess_seurat <- function(
-  seurat_object,
-  celltype_column_id,
-  condition_column_id,
-  assay,
-  slot,
-  log_scale,
-  return_type,
-  min_cells,
-  verbose
-) {
+                              seurat_object,
+                              celltype_column_id,
+                              condition_column_id,
+                              assay,
+                              slot,
+                              log_scale,
+                              return_type,
+                              min_cells,
+                              verbose) {
   cell_type <- NULL
   if (verbose) message("Preprocessing Seurat object.")
   prep_data <- extract_seurat_data(
@@ -135,28 +135,32 @@ preprocess_seurat <- function(
 }
 
 extract_seurat_data <- function(
-  seurat_object,
-  assay,
-  slot,
-  log_scale,
-  return_type,
-  verbose
-) {
-  if(slot == "data") {
-    if(verbose) message(
-      paste0(
-        "Extracting data from assay ",
-        assay,
-        " and slot 'data' (assuming normalized log-transformed values)."
+                                seurat_object,
+                                assay,
+                                slot,
+                                log_scale,
+                                return_type,
+                                verbose) {
+  if (slot == "data") {
+    if (verbose) {
+      message(
+        paste0(
+          "Extracting data from assay ",
+          assay,
+          " and slot 'data' (assuming normalized log-transformed values)."
+        )
       )
-    )
-  } else if(slot == "counts") {
-    if(verbose) message(
-      paste0("Extracting data from assay ",
-             assay,
-             " and slot 'counts' (assuming normalized non-log-transformed values)."
+    }
+  } else if (slot == "counts") {
+    if (verbose) {
+      message(
+        paste0(
+          "Extracting data from assay ",
+          assay,
+          " and slot 'counts' (assuming normalized non-log-transformed values)."
+        )
       )
-    )
+    }
   } else {
     stop("The slot should be 'counts' or 'data'.")
   }
@@ -165,31 +169,31 @@ extract_seurat_data <- function(
     slot = slot,
     assay = assay
   )
-  if(slot == "data" & !log_scale) {
-    if(verbose) message("Converting values from log-transformed to non-log-transformed.")
+  if (slot == "data" & !log_scale) {
+    if (verbose) message("Converting values from log-transformed to non-log-transformed.")
     temp_data <- expm1(temp_data)
   }
-  if(slot == "counts" & log_scale) {
-    if(verbose) message("Converting values from non-log-transformed to log-transformed.")
+  if (slot == "counts" & log_scale) {
+    if (verbose) message("Converting values from non-log-transformed to log-transformed.")
     temp_data <- log1p(temp_data)
   }
-  if(class(temp_data) == "dgCMatrix") {
-    if(return_type == "sparse") {
-      if(verbose) message("Returning a sparse data matrix from the Seurat object.")
+  if (class(temp_data) == "dgCMatrix") {
+    if (return_type == "sparse") {
+      if (verbose) message("Returning a sparse data matrix from the Seurat object.")
       return(temp_data)
-    } else if(return_type == "dense") {
-      if(verbose) message("Returning a dense data matrix from the Seurat object.")
+    } else if (return_type == "dense") {
+      if (verbose) message("Returning a dense data matrix from the Seurat object.")
       return(as.matrix(temp_data))
     } else {
-      if(verbose) message("Returning a data.table from the Seurat object.")
+      if (verbose) message("Returning a data.table from the Seurat object.")
       return(data.table::as.data.table(as.matrix(temp_data), keep.rownames = TRUE))
     }
-  } else if(class(temp_data) == "matrix") {
-    if((return_type == "dense") | (return_type == "sparse")) {
-      if(verbose) message("Returning a dense data matrix from the Seurat object.")
+  } else if (class(temp_data) == "matrix") {
+    if ((return_type == "dense") | (return_type == "sparse")) {
+      if (verbose) message("Returning a dense data matrix from the Seurat object.")
       return(temp_data)
     } else {
-      if(verbose) message("Return a data.table from the Seurat object.")
+      if (verbose) message("Return a data.table from the Seurat object.")
       return(data.table::as.data.table(temp_data, keep.rownames = TRUE))
     }
   } else {
@@ -198,10 +202,9 @@ extract_seurat_data <- function(
 }
 
 extract_seurat_metadata <- function(
-  seurat_object,
-  celltype_column_id,
-  condition_column_id
-) {
+                                    seurat_object,
+                                    celltype_column_id,
+                                    condition_column_id) {
   cols_to_keep <- c("cell_id", celltype_column_id, condition_column_id)
   temp_md <- data.table::copy(x = seurat_object[[]])
   temp_md <- data.table::setDT(
@@ -210,8 +213,8 @@ extract_seurat_metadata <- function(
   )
   temp_md <- temp_md[, cols_to_keep, with = FALSE]
   temp_md[, names(temp_md) := lapply(.SD, as.character)]
-  if(!is.null(condition_column_id)) {
-    if(length(unique(temp_md[[condition_column_id]])) != 2) {
+  if (!is.null(condition_column_id)) {
+    if (length(unique(temp_md[[condition_column_id]])) != 2) {
       stop(paste0("The column ", condition_column_id, " of the Seurat object does not contain exactly 2 conditions."))
     } else {
       new_colnames <- c("cell_id", "cell_type", "condition")
@@ -228,13 +231,14 @@ extract_seurat_metadata <- function(
 }
 
 filter_celltypes <- function(
-  metadata,
-  min_cells
-) {
-  if("condition" %in% colnames(metadata)) {
+                             metadata,
+                             min_cells) {
+  if ("condition" %in% colnames(metadata)) {
     filt <- apply(
-      X = table(metadata$cell_type,
-                metadata$condition) >= min_cells,
+      X = table(
+        metadata$cell_type,
+        metadata$condition
+      ) >= min_cells,
       MARGIN = 1,
       FUN = all
     )

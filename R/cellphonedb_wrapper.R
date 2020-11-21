@@ -28,33 +28,32 @@
 #' @return Return the results of CellPhoneDB
 #' @export
 run_cpdb_from_seurat <- function(
-  seurat_object,
-  assay = "RNA",
-  slot = "data",
-  log_scale = FALSE,
-  celltype_column_id,
-  input_species = "mouse",
-  min_cells = 5,
-  condition_column_id = NULL,
-  input_dir = getwd(),
-  create_plots = FALSE,
-  method = 'statistical_analysis',
-  iterations = NULL,
-  threshold = NULL,
-  result_precision = NULL,
-  counts_data = NULL,
-  output_format = NULL,
-  verbose = TRUE,
-  debug_seed = NULL,
-  threads = NULL,
-  subsampling = FALSE,
-  subsampling_log = FALSE,
-  subsampling_num_pc = NULL,
-  subsampling_num_cells = NULL,
-  return_full_dt = TRUE
-) {
+                                 seurat_object,
+                                 assay = "RNA",
+                                 slot = "data",
+                                 log_scale = FALSE,
+                                 celltype_column_id,
+                                 input_species = "mouse",
+                                 min_cells = 5,
+                                 condition_column_id = NULL,
+                                 input_dir = getwd(),
+                                 create_plots = FALSE,
+                                 method = "statistical_analysis",
+                                 iterations = NULL,
+                                 threshold = NULL,
+                                 result_precision = NULL,
+                                 counts_data = NULL,
+                                 output_format = NULL,
+                                 verbose = TRUE,
+                                 debug_seed = NULL,
+                                 threads = NULL,
+                                 subsampling = FALSE,
+                                 subsampling_log = FALSE,
+                                 subsampling_num_pc = NULL,
+                                 subsampling_num_cells = NULL,
+                                 return_full_dt = TRUE) {
   message("Create file directory if not already existing.")
-  if(!dir.exists(input_dir)) {
+  if (!dir.exists(input_dir)) {
     dir.create(input_dir)
   }
   message("Create input files from Seurat to be used by CellPhoneDB.")
@@ -69,16 +68,16 @@ run_cpdb_from_seurat <- function(
     min_cells = min_cells,
     input_dir = input_dir
   )
-  if(is.null(condition_column_id)) {
-    n_run = 1
+  if (is.null(condition_column_id)) {
+    n_run <- 1
     project_name <- "cpdb_results_noCond"
     means_result_name <- NULL
     significant_means_result_name <- NULL
-    econvoluted_result_name <-  NULL
+    econvoluted_result_name <- NULL
     pvalues_result_name <- NULL
     message("Run CellphoneDB once (no condition).")
   } else {
-    n_run = 2
+    n_run <- 2
     project_name <- paste0("cpdb_results_", paths$conds)
     means_result_name <- paste0("means-", paths$conds, ".txt")
     significant_means_result_name <- paste0("significant-means-", paths$conds, ".txt")
@@ -86,7 +85,7 @@ run_cpdb_from_seurat <- function(
     pvalues_result_name <- paste0("pvalues-", paths$conds, ".txt")
     message("Run CellPhoneDB on the two conditions.")
   }
-  for(i in 1:n_run) {
+  for (i in 1:n_run) {
     run_cpdb_from_files(
       data_path = paths$data_path[[i]],
       metadata_path = paths$md_path[[i]],
@@ -111,19 +110,19 @@ run_cpdb_from_seurat <- function(
       subsampling_num_cells = subsampling_num_cells
     )
   }
-  if(return_full_dt) {
-    if(method != 'statistical_analysis') {
+  if (return_full_dt) {
+    if (method != "statistical_analysis") {
       message("Not possible to create the full data.table for the selected method.")
     } else {
       message("Create and write full data.table.")
       full_dt <- create_cpdb_cci(
         input_dir = input_dir,
         conds = paths$conds
-        )
-      if(is.null(condition_column_id)) {
-        output_dir_full <-  paste0(input_dir, "/cpdb_full_table_noCond.txt")
+      )
+      if (is.null(condition_column_id)) {
+        output_dir_full <- paste0(input_dir, "/cpdb_full_table_noCond.txt")
       } else {
-        output_dir_full <-  paste0(input_dir, "/cpdb_full_table_withCond.txt")
+        output_dir_full <- paste0(input_dir, "/cpdb_full_table_withCond.txt")
       }
       utils::write.table(
         full_dt,
@@ -131,11 +130,11 @@ run_cpdb_from_seurat <- function(
         quote = FALSE,
         col.names = TRUE,
         row.names = FALSE,
-        sep = '\t'
+        sep = "\t"
       )
     }
   }
-  if(input_species == "mouse") {
+  if (input_species == "mouse") {
     message(paste0("Write human-mouse orthologs in ", input_dir, "/cpdb_human_mouse_orthologs.txt"))
     utils::write.table(
       paths$gene_mapping,
@@ -143,9 +142,7 @@ run_cpdb_from_seurat <- function(
       quote = FALSE,
       col.names = TRUE,
       row.names = FALSE,
-      sep = '\t'
+      sep = "\t"
     )
   }
 }
-
-

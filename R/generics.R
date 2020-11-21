@@ -139,4 +139,3 @@ setMethod("set_ora_tables", "scDiffCom", function(x, new_ora_tables) {
   validObject(x)
   return(x)
 })
-

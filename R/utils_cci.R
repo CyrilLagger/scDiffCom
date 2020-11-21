@@ -1,7 +1,6 @@
 create_template_cci <- function(
-  LR_db,
-  cell_types
-) {
+                                LR_db,
+                                cell_types) {
   template <- CJ(
     L_CELLTYPE = cell_types,
     R_CELLTYPE = cell_types,
@@ -18,11 +17,10 @@ create_template_cci <- function(
 }
 
 add_cell_number <- function(
-  cci_dt,
-  condition_info,
-  metadata
-) {
-  if(!condition_info$is_cond) {
+                            cci_dt,
+                            condition_info,
+                            metadata) {
+  if (!condition_info$is_cond) {
     dt_NCELLS <- metadata[, .N, by = "cell_type"]
     cci_dt <- merge.data.table(
       x = cci_dt,
@@ -75,33 +73,34 @@ add_cell_number <- function(
       paste0("L_NCELLS_", condition_info$cond1),
       paste0("L_NCELLS_", condition_info$cond2),
       paste0("R_NCELLS_", condition_info$cond1),
-      paste0("R_NCELLS_", condition_info$cond2))
+      paste0("R_NCELLS_", condition_info$cond2)
+    )
     setnames(
       x = cci_dt,
       old = c(
         paste0(condition_info$cond1, "_L"),
         paste0(condition_info$cond2, "_L"),
         paste0(condition_info$cond1, "_R"),
-        paste0(condition_info$cond2, "_R")),
+        paste0(condition_info$cond2, "_R")
+      ),
       new = new_cols
     )
   }
-  for(j in new_cols){
+  for (j in new_cols) {
     set(cci_dt, i = which(is.na(cci_dt[[j]])), j = j, value = 0)
   }
   return(cci_dt)
 }
 
 run_simple_cci_analysis <- function(
-  expr_tr,
-  metadata,
-  template_cci_dt,
-  pp_LR,
-  condition_info,
-  pct_threshold,
-  min_cells = min_cells,
-  compute_fast
-) {
+                                    expr_tr,
+                                    metadata,
+                                    template_cci_dt,
+                                    pp_LR,
+                                    condition_info,
+                                    pct_threshold,
+                                    min_cells = min_cells,
+                                    compute_fast) {
   averaged_expr <- aggregate_cells(
     expr_tr = expr_tr,
     metadata = metadata,
@@ -116,15 +115,14 @@ run_simple_cci_analysis <- function(
     min_cells = min_cells,
     cci_or_drate = "cci"
   )
-  if(compute_fast) {
-    if(!condition_info$is_cond) {
+  if (compute_fast) {
+    if (!condition_info$is_cond) {
       return(cci_dt[["LR_SCORE"]])
     } else {
       return(list(
         cond1 = cci_dt[[paste0("LR_SCORE_", condition_info$cond1)]],
         cond2 = cci_dt[[paste0("LR_SCORE_", condition_info$cond2)]]
-      )
-      )
+      ))
     }
   }
   detection_rate <- aggregate_cells(
@@ -151,11 +149,10 @@ run_simple_cci_analysis <- function(
 }
 
 aggregate_cells <- function(
-  expr_tr,
-  metadata,
-  is_cond
-) {
-  if(!is_cond) {
+                            expr_tr,
+                            metadata,
+                            is_cond) {
+  if (!is_cond) {
     group <- metadata[["cell_type"]]
   } else {
     group <- paste(metadata[["condition"]], metadata[["cell_type"]], sep = "_")
@@ -165,29 +162,28 @@ aggregate_cells <- function(
     group = group,
     reorder = TRUE
   )
-  aggr <- sums/as.vector(table(group))
+  aggr <- sums / as.vector(table(group))
   return(aggr)
 }
 
 build_cci_or_drate <- function(
-  averaged_expr,
-  template_cci_dt,
-  pp_LR,
-  condition_info,
-  pct_threshold,
-  min_cells,
-  cci_or_drate
-) {
+                               averaged_expr,
+                               template_cci_dt,
+                               pp_LR,
+                               condition_info,
+                               pct_threshold,
+                               min_cells,
+                               cci_or_drate) {
   CONDITION_CELLTYPE <- NULL
   full_dt <- copy(template_cci_dt)
-  if(cci_or_drate == "cci") {
-    name_tag = "EXPRESSION"
-  } else if(cci_or_drate == "drate") {
-    name_tag = "DETECTED"
+  if (cci_or_drate == "cci") {
+    name_tag <- "EXPRESSION"
+  } else if (cci_or_drate == "drate") {
+    name_tag <- "DETECTED"
   } else {
     stop("Error in build_cci_drate_dt.")
   }
-  if(!condition_info$is_cond) {
+  if (!condition_info$is_cond) {
     row_id <- "CELLTYPE"
     vars_id <- "CELLTYPE"
     cond1_id <- NULL
@@ -213,7 +209,7 @@ build_cci_or_drate <- function(
     keep.rownames = row_id,
     sorted = FALSE
   )
-  if(condition_info$is_cond) {
+  if (condition_info$is_cond) {
     dt[, c("CONDITION", "CELLTYPE") := split_cond_string(CONDITION_CELLTYPE, condition_info$cond1, condition_info$cond2)]
     dt[, CONDITION_CELLTYPE := NULL]
   }
@@ -223,11 +219,12 @@ build_cci_or_drate <- function(
     variable.name = "GENE",
     value.name = name_tag
   )
-  if(condition_info$is_cond) {
+  if (condition_info$is_cond) {
     dt <- dcast.data.table(
       data = dt,
       formula = CELLTYPE + GENE ~ CONDITION,
-      value.var = name_tag)
+      value.var = name_tag
+    )
   }
   dt[is.na(dt)] <- 0
   out_names <- c(
@@ -235,79 +232,95 @@ build_cci_or_drate <- function(
       1:pp_LR$max_nL,
       function(i) {
         paste0("L", i, "_", name_tag, pmin_id)
-      }),
+      }
+    ),
     sapply(
       1:pp_LR$max_nR,
       function(i) {
         paste0("R", i, "_", name_tag, pmin_id)
-      })
+      }
+    )
   )
-  full_dt[,
-          c(out_names) :=
-            c(
-              sapply(
-                1:pp_LR$max_nL,
-                function(i) {
-                  as.list(
-                    dt[.SD,
-                       on = c(paste0("GENE==LIGAND_", i), "CELLTYPE==L_CELLTYPE"),
-                       mget(paste0("x.", merge_id))
-                       ])
-                }),
-              sapply(
-                1:pp_LR$max_nR,
-                function(i) {
-                  as.list(
-                    dt[.SD,
-                       on = c(paste0("GENE==RECEPTOR_", i), "CELLTYPE==R_CELLTYPE"),
-                       mget(paste0("x.", merge_id))
-                       ])
-                })
+  full_dt[
+    ,
+    c(out_names) :=
+      c(
+        sapply(
+          1:pp_LR$max_nL,
+          function(i) {
+            as.list(
+              dt[.SD,
+                on = c(paste0("GENE==LIGAND_", i), "CELLTYPE==L_CELLTYPE"),
+                mget(paste0("x.", merge_id))
+              ]
             )
-          ]
-  if(cci_or_drate == "cci") {
+          }
+        ),
+        sapply(
+          1:pp_LR$max_nR,
+          function(i) {
+            as.list(
+              dt[.SD,
+                on = c(paste0("GENE==RECEPTOR_", i), "CELLTYPE==R_CELLTYPE"),
+                mget(paste0("x.", merge_id))
+              ]
+            )
+          }
+        )
+      )
+  ]
+  if (cci_or_drate == "cci") {
     full_dt[, (score_id) :=
-              lapply(1:n_id, function(x) {
-                (
-                  do.call(pmin,
-                          c(lapply(1:pp_LR$max_nL, function(i) {get(paste0("L", i, "_", name_tag, pmin_id[x]))}), na.rm = TRUE))
-                  +
-                    do.call(pmin,
-                            c(lapply(1:pp_LR$max_nR, function(i) {get(paste0("R", i,"_", name_tag, pmin_id[x]))}), na.rm = TRUE))
-                )/2
-              })
-            ]
-  } else if(cci_or_drate == "drate") {
+      lapply(1:n_id, function(x) {
+        (
+          do.call(
+            pmin,
+            c(lapply(1:pp_LR$max_nL, function(i) {
+              get(paste0("L", i, "_", name_tag, pmin_id[x]))
+            }), na.rm = TRUE)
+          )
+          +
+            do.call(
+              pmin,
+              c(lapply(1:pp_LR$max_nR, function(i) {
+                get(paste0("R", i, "_", name_tag, pmin_id[x]))
+              }), na.rm = TRUE)
+            )
+        ) / 2
+      })]
+  } else if (cci_or_drate == "drate") {
     full_dt[, (dr_id) :=
-              lapply(1:n_id, function(x) {
-                is_detected_full(
-                  x_dr = do.call(pmin, c(lapply(1:pp_LR$max_nL, function(i) {get(paste0("L", i, "_", name_tag, pmin_id[x]))}), na.rm = TRUE)),
-                  x_ncells = get(paste0("L_NCELLS", pmin_id[x])),
-                  y_dr = do.call(pmin, c(lapply(1:pp_LR$max_nR, function(i) {get(paste0("R", i, "_", name_tag, pmin_id[x]))}), na.rm = TRUE)),
-                  y_ncells = get(paste0("R_NCELLS", pmin_id[x])),
-                  dr_thr = pct_threshold,
-                  min_cells = min_cells
-                )
-              })
-            ]
+      lapply(1:n_id, function(x) {
+        is_detected_full(
+          x_dr = do.call(pmin, c(lapply(1:pp_LR$max_nL, function(i) {
+            get(paste0("L", i, "_", name_tag, pmin_id[x]))
+          }), na.rm = TRUE)),
+          x_ncells = get(paste0("L_NCELLS", pmin_id[x])),
+          y_dr = do.call(pmin, c(lapply(1:pp_LR$max_nR, function(i) {
+            get(paste0("R", i, "_", name_tag, pmin_id[x]))
+          }), na.rm = TRUE)),
+          y_ncells = get(paste0("R_NCELLS", pmin_id[x])),
+          dr_thr = pct_threshold,
+          min_cells = min_cells
+        )
+      })]
   }
   return(full_dt)
 }
 
 clean_colnames <- function(
-  cci_dt,
-  condition_info,
-  max_nL,
-  max_nR,
-  permutation_analysis
-) {
+                           cci_dt,
+                           condition_info,
+                           max_nL,
+                           max_nR,
+                           permutation_analysis) {
   first_cols <- c("LR_NAME", "LR_SORTED", "L_CELLTYPE", "R_CELLTYPE", "LR_CELLTYPE")
   LR_names <- c(
     paste0("LIGAND_", 1:max_nL),
-    paste0("RECEPTOR_", 1:max_nR )
+    paste0("RECEPTOR_", 1:max_nR)
   )
   first_cols <- c(first_cols, LR_names)
-  if(!condition_info$is_cond) {
+  if (!condition_info$is_cond) {
     last_cols <- c(
       "L_NCELLS",
       paste0("L", 1:max_nL, "_EXPRESSION"),
@@ -316,7 +329,7 @@ clean_colnames <- function(
       paste0("R", 1:max_nR, "_EXPRESSION"),
       paste0("R", 1:max_nR, "_DETECTED")
     )
-    if(!permutation_analysis) {
+    if (!permutation_analysis) {
       ordered_cols <- c(
         first_cols,
         "LR_SCORE", "LR_DETECTED",
@@ -344,7 +357,7 @@ clean_colnames <- function(
       paste0("R", 1:max_nR, "_EXPRESSION_", condition_info$cond2),
       paste0("R", 1:max_nR, "_DETECTED_", condition_info$cond2)
     )
-    if(!permutation_analysis) {
+    if (!permutation_analysis) {
       ordered_cols <- c(
         first_cols,
         "LOGFC", "LOGFC_ABS",
@@ -379,17 +392,16 @@ clean_colnames <- function(
 
 is_detected_full <- Vectorize(
   function(
-    x_dr,
-    x_ncells,
-    y_dr,
-    y_ncells,
-    dr_thr,
-    min_cells
-  ) {
+           x_dr,
+           x_ncells,
+           y_dr,
+           y_ncells,
+           dr_thr,
+           min_cells) {
     if (x_dr >= dr_thr &
-        x_dr*x_ncells >= min_cells &
-        y_dr >= dr_thr &
-        y_dr*y_ncells >= min_cells
+      x_dr * x_ncells >= min_cells &
+      y_dr >= dr_thr &
+      y_dr * y_ncells >= min_cells
     ) {
       return(TRUE)
     } else {
@@ -399,30 +411,34 @@ is_detected_full <- Vectorize(
 )
 
 split_cond_string <- function(
-  expr_string,
-  cond1,
-  cond2
-) {
+                              expr_string,
+                              cond1,
+                              cond2) {
   cond <- ifelse(
     substr(
       x = expr_string,
       start = 1,
-      stop = nchar(cond1)) == cond1,
+      stop = nchar(cond1)
+    ) == cond1,
     cond1,
-    cond2)
+    cond2
+  )
   cell_type <- ifelse(
     substr(
       x = expr_string,
       start = 1,
-      stop = nchar(cond1)) == cond1,
+      stop = nchar(cond1)
+    ) == cond1,
     substr(
       x = expr_string,
-      start = nchar(cond1)+2,
-      stop = nchar(expr_string)),
+      start = nchar(cond1) + 2,
+      stop = nchar(expr_string)
+    ),
     substr(
       x = expr_string,
-      start = nchar(cond2)+2,
-      stop = nchar(expr_string)))
+      start = nchar(cond2) + 2,
+      stop = nchar(expr_string)
+    )
+  )
   return(list(cond = cond, cell_type = cell_type))
 }
-

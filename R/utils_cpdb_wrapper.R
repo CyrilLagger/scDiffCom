@@ -1,14 +1,13 @@
 create_cpdb_input <- function(
-  seurat_object,
-  assay = "RNA",
-  slot = "data",
-  log_scale = FALSE,
-  celltype_column_id,
-  input_species = "mouse",
-  min_cells = 5,
-  condition_column_id = NULL,
-  input_dir = getwd()
-) {
+                              seurat_object,
+                              assay = "RNA",
+                              slot = "data",
+                              log_scale = FALSE,
+                              celltype_column_id,
+                              input_species = "mouse",
+                              min_cells = 5,
+                              condition_column_id = NULL,
+                              input_dir = getwd()) {
   Gene <- cell_type <- NULL
   data <- extract_seurat_data(
     seurat_object = seurat_object,
@@ -32,7 +31,7 @@ create_cpdb_input <- function(
   data <- data[, cols, with = FALSE]
   data.table::setnames(data, old = "rn", new = "Gene")
   data.table::setnames(md, old = c("cell_id"), new = c("Cell"))
-  if(input_species == "mouse") {
+  if (input_species == "mouse") {
     message("Converting mouse gene names to human gene names for CELLPHONEDB.")
     gene_mapping <- get_orthologs(
       genes = unique(data$Gene),
@@ -50,13 +49,13 @@ create_cpdb_input <- function(
     data[, Gene := NULL]
     data.table::setnames(data, old = "human_symbol", new = "Gene")
     data.table::setcolorder(data, "Gene")
-  } else if(input_species == "human") {
+  } else if (input_species == "human") {
     message("Assuming genes symbols are human genes names.")
     gene_mapping <- NULL
   } else {
     stop("Species not supported: 'input_species' can be either 'human' or 'mouse'.")
   }
-  if(is.null(condition_column_id)) {
+  if (is.null(condition_column_id)) {
     output_dir_data <- paste0(input_dir, "/cpdb_data_noCond.txt")
     output_dir_md <- paste0(input_dir, "/cpdb_metadata_noCond.txt")
     message(paste0("Writing CellPhoneDB input data to ", output_dir_data))
@@ -66,7 +65,7 @@ create_cpdb_input <- function(
       quote = FALSE,
       col.names = TRUE,
       row.names = FALSE,
-      sep = '\t'
+      sep = "\t"
     )
     message(paste0("Writing CellPhoneDB input metadata to ", output_dir_md))
     utils::write.table(
@@ -75,14 +74,16 @@ create_cpdb_input <- function(
       quote = FALSE,
       col.names = TRUE,
       row.names = FALSE,
-      sep = '\t'
+      sep = "\t"
     )
-    return(list(data_path = output_dir_data,
-                md_path = output_dir_md,
-                gene_mapping = gene_mapping))
+    return(list(
+      data_path = output_dir_data,
+      md_path = output_dir_md,
+      gene_mapping = gene_mapping
+    ))
   } else {
     conds <- unique(md$condition)
-    if(length(conds) != 2) stop("Wrong number of groups in cell-type conditions (expected 2).")
+    if (length(conds) != 2) stop("Wrong number of groups in cell-type conditions (expected 2).")
     md1 <- md[md$condition == conds[[1]], ]
     md1$condition <- NULL
     md2 <- md[md$condition == conds[[2]], ]
@@ -91,9 +92,9 @@ create_cpdb_input <- function(
     cols_2 <- colnames(data)[colnames(data) %in% c("Gene", md2$Cell)]
     data1 <- data[, cols_1, with = FALSE]
     data2 <- data[, cols_2, with = FALSE]
-    output_dir_data1 <- paste0(input_dir, "/cpdb_data_" , conds[[1]], ".txt")
+    output_dir_data1 <- paste0(input_dir, "/cpdb_data_", conds[[1]], ".txt")
     output_dir_md1 <- paste0(input_dir, "/cpdb_metadata_", conds[[1]], ".txt")
-    output_dir_data2 <- paste0(input_dir, "/cpdb_data_" , conds[[2]], ".txt")
+    output_dir_data2 <- paste0(input_dir, "/cpdb_data_", conds[[2]], ".txt")
     output_dir_md2 <- paste0(input_dir, "/cpdb_metadata_", conds[[2]], ".txt")
     message(paste0("Writing CellPhoneDB input data to ", output_dir_data1))
     utils::write.table(
@@ -102,7 +103,7 @@ create_cpdb_input <- function(
       quote = FALSE,
       col.names = TRUE,
       row.names = FALSE,
-      sep = '\t'
+      sep = "\t"
     )
     message(paste0("Writing CellPhoneDB input data to ", output_dir_data2))
     utils::write.table(
@@ -111,7 +112,7 @@ create_cpdb_input <- function(
       quote = FALSE,
       col.names = TRUE,
       row.names = FALSE,
-      sep = '\t'
+      sep = "\t"
     )
     message(paste0("Writing CellPhoneDB input metadata to ", output_dir_md1))
     utils::write.table(
@@ -120,7 +121,7 @@ create_cpdb_input <- function(
       quote = FALSE,
       col.names = TRUE,
       row.names = FALSE,
-      sep = '\t'
+      sep = "\t"
     )
     message(paste0("Writing CellPhoneDB input metadata to ", output_dir_md2))
     utils::write.table(
@@ -129,44 +130,45 @@ create_cpdb_input <- function(
       quote = FALSE,
       col.names = TRUE,
       row.names = FALSE,
-      sep = '\t'
+      sep = "\t"
     )
-    return(list(conds = c(conds[[1]], conds[[2]]),
-                data_path = c(output_dir_data1, output_dir_data2),
-                md_path = c(output_dir_md1, output_dir_md2),
-                gene_mapping = gene_mapping))
+    return(list(
+      conds = c(conds[[1]], conds[[2]]),
+      data_path = c(output_dir_data1, output_dir_data2),
+      md_path = c(output_dir_md1, output_dir_md2),
+      gene_mapping = gene_mapping
+    ))
   }
 }
 
 run_cpdb_from_files <- function(
-  data_path,
-  metadata_path,
-  method = 'statistical_analysis',
-  project_name = NULL,
-  iterations = NULL,
-  threshold = NULL,
-  result_precision = NULL,
-  counts_data = NULL,
-  output_path = NULL,
-  output_format = NULL,
-  means_result_name = NULL,
-  significant_means_result_name = NULL,
-  deconvoluted_result_name = NULL,
-  verbose = TRUE,
-  pvalues_result_name = NULL,
-  debug_seed = NULL,
-  threads = NULL,
-  subsampling = FALSE,
-  subsampling_log = FALSE,
-  subsampling_num_pc = NULL,
-  subsampling_num_cells = NULL
-) {
+                                data_path,
+                                metadata_path,
+                                method = "statistical_analysis",
+                                project_name = NULL,
+                                iterations = NULL,
+                                threshold = NULL,
+                                result_precision = NULL,
+                                counts_data = NULL,
+                                output_path = NULL,
+                                output_format = NULL,
+                                means_result_name = NULL,
+                                significant_means_result_name = NULL,
+                                deconvoluted_result_name = NULL,
+                                verbose = TRUE,
+                                pvalues_result_name = NULL,
+                                debug_seed = NULL,
+                                threads = NULL,
+                                subsampling = FALSE,
+                                subsampling_log = FALSE,
+                                subsampling_num_pc = NULL,
+                                subsampling_num_cells = NULL) {
   command_cpdb <- "cellphonedb method"
   command_cpdb <- paste(command_cpdb, method, metadata_path, data_path, sep = " ")
-  if(method == "statistical_analysis") {
-    if(subsampling) {
+  if (method == "statistical_analysis") {
+    if (subsampling) {
       command_cpdb <- paste0(command_cpdb, " --subsampling --subsampling-log")
-      if(subsampling_log) {
+      if (subsampling_log) {
         command_cpdb <- paste0(command_cpdb, " true")
       } else {
         command_cpdb <- paste0(command_cpdb, " false")
@@ -187,7 +189,7 @@ run_cpdb_from_files <- function(
   if (!is.null(means_result_name)) command_cpdb <- paste0(command_cpdb, " --means-result-name=", means_result_name)
   if (!is.null(significant_means_result_name)) command_cpdb <- paste0(command_cpdb, " --significant-means-result-name=", significant_means_result_name)
   if (!is.null(deconvoluted_result_name)) command_cpdb <- paste0(command_cpdb, " --deconvoluted-result-name=", deconvoluted_result_name)
-  if(verbose) {
+  if (verbose) {
     command_cpdb <- paste0(command_cpdb, " --verbose")
   } else {
     command_cpdb <- paste0(command_cpdb, " --quiet")
@@ -201,9 +203,7 @@ run_cpdb_dot_plot <- function(means_path = NULL,
                               output_name = NULL,
                               rows = NULL,
                               columns = NULL,
-                              verbose = TRUE
-
-) {
+                              verbose = TRUE) {
   command_dp <- "cellphonedb plot dot_plot"
 
   if (!is.null(means_path)) command_dp <- paste0(command_dp, " --means-path=", means_path)
@@ -212,7 +212,7 @@ run_cpdb_dot_plot <- function(means_path = NULL,
   if (!is.null(output_name)) command_dp <- paste0(command_dp, " --output-name=", output_name)
   if (!is.null(rows)) command_dp <- paste0(command_dp, " --rows=", rows)
   if (!is.null(columns)) command_dp <- paste0(command_dp, " --columns=", columns)
-  if(verbose) {
+  if (verbose) {
     command_dp <- paste0(command_dp, " --verbose")
   } else {
     command_dp <- paste0(command_dp, " --quiet")
@@ -227,9 +227,7 @@ run_cpdb_heatmap <- function(metadata_path,
                              log_name = NULL,
                              count_network_name = NULL,
                              interaction_count_name = NULL,
-                             verbose = TRUE
-
-) {
+                             verbose = TRUE) {
   command_hm <- "cellphonedb plot heatmap_plot"
   command_hm <- paste(command_hm, metadata_path, sep = " ")
 
@@ -239,46 +237,47 @@ run_cpdb_heatmap <- function(metadata_path,
   if (!is.null(log_name)) command_hm <- paste0(command_hm, " --log-name=", log_name)
   if (!is.null(count_network_name)) command_hm <- paste0(command_hm, " --count-network-name=", count_network_name)
   if (!is.null(interaction_count_name)) command_hm <- paste0(command_hm, " --interaction-count-name=", interaction_count_name)
-  if(verbose) {
+  if (verbose) {
     command_hm <- paste0(command_hm, " --verbose")
   } else {
     command_hm <- paste0(command_hm, " --quiet")
   }
   system(command = command_hm)
-
 }
 
 create_cpdb_cci <- function(
-  input_dir,
-  conds = NULL
-) {
-  if(is.null(conds)) {
+                            input_dir,
+                            conds = NULL) {
+  if (is.null(conds)) {
     path_res <- list(
-      paste0(input_dir, '/cpdb_results_noCond/means.txt'),
-      paste0(input_dir, '/cpdb_results_noCond/pvalues.txt')#,
-      #paste0(input_dir, "/cpdb_results_noCond/deconvoluted.txt")
+      paste0(input_dir, "/cpdb_results_noCond/means.txt"),
+      paste0(input_dir, "/cpdb_results_noCond/pvalues.txt") # ,
+      # paste0(input_dir, "/cpdb_results_noCond/deconvoluted.txt")
     )
-    names(path_res) <- c("means_noCond", "pvalues_noCond")#, "deconv_noCond")
+    names(path_res) <- c("means_noCond", "pvalues_noCond") # , "deconv_noCond")
   } else {
     path_res <- list(
       paste0(input_dir, "/cpdb_results_", conds[[1]], "/means-", conds[[1]], ".txt"),
       paste0(input_dir, "/cpdb_results_", conds[[2]], "/means-", conds[[2]], ".txt"),
       paste0(input_dir, "/cpdb_results_", conds[[1]], "/pvalues-", conds[[1]], ".txt"),
-      paste0(input_dir, "/cpdb_results_", conds[[2]], "/pvalues-", conds[[2]], ".txt")#,
+      paste0(input_dir, "/cpdb_results_", conds[[2]], "/pvalues-", conds[[2]], ".txt") # ,
       # paste0(input_dir, "/cpdb_results_", conds[[1]], "/deconvoluted-", conds[[1]], ".txt"),
-      #paste0(input_dir, "/cpdb_results_", conds[[2]], "/deconvoluted-", conds[[2]], ".txt")
+      # paste0(input_dir, "/cpdb_results_", conds[[2]], "/deconvoluted-", conds[[2]], ".txt")
     )
-    names(path_res) <- c(paste0("means_", conds), paste0("pvalues_", conds))#, paste0("deconv_", conds))
+    names(path_res) <- c(paste0("means_", conds), paste0("pvalues_", conds)) # , paste0("deconv_", conds))
   }
-  cols_to_rm <- c("interacting_pair", "partner_a", "partner_b", "gene_a", "gene_b",
-                  "secreted", "receptor_a", "receptor_b", "annotation_strategy", "is_integrin")
+  cols_to_rm <- c(
+    "interacting_pair", "partner_a", "partner_b", "gene_a", "gene_b",
+    "secreted", "receptor_a", "receptor_b", "annotation_strategy", "is_integrin"
+  )
   cpdb_res <- lapply(
     seq_along(path_res),
     function(i) {
       temp <- utils::read.table(
         path_res[[i]],
         header = TRUE,
-        sep = "\t")
+        sep = "\t"
+      )
       data.table::setDT(temp)
       temp <- temp[, (cols_to_rm) := NULL]
       temp <- data.table::melt.data.table(
@@ -291,7 +290,7 @@ create_cpdb_cci <- function(
     }
   )
   names(cpdb_res) <- names(path_res)
-  if(is.null(conds)) {
+  if (is.null(conds)) {
     full_res <- data.table::merge.data.table(
       cpdb_res[[1]],
       cpdb_res[[2]],
@@ -317,4 +316,3 @@ create_cpdb_cci <- function(
   }
   return(full_res)
 }
-

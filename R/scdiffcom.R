@@ -29,31 +29,30 @@
 #' @return A data.table with the CCI interactions.
 #' @export
 run_interaction_analysis <- function(
-  seurat_object,
-  LR_object,
-  celltype_column_id,
-  condition_column_id,
-  cond1_name,
-  cond2_name,
-  object_name = "scDiffCom_object",
-  assay = "RNA",
-  slot = "data",
-  log_scale = FALSE,
-  min_cells = 5,
-  pct_threshold = 0.1,
-  permutation_analysis = TRUE,
-  iterations = 1000,
-  cutoff_quantile_score = 0.25,
-  cutoff_pval_specificity = 0.05,
-  cutoff_pval_de = 0.05,
-  cutoff_logfc = log(1.2),
-  return_distr = FALSE,
-  seed = 42,
-  verbose = TRUE,
-  sparse = TRUE
-) {
+                                     seurat_object,
+                                     LR_object,
+                                     celltype_column_id,
+                                     condition_column_id,
+                                     cond1_name,
+                                     cond2_name,
+                                     object_name = "scDiffCom_object",
+                                     assay = "RNA",
+                                     slot = "data",
+                                     log_scale = FALSE,
+                                     min_cells = 5,
+                                     pct_threshold = 0.1,
+                                     permutation_analysis = TRUE,
+                                     iterations = 1000,
+                                     cutoff_quantile_score = 0.25,
+                                     cutoff_pval_specificity = 0.05,
+                                     cutoff_pval_de = 0.05,
+                                     cutoff_logfc = log(1.2),
+                                     return_distr = FALSE,
+                                     seed = 42,
+                                     verbose = TRUE,
+                                     sparse = TRUE) {
   set.seed(seed)
-  if(sparse) {
+  if (sparse) {
     return_type <- "sparse"
   } else {
     return_type <- "dense"
@@ -164,33 +163,32 @@ run_interaction_analysis <- function(
 #' @return Return a list of result in the scDiffCom format with new filtering analysis.
 #' @export
 run_filtering_and_ora <- function(
-  object,
-  verbose = TRUE,
-  new_cutoff_quantile_score = NULL,
-  new_cutoff_pval_specificity = NULL,
-  new_cutoff_pval_de = NULL,
-  new_cutoff_logfc = NULL,
-  skip_ora = FALSE
-) {
+                                  object,
+                                  verbose = TRUE,
+                                  new_cutoff_quantile_score = NULL,
+                                  new_cutoff_pval_specificity = NULL,
+                                  new_cutoff_pval_de = NULL,
+                                  new_cutoff_logfc = NULL,
+                                  skip_ora = FALSE) {
   REGULATION_SIMPLE <- NULL
-  if(verbose) message("Filtering and cleaning results.")
+  if (verbose) message("Filtering and cleaning results.")
   temp_param <- parameters(object)
-  if(!is.null(new_cutoff_quantile_score)) {
+  if (!is.null(new_cutoff_quantile_score)) {
     temp_param$cutoff_quantile_score <- new_cutoff_quantile_score
   }
-  if(!is.null(new_cutoff_pval_specificity)) {
+  if (!is.null(new_cutoff_pval_specificity)) {
     temp_param$cutoff_pval_specificity <- new_cutoff_pval_specificity
   }
-  if(!is.null(new_cutoff_pval_de)) {
+  if (!is.null(new_cutoff_pval_de)) {
     temp_param$cutoff_pval_de <- new_cutoff_pval_de
   }
-  if(!is.null(new_cutoff_logfc)) {
+  if (!is.null(new_cutoff_logfc)) {
     temp_param$cutoff_logfc <- new_cutoff_logfc
   }
   parameters(object) <- temp_param
   cci_dt <- data.table::copy(
     x = get_cci_table_raw(object)
-    )
+  )
   cci_dt <- add_convenience_cols(
     cci_dt = cci_dt,
     condition_info = temp_param$condition_info,
@@ -198,7 +196,7 @@ run_filtering_and_ora <- function(
     permutation_analysis = temp_param$permutation_analysis,
     pre_filtering = TRUE
   )
-  if(temp_param$permutation_analysis) {
+  if (temp_param$permutation_analysis) {
     cci_dt <- find_detected_cci(
       cci_dt = cci_dt,
       condition_info = temp_param$condition_info,
@@ -207,7 +205,7 @@ run_filtering_and_ora <- function(
       cutoff_pval_de = temp_param$cutoff_pval_de,
       cutoff_logfc = temp_param$cutoff_logfc
     )
-    if(temp_param$condition_info$is_cond) {
+    if (temp_param$condition_info$is_cond) {
       cci_dt <- assign_regulation(
         cci_dt = cci_dt,
         condition_info = temp_param$condition_info,
@@ -224,22 +222,22 @@ run_filtering_and_ora <- function(
     condition_info = temp_param$condition_info,
     permutation_analysis = temp_param$permutation_analysis
   )
-  if(nrow(cci_dt) == 0) {
+  if (nrow(cci_dt) == 0) {
     if (verbose) message("No detected interactions for this dataset.")
     object <- set_cci_table_filtered(object, list())
     object <- set_ora_tables(object, list())
   } else {
     object <- set_cci_table_filtered(object, cci_dt)
-    if(skip_ora) {
+    if (skip_ora) {
       object <- set_ora_tables(object, list())
     } else {
       object <- run_ora(
-      object = object,
-      verbose = TRUE,
-      logfc_threshold = NULL,
-      categories = c("LR_CELLTYPE", "LR_NAME", "GO"),
-      overwrite = TRUE
-    )
+        object = object,
+        verbose = TRUE,
+        logfc_threshold = NULL,
+        categories = c("LR_CELLTYPE", "LR_NAME", "GO"),
+        overwrite = TRUE
+      )
     }
   }
   return(object)
@@ -257,30 +255,29 @@ run_filtering_and_ora <- function(
 #' @return A data.table
 #' @export
 run_ora <- function(
-  object,
-  verbose = TRUE,
-  logfc_threshold = NULL,
-  categories = c("LR_CELLTYPE", "LR_NAME", "GO"),
-  overwrite = FALSE
-) {
+                    object,
+                    verbose = TRUE,
+                    logfc_threshold = NULL,
+                    categories = c("LR_CELLTYPE", "LR_NAME", "GO"),
+                    overwrite = FALSE) {
   ora_types <- c("UP", "DOWN", "FLAT", "DIFF")
   temp_param <- parameters(object)
-  if(is.null(logfc_threshold)) {
+  if (is.null(logfc_threshold)) {
     logfc_threshold <- temp_param$cutoff_logfc
   }
-  if(temp_param$permutation_analysis &
-     temp_param$condition_info$is_cond) {
+  if (temp_param$permutation_analysis &
+    temp_param$condition_info$is_cond) {
     temp_ora <- get_ora_tables(object)
     categories_old <- names(temp_ora)
-    if(is.null(categories_old)) {
-      if(verbose) message("Performing ORA analysis on the specified categories.")
+    if (is.null(categories_old)) {
+      if (verbose) message("Performing ORA analysis on the specified categories.")
       categories_to_keep <- categories
     } else {
-      if(overwrite) {
-        if(verbose) message("Performing ORA analysis on the specified categories (and erasing any previous ORA results).")
+      if (overwrite) {
+        if (verbose) message("Performing ORA analysis on the specified categories (and erasing any previous ORA results).")
         categories_to_keep <- categories
       } else {
-        if(verbose) message("Performing ORA analysis only on the new specified categories (and keeping previous results).")
+        if (verbose) message("Performing ORA analysis only on the new specified categories (and keeping previous results).")
         categories_to_keep <- setdiff(categories, categories_old)
       }
     }
@@ -297,10 +294,10 @@ run_ora <- function(
       USE.NAMES = TRUE,
       simplify = FALSE
     )
-    if(is.null(categories_old)) {
+    if (is.null(categories_old)) {
       res_ora <- ora_tables
     } else {
-      if(overwrite) {
+      if (overwrite) {
         res_ora <- ora_tables
       } else {
         res_ora <- c(temp_ora, ora_tables)
@@ -318,8 +315,7 @@ run_ora <- function(
 #'
 #' @return A data.table with ligands, receptors and some annotations (database of origin and source of curation).
 #' @export
-build_LR6db <- function(
-) {
+build_LR6db <- function() {
   LR6db_all <- combine_LR_db(
     one2one = FALSE,
     curated = FALSE
@@ -352,21 +348,20 @@ build_LR6db <- function(
 #' @return x
 #' @export
 plot_ora <- function(
-  object,
-  category,
-  #ora_type,
-  OR_val,
-  pval_val,
-  ORA_score_val,
-  max_value,
-  OR_cutoff = 1,
-  pval_cutoff = 0.05
-) {
+                     object,
+                     category,
+                     # ora_type,
+                     OR_val,
+                     pval_val,
+                     ORA_score_val,
+                     max_value,
+                     OR_cutoff = 1,
+                     pval_cutoff = 0.05) {
   ora_tables <- get_ora_tables(object)
   ora_table <- ora_tables[[category]]
-  if(category == "GO") {
+  if (category == "GO") {
     Value_val <- "Value_NAME"
-  } else{
+  } else {
     Value_val <- "Value"
   }
   # if(ora_type == "UP") {
@@ -407,13 +402,12 @@ plot_ora <- function(
 #' @return x
 #' @export
 build_celltype_bipartite_graph <- function(
-  object,
-  disperse = FALSE,
-  dir = NULL,
-  from_shiny = FALSE
-) {
+                                           object,
+                                           disperse = FALSE,
+                                           dir = NULL,
+                                           from_shiny = FALSE) {
   ora_tables <- get_ora_tables(object)
-  if("LR_CELLTYPE" %in% names(ora_tables)) {
+  if ("LR_CELLTYPE" %in% names(ora_tables)) {
     ora_ct <- ora_tables[["LR_CELLTYPE"]]
   } else {
     temp_object <- run_ora(
@@ -439,12 +433,12 @@ build_celltype_bipartite_graph <- function(
   plot_graph(
     G,
     config = config,
-    path=NULL,
+    path = NULL,
     show_legend = TRUE
   )
-  #dir = NULL
-  #analysis_name = NULL
-  #ora_ct$Tissue <- tissue
+  # dir = NULL
+  # analysis_name = NULL
+  # ora_ct$Tissue <- tissue
   # if ( !is.null(dir) ) {
   #   if ( is.null(analysis_name) ) {
   #     stop('analyze_Graph: Analysis name not provided.')

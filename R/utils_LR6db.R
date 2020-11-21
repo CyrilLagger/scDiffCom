@@ -1,17 +1,19 @@
 get_GO_interactions <- function(
-  LR_db
-) {
+                                LR_db) {
   if (!requireNamespace("biomaRt", quietly = TRUE)) {
     stop("Package \"biomaRt\" needed for this function to work. Please install it.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   if (!requireNamespace("ontoProc", quietly = TRUE)) {
     stop("Package \"ontoProc\" needed for this function to work. Please install it.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   if (!requireNamespace("ontologyIndex", quietly = TRUE)) {
     stop("Package \"ontologyIndex\" needed for this function to work. Please install it.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   mgi_symbol <- NULL
   LR_genes <- unique(unlist(LR_db[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]))
@@ -79,7 +81,7 @@ get_GO_interactions <- function(
           LR_genes_go[[row[["RECEPTOR_3"]]]]
         ))
         res_inter <- intersect(LIGAND_GO, RECEPTOR_GO)
-        if(length(res_inter) > 0) {
+        if (length(res_inter) > 0) {
           res_inter <- data.table(
             LR_SORTED = rep(row[["LR_SORTED"]], length(res_inter)),
             GO_ID = res_inter
@@ -104,17 +106,16 @@ get_GO_interactions <- function(
     go_id_name_dt,
     on = "GO_ID==ID",
     GO_NAME := i.GO_name
-    ]
+  ]
   return(list(
-    #LR_GO_union = LR_interactions_go_union,
+    # LR_GO_union = LR_interactions_go_union,
     LR_GO_intersection = LR_interactions_go_intersection
   ))
 }
 
 combine_LR_db <- function(
-  one2one = FALSE,
-  curated = TRUE
-) {
+                          one2one = FALSE,
+                          curated = TRUE) {
   DATABASE <- SOURCE <- ANNOTATION <- FAMILY <- SUBFAMILY <- keep_subLR <- NULL
   LR_sct <- prepare_LR_scTensor()
   LR_scsr <- prepare_LR_scsr(one2one = one2one)
@@ -129,7 +130,8 @@ combine_LR_db <- function(
       "NICHENET" = LR_niche,
       "CELLPHONEDB" = LR_cpdb,
       "CELLCHAT" = LR_cc,
-      "ICELLNET" = LR_ic),
+      "ICELLNET" = LR_ic
+    ),
     use.names = TRUE,
     fill = TRUE,
     idcol = "DATABASE"
@@ -196,29 +198,31 @@ combine_LR_db <- function(
   )]
   col_database <- paste0("DATABASE.1_", db_names)
   LR_full[, c("DATABASE") := do.call(paste, c(.SD, sep = ",")), .SDcols = col_database]
-  LR_full[, c("DATABASE") := gsub("NA|NA,|,NA","", DATABASE)]
+  LR_full[, c("DATABASE") := gsub("NA|NA,|,NA", "", DATABASE)]
   LR_full[, c("N_DB") := rowSums(!is.na(.SD)), .SDcols = col_database]
   col_source <- paste0("SOURCE_", db_names)
   LR_full[, c("SOURCE") := do.call(paste, c(.SD, sep = ",")), .SDcols = col_source]
-  LR_full[, c("SOURCE") := gsub("NA|NA,|,NA","", SOURCE)]
+  LR_full[, c("SOURCE") := gsub("NA|NA,|,NA", "", SOURCE)]
   col_anno <- paste0("ANNOTATION_", db_names)
   LR_full[, c("ANNOTATION") := do.call(paste, c(.SD, sep = ",")), .SDcols = col_anno]
-  LR_full[, c("ANNOTATION") := gsub("NA|NA,|,NA","", ANNOTATION)]
+  LR_full[, c("ANNOTATION") := gsub("NA|NA,|,NA", "", ANNOTATION)]
   col_fam <- paste0("FAMILY_", db_names)
   LR_full[, c("FAMILY") := do.call(paste, c(.SD, sep = ",")), .SDcols = col_fam]
-  LR_full[, c("FAMILY") := gsub("NA|NA,|,NA","", FAMILY)]
+  LR_full[, c("FAMILY") := gsub("NA|NA,|,NA", "", FAMILY)]
   col_subfam <- paste0("SUBFAMILY_", db_names)
   LR_full[, c("SUBFAMILY") := do.call(paste, c(.SD, sep = ",")), .SDcols = col_subfam]
-  LR_full[, c("SUBFAMILY") := gsub("NA|NA,|,NA","", SUBFAMILY)]
-  for(id_loop in c(paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3))) {
+  LR_full[, c("SUBFAMILY") := gsub("NA|NA,|,NA", "", SUBFAMILY)]
+  for (id_loop in c(paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3))) {
     cols_conf <- paste0(id_loop, "_CONF_", db_names)
     LR_full[, paste0(id_loop, "_CONF") := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = cols_conf]
     LR_full[, paste0(id_loop, "_CONF") := ifelse(is.na(get(paste0(id_loop, "_CONF"))) & !is.na(get(id_loop)),
-                                                 1, get(paste0(id_loop, "_CONF")))]
+      1, get(paste0(id_loop, "_CONF"))
+    )]
     cols_type <- paste0(id_loop, "_TYPE_", db_names)
     LR_full[, paste0(id_loop, "_TYPE") := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = cols_type]
     LR_full[, paste0(id_loop, "_TYPE") := ifelse(is.na(get(paste0(id_loop, "_TYPE"))) & !is.na(get(id_loop)),
-                                                 "provided", get(paste0(id_loop, "_TYPE")))]
+      "provided", get(paste0(id_loop, "_TYPE"))
+    )]
   }
   rm_subLR <- sapply(LR_full$LR_SORTED, function(i) {
     sum(grepl(i, LR_full$LR_SORTED, fixed = TRUE))
@@ -232,11 +236,13 @@ combine_LR_db <- function(
     paste0("RECEPTOR_", 1:3, "_CONF"), paste0("RECEPTOR_", 1:3, "_TYPE")
   )
   LR_full <- LR_full[, cols_to_keep, with = FALSE]
-  if(curated) {
+  if (curated) {
     LR_rm_sctensor <- c("SWISSPROT_STRING", "TREMBL_STRING")
-    LR_rm_nichenet <- c("ppi_bidir_bidir", "ppi_bidir_bidir_go", "ppi_bidir_r",
-                        "ppi_bidir_r_go", "ppi_l_bidir", "ppi_l_bidir_go",
-                        "ppi_lr", "ppi_lr_go")
+    LR_rm_nichenet <- c(
+      "ppi_bidir_bidir", "ppi_bidir_bidir_go", "ppi_bidir_r",
+      "ppi_bidir_r_go", "ppi_l_bidir", "ppi_l_bidir_go",
+      "ppi_lr", "ppi_lr_go"
+    )
     LR_rm_scsr <- c("uniprot")
     LR_rm <- c(
       LR_rm_sctensor,
@@ -244,24 +250,26 @@ combine_LR_db <- function(
       LR_rm_scsr,
       sapply(LR_rm_sctensor, function(i) {
         sapply(LR_rm_nichenet, function(j) {
-          c(paste(i,j, sep = ","), paste(j, i, sep = ","))
+          c(paste(i, j, sep = ","), paste(j, i, sep = ","))
         })
       }),
       sapply(LR_rm_sctensor, function(i) {
         sapply(LR_rm_scsr, function(j) {
-          c(paste(i,j, sep = ","), paste(j, i, sep = ","))
+          c(paste(i, j, sep = ","), paste(j, i, sep = ","))
         })
       }),
       sapply(LR_rm_scsr, function(i) {
         sapply(LR_rm_nichenet, function(j) {
-          c(paste(i,j, sep = ","), paste(j, i, sep = ","))
+          c(paste(i, j, sep = ","), paste(j, i, sep = ","))
         })
       }),
       sapply(LR_rm_sctensor, function(i) {
         sapply(LR_rm_nichenet, function(j) {
           sapply(LR_rm_scsr, function(k) {
-            c(paste(i,j,k, sep = ","), paste(i,k,j, sep = ","), paste(j, i,k, sep = ","), paste(j, k, i, sep = ","),
-              paste(k, i, j, sep = ","), paste(k, j, i, sep = ","))
+            c(
+              paste(i, j, k, sep = ","), paste(i, k, j, sep = ","), paste(j, i, k, sep = ","), paste(j, k, i, sep = ","),
+              paste(k, i, j, sep = ","), paste(k, j, i, sep = ",")
+            )
           })
         })
       })
@@ -271,7 +279,7 @@ combine_LR_db <- function(
     LR_full[, SOURCE_CLEAN := gsub("pharmacology", "IUPHAR", SOURCE_CLEAN)]
     LR_full[, SOURCE_CLEAN := gsub("kegg", "KEGG", SOURCE_CLEAN)]
     LR_full[, SOURCE_CLEAN := gsub("fantom5", "Ramilowski", SOURCE_CLEAN)]
-    LR_full[, SOURCE_no_digit := gsub(" ", "", gsub('[[:digit:]]+', '', SOURCE))]
+    LR_full[, SOURCE_no_digit := gsub(" ", "", gsub("[[:digit:]]+", "", SOURCE))]
     LR_full[SOURCE_no_digit %in% c("", "; ", " ;", ";") | nchar(SOURCE_no_digit) <= 2, SOURCE_CLEAN := paste0("PMID:", SOURCE_CLEAN)]
     LR_full[, SOURCE_no_digit := NULL]
     setnames(
@@ -283,24 +291,26 @@ combine_LR_db <- function(
   return(LR_full)
 }
 
-prepare_LR_scTensor <- function(
-) {
+prepare_LR_scTensor <- function() {
   if (!requireNamespace("AnnotationDbi", quietly = TRUE)) {
     stop("Package \"AnnotationDbi\" needed for this function to work. Please install it.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   if (!requireNamespace("LRBase.Mmu.eg.db", quietly = TRUE)) {
     stop("Package \"LRBase.Mmu.eg.db\" needed for this function to work. Please install it.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   if (!requireNamespace("AnnotationHub", quietly = TRUE)) {
     stop("Package \"AnnotationHub\" needed for this function to work. Please install it.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   LR_SORTED <- LIGAND_1 <- RECEPTOR_1 <- NULL
   key <- AnnotationDbi::keys(
     LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
-    keytype="GENEID_L"
+    keytype = "GENEID_L"
   )
   LR <- AnnotationDbi::select(
     LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
@@ -316,22 +326,22 @@ prepare_LR_scTensor <- function(
   )[[1]]
   LR_L_match <- AnnotationDbi::select(
     hs,
-    column=c("SYMBOL", "ENTREZID"),
-    keytype="ENTREZID",
-    keys= as.character(LR$GENEID_L)
+    column = c("SYMBOL", "ENTREZID"),
+    keytype = "ENTREZID",
+    keys = as.character(LR$GENEID_L)
   )
   LR_R_match <- AnnotationDbi::select(
     hs,
-    column=c("SYMBOL", "ENTREZID"),
-    keytype="ENTREZID",
-    keys= as.character(LR$GENEID_R)
+    column = c("SYMBOL", "ENTREZID"),
+    keytype = "ENTREZID",
+    keys = as.character(LR$GENEID_R)
   )
-  if(identical(LR_L_match$ENTREZID, as.character(LR$GENEID_L))) {
+  if (identical(LR_L_match$ENTREZID, as.character(LR$GENEID_L))) {
     LR$LIGAND_1 <- LR_L_match$SYMBOL
   } else {
     stop("Matching not possible.")
   }
-  if(identical(LR_R_match$ENTREZID, as.character(LR$GENEID_R))) {
+  if (identical(LR_R_match$ENTREZID, as.character(LR$GENEID_R))) {
     LR$RECEPTOR_1 <- LR_R_match$SYMBOL
   } else {
     stop("Matching not possible.")
@@ -347,18 +357,18 @@ prepare_LR_scTensor <- function(
   }))]
   LR <- LR[!duplicated(LR_SORTED)]
   cols_to_keep <- c(
-    "LR_SORTED","SOURCE",
+    "LR_SORTED", "SOURCE",
     "LIGAND_1", "RECEPTOR_1"
   )
   return(LR[, cols_to_keep, with = FALSE])
 }
 
 prepare_LR_scsr <- function(
-  one2one = FALSE
-) {
+                            one2one = FALSE) {
   if (!requireNamespace("SingleCellSignalR", quietly = TRUE)) {
     stop("Package \"SingleCellSignalR\" needed for this function to work. Please install it.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   LR <- SingleCellSignalR::LRdb
   setDT(LR)
@@ -381,7 +391,7 @@ prepare_LR_scsr <- function(
     nR = 1,
     charR = "R"
   )
-  LR$SOURCE <-  ifelse(LR$PMIDs == "", LR$source, paste0(LR$source, ",PMID:", LR$PMIDs))
+  LR$SOURCE <- ifelse(LR$PMIDs == "", LR$source, paste0(LR$source, ",PMID:", LR$PMIDs))
 
   cols_to_keep <- c(
     "LR_SORTED", "SOURCE",
@@ -393,11 +403,11 @@ prepare_LR_scsr <- function(
 }
 
 prepare_LR_nichenet <- function(
-  one2one = FALSE
-) {
+                                one2one = FALSE) {
   if (!requireNamespace("nichenetr", quietly = TRUE)) {
     stop("Package \"nichenetr\" needed for this function to work. Please install it.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   LR <- nichenetr::lr_network
   setDT(LR)
@@ -430,10 +440,9 @@ prepare_LR_nichenet <- function(
 }
 
 create_LR_cpdb <- function(
-  deconvoluted = FALSE
-) {
+                           deconvoluted = FALSE) {
   id_protein_multi_1_1 <- id_protein_multi_1_2 <- id_protein_1 <- id_protein_2 <- temp_id <-
-     receptor_1 <- receptor_2 <- secreted_1 <- secreted_2 <- L_3 <- LR_ID <-  NULL
+    receptor_1 <- receptor_2 <- secreted_1 <- secreted_2 <- L_3 <- LR_ID <- NULL
   data <- LRcp_raw
   dt_interac <- setDT(data$interaction_table)
   dt_multi <- setDT(data$multidata_table)
@@ -501,7 +510,7 @@ create_LR_cpdb <- function(
   dt_full[, id_protein_multi_1_2 := ifelse(is.na(id_protein_2), id_protein_multi_1_2, id_protein_2)]
   dt_gene <- stats::na.omit(unique(dt_gene[, c("protein_id", "hgnc_symbol")]))
   dt_gene$temp_id <- rowid(dt_gene$protein_id)
-  dt_gene <- dt_gene[temp_id == 1,]
+  dt_gene <- dt_gene[temp_id == 1, ]
   dt_gene[, temp_id := NULL]
   dt_full[, c(paste0("id_gene_multi_", 1:3, "_1"), paste0("id_gene_multi_", 1:3, "_2")) := c(
     lapply(1:3, function(i) {
@@ -510,8 +519,7 @@ create_LR_cpdb <- function(
     lapply(1:3, function(i) {
       dt_gene[.SD, on = paste0("protein_id==id_protein_multi_", i, "_2"), get("x.hgnc_symbol")]
     })
-  )
-  ]
+  )]
   dt_full[, paste0("L_", 1:3) := lapply(1:3, function(i) {
     ifelse(
       receptor_1 == 0 & receptor_2 == 1,
@@ -576,27 +584,26 @@ create_LR_cpdb <- function(
   })]
   dt_full <- dt_full[, c("id_cp_interaction", paste0("L_", 1:3), paste0("R_", 1:3))]
   dt_full[, L_3 := NULL]
-  if(deconvoluted) {
+  if (deconvoluted) {
     dt_full <- do.call("rbind", lapply(1:2, function(i) {
-      do.call("rbind",lapply(1:3, function(j) {
-        cols <- c(paste0("L_", i), paste0("R_",j))
+      do.call("rbind", lapply(1:3, function(j) {
+        cols <- c(paste0("L_", i), paste0("R_", j))
         df <- stats::na.omit(dt_full[, cols, with = FALSE])
         colnames(df) <- c("L_1", "R_1")
         df$LR_ID <- paste(df$L_1, df$R_1, sep = "_")
-        df <- df[!duplicated(df$LR_ID),]
-      }) )
+        df <- df[!duplicated(df$LR_ID), ]
+      }))
     }))
-    dt_full <- dt_full[!duplicated(dt_full$LR_ID),]
+    dt_full <- dt_full[!duplicated(dt_full$LR_ID), ]
     dt_full[, LR_ID := NULL]
   }
   return(dt_full)
 }
 
 prepare_LR_cpdb <- function(
-  one2one = FALSE,
-  deconvoluted = FALSE,
-  keep_id = FALSE
-) {
+                            one2one = FALSE,
+                            deconvoluted = FALSE,
+                            keep_id = FALSE) {
   LR <- create_LR_cpdb(
     deconvoluted = deconvoluted
   )
@@ -608,10 +615,10 @@ prepare_LR_cpdb <- function(
     one2one = one2one
   )
   ortho <- stats::na.omit(ortho)
-  if(deconvoluted) {
-    nL = 1
-    nR = 1
-    LR$SOURCE <-  "CPDB_DECONV"
+  if (deconvoluted) {
+    nL <- 1
+    nR <- 1
+    LR$SOURCE <- "CPDB_DECONV"
     cols_to_keep <- c(
       "LR_SORTED", "SOURCE",
       "LIGAND_1", "RECEPTOR_1",
@@ -619,16 +626,16 @@ prepare_LR_cpdb <- function(
       "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
     )
   } else {
-    nL = 2
-    nR = 3
-    LR$SOURCE <-  "CPDB"
+    nL <- 2
+    nR <- 3
+    LR$SOURCE <- "CPDB"
     cols_to_keep <- c(
       "LR_SORTED", "SOURCE",
       "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3",
       "LIGAND_1_CONF", "LIGAND_2_CONF", "RECEPTOR_1_CONF", "RECEPTOR_2_CONF", "RECEPTOR_3_CONF",
       "LIGAND_1_TYPE", "LIGAND_2_TYPE", "RECEPTOR_1_TYPE", "RECEPTOR_2_TYPE", "RECEPTOR_3_TYPE"
     )
-    if(keep_id){
+    if (keep_id) {
       cols_to_keep <- c("id_cp_interaction", cols_to_keep)
     }
   }
@@ -643,11 +650,11 @@ prepare_LR_cpdb <- function(
   return(LR[, cols_to_keep, with = FALSE])
 }
 
-prepare_LR_CellChat <- function(
-) {
+prepare_LR_CellChat <- function() {
   if (!requireNamespace("CellChat", quietly = TRUE)) {
     stop("Package \"CellChat\" needed for this function to work. Please install it.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_2 <- LR_SORTED <- interaction_name_2 <- temp <- new <- NULL
   LR <- CellChat::CellChatDB.mouse$interaction
@@ -657,28 +664,31 @@ prepare_LR_CellChat <- function(
     old = c("evidence", "annotation"),
     new = c("SOURCE", "ANNOTATION")
   )
-  LR[, LIGAND_1 := sub(" - .*", "", interaction_name_2) ]
-  LR[, temp := sub(".* - ", "", interaction_name_2) ]
+  LR[, LIGAND_1 := sub(" - .*", "", interaction_name_2)]
+  LR[, temp := sub(".* - ", "", interaction_name_2)]
   LR[, RECEPTOR_1 := ifelse(grepl("+", temp, fixed = TRUE), gsub(".*\\((.+)\\+.*", "\\1", temp), temp)]
   LR[, RECEPTOR_2 := ifelse(grepl("+", temp, fixed = TRUE), gsub(".*\\+(.+)\\).*", "\\1", temp), NA)]
   LR[, temp := NULL]
   LR[, LIGAND_1 := gsub(" ", "", LIGAND_1)]
   LR[, RECEPTOR_1 := gsub(" ", "", RECEPTOR_1)]
   LR[, RECEPTOR_2 := gsub(" ", "", RECEPTOR_2)]
-  #some CELLCHAT gene names (70) are not mgi_symbols and we need to convert them manually...
+  # some CELLCHAT gene names (70) are not mgi_symbols and we need to convert them manually...
   convert_table <- CellChat_conversion
   genes_to_rm <- convert_table[new == "remove"]
   genes_to_change <- convert_table[new != "remove"]
   LR <- LR[!(LIGAND_1 %in% genes_to_rm$old) & !(RECEPTOR_1 %in% genes_to_rm$old) & !(RECEPTOR_2 %in% genes_to_rm$old)]
   LR[genes_to_change,
-        `:=`(LIGAND_1 = new),
-        on = "LIGAND_1==old"][
-          genes_to_change,
-          `:=`(RECEPTOR_1 = new),
-          on = "RECEPTOR_1==old"][
-            genes_to_change,
-            `:=`(RECEPTOR_2 = new),
-            on = "RECEPTOR_2==old"]
+    `:=`(LIGAND_1 = new),
+    on = "LIGAND_1==old"
+  ][
+    genes_to_change,
+    `:=`(RECEPTOR_1 = new),
+    on = "RECEPTOR_1==old"
+  ][
+    genes_to_change,
+    `:=`(RECEPTOR_2 = new),
+    on = "RECEPTOR_2==old"
+  ]
   LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
     temp <- c(LIGAND_1[[i]], RECEPTOR_1[[i]], RECEPTOR_2[[i]])
     temp <- temp[!is.na(temp)]
@@ -696,11 +706,11 @@ prepare_LR_CellChat <- function(
 }
 
 prepare_LR_ICELLNET <- function(
-  one2one = FALSE
-) {
+                                one2one = FALSE) {
   if (!requireNamespace("curl", quietly = TRUE)) {
     stop("Package \"curl\" needed for this function to work. Please install it.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   LR <- utils::read.csv(
     file = curl::curl(url = "https://raw.githubusercontent.com/soumelis-lab/ICELLNET/master/database.tsv"),
@@ -713,12 +723,16 @@ prepare_LR_ICELLNET <- function(
   setDT(LR)
   setnames(
     x = LR,
-    old = c("Ligand 1", "Ligand 2",
-            "Receptor 1", "Receptor 2", "Receptor 3",
-            "PubMed ID", "Family", "Subfamily", "Classifications"),
-    new = c("L1", "L2",
-            "R1", "R2", "R3",
-            "SOURCE", "FAMILY", "SUBFAMILY", "ANNOTATION")
+    old = c(
+      "Ligand 1", "Ligand 2",
+      "Receptor 1", "Receptor 2", "Receptor 3",
+      "PubMed ID", "Family", "Subfamily", "Classifications"
+    ),
+    new = c(
+      "L1", "L2",
+      "R1", "R2", "R3",
+      "SOURCE", "FAMILY", "SUBFAMILY", "ANNOTATION"
+    )
   )
   ortho <- get_orthologs(
     genes = unique(c(LR$L1, LR$L2, LR$R1, LR$R2, LR$R3)),
@@ -745,54 +759,70 @@ prepare_LR_ICELLNET <- function(
 }
 
 merge_LR_orthologs <- function(
-  LR_dt,
-  ortho_dt,
-  nL,
-  charL,
-  nR,
-  charR
-) {
+                               LR_dt,
+                               ortho_dt,
+                               nL,
+                               charL,
+                               nR,
+                               charR) {
   to_keep <- LR_SORTED <- NULL
   out_names <- c(
-    sapply(1:nL, function(i) {paste0("LIGAND_", i, c("", "_CONF", "_TYPE"))}),
-    sapply(1:nR, function(i) {paste0("RECEPTOR_", i, c("", "_CONF", "_TYPE"))})
+    sapply(1:nL, function(i) {
+      paste0("LIGAND_", i, c("", "_CONF", "_TYPE"))
+    }),
+    sapply(1:nR, function(i) {
+      paste0("RECEPTOR_", i, c("", "_CONF", "_TYPE"))
+    })
   )
   merge_id <- c("mouse_symbol", "confidence", "type")
   LR_temp <- copy(LR_dt)
   LR_temp[, c(out_names) :=
-       c(
-         sapply(
-           1:nL,
-           function(i) {
-             as.list(
-               ortho_dt[.SD,
-                     on = c(paste0("human_symbol==", charL, i)),
-                     mget(paste0("x.", merge_id))
-                     ])
-           }
-         ),
-         sapply(
-           1:nR,
-           function(i) {
-             as.list(
-               ortho_dt[.SD,
-                     on = c(paste0("human_symbol==", charR, i)),
-                     mget(paste0("x.", merge_id))
-                     ])
-           }
-         )
-       )
-     ]
+    c(
+      sapply(
+        1:nL,
+        function(i) {
+          as.list(
+            ortho_dt[.SD,
+              on = c(paste0("human_symbol==", charL, i)),
+              mget(paste0("x.", merge_id))
+            ]
+          )
+        }
+      ),
+      sapply(
+        1:nR,
+        function(i) {
+          as.list(
+            ortho_dt[.SD,
+              on = c(paste0("human_symbol==", charR, i)),
+              mget(paste0("x.", merge_id))
+            ]
+          )
+        }
+      )
+    )]
   LR_temp <- stats::na.omit(LR_temp, cols = c("LIGAND_1", "RECEPTOR_1"))
   LR_temp[, to_keep := sapply(1:nrow(.SD), function(i) {
-    all(c(sapply(1:nL, function(j) {!(is.na(get(paste0("LIGAND_", j))[[i]]) & !is.na(get(paste0(charL, j))[[i]]))}),
-          sapply(1:nR, function(j) {!(is.na(get(paste0("RECEPTOR_", j))[[i]]) & !is.na(get(paste0(charR, j))[[i]]))})))
+    all(c(
+      sapply(1:nL, function(j) {
+        !(is.na(get(paste0("LIGAND_", j))[[i]]) & !is.na(get(paste0(charL, j))[[i]]))
+      }),
+      sapply(1:nR, function(j) {
+        !(is.na(get(paste0("RECEPTOR_", j))[[i]]) & !is.na(get(paste0(charR, j))[[i]]))
+      })
+    ))
   })]
   LR_temp <- LR_temp[to_keep == TRUE]
   LR_temp[, to_keep := NULL]
   LR_temp[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
-    temp <- c(sapply(1:nL, function(j) {get(paste0("LIGAND_", j))[[i]]}),
-              sapply(1:nR, function(j) {get(paste0("RECEPTOR_", j))[[i]]}))
+    temp <- c(
+      sapply(1:nL, function(j) {
+        get(paste0("LIGAND_", j))[[i]]
+      }),
+      sapply(1:nR, function(j) {
+        get(paste0("RECEPTOR_", j))[[i]]
+      })
+    )
     temp <- temp[!is.na(temp)]
     temp <- sort(temp)
     temp <- paste0(temp, collapse = "_")
@@ -802,22 +832,22 @@ merge_LR_orthologs <- function(
 }
 
 get_orthologs <- function(
-  genes,
-  input_species,
-  one2one = FALSE
-) {
+                          genes,
+                          input_species,
+                          one2one = FALSE) {
   if (!requireNamespace("biomaRt", quietly = TRUE)) {
     stop("Package \"biomaRt\" needed for this function to work. Please install it.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   ensembl_gene_id <- inl <- outl <- output <- input <- confidence <- NULL
-  if(input_species == "mouse") {
+  if (input_species == "mouse") {
     id_in <- "mmusculus"
     id_out <- "hsapiens"
     id_gene <- "mgi_symbol"
     name_in <- "mouse"
     name_out <- "human"
-  } else if(input_species == "human") {
+  } else if (input_species == "human") {
     id_in <- "hsapiens"
     id_out <- "mmusculus"
     id_gene <- "hgnc_symbol"
@@ -852,7 +882,8 @@ get_orthologs <- function(
     ),
     filters = "ensembl_gene_id",
     mart = mart,
-    value = ensembl$ensembl_gene_id)
+    value = ensembl$ensembl_gene_id
+  )
   setDT(ensembl)
   setDT(ensembl_conv)
   ensembl_all <- merge.data.table(
@@ -862,10 +893,10 @@ get_orthologs <- function(
     all = TRUE,
     sort = FALSE
   )
-  if(one2one) {
-    ensembl_all <- ensembl_all[eval(as.symbol(ortho_type)) == 'ortholog_one2one',]
+  if (one2one) {
+    ensembl_all <- ensembl_all[eval(as.symbol(ortho_type)) == "ortholog_one2one", ]
   } else {
-    #ensembl_all <- ensembl_all[eval(as.symbol(ortho_type)) %in% c('ortholog_one2one','ortholog_one2many'),]
+    # ensembl_all <- ensembl_all[eval(as.symbol(ortho_type)) %in% c('ortholog_one2one','ortholog_one2many'),]
   }
   ensembl_all <- ensembl_all[, ensembl_gene_id := NULL]
   ensembl_all <- unique(ensembl_all)
@@ -875,19 +906,19 @@ get_orthologs <- function(
     new = c("input", "output", "confidence", "type")
   )
   ensembl_all <- stats::na.omit(ensembl_all)
-  #check for remaining duplicate
-  if(sum(duplicated(ensembl_all[["input"]])) > 0) {
+  # check for remaining duplicate
+  if (sum(duplicated(ensembl_all[["input"]])) > 0) {
     ensembl_all[, inl := tolower(input)]
     ensembl_all[, outl := tolower(output)]
     dup_input <- unique(ensembl_all$input[duplicated(ensembl_all$input)])
-    for(g in dup_input) {
+    for (g in dup_input) {
       dt_g <- ensembl_all[input == g]
       dt_gconf <- dt_g[confidence == 1]
-      if(nrow(dt_gconf) == 1) {
+      if (nrow(dt_gconf) == 1) {
         ensembl_all <- ensembl_all[!(input == g & confidence == 0)]
-      } else if(nrow(dt_gconf) == 0) {
+      } else if (nrow(dt_gconf) == 0) {
         dt_gsame <- dt_g[inl == outl]
-        if(nrow(dt_gsame) == 0) {
+        if (nrow(dt_gsame) == 0) {
           g_keep <- dt_g[1]$output
         } else {
           g_keep <- dt_gsame[1]$output
@@ -895,7 +926,7 @@ get_orthologs <- function(
         ensembl_all <- ensembl_all[!(input == g & output != g_keep)]
       } else {
         dt_gsame <- dt_gconf[inl == outl]
-        if(nrow(dt_gsame) == 0) {
+        if (nrow(dt_gsame) == 0) {
           g_keep <- dt_gconf[1]$output
         } else {
           g_keep <- dt_gsame[1]$output
@@ -906,7 +937,7 @@ get_orthologs <- function(
     }
     ensembl_all[, inl := NULL]
     ensembl_all[, outl := NULL]
-    if(sum(duplicated(ensembl_all[["input"]])) > 0) {
+    if (sum(duplicated(ensembl_all[["input"]])) > 0) {
       warning("There are some duplicates from orthology conversion. Removing them by using 'unique'.")
       ensembl_all <- unique(ensembl_all, by = "input")
     }
@@ -918,5 +949,3 @@ get_orthologs <- function(
   )
   return(ensembl_all)
 }
-
-
