@@ -373,9 +373,9 @@ run_ora <- function(
         }
       }
       object <- set_ora_default(object, res_ora)
-
-
-
+      
+      
+      
     } else if (stringent_or_default == "stringent") {
       if (is.null(stringent_logfc_threshold)) {
         if (verbose) message("Choose a non-NULL `stringent_logfc_threshold` to perform stringent over-representation analysis.")
@@ -504,6 +504,22 @@ build_LR6db <- function() {
 #'     labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
 #'     theme(text = element_text(size = 16))
 #' }
+#'
+
+#' #' Generate interactive networks with visNetwork
+#' #'
+#' #' @param object scDiffCom
+#' #' @param network_type chr in "bipartite", "cells"
+#' #'
+#' #' @return visNetwork interactive network
+#' #' @export
+generate_interactive_network = function(
+  object,
+  network_type
+) {
+  return(build_interactive_network(object, network_type))
+}
+
 #'
 #' #' Title
 #' #'
