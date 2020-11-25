@@ -2,31 +2,36 @@
 % Please edit documentation in R/scdiffcom.R
 \name{run_ora}
 \alias{run_ora}
-\title{Run over-representation analysis on the results from scDiffCom}
+\title{Perform over-representation analysis on detected intercellular communication patterns}
 \usage{
 run_ora(
   object,
-  verbose = TRUE,
-  logfc_threshold = NULL,
-  categories = c("LR_CELLTYPE", "LR_NAME", "GO"),
-  overwrite = FALSE
+  categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS"),
+  overwrite = TRUE,
+  stringent_or_default = "default",
+  stringent_logfc_threshold = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{object}{The list of results returned by run_scdiffcom}
+\item{object}{An scDiffCom object previously returned by \code{run_interaction_analysis}.}
 
-\item{verbose}{Print messages}
-
-\item{logfc_threshold}{Log fold-change threshold (in absolute value) to be used to define the categories of interest.
-Default to cutoff_logfc used for the filtering analysis.}
-
-\item{categories}{The categories over which the test is done}
+\item{categories}{A character vector specifying the categories on which to perform the analysis. One data.table is returned
+for each category. Set to \code{c("ER_CELLTYPES", "LR_GENES", "GO_TERMS")} by default.}
 
 \item{overwrite}{Should existing categories be overwriten in case they match with new categories?}
+
+\item{stringent_or_default}{Should the default or more stringent ORA be performed?}
+
+\item{stringent_logfc_threshold}{A more stringent logfc threshold compared to the one stored in \code{parameters}.
+Set to \code{NULL} by default, namely no stringent ORA is done.}
+
+\item{verbose}{Should messages be printed?}
 }
 \value{
-A data.table
+An S4 object of class \code{scDiffCom} with updated slots \code{ora_defaut} (and potentially \code{ora_stringent}).
 }
 \description{
-Run over-representation analysis on the results from scDiffCom
+Over-representation analysis performed when an scDiffCom object contains results
+ obtained from differential expression analysis.
 }

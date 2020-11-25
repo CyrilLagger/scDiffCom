@@ -2,36 +2,46 @@
 % Please edit documentation in R/scdiffcom.R
 \name{run_filtering_and_ora}
 \alias{run_filtering_and_ora}
-\title{Run filtering analysis on the result of scDiffCom}
+\title{Perform filtering and over-representation analysis on intercellular communication patterns}
 \usage{
 run_filtering_and_ora(
   object,
-  verbose = TRUE,
-  new_cutoff_quantile_score = NULL,
-  new_cutoff_pval_specificity = NULL,
-  new_cutoff_pval_de = NULL,
-  new_cutoff_logfc = NULL,
-  skip_ora = FALSE
+  new_threshold_quantile_score = NULL,
+  new_threshold_p_value_specificity = NULL,
+  new_threshold_p_value_de = NULL,
+  new_threshold_logfc = NULL,
+  skip_ora = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{object}{The list of results returned by run_scdiffcom}
+\item{object}{An scDiffCom object previously returned by \code{run_interaction_analysis}.}
 
-\item{verbose}{Print messages}
+\item{new_threshold_quantile_score}{A new threshold for the quantile score. Set to \code{NULL} by default.}
 
-\item{new_cutoff_quantile_score}{New quantile used to define the threshold of detection regarding the score of an interaction.}
+\item{new_threshold_p_value_specificity}{A new threshold for the specificity p-value specificity. Set to \code{NULL} by default.}
 
-\item{new_cutoff_pval_specificity}{New P-value threshold that indicates when an interaction is specific}
+\item{new_threshold_p_value_de}{A new threshold for the differential expression p-value. Set to \code{NULL} by default.}
 
-\item{new_cutoff_pval_de}{New P-value threshold that indicates when an interaction is differentially expressed}
+\item{new_threshold_logfc}{A new threshold for the differential expression logfc. Set to \code{NULL} by default.}
 
-\item{new_cutoff_logfc}{New LOGFC threshold to filter interactions}
+\item{skip_ora}{Should the over-representation analysis be skipped? Set to \code{FALSE} by default.
+Setting it to \code{FALSE} might be useful if we are interested in performing a rapid parameter scan only on the filtering
+parameters. Note that in such case, the slot \code{ora_default} is returned empty.}
 
-\item{skip_ora}{x}
+\item{verbose}{Should messages be printed?}
 }
 \value{
-Return a list of result in the scDiffCom format with new filtering analysis.
+An S4 object of class \code{scDiffCom}.
 }
 \description{
-Run filtering analysis on the result of scDiffCom
+This function is called internally by \code{run_interaction_analysis} after the permutation tests
+ have been performed. Based on the threshold parameters, it returns detected and differentially expressed
+ CCIs in the slot \code{cci_detected} and results of over-representation analysis in \code{cci_ora_default}.
+ The function can be run with new threshold parameters on any scDiffCom object that already contain the slot
+ \code{cci_raw}. This allows the user to test various filtering parameters without the need to rerun the
+ potentially time-consuming permutation analysis. When new thresholds are defined the slot \code{parameters} is
+ modified accordingly.
+ Filtering and over-representation are not independent as the second depends on the first. Therefore, when
+ running filtering with new parameters, we also need to update the ORA results.
 }

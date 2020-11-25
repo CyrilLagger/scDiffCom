@@ -1,105 +1,87 @@
 run_stat_analysis <- function(
-                              cci_dt_simple,
-                              expr_tr,
-                              metadata,
-                              condition_info,
-                              pp_LR,
-                              iterations,
-                              return_distr,
-                              verbose) {
-  PVAL <- PVAL_DIFF <- NULL
-  LR_names <- cols_keep <- cols_keep2 <- NULL
-  if (!condition_info$is_cond) {
-    if (verbose) message("Performing permutation analysis without conditions.")
-    sub_template_cci_dt <- cci_dt_simple[get("LR_DETECTED") == TRUE]
+  analysis_inputs,
+  cci_dt_simple,
+  iterations,
+  return_distributions,
+  verbose
+) {
+  P_VALUE <- P_VALUE_DE <- cols_keep <- cols_keep2 <- NULL
+  if (!analysis_inputs$condition$is_cond) {
+    sub_cci_template <- cci_dt_simple[get("CCI_DETECTED") == TRUE]
   } else {
-    if (verbose) message("Performing permutation analysis on the two conditions.")
-    sub_template_cci_dt <- cci_dt_simple[get(paste0("LR_DETECTED_", condition_info$cond1)) == TRUE | get(paste0("LR_DETECTED_", condition_info$cond2)) == TRUE]
+    sub_cci_template <- cci_dt_simple[
+      get(paste0("CCI_DETECTED_", analysis_inputs$condition$cond1)) == TRUE |
+        get(paste0("CCI_DETECTED_", analysis_inputs$condition$cond2)) == TRUE
+      ]
   }
-  LR_names <- c(
-    paste0("LIGAND_", 1:pp_LR$max_nL),
-    paste0("RECEPTOR_", 1:pp_LR$max_nR)
+  mes <- paste0(
+    "Performing statistical analysis (",
+    iterations,
+    " iterations) on ",
+    nrow(sub_cci_template),
+    " CCIs."
   )
-  sub_expr_tr <- expr_tr[, colnames(expr_tr) %in%
-    unique(unlist(sub_template_cci_dt[, LR_names, with = FALSE]))]
-  if (verbose) {
-    message(paste0(
-      "Initial number of genes: ",
-      ncol(expr_tr),
-      ". Number of detected genes for permutation test: ",
-      ncol(sub_expr_tr)
-    ))
-  }
-  cols_keep <- c("LR_SORTED", "L_CELLTYPE", "R_CELLTYPE", LR_names)
+  if (verbose) message(mes)
+  LR_COLNAMES <- c(
+    paste0("LIGAND_", 1:analysis_inputs$max_nL),
+    paste0("RECEPTOR_", 1:analysis_inputs$max_nR)
+  )
+  sub_data_tr <- analysis_inputs$data_tr[, colnames(analysis_inputs$data_tr) %in%
+                           unique(unlist(sub_cci_template[, LR_COLNAMES, with = FALSE]))]
+  analysis_inputs$data_tr <- sub_data_tr
+  cols_keep <- c("LR_SORTED", "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", LR_COLNAMES)
   progressr::with_progress({
     prog <- progressr::progressor(steps = iterations)
-    # cci_perm <- pbapply::pbreplicate(
     cci_perm <- future.apply::future_sapply(
       X = integer(iterations),
       FUN = function(iter) {
         if (iter %% 10 == 0) prog(sprintf("iter=%g", iter))
         run_stat_iteration(
-          expr_tr = sub_expr_tr,
-          metadata = metadata,
-          template_cci_dt = sub_template_cci_dt[, cols_keep, with = FALSE],
-          pp_LR = pp_LR,
-          condition_info = condition_info
+          analysis_inputs = analysis_inputs,
+          cci_template = sub_cci_template[, cols_keep, with = FALSE]
         )
       },
       simplify = "array",
       future.seed = TRUE,
       future.label = "future_replicate-%d"
     )
-    # cci_perm <- future.apply::future_replicate(
-    #   n = iterations,
-    #   expr = run_stat_iteration(
-    #     expr_tr = sub_expr_tr,
-    #     metadata = metadata,
-    #     template_cci_dt = sub_template_cci_dt[, cols_keep, with = FALSE],
-    #     pp_LR = pp_LR,
-    #     condition_info = condition_info
-    #   ),
-    #   simplify = "array"
-    # )
   })
-  if (!condition_info$is_cond) {
-    distr <- cbind(cci_perm, sub_template_cci_dt[["LR_SCORE"]])
-    if (verbose) message("Computing p-values.")
+  if (!analysis_inputs$condition$is_cond) {
+    distr <- cbind(cci_perm, sub_cci_template[["CCI_SCORE"]])
     pvals <- rowSums(distr[, 1:iterations] >= distr[, (iterations + 1)]) / iterations
-    sub_template_cci_dt[, PVAL := pvals]
-    cols_new <- c("PVAL")
+    sub_cci_template[, P_VALUE := pvals]
+    cols_new <- c("P_VALUE")
     cols_keep2 <- c(cols_keep, cols_new)
-    sub_template_cci_dt <- sub_template_cci_dt[, cols_keep2, with = FALSE]
+    sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
     rownames(distr) <- paste(
-      sub_template_cci_dt[["LR_SORTED"]],
-      sub_template_cci_dt[["L_CELLTYPE"]],
-      sub_template_cci_dt[["R_CELLTYPE"]],
+      sub_cci_template[["LR_SORTED"]],
+      sub_cci_template[["EMITTER_CELLTYPE"]],
+      sub_cci_template[["RECEIVER_CELLTYPE"]],
       sep = "_"
     )
   } else {
-    distr_diff <- cbind(cci_perm[, 1, ], sub_template_cci_dt[[paste0("LR_SCORE_", condition_info$cond2)]]
-    - sub_template_cci_dt[[paste0("LR_SCORE_", condition_info$cond1)]])
-    distr_cond1 <- cbind(cci_perm[, 2, ], sub_template_cci_dt[[paste0("LR_SCORE_", condition_info$cond1)]])
-    distr_cond2 <- cbind(cci_perm[, 3, ], sub_template_cci_dt[[paste0("LR_SCORE_", condition_info$cond2)]])
-    if (verbose) message("Computing p-values.")
+    distr_diff <- cbind(cci_perm[, 1, ], sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond2)]]
+                        - sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond1)]])
+    distr_cond1 <- cbind(cci_perm[, 2, ], sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond1)]])
+    distr_cond2 <- cbind(cci_perm[, 3, ], sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond2)]])
     pvals_diff <- rowSums(abs(distr_diff[, 1:iterations]) >= abs(distr_diff[, (iterations + 1)])) / iterations
     pvals_cond1 <- rowSums(distr_cond1[, 1:iterations] >= distr_cond1[, (iterations + 1)]) / iterations
     pvals_cond2 <- rowSums(distr_cond2[, 1:iterations] >= distr_cond2[, (iterations + 1)]) / iterations
-    sub_template_cci_dt[, paste0("PVAL_", c(condition_info$cond1, condition_info$cond2)) := list(pvals_cond1, pvals_cond2)]
-    sub_template_cci_dt[, PVAL_DIFF := pvals_diff]
-    cols_new <- c(paste0("PVAL_", condition_info$cond1), paste0("PVAL_", condition_info$cond2), "PVAL_DIFF")
+    sub_cci_template[, paste0("P_VALUE_", c(analysis_inputs$condition$cond1, analysis_inputs$condition$cond2)) := list(pvals_cond1, pvals_cond2)]
+    sub_cci_template[, P_VALUE_DE := pvals_diff]
+    cols_new <- c(paste0("P_VALUE_", analysis_inputs$condition$cond1), paste0("P_VALUE_", analysis_inputs$condition$cond2), "P_VALUE_DE")
     cols_keep2 <- c(cols_keep, cols_new)
-    sub_template_cci_dt <- sub_template_cci_dt[, cols_keep2, with = FALSE]
+    sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
     rownames(distr_diff) <- rownames(distr_cond1) <- rownames(distr_cond2) <- paste(
-      sub_template_cci_dt[["LR_SORTED"]],
-      sub_template_cci_dt[["L_CELLTYPE"]],
-      sub_template_cci_dt[["R_CELLTYPE"]],
+      sub_cci_template[["LR_SORTED"]],
+      sub_cci_template[["EMITTER_CELLTYPE"]],
+      sub_cci_template[["RECEIVER_CELLTYPE"]],
       sep = "_"
     )
   }
   cci_dt <- data.table::merge.data.table(
     x = cci_dt_simple,
-    y = sub_template_cci_dt,
+    y = sub_cci_template,
     by = cols_keep,
     all.x = TRUE,
     sort = FALSE
@@ -107,21 +89,21 @@ run_stat_analysis <- function(
   for (j in cols_new) {
     data.table::set(cci_dt, i = which(is.na(cci_dt[[j]])), j = j, value = 1)
   }
-  if (!return_distr) {
+  if (!return_distributions) {
     return(list(
-      cci_table_raw = cci_dt,
+      cci_raw = cci_dt,
       distributions = list()
     ))
   } else {
-    if (verbose) message("Storing the matrix of distributions from the permutation test.")
-    if (!condition_info$is_cond) {
+    if (verbose) message("Returning distributions from the permutation test.")
+    if (!analysis_inputs$condition$is_cond) {
       return(list(
-        cci_table_raw = cci_dt,
-        distributions = list(distr)
+        cci_raw = cci_dt,
+        distributions = list("DISTRIBUTIONS" = distr)
       ))
     } else {
       res <- list(
-        cci_table_raw = cci_dt,
+        cci_raw = cci_dt,
         distributions = list(
           distr_diff,
           distr_cond1,
@@ -129,9 +111,9 @@ run_stat_analysis <- function(
         )
       )
       names(res$distributions) <- c(
-        "distr_diff",
-        paste0("distr_", condition_info$cond1),
-        paste0("distr_", condition_info$cond2)
+        "DISTRIBUTIONS_DE",
+        paste0("DISTRIBUTIONS_", analysis_inputs$condition$cond1),
+        paste0("DISTRIBUTIONS_", analysis_inputs$condition$cond2)
       )
       return(res)
     }
@@ -139,50 +121,46 @@ run_stat_analysis <- function(
 }
 
 run_stat_iteration <- function(
-                               expr_tr,
-                               metadata,
-                               template_cci_dt,
-                               pp_LR,
-                               condition_info) {
-  if (!condition_info$is_cond) {
-    meta_ct <- metadata
+  analysis_inputs,
+  cci_template
+) {
+  temp_md <- analysis_inputs$metadata
+  if (!analysis_inputs$condition$is_cond) {
+    meta_ct <- temp_md
     meta_ct$cell_type <- sample(meta_ct$cell_type)
+    analysis_inputs$metadata <- meta_ct
     return(run_simple_cci_analysis(
-      expr_tr = expr_tr,
-      metadata = meta_ct,
-      template_cci_dt = template_cci_dt,
-      pp_LR = pp_LR,
-      condition_info = condition_info,
-      pct_threshold = NULL,
-      min_cells = NULL,
+      analysis_inputs = analysis_inputs,
+      cci_template = cci_template,
+      log_scale = FALSE,
+      threshold_min_cells = NULL,
+      threshold_pct = NULL,
       compute_fast = TRUE
     ))
   } else {
-    meta_cond <- metadata
+    meta_cond <- temp_md
     for (x in unique(meta_cond$cell_type)) {
       meta_cond$condition[meta_cond$cell_type == x] <- sample(meta_cond$condition[meta_cond$cell_type == x])
     }
+    analysis_inputs$metadata <- meta_cond
     permcond_dt <- run_simple_cci_analysis(
-      expr_tr = expr_tr,
-      metadata = meta_cond,
-      template_cci_dt = template_cci_dt,
-      pp_LR = pp_LR,
-      condition_info = condition_info,
-      pct_threshold = NULL,
-      min_cells = NULL,
+      analysis_inputs = analysis_inputs,
+      cci_template = cci_template,
+      log_scale = FALSE,
+      threshold_min_cells = NULL,
+      threshold_pct = NULL,
       compute_fast = TRUE
     )
-    meta_ct <- metadata
-    meta_ct$cell_type[meta_ct$condition == condition_info$cond1] <- sample(meta_ct$cell_type[meta_ct$condition == condition_info$cond1])
-    meta_ct$cell_type[meta_ct$condition == condition_info$cond2] <- sample(meta_ct$cell_type[meta_ct$condition == condition_info$cond2])
+    meta_ct <- temp_md
+    meta_ct$cell_type[meta_ct$condition == analysis_inputs$condition$cond1] <- sample(meta_ct$cell_type[meta_ct$condition == analysis_inputs$condition$cond1])
+    meta_ct$cell_type[meta_ct$condition == analysis_inputs$condition$cond2] <- sample(meta_ct$cell_type[meta_ct$condition == analysis_inputs$condition$cond2])
+    analysis_inputs$metadata <- meta_ct
     permct_dt <- run_simple_cci_analysis(
-      expr_tr = expr_tr,
-      metadata = meta_ct,
-      template_cci_dt = template_cci_dt,
-      pp_LR = pp_LR,
-      condition_info = condition_info,
-      pct_threshold = NULL,
-      min_cells = NULL,
+      analysis_inputs = analysis_inputs,
+      cci_template = cci_template,
+      log_scale = FALSE,
+      threshold_min_cells = NULL,
+      threshold_pct = NULL,
       compute_fast = TRUE
     )
     return(cbind(permcond_dt$cond2 - permcond_dt$cond1, permct_dt$cond1, permct_dt$cond2))

@@ -2,84 +2,92 @@
 % Please edit documentation in R/scdiffcom.R
 \name{run_interaction_analysis}
 \alias{run_interaction_analysis}
-\title{Run scDiffCom analysis}
+\title{Run intercellular communication analysis}
 \usage{
 run_interaction_analysis(
   seurat_object,
-  LR_object,
   celltype_column_id,
-  condition_column_id,
-  cond1_name,
-  cond2_name,
-  object_name = "scDiffCom_object",
+  condition_column_id = NULL,
+  cond1_name = NULL,
+  cond2_name = NULL,
   assay = "RNA",
   slot = "data",
   log_scale = FALSE,
-  min_cells = 5,
-  pct_threshold = 0.1,
+  threshold_min_cells = 5,
+  threshold_pct = 0.1,
+  LRdb_table = LR6db$LR6db_curated,
+  object_name = "scDiffCom_object",
   permutation_analysis = TRUE,
   iterations = 1000,
-  cutoff_quantile_score = 0.25,
-  cutoff_pval_specificity = 0.05,
-  cutoff_pval_de = 0.05,
-  cutoff_logfc = log(1.2),
-  return_distr = FALSE,
+  threshold_quantile_score = 0.25,
+  threshold_p_value_specificity = 0.05,
+  threshold_p_value_de = 0.05,
+  threshold_logfc = log(1.2),
+  return_distributions = FALSE,
   seed = 42,
-  verbose = TRUE,
-  sparse = TRUE
+  verbose = TRUE
 )
 }
 \arguments{
-\item{seurat_object}{A Seurat object}
+\item{seurat_object}{A Seurat object that contains pre-normalized data as well as cell-type annotations.}
 
-\item{LR_object}{A data.table with ligand-receptor interactions}
+\item{celltype_column_id}{The \code{meta.data} name of \code{seurat_object} that indicates the cell-type of each cell (e.g.: "CELL-TYPE")}
 
-\item{celltype_column_id}{The column of the Seurat meta.data that contains the cell-type of each cell}
+\item{condition_column_id}{The \code{meta.data} name of \code{seurat_object} that indicates the two groups of cells
+on which to perform the differential analysis (e.g: "AGE"). Set to \code{NULL} (default) to perform a detection analysis without
+testing for differential expression.}
 
-\item{condition_column_id}{The column of the Seurat meta.data that contains the group of each cell (only 2 groups allowed).
-Use NULL to run the analysis without conditions.}
+\item{cond1_name}{The name of one of the two conditions contained in \code{condition_column_id} (e.g: "YOUNG"). Set to \code{NULL}
+(default) for no differential analysis. By convention, the returned LOGFC are positive when \code{score(cond2) > score(cond1)}.}
 
-\item{cond1_name}{Name of the first condition. Use NULL if no condition,
-otherwise it should corresponds to one of the groups contained in celltype_column_id.
-During differential expression, LOGFC is positive when score(cond1) > score(cond1).}
+\item{cond2_name}{The name of the other condition contained in \code{condition_column_id} (e.g: "OLD"). Similar as \code{cond1_name}.}
 
-\item{cond2_name}{Name of the second condition. Similar as cond1_name.}
+\item{assay}{The assay of \code{seurat_object} from which the data are extracted. Set to "RNA" by default.}
 
-\item{object_name}{Name of the scDiffCom object that will be returned.}
+\item{slot}{The slot of \code{seurat_object} from which the data are extracted. Set to "data" by default.}
 
-\item{assay}{Seurat assay from which the data are extracted.}
+\item{log_scale}{Should the data be log-transformed before the analysis? Set to "FALSE" by default (recommended).}
 
-\item{slot}{Seurat slot from which the data are extracted.}
+\item{threshold_min_cells}{The minimal number of cells that a cell-type need to contain to be considered in the analysis.
+Set to \code{5} by default.}
 
-\item{log_scale}{Logical indicating if working in log-space or not.}
+\item{threshold_pct}{The minimal percentage of cells that need to express a gene, for the gene to be considered in the analysis.
+Set to \code{0.1} by default.}
 
-\item{min_cells}{Minimal number of cells for a cell-type to be considered in the analysis.}
+\item{LRdb_table}{A data.table with ligand-receptor interactions. Set by default to \code{LR6db}, the internal database of scDiffCom.}
 
-\item{pct_threshold}{Minimal percentage of cells required to express a gene, for the gene to be considered in the analysis.}
+\item{object_name}{The name of the scDiffCom object that will be returned. Set to "scDiffCom_object" by default.}
 
-\item{permutation_analysis}{Logical indicating if performing the statistical analysis (specificity and differential expression).}
+\item{permutation_analysis}{Should the permutation analysis be performed? Set to "TRUE" by default. When "FALSE", only
+raw results will be returned (such as scores).}
 
-\item{iterations}{Number of permutations performed when permutation_analysis == TRUE}
+\item{iterations}{The number of iterations to perform when \code{permutation_analysis == TRUE}. Set to \code{1000} by default.}
 
-\item{cutoff_quantile_score}{Quantile used to define the threshold of detection regarding the score of an interaction.}
+\item{threshold_quantile_score}{The quantile value used to define a detection threshold to filter lowly expressed interactions.
+Set to \code{0.25} by default (namely the 25% lower interactions are filtered out). Can be modified a posteriori
+(namely without the need to perform the permutation analysis again).}
 
-\item{cutoff_pval_specificity}{P-value threshold that indicates when an interaction is specific}
+\item{threshold_p_value_specificity}{The maximal BH p-value to consider an interaction as detected. Set to \code{0.05} by default.
+Can be modified a posteriori.}
 
-\item{cutoff_pval_de}{P-value threshold that indicates when an interaction is differentially expressed}
+\item{threshold_p_value_de}{The maximal BH p-value to consider an interaction as differentially expressed. Set to \code{0.05} by default.
+Can be modified a posteriori.}
 
-\item{cutoff_logfc}{LOGFC threshold to filter interactions}
+\item{threshold_logfc}{The minimal LOGFC (natural log scale) to consider an interaction as differentially expressed.
+Set to \code{log(1.2)} by default. Can be modified a posteriori.}
 
-\item{return_distr}{Logical indicating if returning the distributions of the permutation test.}
+\item{return_distributions}{Should the distributions from the permutation analysis be returned? Set to \code{FALSE} by default.}
 
-\item{seed}{A seed for replicability}
+\item{seed}{A seed for replicability. Set to \code{42} by default.}
 
-\item{verbose}{Print messages}
-
-\item{sparse}{Using sparse or dense data from Seurat}
+\item{verbose}{Should messages be printed? Set to \code{TRUE} by default.}
 }
 \value{
-A data.table with the CCI interactions.
+An S4 object of class \code{scDiffCom}.
 }
 \description{
-Run scDiffCom analysis
+Main function of the scDiffCom package. From a Seurat object and a database of ligand-receptor interactions,
+ it returns an S4 object of class scDiffCom that contains all possible cell-cell interactions (CCIs) with
+ their expression scores. In default mode, it also performs a series of permutation tests to determine statistically
+ significant CCIs, as well as differentially expressed CCIs in case the dataset contains two conditions of interest.
 }
