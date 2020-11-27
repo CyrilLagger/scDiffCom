@@ -3,15 +3,18 @@
 \docType{data}
 \name{LRdb_mouse}
 \alias{LRdb_mouse}
-\title{xx}
+\title{A database of mouse ligand-receptor interactions.}
 \format{
-xx
+A list of 3 data.tables: a non-curated table, a curated table and a table of corresponding GO terms
 }
 \usage{
 data(LRdb_mouse)
 }
 \description{
-xx
+The DB has been compiled from eight external studies.
+}
+\details{
+Can be obtained by running scDiffCom:::build_LRdb(species = "mouse")
 }
 \references{
 to add
