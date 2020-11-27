@@ -6,7 +6,7 @@
 #'  significant CCIs, as well as differentially expressed CCIs in case the dataset contains two conditions of interest.
 #'
 #' @param seurat_object A Seurat object that contains pre-normalized data as well as cell-type annotations.
-#' @param LRdb_species Eithe "mouse" or "human". It species with internal ligand-receptor database to use.
+#' @param LRdb_species Either "mouse" or "human". It specifies which internal ligand-receptor database to use.
 #' @param celltype_column_id The \code{meta.data} name of \code{seurat_object} that indicates the cell-type of each cell (e.g.: "CELL-TYPE")
 #' @param condition_column_id The \code{meta.data} name of \code{seurat_object} that indicates the two groups of cells
 #'  on which to perform the differential analysis (e.g: "AGE"). Set to \code{NULL} (default) to perform a detection analysis without
