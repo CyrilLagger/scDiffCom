@@ -6,6 +6,7 @@
 #'  significant CCIs, as well as differentially expressed CCIs in case the dataset contains two conditions of interest.
 #'
 #' @param seurat_object A Seurat object that contains pre-normalized data as well as cell-type annotations.
+#' @param LRdb_table A data.table with ligand-receptor interactions.
 #' @param celltype_column_id The \code{meta.data} name of \code{seurat_object} that indicates the cell-type of each cell (e.g.: "CELL-TYPE")
 #' @param condition_column_id The \code{meta.data} name of \code{seurat_object} that indicates the two groups of cells
 #'  on which to perform the differential analysis (e.g: "AGE"). Set to \code{NULL} (default) to perform a detection analysis without
@@ -20,7 +21,6 @@
 #'  Set to \code{5} by default.
 #' @param threshold_pct The minimal percentage of cells that need to express a gene, for the gene to be considered in the analysis.
 #'  Set to \code{0.1} by default.
-#' @param LRdb_table A data.table with ligand-receptor interactions. Set by default to \code{LR6db}, the internal database of scDiffCom.
 #' @param object_name The name of the scDiffCom object that will be returned. Set to "scDiffCom_object" by default.
 #' @param permutation_analysis Should the permutation analysis be performed? Set to "TRUE" by default. When "FALSE", only
 #'  raw results will be returned (such as scores).
@@ -42,6 +42,7 @@
 #' @export
 run_interaction_analysis <- function(
   seurat_object,
+  LRdb_table,
   celltype_column_id,
   condition_column_id = NULL,
   cond1_name = NULL,
@@ -51,7 +52,6 @@ run_interaction_analysis <- function(
   log_scale = FALSE,
   threshold_min_cells = 5,
   threshold_pct = 0.1,
-  LRdb_table = LRdb_mouse$LRdb_curated,
   object_name = "scDiffCom_object",
   permutation_analysis = TRUE,
   iterations = 1000,
@@ -373,9 +373,9 @@ run_ora <- function(
         }
       }
       object <- set_ora_default(object, res_ora)
-      
-      
-      
+
+
+
     } else if (stringent_or_default == "stringent") {
       if (is.null(stringent_logfc_threshold)) {
         if (verbose) message("Choose a non-NULL `stringent_logfc_threshold` to perform stringent over-representation analysis.")
@@ -482,15 +482,15 @@ plot_ora <- function(
     theme(text = element_text(size = 16))
 }
 
-#'
 
-#' #' Generate interactive networks with visNetwork
-#' #'
-#' #' @param object scDiffCom
-#' #' @param network_type chr in "bipartite", "cells"
-#' #'
-#' #' @return visNetwork interactive network
-#' #' @export
+
+#' Generate interactive networks with visNetwork
+#'
+#' @param object scDiffCom
+#' @param network_type chr in "bipartite", "cells"
+#'
+#' @return visNetwork interactive network
+#' @export
 generate_interactive_network = function(
   object,
   network_type

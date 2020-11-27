@@ -20,19 +20,24 @@ build_LRdb <- function(
     curated = TRUE
   )
   LRdb_GO <- get_GO_interactions(
+    species = species,
     LR_db = LRdb_curated
   )
   return(list(
     LRdb_notCurated = LRdb_notCurated,
     LRdb_curated = LRdb_curated,
-    LRdb_curated_GO = LRdb_GO
+    LRdb_curated_GO = LRdb_GO$LR_GO_intersection
   ))
 }
 
 get_GO_interactions <- function(
+  species,
   LR_db
 ) {
   GO_NAME <- NULL
+  if (!(species %in% c("human", "mouse"))) {
+    stop("`species` muste be either 'mouse' or 'human'")
+  }
   if (!requireNamespace("biomaRt", quietly = TRUE)) {
     stop("Package \"biomaRt\" needed for this function to work. Please install it.",
          call. = FALSE
@@ -48,20 +53,27 @@ get_GO_interactions <- function(
          call. = FALSE
     )
   }
-  mgi_symbol <- NULL
   LR_genes <- unique(unlist(LR_db[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]))
   LR_genes <- LR_genes[!is.na(LR_genes)]
+  if (species == "mouse") {
+    dataset <- "mmusculus_gene_ensembl"
+    id_gene <- "mgi_symbol"
+  }
+  if (species == "human") {
+    dataset <- "hsapiens_gene_ensembl"
+    id_gene <- "hgnc_symbol"
+  }
   mart <- biomaRt::useMart(
     "ensembl",
-    dataset = "mmusculus_gene_ensembl"
+    dataset = dataset
   )
   LR_genes_info <- biomaRt::getBM(
     attributes = c(
-      "mgi_symbol",
+      id_gene,
       "go_id",
       "name_1006"
     ),
-    filters = "mgi_symbol",
+    filters = id_gene,
     mart = mart,
     values = LR_genes
   )
@@ -71,34 +83,12 @@ get_GO_interactions <- function(
   LR_genes_go <- sapply(
     LR_genes,
     function(gene) {
-      temp_go <- unique(LR_genes_info[mgi_symbol == gene]$name_1006)
+      temp_go <- unique(LR_genes_info[get(id_gene) == gene]$name_1006)
       ontologyIndex::get_ancestors(onto_go_terms, names(go_names[go_names %in% temp_go]))
     },
     USE.NAMES = TRUE,
     simplify = FALSE
   )
-  # LR_interactions_go_union <- rbindlist(
-  #   apply(
-  #     LR_db,
-  #     MARGIN = 1,
-  #     function(row) {
-  #       LIGAND_GO <- unique(c(
-  #         LR_genes_go[[row[["LIGAND_1"]]]],
-  #         LR_genes_go[[row[["LIGAND_2"]]]]
-  #       ))
-  #       RECEPTOR_GO <- unique(c(
-  #         LR_genes_go[[row[["RECEPTOR_1"]]]],
-  #         LR_genes_go[[row[["RECEPTOR_2"]]]],
-  #         LR_genes_go[[row[["RECEPTOR_3"]]]]
-  #       ))
-  #       res_union <- unique(c(LIGAND_GO, RECEPTOR_GO))
-  #       res_union <- data.table(
-  #         LR_SORTED = rep(row[["LR_SORTED"]], length(res_union)),
-  #         GO_ID = res_union
-  #       )
-  #     }
-  #   )
-  # )
   LR_interactions_go_intersection <- rbindlist(
     apply(
       LR_db,
@@ -130,18 +120,12 @@ get_GO_interactions <- function(
     GO_name = go_names,
     ID = names(go_names)
   )
-  # LR_interactions_go_union[
-  #   go_id_name_dt,
-  #   on = "GO_ID==ID",
-  #   GO_NAME := i.GO_name
-  #   ]
   LR_interactions_go_intersection[
     go_id_name_dt,
     on = "GO_ID==ID",
     GO_NAME := i.GO_name
     ]
   return(list(
-    # LR_GO_union = LR_interactions_go_union,
     LR_GO_intersection = LR_interactions_go_intersection
   ))
 }

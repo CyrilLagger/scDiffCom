@@ -3,6 +3,7 @@
 export("distributions<-")
 export("parameters<-")
 export(distributions)
+export(generate_interactive_network)
 export(get_cci_detected)
 export(get_cci_raw)
 export(get_ora_default)

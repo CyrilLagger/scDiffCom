@@ -1,28 +1,31 @@
-#' Ligand-receptor interactions from 6 databases.
+#' A database of human ligand-receptor interactions.
 #'
-#' LR6db contains two data.tables of LR interactions and etc
+#' The DB has been compiled from eight external studies.
 #'
-#' Can be obtained by running scDiffCom::build_LR6db()
+#' Can be obtained by running scDiffCom:::build_LRdb(species = "human")
 #' @docType data
 #'
-#' @usage data(LR6db)
+#' @usage data(LRdb_human)
 #'
-#' @format A list of 2 data.tables and one list of GO terms.
+#' @format A list of 3 data.tables: a non-curated table, a curated table and a table of corresponding GO terms
 #'
 #' @keywords datasets
 #'
 #' @references to add
 #' (\href{to_add}{PubMed})
 #'
-"LR6db"
+"LRdb_human"
 
-#' xx
+#' A database of mouse ligand-receptor interactions.
 #'
+#' The DB has been compiled from eight external studies.
+#'
+#' Can be obtained by running scDiffCom:::build_LRdb(species = "mouse")
 #' @docType data
 #'
 #' @usage data(LRdb_mouse)
 #'
-#' @format xx
+#' @format A list of 3 data.tables: a non-curated table, a curated table and a table of corresponding GO terms
 #'
 #' @keywords datasets
 #'
