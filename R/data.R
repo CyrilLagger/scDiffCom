@@ -33,3 +33,24 @@
 #' (\href{to_add}{PubMed})
 #'
 "LRdb_mouse"
+
+#' A (sampled) Seurat object from the Tabula Muris Senis liver.
+#'
+#' This is only a sample from the original object. It only contains
+#' two cell-types and roughly 2000 genes. The slot "data" contains
+#' log-normalized values with normalization performed before the down-sampling.
+#' It is only intended to be used as a toy model to show the functionalities of the package.
+#' It does not convey meaningful biological information.
+#'
+#' @docType data
+#'
+#' @usage data(seurat_sample_tms_liver)
+#'
+#' @format A Seurat object.
+#'
+#' @keywords datasets
+#'
+#' @references to add
+#' (\href{to_add}{PubMed})
+#'
+"seurat_sample_tms_liver"
