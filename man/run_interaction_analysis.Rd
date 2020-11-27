@@ -31,7 +31,7 @@ run_interaction_analysis(
 \arguments{
 \item{seurat_object}{A Seurat object that contains pre-normalized data as well as cell-type annotations.}
 
-\item{LRdb_species}{Eithe "mouse" or "human". It species with internal ligand-receptor database to use.}
+\item{LRdb_species}{Either "mouse" or "human". It specifies which internal ligand-receptor database to use.}
 
 \item{celltype_column_id}{The \code{meta.data} name of \code{seurat_object} that indicates the cell-type of each cell (e.g.: "CELL-TYPE")}
 
