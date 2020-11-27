@@ -51,7 +51,7 @@ run_interaction_analysis <- function(
   log_scale = FALSE,
   threshold_min_cells = 5,
   threshold_pct = 0.1,
-  LRdb_table = LR6db$LR6db_curated,
+  LRdb_table = LRdb_mouse$LRdb_curated,
   object_name = "scDiffCom_object",
   permutation_analysis = TRUE,
   iterations = 1000,
@@ -416,94 +416,72 @@ run_ora <- function(
   return(object)
 }
 
-#' Build a data.table of curated ligand-receptor interactions obtained from 6 databases.
+
+#' Plot over-represented terms of a given category
 #'
-#' @return A data.table with ligands, receptors and some annotations (database of origin and source of curation).
+#' @param object An scDiffCom object.
+#' @param category The category over wich the ORA has been performed (e.g. "GO_TERMS").
+#' @param regulation One from "UP", "DOWN", "DIFF" or "FLAT".
+#' @param max_terms_show The maximal number of terms to show on the plot.
+#' @param OR_threshold Only display terms with an odds ratio bigger than this threshold. Set to \code{1} by default.
+#' @param p_value_threshold Only display terms with a BH-p-value smaller thatn this threshold. Set to \code{0.05} by default.
+#' @param stringent Should we display the default ORA results or the stringent ORA results. Set to \code{FALSE} by default.
+#'
+#' @return A ggplot object.
 #' @export
-build_LR6db <- function() {
-  LR6db_all <- combine_LR_db(
-    one2one = FALSE,
-    curated = FALSE
-  )
-  LR6db_curated <- combine_LR_db(
-    one2one = FALSE,
-    curated = TRUE
-  )
-  LR6db_GO <- get_GO_interactions(
-    LR_db = LR6db_curated
-  )
-  return(list(
-    LR6db_all = LR6db_all,
-    LR6db_curated = LR6db_curated,
-    LR6db_GO = LR6db_GO
-  ))
+plot_ora <- function(
+  object,
+  category,
+  regulation,
+  max_terms_show,
+  OR_threshold = 1,
+  p_value_threshold = 0.05,
+  stringent = FALSE
+) {
+  if (stringent) {
+    ora_dt <- get_ora_stringent(object)
+  } else {
+    ora_dt <- get_ora_default(object)
+  }
+  if (identical(ora_dt, list())) {
+    stop("No ORA data.table to exctract from scDiffCom object")
+  }
+  if (!(category %in% names(ora_dt))) {
+    stop("Can't find the specified ORA category")
+  }
+  ora_dt <- ora_dt[[category]]
+  VALUE_ID <- "VALUE"
+  if(regulation == "UP") {
+    OR_ID <- "OR_UP"
+    p_value_ID <- "BH_P_VALUE_UP"
+    ORA_SCORE_ID <- "ORA_SCORE_UP"
+  } else if(regulation == "DOWN") {
+    OR_ID <- "OR_DOWN"
+    p_value_ID <- "BH_P_VALUE_DOWN"
+    ORA_SCORE_ID <- "ORA_SCORE_DOWN"
+
+  } else if(regulation == "FLAT") {
+    OR_ID <- "OR_FLAT"
+    p_value_ID <- "BH_P_VALUE_FLAT"
+    ORA_SCORE_ID <- "ORA_SCORE_FLAT"
+  } else {
+    stop("Can't find `regulation` type")
+  }
+  ora_dt <- ora_dt[get(OR_ID) > OR_threshold & get(p_value_ID) <= p_value_threshold][order(-get(ORA_SCORE_ID))]
+  if (nrow(ora_dt) == 0) {
+    return("No significant ORA results for the selected parameters.")
+  }
+  n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
+  ora_dt <- ora_dt[1:n_row_tokeep]
+  ggplot2::ggplot(ora_dt, aes(get(ORA_SCORE_ID), stats::reorder(get(VALUE_ID), get(ORA_SCORE_ID)))) +
+    geom_point(aes(size = -log10(get(p_value_ID)), color = log2(get(OR_ID)))) +
+    scale_color_gradient(low = "orange", high = "red") +
+    xlab("ORA score") +
+    ylab(category) +
+    labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
+    theme(text = element_text(size = 16))
 }
 
-
-#' #' Plot over-represented terms of a given category
-#' #'
-#' #' @param object An scDiffCom object.
-#' #' @param category The category over wich the ORA has been performed (e.g. "GO_TERMS").
-#' #' @param regulation One from "UP", "DOWN", "DIFF" or "FLAT".
-#' #' @param max_terms_show The maximal number of terms to show on the plot.
-#' #' @param OR_threshold Only display terms with an odds ratio bigger than this threshold. Set to \code{1} by default.
-#' #' @param p_value_threshold Only display terms with a BH-p-value smaller thatn this threshold. Set to \code{0.05} by default.
-#' #' @param stringent Should we display the default ORA results or the stringent ORA results. Set to \code{FALSE} by default.
-#' #'
-#' #' @return A ggplot object.
-#' #' @export
-#' plot_ora <- function(
-#'   object,
-#'   category,
-#'   regulation,
-#'   max_terms_show,
-#'   OR_threshold = 1,
-#'   p_value_threshold = 0.05,
-#'   stringent = FALSE
-#' ) {
-#'   if (stringent) {
-#'     ora_dt <- get_ora_stringent(object)
-#'   } else {
-#'     ora_dt <- get_ora_default(object)
-#'   }
-#'   if (identical(ora_dt, list())) {
-#'     stop("No ORA data.table to exctract from scDiffCom object")
-#'   }
-#'   if (!(category %in% names(ora_dt))) {
-#'     stop("Can't find the specified ORA category")
-#'   }
-#'   ora_dt <- ora_dt[[category]]
-#'   VALUE_ID <- "VALUE"
-#'   if(regulation == "UP") {
-#'     OR_ID <- "OR_UP"
-#'     p_value_ID <- "BH_P_VALUE_UP"
-#'     ORA_SCORE_ID <- "ORA_SCORE_UP"
-#'   } else if(regulation == "DOWN") {
-#'     OR_ID <- "OR_DOWN"
-#'     p_value_ID <- "BH_P_VALUE_DOWN"
-#'     ORA_SCORE_ID <- "ORA_SCORE_DOWN"
-#'
-#'   } else if(regulation == "FLAT") {
-#'     OR_ID <- "OR_FLAT"
-#'     p_value_ID <- "BH_P_VALUE_FLAT"
-#'     ORA_SCORE_ID <- "ORA_SCORE_FLAT"
-#'   } else {
-#'     stop("Can't find `regulation` type")
-#'   }
-#'   ora_dt <- ora_dt[get(OR_ID) > OR_threshold & get(p_value_ID) <= p_value_threshold][order(-get(ORA_SCORE_ID))]
-#'   if (nrow(ora_dt) == 0) {
-#'     return("No significant ORA results for the selected parameters.")
-#'   }
-#'   n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
-#'   ora_dt <- ora_dt[1:n_row_tokeep]
-#'   ggplot2::ggplot(ora_dt, aes(get(ORA_SCORE_ID), reorder(get(VALUE_ID), get(ORA_SCORE_ID)))) +
-#'     geom_point(aes(size = -log10(get(p_value_ID)), color = log2(get(OR_ID)))) +
-#'     scale_color_gradient(low = "orange", high = "red") +
-#'     xlab("ORA score") +
-#'     ylab(category) +
-#'     labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
-#'     theme(text = element_text(size = 16))
-#' }
 #'
 #' #' Title
 #' #'

@@ -15,7 +15,7 @@ run_interaction_analysis(
   log_scale = FALSE,
   threshold_min_cells = 5,
   threshold_pct = 0.1,
-  LRdb_table = LR6db$LR6db_curated,
+  LRdb_table = LRdb_mouse$LRdb_curated,
   object_name = "scDiffCom_object",
   permutation_analysis = TRUE,
   iterations = 1000,

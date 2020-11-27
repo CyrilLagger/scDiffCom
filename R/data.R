@@ -15,3 +15,18 @@
 #' (\href{to_add}{PubMed})
 #'
 "LR6db"
+
+#' xx
+#'
+#' @docType data
+#'
+#' @usage data(LRdb_mouse)
+#'
+#' @format xx
+#'
+#' @keywords datasets
+#'
+#' @references to add
+#' (\href{to_add}{PubMed})
+#'
+"LRdb_mouse"

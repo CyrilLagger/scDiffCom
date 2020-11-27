@@ -1,3 +1,34 @@
+#' Build a data.table of curated ligand-receptor interactions obtained from 6 databases.
+#'
+#' @param species human or mouse
+#'
+#' @return A data.table with ligands, receptors and some annotations (database of origin and source of curation).
+build_LRdb <- function(
+  species
+) {
+  if (!(species %in% c("human", "mouse"))) {
+    stop("`species` muste be either 'mouse' or 'human'")
+  }
+  LRdb_notCurated <- combine_LR_db(
+    species = species,
+    one2one = FALSE,
+    curated = FALSE
+  )
+  LRdb_curated <- combine_LR_db(
+    species = species,
+    one2one = FALSE,
+    curated = TRUE
+  )
+  LRdb_GO <- get_GO_interactions(
+    LR_db = LRdb_curated
+  )
+  return(list(
+    LRdb_notCurated = LRdb_notCurated,
+    LRdb_curated = LRdb_curated,
+    LRdb_curated_GO = LRdb_GO
+  ))
+}
+
 get_GO_interactions <- function(
   LR_db
 ) {
@@ -116,19 +147,37 @@ get_GO_interactions <- function(
 }
 
 combine_LR_db <- function(
+  species,
   one2one = FALSE,
   curated = TRUE
 ) {
   DATABASE <- SOURCE <- ANNOTATION <- FAMILY <- SUBFAMILY <- keep_subLR <-
-    SOURCE_CLEAN <- SOURCE_no_digit <- NULL
-  LR_sct <- prepare_LR_scTensor()
-  LR_scsr <- prepare_LR_scsr(one2one = one2one)
-  LR_niche <- prepare_LR_nichenet(one2one = one2one)
-  LR_cpdb <- prepare_LR_cpdb(one2one = one2one, deconvoluted = FALSE)
-  LR_cc <- prepare_LR_CellChat()
-  LR_ic <- prepare_LR_ICELLNET(one2one = one2one)
+    SOURCE_CLEAN <- SOURCE_no_digit <- is_complex_temp <- LIGAND_2 <- RECEPTOR_2 <- LR_vectorized_temp <-
+    N_IS_SUBPART <- NULL
+  if (!(species %in% c("human", "mouse"))) {
+    stop("`species` muste be either 'mouse' or 'human'")
+  }
+  #already curated
+  LR_CONNECTOMEDB <- prepare_LR_CONNECTOMEDB(species = species, one2one = one2one) #PMID:
+  LR_celltalk <- prepare_LR_CellTalkDB(species = species) #PMID:
+  LR_ic <- prepare_LR_ICELLNET(species = species, one2one = one2one) #PMID:
+  LR_cpdb <- prepare_LR_cpdb(species = species, one2one = one2one, deconvoluted = FALSE) #CPDB
+  LR_cc <- prepare_LR_CellChat(species = species) #PMID: KEGG: PMC: PMC
+  #not fully curated
+  LR_scsr <- prepare_LR_scsr(species = species, one2one = one2one) #"PMID:" "Ramilowski2015" "HPMR" "HPRD" and
+  #"reactome" "IUPHAR" "PPI" "cellsignal.com"
+  LR_niche <- prepare_LR_nichenet(species = species, one2one = one2one) #"KEGG:nichenet"  "IUPHAR" "Ramilowski2015" "PPI"
+  LR_sct <- prepare_LR_scTensor(species = species) #"SCT:DLRP" "IUPHAR" "HPMR" "SCT:CPDB" "SCT:SCSR"   "PPI"
+  #"HPRD" SCT:Ramilowski2015"
+  if (curated) {
+    LR_scsr <- LR_scsr[SOURCE != "PPI"]
+    LR_niche <- LR_niche[SOURCE != "PPI"]
+    LR_sct <- LR_sct[SOURCE != "PPI"]
+  }
   LR_full <- rbindlist(
     list(
+      "CONNECTOMEDB" = LR_CONNECTOMEDB,
+      "CELLTALK" = LR_celltalk,
       "SCTENSOR" = LR_sct,
       "SCSR" = LR_scsr,
       "NICHENET" = LR_niche,
@@ -142,7 +191,7 @@ combine_LR_db <- function(
   )
   col_md <- colnames(LR_full)
   col_md <- col_md[col_md != "LR_SORTED"]
-  db_names <- c("CELLCHAT", "CELLPHONEDB", "SCSR", "SCTENSOR", "ICELLNET", "NICHENET")
+  db_names <- c("CONNECTOMEDB", "CELLTALK", "CELLCHAT", "CELLPHONEDB", "SCSR", "SCTENSOR", "ICELLNET", "NICHENET")
   LR_full <- dcast.data.table(
     LR_full,
     formula = LR_SORTED ~ DATABASE,
@@ -166,7 +215,15 @@ combine_LR_db <- function(
               ifelse(
                 !is.na(get(paste0("LIGAND_", i, "_NICHENET"))),
                 get(paste0("LIGAND_", i, "_NICHENET")),
-                get(paste0("LIGAND_", i, "_CELLCHAT"))
+                ifelse(
+                  !is.na(get(paste0("LIGAND_", i, "_CONNECTOMEDB"))),
+                  get(paste0("LIGAND_", i, "_CONNECTOMEDB")),
+                  ifelse(
+                    !is.na(get(paste0("LIGAND_", i, "_CELLTALK"))),
+                    get(paste0("LIGAND_", i, "_CELLTALK")),
+                    get(paste0("LIGAND_", i, "_CELLCHAT"))
+                  )
+                )
               )
             )
           )
@@ -192,7 +249,15 @@ combine_LR_db <- function(
               ifelse(
                 !is.na(get(paste0("RECEPTOR_", i, "_NICHENET"))),
                 get(paste0("RECEPTOR_", i, "_NICHENET")),
-                get(paste0("RECEPTOR_", i, "_CELLCHAT"))
+                ifelse(
+                  !is.na(get(paste0("RECEPTOR_", i, "_CONNECTOMEDB"))),
+                  get(paste0("RECEPTOR_", i, "_CONNECTOMEDB")),
+                  ifelse(
+                    !is.na(get(paste0("RECEPTOR_", i, "_CELLTALK"))),
+                    get(paste0("RECEPTOR_", i, "_CELLTALK")),
+                    get(paste0("RECEPTOR_", i, "_CELLCHAT"))
+                  )
+                )
               )
             )
           )
@@ -201,101 +266,213 @@ combine_LR_db <- function(
     }
   )]
   col_database <- paste0("DATABASE.1_", db_names)
-  LR_full[, c("DATABASE") := do.call(paste, c(.SD, sep = ",")), .SDcols = col_database]
-  LR_full[, c("DATABASE") := gsub("NA|NA,|,NA", "", DATABASE)]
+  LR_full[, c("DATABASE") := do.call(paste, c(.SD, sep = ";")), .SDcols = col_database]
+  LR_full[, c("DATABASE") := gsub("NA|NA;|;NA", "", DATABASE)]
   LR_full[, c("N_DB") := rowSums(!is.na(.SD)), .SDcols = col_database]
   col_source <- paste0("SOURCE_", db_names)
-  LR_full[, c("SOURCE") := do.call(paste, c(.SD, sep = ",")), .SDcols = col_source]
-  LR_full[, c("SOURCE") := gsub("NA|NA,|,NA", "", SOURCE)]
+  LR_full[, c("SOURCE") := do.call(paste, c(.SD, sep = ";")), .SDcols = col_source]
+  LR_full[, c("SOURCE") := gsub("NA|NA;|;NA", "", SOURCE)]
   col_anno <- paste0("ANNOTATION_", db_names)
-  LR_full[, c("ANNOTATION") := do.call(paste, c(.SD, sep = ",")), .SDcols = col_anno]
-  LR_full[, c("ANNOTATION") := gsub("NA|NA,|,NA", "", ANNOTATION)]
+  LR_full[, c("ANNOTATION") := do.call(paste, c(.SD, sep = ";")), .SDcols = col_anno]
+  LR_full[, c("ANNOTATION") := gsub("NA|NA;|;NA", "", ANNOTATION)]
   col_fam <- paste0("FAMILY_", db_names)
-  LR_full[, c("FAMILY") := do.call(paste, c(.SD, sep = ",")), .SDcols = col_fam]
-  LR_full[, c("FAMILY") := gsub("NA|NA,|,NA", "", FAMILY)]
+  LR_full[, c("FAMILY") := do.call(paste, c(.SD, sep = ";")), .SDcols = col_fam]
+  LR_full[, c("FAMILY") := gsub("NA|NA;|;NA", "", FAMILY)]
   col_subfam <- paste0("SUBFAMILY_", db_names)
-  LR_full[, c("SUBFAMILY") := do.call(paste, c(.SD, sep = ",")), .SDcols = col_subfam]
-  LR_full[, c("SUBFAMILY") := gsub("NA|NA,|,NA", "", SUBFAMILY)]
-  for (id_loop in c(paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3))) {
-    cols_conf <- paste0(id_loop, "_CONF_", db_names)
-    LR_full[, paste0(id_loop, "_CONF") := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = cols_conf]
-    LR_full[, paste0(id_loop, "_CONF") := ifelse(is.na(get(paste0(id_loop, "_CONF"))) & !is.na(get(id_loop)),
-                                                 1, get(paste0(id_loop, "_CONF"))
-    )]
-    cols_type <- paste0(id_loop, "_TYPE_", db_names)
-    LR_full[, paste0(id_loop, "_TYPE") := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = cols_type]
-    LR_full[, paste0(id_loop, "_TYPE") := ifelse(is.na(get(paste0(id_loop, "_TYPE"))) & !is.na(get(id_loop)),
-                                                 "provided", get(paste0(id_loop, "_TYPE"))
-    )]
+  LR_full[, c("SUBFAMILY") := do.call(paste, c(.SD, sep = ";")), .SDcols = col_subfam]
+  LR_full[, c("SUBFAMILY") := gsub("NA|NA;|;NA", "", SUBFAMILY)]
+  if(species == "mouse") {
+    for (id_loop in c(paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3))) {
+      cols_conf <- paste0(id_loop, "_CONF_", db_names)
+      LR_full[, paste0(id_loop, "_CONF") := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = cols_conf]
+      LR_full[, paste0(id_loop, "_CONF") := ifelse(is.na(get(paste0(id_loop, "_CONF"))) & !is.na(get(id_loop)),
+                                                   1, get(paste0(id_loop, "_CONF"))
+      )]
+      cols_type <- paste0(id_loop, "_TYPE_", db_names)
+      LR_full[, paste0(id_loop, "_TYPE") := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = cols_type]
+      LR_full[, paste0(id_loop, "_TYPE") := ifelse(is.na(get(paste0(id_loop, "_TYPE"))) & !is.na(get(id_loop)),
+                                                   "provided", get(paste0(id_loop, "_TYPE"))
+      )]
+    }
   }
-  rm_subLR <- sapply(LR_full$LR_SORTED, function(i) {
-    sum(grepl(i, LR_full$LR_SORTED, fixed = TRUE))
-  })
-  LR_full[, keep_subLR := grepl("CELLPHONEDB|CELLCHAT|ICELLNET", DATABASE)]
-  LR_full <- LR_full[rm_subLR == 1 | keep_subLR == TRUE]
-  cols_to_keep <- c(
-    paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3), "LR_SORTED",
-    "DATABASE", "N_DB", "SOURCE", "ANNOTATION", "FAMILY", "SUBFAMILY",
-    paste0("LIGAND_", 1:2, "_CONF"), paste0("LIGAND_", 1:2, "_TYPE"),
-    paste0("RECEPTOR_", 1:3, "_CONF"), paste0("RECEPTOR_", 1:3, "_TYPE")
-  )
-  LR_full <- LR_full[, cols_to_keep, with = FALSE]
   if (curated) {
-    LR_rm_sctensor <- c("SWISSPROT_STRING", "TREMBL_STRING")
-    LR_rm_nichenet <- c(
-      "ppi_bidir_bidir", "ppi_bidir_bidir_go", "ppi_bidir_r",
-      "ppi_bidir_r_go", "ppi_l_bidir", "ppi_l_bidir_go",
-      "ppi_lr", "ppi_lr_go"
+    LR_full[, is_complex_temp := fifelse(!is.na(LIGAND_2) | !is.na(RECEPTOR_2), TRUE, FALSE)]
+    LR_full[, LR_vectorized_temp := list(sapply(1:nrow(.SD), function(i) {
+      temp <- c(
+        sapply(1:2, function(j) {
+          get(paste0("LIGAND_", j))[[i]]
+        }),
+        sapply(1:3, function(j) {
+          get(paste0("RECEPTOR_", j))[[i]]
+        })
+      )
+      temp <- temp[!is.na(temp)]
+    }))]
+    LR_full_simple <- LR_full[is_complex_temp == FALSE]
+    LR_full_complex <- LR_full[is_complex_temp == TRUE]
+    LR_full_simple_list <- LR_full_simple$LR_vectorized_temp
+    LR_full_complex_list <- LR_full_complex$LR_vectorized_temp
+    rm_LR_full <- sapply(
+      LR_full_simple_list,
+      function(i) {
+        sum(
+          sapply(
+            LR_full_complex_list,
+            function(j) {
+              all(i %in% j)
+            }
+          )
+        )
+      }
     )
-    LR_rm_scsr <- c("uniprot")
-    LR_rm <- c(
-      LR_rm_sctensor,
-      LR_rm_nichenet,
-      LR_rm_scsr,
-      sapply(LR_rm_sctensor, function(i) {
-        sapply(LR_rm_nichenet, function(j) {
-          c(paste(i, j, sep = ","), paste(j, i, sep = ","))
-        })
-      }),
-      sapply(LR_rm_sctensor, function(i) {
-        sapply(LR_rm_scsr, function(j) {
-          c(paste(i, j, sep = ","), paste(j, i, sep = ","))
-        })
-      }),
-      sapply(LR_rm_scsr, function(i) {
-        sapply(LR_rm_nichenet, function(j) {
-          c(paste(i, j, sep = ","), paste(j, i, sep = ","))
-        })
-      }),
-      sapply(LR_rm_sctensor, function(i) {
-        sapply(LR_rm_nichenet, function(j) {
-          sapply(LR_rm_scsr, function(k) {
-            c(
-              paste(i, j, k, sep = ","), paste(i, k, j, sep = ","), paste(j, i, k, sep = ","), paste(j, k, i, sep = ","),
-              paste(k, i, j, sep = ","), paste(k, j, i, sep = ",")
-            )
-          })
-        })
-      })
-    )
-    LR_full <- LR_full[!(SOURCE %in% LR_rm)]
-    LR_full[, SOURCE_CLEAN := gsub(paste0(c(LR_rm_nichenet, LR_rm_sctensor, "uniprot"), collapse = "|"), "PPI", SOURCE)]
-    LR_full[, SOURCE_CLEAN := gsub("pharmacology", "IUPHAR", SOURCE_CLEAN)]
-    LR_full[, SOURCE_CLEAN := gsub("kegg", "KEGG", SOURCE_CLEAN)]
-    LR_full[, SOURCE_CLEAN := gsub("fantom5", "Ramilowski", SOURCE_CLEAN)]
-    LR_full[, SOURCE_no_digit := gsub(" ", "", gsub("[[:digit:]]+", "", SOURCE))]
-    LR_full[SOURCE_no_digit %in% c("", "; ", " ;", ";") | nchar(SOURCE_no_digit) <= 2, SOURCE_CLEAN := paste0("PMID:", SOURCE_CLEAN)]
-    LR_full[, SOURCE_no_digit := NULL]
-    setnames(
-      LR_full,
-      old = c("SOURCE", "SOURCE_CLEAN"),
-      new = c("SOURCE_MESSY", "SOURCE")
+    LR_full_simple[, N_IS_SUBPART := rm_LR_full]
+    LR_full[LR_full_simple, on = "LR_SORTED", N_IS_SUBPART := i.N_IS_SUBPART]
+    setnafill(LR_full, fill = 0, cols = "N_IS_SUBPART")
+    LR_full[, keep_subLR := grepl("CELLPHONEDB|CELLCHAT|ICELLNET", DATABASE)]
+    LR_full <- LR_full[N_IS_SUBPART == 0 | keep_subLR == TRUE]
+    LR_full <- LR_full[DATABASE != "SCTENSOR"]
+    cols_to_keep <- NULL
+  } else {
+    cols_to_keep <- NULL
+  }
+  if (species == "mouse") {
+    cols_to_keep <- c(
+      cols_to_keep,
+      paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3), "LR_SORTED",
+      "DATABASE", "N_DB", "SOURCE", "ANNOTATION", "FAMILY", "SUBFAMILY",
+      paste0("LIGAND_", 1:2, "_CONF"), paste0("LIGAND_", 1:2, "_TYPE"),
+      paste0("RECEPTOR_", 1:3, "_CONF"), paste0("RECEPTOR_", 1:3, "_TYPE")
     )
   }
+  if (species == "human") {
+    cols_to_keep <- c(
+      cols_to_keep,
+      paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3), "LR_SORTED",
+      "DATABASE", "N_DB", "SOURCE", "ANNOTATION", "FAMILY", "SUBFAMILY"
+    )
+  }
+  LR_full <- LR_full[, cols_to_keep, with = FALSE]
   return(LR_full)
 }
 
-prepare_LR_scTensor <- function() {
+prepare_LR_CONNECTOMEDB <- function(
+  species,
+  one2one = FALSE
+) {
+  LR_SORTED <- SOURCE <- NULL
+  if (!(species %in% c("human", "mouse"))) {
+    stop("`species` muste be either 'mouse' or 'human'")
+  }
+  LR <- NATMI_connectomeDB2020
+  setDT(LR)
+  setnames(
+    x = LR,
+    old = c("Ligand.gene.symbol", "Receptor.gene.symbol", "PMID.support"),
+    new = c("L1", "R1", "SOURCE")
+  )
+  if (species == "mouse") {
+    ortho <- get_orthologs(
+      genes = unique(c(LR$L1, LR$R1)),
+      input_species = "human",
+      one2one = one2one
+    )
+    ortho <- stats::na.omit(ortho)
+    LR <- merge_LR_orthologs(
+      LR_dt = LR,
+      ortho_dt = ortho,
+      nL = 1,
+      charL = "L",
+      nR = 1,
+      charR = "R"
+    )
+    cols_to_keep <- c(
+      "LR_SORTED", "SOURCE",
+      "LIGAND_1", "RECEPTOR_1",
+      "LIGAND_1_CONF", "RECEPTOR_1_CONF",
+      "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
+    )
+  }
+  if (species == "human") {
+    setnames(
+      x = LR,
+      old = c(
+        "L1", "R1"
+      ),
+      new = c(
+        "LIGAND_1", "RECEPTOR_1"
+      )
+    )
+    LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
+      temp <- c(
+        sapply(1:1, function(j) {
+          get(paste0("LIGAND_", j))[[i]]
+        }),
+        sapply(1:1, function(j) {
+          get(paste0("RECEPTOR_", j))[[i]]
+        })
+      )
+      temp <- temp[!is.na(temp)]
+      temp <- sort(temp)
+      temp <- paste0(temp, collapse = "_")
+    }))]
+    LR <- LR[!duplicated(LR_SORTED)]
+    cols_to_keep <- c(
+      "LR_SORTED", "SOURCE",
+      "LIGAND_1", "RECEPTOR_1"
+    )
+  }
+  LR[, SOURCE := gsub("\\s", "", SOURCE)]
+  LR[, SOURCE := paste0("PMID:", SOURCE)]
+  LR[, SOURCE := gsub(",", ";PMID:", SOURCE)]
+  return(LR[, cols_to_keep, with = FALSE])
+}
+
+prepare_LR_CellTalkDB <- function(
+  species
+) {
+  LR_SORTED <- SOURCE <- NULL
+  if (!(species %in% c("human", "mouse"))) {
+    stop("`species` muste be either 'mouse' or 'human'")
+  }
+  if (species == "mouse") {
+    LR <- CellTalkDB_mouse
+  }
+  if (species == "human") {
+    LR <- CellTalkDB_human
+  }
+  setDT(LR)
+  setnames(
+    LR,
+    old = c("ligand_gene_symbol", "receptor_gene_symbol", "evidence"),
+    new = c("LIGAND_1", "RECEPTOR_1", "SOURCE")
+  )
+  LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
+    temp <- c(
+      sapply(1:1, function(j) {
+        get(paste0("LIGAND_", j))[[i]]
+      }),
+      sapply(1:1, function(j) {
+        get(paste0("RECEPTOR_", j))[[i]]
+      })
+    )
+    temp <- temp[!is.na(temp)]
+    temp <- sort(temp)
+    temp <- paste0(temp, collapse = "_")
+  }))]
+  LR <- LR[!duplicated(LR_SORTED)]
+  cols_to_keep <- c(
+    "LR_SORTED", "SOURCE",
+    "LIGAND_1", "RECEPTOR_1"
+  )
+  LR[, SOURCE := paste0("PMID:", SOURCE)]
+  LR[, SOURCE := gsub(",", ";PMID:", SOURCE)]
+  return(LR[, cols_to_keep, with = FALSE])
+}
+
+prepare_LR_scTensor <- function(
+  species
+) {
+  SOURCE <- NULL
   if (!requireNamespace("AnnotationDbi", quietly = TRUE)) {
     stop("Package \"AnnotationDbi\" needed for this function to work. Please install it.",
          call. = FALSE
@@ -306,28 +483,58 @@ prepare_LR_scTensor <- function() {
          call. = FALSE
     )
   }
+  if (!requireNamespace("LRBase.Hsa.eg.db", quietly = TRUE)) {
+    stop("Package \"LRBase.Hsa.eg.db\" needed for this function to work. Please install it.",
+         call. = FALSE
+    )
+  }
   if (!requireNamespace("AnnotationHub", quietly = TRUE)) {
     stop("Package \"AnnotationHub\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }
+  if (!(species %in% c("human", "mouse"))) {
+    stop("`species` muste be either 'mouse' or 'human'")
+  }
   LR_SORTED <- LIGAND_1 <- RECEPTOR_1 <- NULL
-  key <- AnnotationDbi::keys(
-    LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
-    keytype = "GENEID_L"
-  )
-  LR <- AnnotationDbi::select(
-    LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
-    keys = key,
-    columns = c("GENEID_L", "GENEID_R", "SOURCEDB"),
-    keytype = "GENEID_L"
-  )
+  if (species == "mouse") {
+    key <- AnnotationDbi::keys(
+      LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
+      keytype = "GENEID_L"
+    )
+    LR <- AnnotationDbi::select(
+      LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
+      keys = key,
+      columns = c("GENEID_L", "GENEID_R", "SOURCEDB"),
+      keytype = "GENEID_L"
+    )
+  }
+  if (species == "human"){
+    key <- AnnotationDbi::keys(
+      LRBase.Hsa.eg.db::LRBase.Hsa.eg.db,
+      keytype = "GENEID_L"
+    )
+    LR <- AnnotationDbi::select(
+      LRBase.Hsa.eg.db::LRBase.Hsa.eg.db,
+      keys = key,
+      columns = c("GENEID_L", "GENEID_R", "SOURCEDB"),
+      keytype = "GENEID_L"
+    )
+  }
   LR <- unique(LR)
   ah <- AnnotationHub::AnnotationHub()
-  hs <- AnnotationHub::query(
-    ah,
-    c("OrgDb", "Mus musculus")
-  )[[1]]
+  if (species == "mouse") {
+    hs <- AnnotationHub::query(
+      ah,
+      c("OrgDb", "Mus musculus")
+    )[[1]]
+  }
+  if (species == "human") {
+    hs <- AnnotationHub::query(
+      ah,
+      c("OrgDb", "Homo sapiens")
+    )[[1]]
+  }
   LR_L_match <- AnnotationDbi::select(
     hs,
     column = c("SYMBOL", "ENTREZID"),
@@ -360,19 +567,45 @@ prepare_LR_scTensor <- function() {
     temp <- paste0(temp, collapse = "_")
   }))]
   LR <- LR[!duplicated(LR_SORTED)]
+  LR <- LR[!is.na(LIGAND_1) & !is.na(RECEPTOR_1)]
   cols_to_keep <- c(
     "LR_SORTED", "SOURCE",
     "LIGAND_1", "RECEPTOR_1"
   )
+  if (species == "mouse") {
+    LR[, SOURCE := gsub("ENSEMBL_DLRP|NCBI_DLRP", "SCT:DLRP", SOURCE)]
+    LR[, SOURCE := gsub("ENSEMBL_IUPHAR|NCBI_IUPHAR", "IUPHAR", SOURCE)]
+    LR[, SOURCE := gsub("ENSEMBL_HPMR|NCBI_HPMR", "HPMR", SOURCE)]
+    LR[, SOURCE := gsub("ENSEMBL_CELLPHONEDB|NCBI_CELLPHONEDB", "SCT:CPDB", SOURCE)]
+    LR[, SOURCE := gsub("ENSEMBL_SINGLECELLSIGNALR|NCBI_SINGLECELLSIGNALR", "SCT:SCSR", SOURCE)]
+    LR[, SOURCE := gsub("SWISSPROT_STRING", "PPI", SOURCE)]
+    LR[, SOURCE := gsub("TREMBL_STRING", "PPI", SOURCE)]
+  }
+  if (species == "human") {
+    LR[, SOURCE := gsub("SWISSPROT_STRING|TREMBL_STRING|BADERLAB", "PPI", SOURCE)]
+    LR[, SOURCE := gsub("SWISSPROT_HPRD|TREMBL_HPRD", "HPRD", SOURCE)]
+    LR[, SOURCE := gsub("IUPHAR", "IUPHAR", SOURCE)]
+    LR[, SOURCE := gsub("DLRP", "SCT:DLRP", SOURCE)]
+    LR[, SOURCE := gsub("HPMR", "HPMR", SOURCE)]
+    LR[, SOURCE := gsub("FANTOM5", "SCT:Ramilowski2015", SOURCE)]
+    LR[, SOURCE := gsub("CELLPHONEDB", "SCT:CPDB", SOURCE)]
+    LR[, SOURCE := gsub("SINGLECELLSIGNALR", "SCT:SCSR", SOURCE)]
+  }
   return(LR[, cols_to_keep, with = FALSE])
 }
 
 prepare_LR_scsr <- function(
-  one2one = FALSE) {
+  species,
+  one2one = FALSE
+) {
+  LR_SORTED <- SOURCE <- PMIDs <- NULL
   if (!requireNamespace("SingleCellSignalR", quietly = TRUE)) {
     stop("Package \"SingleCellSignalR\" needed for this function to work. Please install it.",
          call. = FALSE
     )
+  }
+  if (!(species %in% c("human", "mouse"))) {
+    stop("`species` muste be either 'mouse' or 'human'")
   }
   LR <- SingleCellSignalR::LRdb
   setDT(LR)
@@ -381,37 +614,86 @@ prepare_LR_scsr <- function(
     old = c("ligand", "receptor"),
     new = c("L1", "R1")
   )
-  ortho <- get_orthologs(
-    genes = unique(c(LR$L1, LR$R1)),
-    input_species = "human",
-    one2one = one2one
-  )
-  ortho <- stats::na.omit(ortho)
-  LR <- merge_LR_orthologs(
-    LR_dt = LR,
-    ortho_dt = ortho,
-    nL = 1,
-    charL = "L",
-    nR = 1,
-    charR = "R"
-  )
-  LR$SOURCE <- ifelse(LR$PMIDs == "", LR$source, paste0(LR$source, ",PMID:", LR$PMIDs))
-
-  cols_to_keep <- c(
-    "LR_SORTED", "SOURCE",
-    "LIGAND_1", "RECEPTOR_1",
-    "LIGAND_1_CONF", "RECEPTOR_1_CONF",
-    "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
-  )
+  if (species == "mouse") {
+    ortho <- get_orthologs(
+      genes = unique(c(LR$L1, LR$R1)),
+      input_species = "human",
+      one2one = one2one
+    )
+    ortho <- stats::na.omit(ortho)
+    LR <- merge_LR_orthologs(
+      LR_dt = LR,
+      ortho_dt = ortho,
+      nL = 1,
+      charL = "L",
+      nR = 1,
+      charR = "R"
+    )
+    cols_to_keep <- c(
+      "LR_SORTED", "SOURCE",
+      "LIGAND_1", "RECEPTOR_1",
+      "LIGAND_1_CONF", "RECEPTOR_1_CONF",
+      "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
+    )
+  }
+  if (species == "human") {
+    setnames(
+      x = LR,
+      old = c(
+        "L1", "R1"
+      ),
+      new = c(
+        "LIGAND_1", "RECEPTOR_1"
+      )
+    )
+    LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
+      temp <- c(
+        sapply(1:1, function(j) {
+          get(paste0("LIGAND_", j))[[i]]
+        }),
+        sapply(1:1, function(j) {
+          get(paste0("RECEPTOR_", j))[[i]]
+        })
+      )
+      temp <- temp[!is.na(temp)]
+      temp <- sort(temp)
+      temp <- paste0(temp, collapse = "_")
+    }))]
+    LR <- LR[!duplicated(LR_SORTED)]
+    cols_to_keep <- c(
+      "LR_SORTED", "SOURCE",
+      "LIGAND_1", "RECEPTOR_1"
+    )
+  }
+  LR[, PMIDs := ifelse(PMIDs == "", NA, PMIDs )]
+  LR[, PMIDs := ifelse(is.na(PMIDs), NA, paste0("PMID:", PMIDs))]
+  LR[, PMIDs := gsub(",", ";PMID:", PMIDs)]
+  LR[, PMIDs := gsub(")", "", PMIDs)]
+  LR[, PMIDs := gsub(" ", "", PMIDs)]
+  LR[, source := gsub(",", ";", source)]
+  LR[, source := gsub("fantom5", "Ramilowski2015", source)]
+  LR[, source := gsub("literature;", "", source)]
+  LR[, source := gsub("literature", "", source)]
+  LR[, source := gsub("uniprot", "PPI", source)]
+  LR[, source := ifelse(source == "", NA, source)]
+  LR[, SOURCE := paste(PMIDs, source, sep = ";")]
+  LR[, SOURCE := gsub(";NA", "", SOURCE)]
+  LR[, SOURCE := gsub("NA;", "", SOURCE)]
   return(LR[, cols_to_keep, with = FALSE])
 }
 
 prepare_LR_nichenet <- function(
-  one2one = FALSE) {
+  species,
+  one2one = FALSE
+) {
+  LR_SORTED <- SOURCE <- R3 <- NULL
   if (!requireNamespace("nichenetr", quietly = TRUE)) {
     stop("Package \"nichenetr\" needed for this function to work. Please install it.",
          call. = FALSE
     )
+  }
+  if (!(species %in% c("human", "mouse"))) {
+    stop("`species` muste be either 'mouse' or 'human'")
   }
   LR <- nichenetr::lr_network
   setDT(LR)
@@ -420,31 +702,70 @@ prepare_LR_nichenet <- function(
     old = c("from", "to", "source"),
     new = c("L1", "R1", "SOURCE")
   )
-  ortho <- get_orthologs(
-    genes = unique(c(LR$L1, LR$R1)),
-    input_species = "human",
-    one2one = one2one
-  )
-  ortho <- stats::na.omit(ortho)
-  LR <- merge_LR_orthologs(
-    LR_dt = LR,
-    ortho_dt = ortho,
-    nL = 1,
-    charL = "L",
-    nR = 1,
-    charR = "R"
-  )
-  cols_to_keep <- c(
-    "LR_SORTED", "SOURCE",
-    "LIGAND_1", "RECEPTOR_1",
-    "LIGAND_1_CONF", "RECEPTOR_1_CONF",
-    "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
-  )
+  if (species == "mouse") {
+    ortho <- get_orthologs(
+      genes = unique(c(LR$L1, LR$R1)),
+      input_species = "human",
+      one2one = one2one
+    )
+    ortho <- stats::na.omit(ortho)
+    LR <- merge_LR_orthologs(
+      LR_dt = LR,
+      ortho_dt = ortho,
+      nL = 1,
+      charL = "L",
+      nR = 1,
+      charR = "R"
+    )
+    cols_to_keep <- c(
+      "LR_SORTED", "SOURCE",
+      "LIGAND_1", "RECEPTOR_1",
+      "LIGAND_1_CONF", "RECEPTOR_1_CONF",
+      "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
+    )
+  }
+  if (species == "human") {
+    setnames(
+      x = LR,
+      old = c(
+        "L1", "R1"
+      ),
+      new = c(
+        "LIGAND_1", "RECEPTOR_1"
+      )
+    )
+    LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
+      temp <- c(
+        sapply(1:1, function(j) {
+          get(paste0("LIGAND_", j))[[i]]
+        }),
+        sapply(1:1, function(j) {
+          get(paste0("RECEPTOR_", j))[[i]]
+        })
+      )
+      temp <- temp[!is.na(temp)]
+      temp <- sort(temp)
+      temp <- paste0(temp, collapse = "_")
+    }))]
+    LR <- LR[!duplicated(LR_SORTED)]
+    cols_to_keep <- c(
+      "LR_SORTED", "SOURCE",
+      "LIGAND_1", "RECEPTOR_1"
+    )
+  }
+  source_temp <- unique(LR$SOURCE)
+  source_temp_kegg <- paste0(source_temp[grepl("kegg", source_temp)], collapse = "|")
+  source_temp_ppi <- paste0(source_temp[grepl("ppi", source_temp)], collapse = "|")
+  LR[, SOURCE := gsub(source_temp_ppi, "PPI", SOURCE)]
+  LR[, SOURCE := gsub(source_temp_kegg, "KEGG:nichenet", SOURCE)]
+  LR[, SOURCE := gsub("pharmacology", "IUPHAR", SOURCE)]
+  LR[, SOURCE := gsub("ramilowski_known", "Ramilowski2015", SOURCE)]
   return(LR[, cols_to_keep, with = FALSE])
 }
 
 create_LR_cpdb <- function(
-  deconvoluted = FALSE) {
+  deconvoluted = FALSE
+) {
   id_protein_multi_1_1 <- id_protein_multi_1_2 <- id_protein_1 <- id_protein_2 <- temp_id <-
     receptor_1 <- receptor_2 <- secreted_1 <- secreted_2 <- L_3 <- LR_ID <- NULL
   data <- LRcp_raw
@@ -605,63 +926,115 @@ create_LR_cpdb <- function(
 }
 
 prepare_LR_cpdb <- function(
+  species,
   one2one = FALSE,
   deconvoluted = FALSE,
-  keep_id = FALSE) {
+  keep_id = FALSE
+) {
+  LR_SORTED <- NULL
+  if (!(species %in% c("human", "mouse"))) {
+    stop("`species` muste be either 'mouse' or 'human'")
+  }
   LR <- create_LR_cpdb(
     deconvoluted = deconvoluted
   )
-  genes_temp <- unique(unlist(LR))
-  genes_temp <- genes_temp[!is.na(genes_temp)]
-  ortho <- get_orthologs(
-    genes = genes_temp,
-    input_species = "human",
-    one2one = one2one
-  )
-  ortho <- stats::na.omit(ortho)
-  if (deconvoluted) {
-    nL <- 1
-    nR <- 1
-    LR$SOURCE <- "CPDB_DECONV"
-    cols_to_keep <- c(
-      "LR_SORTED", "SOURCE",
-      "LIGAND_1", "RECEPTOR_1",
-      "LIGAND_1_CONF", "RECEPTOR_1_CONF",
-      "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
+  if (species == "mouse") {
+    genes_temp <- unique(unlist(LR))
+    genes_temp <- genes_temp[!is.na(genes_temp)]
+    ortho <- get_orthologs(
+      genes = genes_temp,
+      input_species = "human",
+      one2one = one2one
     )
-  } else {
-    nL <- 2
-    nR <- 3
+    ortho <- stats::na.omit(ortho)
+    if (deconvoluted) {
+      nL <- 1
+      nR <- 1
+      LR$SOURCE <- "CPDB_DECONV"
+      cols_to_keep <- c(
+        "LR_SORTED", "SOURCE",
+        "LIGAND_1", "RECEPTOR_1",
+        "LIGAND_1_CONF", "RECEPTOR_1_CONF",
+        "LIGAND_1_TYPE", "RECEPTOR_1_TYPE"
+      )
+    } else {
+      nL <- 2
+      nR <- 3
+      LR$SOURCE <- "CPDB"
+      cols_to_keep <- c(
+        "LR_SORTED", "SOURCE",
+        "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3",
+        "LIGAND_1_CONF", "LIGAND_2_CONF", "RECEPTOR_1_CONF", "RECEPTOR_2_CONF", "RECEPTOR_3_CONF",
+        "LIGAND_1_TYPE", "LIGAND_2_TYPE", "RECEPTOR_1_TYPE", "RECEPTOR_2_TYPE", "RECEPTOR_3_TYPE"
+      )
+      if (keep_id) {
+        cols_to_keep <- c("id_cp_interaction", cols_to_keep)
+      }
+    }
+    LR <- merge_LR_orthologs(
+      LR_dt = LR,
+      ortho_dt = ortho,
+      nL = nL,
+      charL = "L_",
+      nR = nR,
+      charR = "R_"
+    )
+  }
+  if (species == "human") {
+    setnames(
+      x = LR,
+      old = c(
+        "L_1", "L_2",
+        "R_1", "R_2", "R_3"
+      ),
+      new = c(
+        "LIGAND_1", "LIGAND_2",
+        "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3"
+      )
+    )
+    LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
+      temp <- c(
+        sapply(1:2, function(j) {
+          get(paste0("LIGAND_", j))[[i]]
+        }),
+        sapply(1:3, function(j) {
+          get(paste0("RECEPTOR_", j))[[i]]
+        })
+      )
+      temp <- temp[!is.na(temp)]
+      temp <- sort(temp)
+      temp <- paste0(temp, collapse = "_")
+    }))]
+    LR <- LR[!duplicated(LR_SORTED)]
     LR$SOURCE <- "CPDB"
     cols_to_keep <- c(
       "LR_SORTED", "SOURCE",
-      "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3",
-      "LIGAND_1_CONF", "LIGAND_2_CONF", "RECEPTOR_1_CONF", "RECEPTOR_2_CONF", "RECEPTOR_3_CONF",
-      "LIGAND_1_TYPE", "LIGAND_2_TYPE", "RECEPTOR_1_TYPE", "RECEPTOR_2_TYPE", "RECEPTOR_3_TYPE"
+      "LIGAND_1", "LIGAND_2",
+      "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3"
     )
-    if (keep_id) {
-      cols_to_keep <- c("id_cp_interaction", cols_to_keep)
-    }
   }
-  LR <- merge_LR_orthologs(
-    LR_dt = LR,
-    ortho_dt = ortho,
-    nL = nL,
-    charL = "L_",
-    nR = nR,
-    charR = "R_"
-  )
   return(LR[, cols_to_keep, with = FALSE])
 }
 
-prepare_LR_CellChat <- function() {
+prepare_LR_CellChat <- function(
+  species
+) {
+  SOURCE <- NULL
   if (!requireNamespace("CellChat", quietly = TRUE)) {
     stop("Package \"CellChat\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }
+  if (!(species %in% c("human", "mouse"))) {
+    stop("`species` muste be either 'mouse' or 'human'")
+  }
   LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_2 <- LR_SORTED <- interaction_name_2 <- temp <- new <- NULL
-  LR <- CellChat::CellChatDB.mouse$interaction
+  if (species == "mouse") {
+    LR <- CellChat::CellChatDB.mouse$interaction
+  }
+  if (species == "human") {
+    LR <- CellChat::CellChatDB.human$interaction
+  }
   setDT(LR)
   setnames(
     x = LR,
@@ -676,23 +1049,25 @@ prepare_LR_CellChat <- function() {
   LR[, LIGAND_1 := gsub(" ", "", LIGAND_1)]
   LR[, RECEPTOR_1 := gsub(" ", "", RECEPTOR_1)]
   LR[, RECEPTOR_2 := gsub(" ", "", RECEPTOR_2)]
-  # some CELLCHAT gene names (70) are not mgi_symbols and we need to convert them manually...
-  convert_table <- CellChat_conversion
-  genes_to_rm <- convert_table[new == "remove"]
-  genes_to_change <- convert_table[new != "remove"]
-  LR <- LR[!(LIGAND_1 %in% genes_to_rm$old) & !(RECEPTOR_1 %in% genes_to_rm$old) & !(RECEPTOR_2 %in% genes_to_rm$old)]
-  LR[genes_to_change,
-     `:=`(LIGAND_1 = new),
-     on = "LIGAND_1==old"
-     ][
-       genes_to_change,
-       `:=`(RECEPTOR_1 = new),
-       on = "RECEPTOR_1==old"
+  if (species == "mouse") {
+    # some CELLCHAT gene names (70) are not mgi_symbols and we need to convert them manually...
+    convert_table <- CellChat_conversion
+    genes_to_rm <- convert_table[new == "remove"]
+    genes_to_change <- convert_table[new != "remove"]
+    LR <- LR[!(LIGAND_1 %in% genes_to_rm$old) & !(RECEPTOR_1 %in% genes_to_rm$old) & !(RECEPTOR_2 %in% genes_to_rm$old)]
+    LR[genes_to_change,
+       `:=`(LIGAND_1 = new),
+       on = "LIGAND_1==old"
        ][
          genes_to_change,
-         `:=`(RECEPTOR_2 = new),
-         on = "RECEPTOR_2==old"
-         ]
+         `:=`(RECEPTOR_1 = new),
+         on = "RECEPTOR_1==old"
+         ][
+           genes_to_change,
+           `:=`(RECEPTOR_2 = new),
+           on = "RECEPTOR_2==old"
+           ]
+  }
   LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
     temp <- c(LIGAND_1[[i]], RECEPTOR_1[[i]], RECEPTOR_2[[i]])
     temp <- temp[!is.na(temp)]
@@ -706,11 +1081,18 @@ prepare_LR_CellChat <- function() {
     "LIGAND_1", "RECEPTOR_1", "RECEPTOR_2"
   )
   LR <- LR[, cols_to_keep, with = FALSE]
+  LR[, SOURCE := gsub(" ", "", SOURCE)]
   return(LR)
 }
 
 prepare_LR_ICELLNET <- function(
-  one2one = FALSE) {
+  species,
+  one2one = FALSE
+) {
+  LR_SORTED <- SOURCE <- R3 <- NULL
+  if (!(species %in% c("human", "mouse"))) {
+    stop("`species` muste be either 'mouse' or 'human'")
+  }
   if (!requireNamespace("curl", quietly = TRUE)) {
     stop("Package \"curl\" needed for this function to work. Please install it.",
          call. = FALSE
@@ -738,27 +1120,66 @@ prepare_LR_ICELLNET <- function(
       "SOURCE", "FAMILY", "SUBFAMILY", "ANNOTATION"
     )
   )
-  ortho <- get_orthologs(
-    genes = unique(c(LR$L1, LR$L2, LR$R1, LR$R2, LR$R3)),
-    input_species = "human",
-    one2one = one2one
-  )
-  ortho <- stats::na.omit(ortho)
-  LR <- merge_LR_orthologs(
-    LR_dt = LR,
-    ortho_dt = ortho,
-    nL = 2,
-    charL = "L",
-    nR = 3,
-    charR = "R"
-  )
-  cols_to_keep <- c(
-    "LR_SORTED",
-    "FAMILY", "SUBFAMILY", "ANNOTATION", "SOURCE",
-    "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3",
-    "LIGAND_1_CONF", "LIGAND_2_CONF", "RECEPTOR_1_CONF", "RECEPTOR_2_CONF", "RECEPTOR_3_CONF",
-    "LIGAND_1_TYPE", "LIGAND_2_TYPE", "RECEPTOR_1_TYPE", "RECEPTOR_2_TYPE", "RECEPTOR_3_TYPE"
-  )
+  LR[, R3 := ifelse(R3 %in% c(" ", "    "), NA, R3)]
+  if (species == "mouse") {
+    ortho <- get_orthologs(
+      genes = unique(c(LR$L1, LR$L2, LR$R1, LR$R2, LR$R3)),
+      input_species = "human",
+      one2one = one2one
+    )
+    ortho <- stats::na.omit(ortho)
+    LR <- merge_LR_orthologs(
+      LR_dt = LR,
+      ortho_dt = ortho,
+      nL = 2,
+      charL = "L",
+      nR = 3,
+      charR = "R"
+    )
+    cols_to_keep <- c(
+      "LR_SORTED",
+      "FAMILY", "SUBFAMILY", "ANNOTATION", "SOURCE",
+      "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3",
+      "LIGAND_1_CONF", "LIGAND_2_CONF", "RECEPTOR_1_CONF", "RECEPTOR_2_CONF", "RECEPTOR_3_CONF",
+      "LIGAND_1_TYPE", "LIGAND_2_TYPE", "RECEPTOR_1_TYPE", "RECEPTOR_2_TYPE", "RECEPTOR_3_TYPE"
+    )
+  }
+  if (species == "human") {
+    setnames(
+      x = LR,
+      old = c(
+        "L1", "L2",
+        "R1", "R2", "R3"
+      ),
+      new = c(
+        "LIGAND_1", "LIGAND_2",
+        "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3"
+      )
+    )
+    LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
+      temp <- c(
+        sapply(1:2, function(j) {
+          get(paste0("LIGAND_", j))[[i]]
+        }),
+        sapply(1:3, function(j) {
+          get(paste0("RECEPTOR_", j))[[i]]
+        })
+      )
+      temp <- temp[!is.na(temp)]
+      temp <- sort(temp)
+      temp <- paste0(temp, collapse = "_")
+    }))]
+    LR <- LR[!duplicated(LR_SORTED)]
+    cols_to_keep <- c(
+      "LR_SORTED",
+      "FAMILY", "SUBFAMILY", "ANNOTATION", "SOURCE",
+      "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3"
+    )
+  }
+  LR <- LR[!is.na(SOURCE)]
+  LR[, SOURCE := gsub(" ", "", SOURCE)]
+  LR[, SOURCE := paste0("PMID:", SOURCE)]
+  LR[, SOURCE := gsub(";", ";PMID:", SOURCE)]
   return(LR[, cols_to_keep, with = FALSE])
 }
 
@@ -768,7 +1189,8 @@ merge_LR_orthologs <- function(
   nL,
   charL,
   nR,
-  charR) {
+  charR
+) {
   to_keep <- LR_SORTED <- NULL
   out_names <- c(
     sapply(1:nL, function(i) {
@@ -838,7 +1260,8 @@ merge_LR_orthologs <- function(
 get_orthologs <- function(
   genes,
   input_species,
-  one2one = FALSE) {
+  one2one = FALSE
+) {
   if (!requireNamespace("biomaRt", quietly = TRUE)) {
     stop("Package \"biomaRt\" needed for this function to work. Please install it.",
          call. = FALSE
