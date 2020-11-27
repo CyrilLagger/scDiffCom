@@ -6,6 +6,7 @@
 \usage{
 run_interaction_analysis(
   seurat_object,
+  LRdb_table,
   celltype_column_id,
   condition_column_id = NULL,
   cond1_name = NULL,
@@ -15,7 +16,6 @@ run_interaction_analysis(
   log_scale = FALSE,
   threshold_min_cells = 5,
   threshold_pct = 0.1,
-  LRdb_table = LRdb_mouse$LRdb_curated,
   object_name = "scDiffCom_object",
   permutation_analysis = TRUE,
   iterations = 1000,
@@ -30,6 +30,8 @@ run_interaction_analysis(
 }
 \arguments{
 \item{seurat_object}{A Seurat object that contains pre-normalized data as well as cell-type annotations.}
+
+\item{LRdb_table}{A data.table with ligand-receptor interactions.}
 
 \item{celltype_column_id}{The \code{meta.data} name of \code{seurat_object} that indicates the cell-type of each cell (e.g.: "CELL-TYPE")}
 
@@ -53,8 +55,6 @@ Set to \code{5} by default.}
 
 \item{threshold_pct}{The minimal percentage of cells that need to express a gene, for the gene to be considered in the analysis.
 Set to \code{0.1} by default.}
-
-\item{LRdb_table}{A data.table with ligand-receptor interactions. Set by default to \code{LR6db}, the internal database of scDiffCom.}
 
 \item{object_name}{The name of the scDiffCom object that will be returned. Set to "scDiffCom_object" by default.}
 

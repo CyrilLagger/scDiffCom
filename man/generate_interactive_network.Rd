@@ -2,22 +2,18 @@
 % Please edit documentation in R/scdiffcom.R
 \name{generate_interactive_network}
 \alias{generate_interactive_network}
-\title{#' Generate interactive networks with visNetwork
-#'
-#' @param object scDiffCom
-#' @param network_type chr in "bipartite", "cells"
-#'
-#' @return visNetwork interactive network
-#' @export}
+\title{Generate interactive networks with visNetwork}
 \usage{
 generate_interactive_network(object, network_type)
 }
+\arguments{
+\item{object}{scDiffCom}
+
+\item{network_type}{chr in "bipartite", "cells"}
+}
+\value{
+visNetwork interactive network
+}
 \description{
-#' Generate interactive networks with visNetwork
-#'
-#' @param object scDiffCom
-#' @param network_type chr in "bipartite", "cells"
-#'
-#' @return visNetwork interactive network
-#' @export
+Generate interactive networks with visNetwork
 }
