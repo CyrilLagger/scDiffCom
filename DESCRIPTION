@@ -26,7 +26,9 @@ Suggests:
     ontologyIndex,
     ontoProc,
     SingleCellSignalR,
-    testthat (>= 2.1.0)
+    testthat (>= 2.1.0),
+    knitr,
+    rmarkdown
 Imports: 
     data.table,
     DelayedArray,
@@ -40,5 +42,6 @@ Imports:
     ggplot2,
     igraph,
     purrr,
-    scales
-
+    scales,
+    visNetwork
+VignetteBuilder: knitr

@@ -1,0 +1,78 @@
+---
+title: "scDiffCom-vignette"
+author: "Cyril Lagger, Eugen Ursu"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{scDiffCom-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Installation and dependencies
+
+```
+devtools::install_github("https://github.com/CyrilLagger/scDiffCom")
+```
+## Workflow
+
+### Prepare a Seurat object
+
+```{r setup}
+library(scDiffCom)
+library(Seurat)
+seurat_sample_tms_liver <- scDiffCom::seurat_sample_tms_liver
+seurat_sample_tms_liver
+```
+
+### Run the interaction analysis 
+
+```{r}
+
+tms_liver_interactions <- run_interaction_analysis(
+  seurat_object = seurat_sample_tms_liver,
+  LRdb_species = "mouse",
+  celltype_column_id = "cell_ontology_class",
+  condition_column_id = "age_group",
+  cond1_name = "YOUNG",
+  cond2_name = "OLD",
+  slot = "data",
+  iterations = 100
+)
+
+```
+
+### Modify the filtering parameters
+
+### Display Volcano and ORA plots
+
+```{r}
+
+plot_ora(
+  object = tms_liver_interactions,
+  category = "GO_TERMS",
+  regulation = "DOWN",
+  max_terms_show = 20
+)
+
+```
+
+### Display Summary network
+
+
+```{r}
+#library(tidyverse) # temporary fix
+#generate_interactive_network(
+#  tms_liver_interactions,
+#  "bipartite"
+#)
+```
+
+
+### Perform over-representation analysis on new categories
