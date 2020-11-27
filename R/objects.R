@@ -108,6 +108,9 @@ validate_parameters <- function(
     params,
     eval
   )
+  if (!(params$LRdb_species %in% c("mouse", "human"))) {
+    res <- c(res, "`LRdb_species` must be either 'human' or 'mouse'")
+  }
   if (!is.character(params$celltype_column_id) | length(params$celltype_column_id) != 1) {
     res <- c(res, "`celltype_column_id` must be a character vector of length 1")
   }

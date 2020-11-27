@@ -6,7 +6,7 @@
 #'  significant CCIs, as well as differentially expressed CCIs in case the dataset contains two conditions of interest.
 #'
 #' @param seurat_object A Seurat object that contains pre-normalized data as well as cell-type annotations.
-#' @param LRdb_table A data.table with ligand-receptor interactions.
+#' @param LRdb_species Eithe "mouse" or "human". It species with internal ligand-receptor database to use.
 #' @param celltype_column_id The \code{meta.data} name of \code{seurat_object} that indicates the cell-type of each cell (e.g.: "CELL-TYPE")
 #' @param condition_column_id The \code{meta.data} name of \code{seurat_object} that indicates the two groups of cells
 #'  on which to perform the differential analysis (e.g: "AGE"). Set to \code{NULL} (default) to perform a detection analysis without
@@ -42,7 +42,7 @@
 #' @export
 run_interaction_analysis <- function(
   seurat_object,
-  LRdb_table,
+  LRdb_species,
   celltype_column_id,
   condition_column_id = NULL,
   cond1_name = NULL,
@@ -66,12 +66,13 @@ run_interaction_analysis <- function(
   if (!methods::is(seurat_object, "Seurat")) {
     stop("`seurat_object` must be a Seurat object")
   }
-  if (!methods::is(LRdb_table, "data.table")) {
-    stop("`LRdb_table must be a data.table")
-  }
   analysis_parameters <- as.list(match.call())[-1]
+  formal_temp <- formals(run_interaction_analysis)
+  for (arg_temp in names(formal_temp)) {
+    if (!(arg_temp %in% names(analysis_parameters)))
+      analysis_parameters <- append(analysis_parameters, formal_temp[arg_temp])
+  }
   analysis_parameters$seurat_object <- NULL
-  analysis_parameters$LRdb_table <- NULL
   analysis_parameters <- lapply(
     analysis_parameters,
     eval
@@ -82,6 +83,12 @@ run_interaction_analysis <- function(
   )
   if (!is.null(check_parameters)) {
     stop(paste0("Invalid parameters: ", paste0(check_parameters, collapse = " and ")))
+  }
+  if (LRdb_species == "human") {
+    LRdb_table <- scDiffCom::LRdb_human$LRdb_curated
+  }
+  if (LRdb_species == "mouse") {
+    LRdb_table <- scDiffCom::LRdb_mouse$LRdb_curated
   }
   threshold_min_cells <- as.integer(threshold_min_cells)
   iterations <- as.integer(iterations)
@@ -357,7 +364,8 @@ run_ora <- function(
             cci_detected = get_cci_detected(object),
             logfc_threshold = logfc_threshold,
             regulation = regulation,
-            category = category
+            category = category,
+            species = temp_param$LRdb_species
           )
         },
         USE.NAMES = TRUE,
@@ -373,9 +381,6 @@ run_ora <- function(
         }
       }
       object <- set_ora_default(object, res_ora)
-
-
-
     } else if (stringent_or_default == "stringent") {
       if (is.null(stringent_logfc_threshold)) {
         if (verbose) message("Choose a non-NULL `stringent_logfc_threshold` to perform stringent over-representation analysis.")
@@ -395,7 +400,8 @@ run_ora <- function(
                 cci_detected = get_cci_detected(object),
                 logfc_threshold = stringent_logfc_threshold,
                 regulation = regulation,
-                category = category
+                category = category,
+                species = temp_param$LRdb_species
               )
             },
             USE.NAMES = TRUE,
@@ -415,7 +421,6 @@ run_ora <- function(
   }
   return(object)
 }
-
 
 #' Plot over-represented terms of a given category
 #'

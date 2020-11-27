@@ -2,7 +2,8 @@ build_ora_dt <- function(
   cci_detected,
   logfc_threshold,
   regulation,
-  category
+  category,
+  species
 ) {
   COUNTS_VALUE_REGULATED <- COUNTS_NOTVALUE_REGULATED <-
     COUNTS_NOTVALUE_NOTREGULATED <- COUNTS_VALUE_NOTREGULATED <-
@@ -20,7 +21,12 @@ build_ora_dt <- function(
           reg = reg,
           logfc_threshold = logfc_threshold
         )
-        go_intersection_dt <- LRdb_mouse$LRdb_curated_GO$LR_GO_intersection
+        if (species == "mouse") {
+          go_intersection_dt <- scDiffCom::LRdb_mouse$LRdb_curated_GO
+        }
+        if (species == "human") {
+          go_intersection_dt <- scDiffCom::LRdb_human$LRdb_curated_GO
+        }
         counts_intersection_dt <- data.table::merge.data.table(
           go_intersection_dt,
           counts_dt,
@@ -170,16 +176,6 @@ clip_infinite_OR <- function(
 ) {
   OR <- COUNTS_VALUE_REGULATED <- COUNTS_NOTVALUE_NOTREGULATED <-
     COUNTS_VALUE_NOTREGULATED <- COUNTS_NOTVALUE_REGULATED <- NULL
-  # if(sum(is.finite(ORA_dt$OR)) == 0) {
-  #   ORA_dt$OR <- 10
-  # } else {
-  #   ORA_dt$OR[is.infinite(ORA_dt$OR)] <- ceiling(max(ORA_dt$OR[is.finite(ORA_dt$OR)]))
-  # }
-  # if(sum(ORA_dt$OR > 0) == 0) {
-  #   ORA_dt$OR <- 0.1
-  # } else {
-  #   ORA_dt$OR[ORA_dt$OR == 0] <- min(ORA_dt$OR[ORA_dt$OR > 0])
-  # }
   ORA_dt[, OR := ifelse(
     is.infinite(OR),
     (COUNTS_VALUE_REGULATED + 1) * (COUNTS_NOTVALUE_NOTREGULATED + 1) / ((COUNTS_VALUE_NOTREGULATED + 1) * (COUNTS_NOTVALUE_REGULATED + 1)),
