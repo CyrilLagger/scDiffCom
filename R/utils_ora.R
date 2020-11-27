@@ -20,7 +20,7 @@ build_ora_dt <- function(
           reg = reg,
           logfc_threshold = logfc_threshold
         )
-        go_intersection_dt <- LR6db$LR6db_GO$LR_GO_intersection
+        go_intersection_dt <- LRdb_mouse$LRdb_curated_GO$LR_GO_intersection
         counts_intersection_dt <- data.table::merge.data.table(
           go_intersection_dt,
           counts_dt,
