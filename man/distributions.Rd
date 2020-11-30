@@ -4,10 +4,10 @@
 \alias{distributions}
 \title{Return scDiffCom \code{distributions}}
 \usage{
-distributions(x)
+distributions(object)
 }
 \arguments{
-\item{x}{An scDiffCom object.}
+\item{object}{An scDiffCom object.}
 }
 \description{
 Return scDiffCom \code{distributions}

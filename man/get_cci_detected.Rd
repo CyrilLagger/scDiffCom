@@ -4,10 +4,10 @@
 \alias{get_cci_detected}
 \title{Return scDiffCom \code{cci_detected}}
 \usage{
-get_cci_detected(x)
+get_cci_detected(object)
 }
 \arguments{
-\item{x}{An scDiffCom object.}
+\item{object}{An scDiffCom object.}
 }
 \description{
 Return scDiffCom \code{cci_detected}

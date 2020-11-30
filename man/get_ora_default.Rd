@@ -4,10 +4,10 @@
 \alias{get_ora_default}
 \title{Return scDiffCom \code{ora_default}}
 \usage{
-get_ora_default(x)
+get_ora_default(object)
 }
 \arguments{
-\item{x}{An scDiffCom object.}
+\item{object}{An scDiffCom object.}
 }
 \description{
 Return scDiffCom \code{ora_default}

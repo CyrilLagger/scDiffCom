@@ -4,10 +4,10 @@
 \alias{get_ora_stringent}
 \title{Return scDiffCom \code{ora_stringent}}
 \usage{
-get_ora_stringent(x)
+get_ora_stringent(object)
 }
 \arguments{
-\item{x}{An scDiffCom object.}
+\item{object}{An scDiffCom object.}
 }
 \description{
 Return scDiffCom \code{ora_stringent}

@@ -38,12 +38,11 @@ seurat_sample_tms_liver
 tms_liver_interactions <- run_interaction_analysis(
   seurat_object = seurat_sample_tms_liver,
   LRdb_species = "mouse",
-  celltype_column_id = "cell_ontology_class",
-  condition_column_id = "age_group",
+  seurat_celltype_id = "cell_ontology_class",
+  seurat_condition_id = "age_group",
   cond1_name = "YOUNG",
   cond2_name = "OLD",
-  slot = "data",
-  iterations = 100
+  iterations = 10
 )
 
 ```
@@ -54,12 +53,12 @@ tms_liver_interactions <- run_interaction_analysis(
 
 ```{r}
 
-plot_ora(
-  object = tms_liver_interactions,
-  category = "GO_TERMS",
-  regulation = "DOWN",
-  max_terms_show = 20
-)
+#plot_ora(
+#  object = tms_liver_interactions,
+#  category = "GO_TERMS",
+#  regulation = "DOWN",
+#  max_terms_show = 20
+#)
 
 ```
 

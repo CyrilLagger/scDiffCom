@@ -1,3 +1,141 @@
+run_ora <- function(
+  object,
+  categories,
+  overwrite,
+  stringent_or_default,
+  stringent_logfc_threshold,
+  verbose,
+  class_signature,
+  global
+) {
+  regulation <- c("UP", "DOWN", "FLAT", "DIFF")
+  temp_param <- parameters(object)
+  condition_inputs <- list(
+    is_cond = temp_param$conditional_analysis,
+    cond1 = temp_param$cond1_name,
+    cond2 = temp_param$cond2_name
+  )
+  if (class_signature == "scDiffCom") {
+    temp_by <- NULL
+  }
+  if (class_signature == "scDiffComCombined") {
+    temp_by <- "ID"
+  }
+  if (temp_param$permutation_analysis &
+      condition_inputs$is_cond) {
+    logfc_threshold <- temp_param$threshold_logfc
+    if (stringent_or_default == "default") {
+      temp_ora <- object@ora_default
+      categories_old <- names(temp_ora)
+      if (is.null(categories_old)) {
+        mes <- paste0(
+          "Performing over-representation analysis on the specified categories: ",
+          paste0(categories, collapse = ", "),
+          "."
+        )
+        if (verbose) message(mes)
+        categories_to_run <- categories
+      } else {
+        if (overwrite) {
+          mes <- paste0(
+            "Performing over-representation analysis on the specified categories: ",
+            paste0(categories, collapse = ", "),
+            ".\n",
+            "Erasing all previous ORA results: ",
+            paste0(categories_old, collapse = ", "),
+            "."
+          )
+          if (verbose) message(mes)
+          categories_to_run <- categories
+        } else {
+          categories_to_run <- setdiff(categories, categories_old)
+          mes <- paste0(
+            "Performing over-representation analysis on the specified categories: ",
+            paste0(categories_to_run, collapse = ", "),
+            ".\n",
+            "Keeping previous ORA results: ",
+            paste0(setdiff(categories_old, categories_to_run), collapse = ", "),
+            "."
+          )
+          if (verbose) message(mes)
+        }
+      }
+      ora_default <- sapply(
+        categories_to_run,
+        function(category) {
+          temp_dt <- object@cci_detected
+          res <- temp_dt[
+            ,
+            build_ora_dt(
+              cci_detected = .SD,
+              logfc_threshold = logfc_threshold,
+              regulation = regulation,
+              category = category,
+              species = temp_param$LRdb_species
+            ),
+            by = temp_by
+          ]
+        },
+        USE.NAMES = TRUE,
+        simplify = FALSE
+      )
+      if (is.null(categories_old)) {
+        res_ora <- ora_default
+      } else {
+        if (overwrite) {
+          res_ora <- ora_default
+        } else {
+          res_ora <- c(temp_ora, ora_default)
+        }
+      }
+      object@ora_default <- res_ora
+    } else if (stringent_or_default == "stringent") {
+      if (is.null(stringent_logfc_threshold)) {
+        if (verbose) message("Choose a non-NULL `stringent_logfc_threshold` to perform stringent over-representation analysis.")
+      } else  {
+        if(stringent_logfc_threshold > logfc_threshold) {
+          mes <- paste0(
+            "Performing stringent over-representation analysis on all specified categories: ",
+            paste0(categories, collapse = ", "),
+            ".\n",
+            "Erasing all previous stringent ORA results."
+          )
+          if (verbose) message(mes)
+          ora_stringent <- sapply(
+            categories,
+            function(category) {
+
+              temp_dt <- object@cci_detected
+              res <- temp_dt[
+                ,
+                build_ora_dt(
+                  cci_detected = .SD,
+                  logfc_threshold = stringent_logfc_threshold,
+                  regulation = regulation,
+                  category = category,
+                  species = temp_param$LRdb_species
+                ),
+                by = temp_by
+                ]
+            },
+            USE.NAMES = TRUE,
+            simplify = FALSE
+          )
+          object@ora_stringent <- ora_stringent
+        } else {
+          if (verbose) message("The supposedly `stringent` logfc is actually less `stringent` than the default parameter.
+                               Choose a higher value.")
+        }
+      }
+    } else {
+      stop("Can't recognize parameter `stringent_or_default")
+    }
+  } else {
+    if (verbose) message("No over-representation analysis analysis available for the selected parameters.")
+  }
+  return(object)
+}
+
 build_ora_dt <- function(
   cci_detected,
   logfc_threshold,

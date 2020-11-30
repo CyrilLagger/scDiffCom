@@ -34,7 +34,7 @@ get_GO_interactions <- function(
   species,
   LR_db
 ) {
-  GO_NAME <- NULL
+  GO_NAME <- i.GO_name <- NULL
   if (!(species %in% c("human", "mouse"))) {
     stop("`species` muste be either 'mouse' or 'human'")
   }
@@ -137,7 +137,7 @@ combine_LR_db <- function(
 ) {
   DATABASE <- SOURCE <- ANNOTATION <- FAMILY <- SUBFAMILY <- keep_subLR <-
     SOURCE_CLEAN <- SOURCE_no_digit <- is_complex_temp <- LIGAND_2 <- RECEPTOR_2 <- LR_vectorized_temp <-
-    N_IS_SUBPART <- NULL
+    N_IS_SUBPART <- i.N_IS_SUBPART <- NULL
   if (!(species %in% c("human", "mouse"))) {
     stop("`species` muste be either 'mouse' or 'human'")
   }

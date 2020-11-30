@@ -45,3 +45,19 @@ Imports:
     scales,
     visNetwork
 VignetteBuilder: knitr
+Collate: 
+    'cellphonedb_wrapper.R'
+    'data.R'
+    'generics.R'
+    'interaction_analysis.R'
+    'objects.R'
+    'utils_LRdb.R'
+    'utils_cci.R'
+    'utils_cpdb_wrapper.R'
+    'utils_filtering.R'
+    'utils_fpm.R'
+    'utils_interactiveNetworks.R'
+    'utils_ora.R'
+    'utils_permutation.R'
+    'utils_preprocessing.R'
+    'utils_validation.R'

@@ -4,10 +4,10 @@
 \alias{parameters}
 \title{Return scDiffCom \code{parameters}}
 \usage{
-parameters(x)
+parameters(object)
 }
 \arguments{
-\item{x}{An scDiffCom object.}
+\item{object}{An scDiffCom object.}
 }
 \description{
 Return scDiffCom \code{parameters}

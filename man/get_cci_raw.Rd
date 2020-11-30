@@ -4,10 +4,10 @@
 \alias{get_cci_raw}
 \title{Return scDiffCom \code{cci_raw}}
 \usage{
-get_cci_raw(x)
+get_cci_raw(object)
 }
 \arguments{
-\item{x}{An scDiffCom object.}
+\item{object}{An scDiffCom object.}
 }
 \description{
 Return scDiffCom \code{cci_raw}
