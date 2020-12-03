@@ -289,12 +289,6 @@ setMethod(
 # Functions
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-add_scDiffCom <- function(
-
-) {
-
-}
-
 Combine_scDiffCom <- function(
   l,
   object_name,
@@ -505,6 +499,8 @@ RunORA.scDiffCom <- function(
   )
 }
 
+#' @export
+#' @method RunORA scDiffComCombined
 RunORA.scDiffComCombined <- function(
   object,
   categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS"),
@@ -621,19 +617,19 @@ PlotORA <- function(
     theme(text = element_text(size = 16))
 }
 
-#' #' Generate interactive networks with visNetwork
-#' #'
-#' #' @param object scDiffCom
-#' #' @param network_type chr in "bipartite", "cells"
-#' #'
-#' #' @return visNetwork interactive network
-#' #' @export
-#' generate_interactive_network = function(
-#'   object,
-#'   network_type
-#' ) {
-#'   return(build_interactive_network(object, network_type))
-#' }
+#' Generate interactive networks with visNetwork
+#'
+#' @param object scDiffCom
+#' @param network_type chr in "bipartite", "cells"
+#'
+#' @return visNetwork interactive network
+#' @export
+generate_interactive_network = function(
+  object,
+  network_type
+) {
+  return(build_interactive_network(object, network_type))
+}
 
 #'
 #' #' Title
@@ -719,105 +715,4 @@ PlotORA <- function(
 #'   # Process ora results and construct graph
 #' }
 
-
-####Old stuff #####
-
-
-#' #' Modify scDiffCom \code{parameters}
-#' #'
-#' #' @param x An scDiffCom object.
-#' #' @param value A new list of parameters.
-#' #'
-#' #' @export
-#' setGeneric("parameters<-", function(x, value) standardGeneric("parameters<-"))
-#'
-#' #' @describeIn scDiffCom Modify scDiffCom \code{parameters}.
-#' #' @inheritParams parameters<-
-#' setMethod("parameters<-", "scDiffCom", function(x, value) {
-#'   x@parameters <- value
-#'   validObject(x)
-#'   return(x)
-#' })
-#'
-#' #' Modify scDiffCom \code{cci_raw}
-#' #'
-#' #' @param x An scDiffCom object.
-#' #' @param new_cci_raw A \code{cci_raw} data.table.
-#' #'
-#' #' @export
-#' setGeneric("set_cci_raw", function(x, new_cci_raw) standardGeneric("set_cci_raw"))
-#'
-#' #' @describeIn scDiffCom Modify scDiffCom \code{cci_raw}.
-#' #' @inheritParams set_cci_raw
-#' setMethod("set_cci_raw", "scDiffCom", function(x, new_cci_raw) {
-#'   x@cci_raw <- new_cci_raw
-#'   validObject(x)
-#'   return(x)
-#' })
-#'
-#' #' Modify scDiffCom \code{cci_detected}
-#' #'
-#' #' @param x An scDiffCom object.
-#' #' @param new_cci_detected A \code{cci_detected} data.table.
-#' #'
-#' #' @export
-#' setGeneric("set_cci_detected", function(x, new_cci_detected) standardGeneric("set_cci_detected"))
-#'
-#' #' @describeIn scDiffCom Modify scDiffCom \code{cci_detected}.
-#' #' @inheritParams set_cci_detected
-#' setMethod("set_cci_detected", "scDiffCom", function(x, new_cci_detected) {
-#'   x@cci_detected <- new_cci_detected
-#'   validObject(x)
-#'   return(x)
-#' })
-
-#' #' Modify scDiffCom \code{distributions}
-#' #'
-#' #' @param x An scDiffCom object.
-#' #' @param value A new list of distributions.
-#' #'
-#' #' @export
-#' setGeneric("distributions<-", function(x, value) standardGeneric("distributions<-"))
-#'
-#' #' @describeIn scDiffCom Modify scDiffCom \code{distributions}.
-#' #' @inheritParams distributions<-
-#' setMethod("distributions<-", "scDiffCom", function(x, value) {
-#'   x@distributions <- value
-#'   validObject(x)
-#'   return(x)
-#' })
-#'
-#'
-#'
-#' #' Modify scDiffCom \code{ora_default}
-#' #'
-#' #' @param x An scDiffCom object.
-#' #' @param new_ora_default A \code{ora_default} list of data.tables.
-#' #'
-#' #' @export
-#' setGeneric("set_ora_default", function(x, new_ora_default) standardGeneric("set_ora_default"))
-#'
-#' #' @describeIn scDiffCom Modify scDiffCom \code{ora_default}.
-#' #' @inheritParams set_ora_default
-#' setMethod("set_ora_default", "scDiffCom", function(x, new_ora_default) {
-#'   x@ora_default <- new_ora_default
-#'   validObject(x)
-#'   return(x)
-#' })
-#'
-#' #' Modify scDiffCom \code{ora_stringent}
-#' #'
-#' #' @param x An scDiffCom object.
-#' #' @param new_ora_stringent A \code{ora_stringent} list of data.tables.
-#' #'
-#' #' @export
-#' setGeneric("set_ora_stringent", function(x, new_ora_stringent) standardGeneric("set_ora_stringent"))
-#'
-#' #' @describeIn scDiffCom Modify scDiffCom \code{ora_stringent}.
-#' #' @inheritParams set_ora_stringent
-#' setMethod("set_ora_stringent", "scDiffCom", function(x, new_ora_stringent) {
-#'   x@ora_stringent <- new_ora_stringent
-#'   validObject(x)
-#'   return(x)
-#' })
 

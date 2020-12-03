@@ -3,6 +3,7 @@
 S3method(FilterCCI,scDiffCom)
 S3method(FilterCCI,scDiffComCombined)
 S3method(RunORA,scDiffCom)
+S3method(RunORA,scDiffComCombined)
 export(FilterCCI)
 export(PlotORA)
 export(RunORA)

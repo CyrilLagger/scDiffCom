@@ -19,7 +19,11 @@ run_ora <- function(
     temp_by <- NULL
   }
   if (class_signature == "scDiffComCombined") {
-    temp_by <- "ID"
+    if (global) {
+      temp_by <- NULL
+    } else {
+      temp_by <- "ID"
+    }
   }
   if (temp_param$permutation_analysis &
       condition_inputs$is_cond) {
@@ -88,7 +92,15 @@ run_ora <- function(
           res_ora <- c(temp_ora, ora_default)
         }
       }
-      object@ora_default <- res_ora
+      if (global == TRUE) {
+        if (class_signature == "scDiffComCombined") {
+          object@ora_combined_default <- res_ora
+        } else {
+          stop("No ORA global analysis allowed for object of class `scDiffComCombined`")
+        }
+      } else {
+        object@ora_default <- res_ora
+      }
     } else if (stringent_or_default == "stringent") {
       if (is.null(stringent_logfc_threshold)) {
         if (verbose) message("Choose a non-NULL `stringent_logfc_threshold` to perform stringent over-representation analysis.")
@@ -121,7 +133,15 @@ run_ora <- function(
             USE.NAMES = TRUE,
             simplify = FALSE
           )
-          object@ora_stringent <- ora_stringent
+          if (global == TRUE) {
+            if (class_signature == "scDiffComCombined") {
+              object@ora_global_stringent <- ora_stringent
+            } else {
+              stop("No ORA global analysis allowed for object of class `scDiffComCombined`")
+            }
+          } else {
+            object@ora_stringent <- ora_stringent
+          }
         } else {
           if (verbose) message("The supposedly `stringent` logfc is actually less `stringent` than the default parameter.
                                Choose a higher value.")

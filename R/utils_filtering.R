@@ -97,7 +97,8 @@ run_filtering_and_ora <- function(
         stringent_or_default = "default",
         stringent_logfc_threshold = NULL,
         verbose = verbose,
-        class_signature = class_signature
+        class_signature = class_signature,
+        global = FALSE
       )
     }
   }
