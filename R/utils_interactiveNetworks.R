@@ -103,7 +103,7 @@ construct_graph <- function(dt_ora, tissue, dt_filtered = NULL) {
   dt_ctypes <- get_celltypes_enrichment(dt_ora)
   dt_edge <- dt_ctypes[Tissue == tissue, .SD, .SDcols = !c("Tissue")]
 
-  # Label the transmitter (L) and receiver (R) cells
+  # TODO: Add counts for Ligand_cell > Receptor_cell
   dt_edge <- dt_edge[, .(
     "Ligand_cell" = paste0(Ligand_cell, " (L)"),
     "Receptor_cell" = paste0(Receptor_cell, " (R)"),
@@ -120,15 +120,17 @@ construct_graph <- function(dt_ora, tissue, dt_filtered = NULL) {
     "pval_adj_DOWN" = pval_readj_on_celltypes_DOWN
   )]
 
-  # Handle NAs
-  message(paste0(
-    "process_edge_dt: #NAs in ORA:celltypes for ",
-    tissue, ":", sum(is.na(dt_edge)), "; NA->1"
-  ))
-  dt_edge[is.na(dt_edge)] <- 1
+  has_na = sum(is.na(dt_edge)) > 0
+  if (has_na) {
+    message(paste0(
+        "process_edge_dt: #NAs in ORA:celltypes for ",
+         tissue, ":", sum(is.na(dt_edge)), "; NA->1"
+      ))
+    dt_edge[is.na(dt_edge)] <- 1
+  }
 
-  # Shouldn't have Inf with pseudocounts
-  if (sum(dt_edge == Inf) > 0) {
+  has_inf = sum(dt_edge == Inf) > 0
+  if (has_inf) {
     stop("construct_graph: Inf values in dt_edge")
   }
 
@@ -138,7 +140,7 @@ construct_graph <- function(dt_ora, tissue, dt_filtered = NULL) {
   G <- igraph::graph_from_data_frame(
     d = dt_edge,
     directed = TRUE,
-    vertices = NULL
+    vertices = NULL  # TODO: Add data on vertices (counts)
   )
 
   # Set graph tissue attribute
@@ -442,7 +444,7 @@ build_igraph <- function(
                          network_type) {
   ora_ct <- ora$ER_CELLTYPES
   ora_ct[, Tissue := tissue]
-  G <- construct_graph(ora_ct, tissue, dt_filtered = dt_filtered)
+  G <- construct_graph(ora_ct, tissue, dt_filtered = dt_filtered)  # TODO: add scDiffCom object as parameter
   G <- setup_graph(G, use_adjpval = TRUE, disperse = TRUE)
   if (network_type == "cells") {
     G <- map_bipartite_to_community(G)
@@ -462,14 +464,26 @@ extract_node_edges <- function(G, exclude_nonsign = TRUE) {
     list(nodes = nodes, edges = edges)
   )
 }
-build_network_global <- function(
+build_network_skeleton <- function(
                                  nodes,
                                  edges,
                                  network_type) {
   nodes_ <- data.table::copy(nodes)
   edges_ <- data.table::copy(edges)
-
-  title_template <- "<p>%s</p><p>Median num cells:</p><p>Num interactions:</p>"
+  
+  node_annotation_html <- function() {
+      temp_dt = data.table::data.table(
+          Type=c("Tissue counts", "Cell counts", "Cell OR"),
+          Total=1:3,
+          UP=1:3,
+          DOWN=1:3,
+          FLAT=1:3,
+          DIFF=1:3
+      )
+      table_html = kableExtra::kbl(temp_dt)
+      html = paste0("<p>CELLNAME</p>", as.character(table_html), "<p>Num cells: ?</p>")
+    return(html)
+  }
   nodes_[
     ,
     "id" := name
@@ -488,7 +502,7 @@ build_network_global <- function(
   ][
     ,
     # 'shapeProperties' := NULL][,
-    "title" := sprintf(title_template, name)
+    "title" := node_annotation_html()
   ]
 
   if (network_type == "bipartite") {
@@ -503,7 +517,10 @@ build_network_global <- function(
   } else {
     stop('argument network_type not in "bipartite", "cells"')
   }
-
+  
+  edge_annotation_html <- function() {
+    paste0("<p>E cell > R cell</p>", as.character(kableExtra::kbl(data.table::data.table(Type=c('Counts', 'OR'), Total=1:2, UP=1:2, DOWN=1:2, FLAT=1:2, DIFF=1:2))) )
+  }
   edges_[
     ,
     color.color := edge.color
@@ -516,15 +533,18 @@ build_network_global <- function(
   ][
     ,
     smooth := TRUE
+  ][
+    ,
+    title := edge_annotation_html()  # "Num_UP=10, Num_DOWN=10, Num_FLAT=30"
   ]
 
   return(
     visNetwork::visNetwork(
       nodes_, edges_,
       width = "100%", # height='100%',
-      main = "Tissue cell:cell communication",
-      submain = "...",
-      footer = "Graph",
+      main = sprintf("%s", 'tissue name'),
+      submain = sprintf("%s", network_type),
+      footer = "Ageing of intercellular communication",
       background = "white"
     )
   )
@@ -545,7 +565,7 @@ get_network_components <- function(
   }
 
   network_components <- list(
-    network_global = build_network_global(
+    network_skeleton = build_network_skeleton(
       nodes, edges,
       network_type = network_type
     ),
@@ -581,7 +601,7 @@ get_network_components <- function(
   return(network_components)
 }
 build_network <- function(
-                          network_global,
+                          network_skeleton,
                           nodes_global = NULL,
                           edges_global = NULL,
                           layout = NULL,
@@ -601,7 +621,7 @@ build_network <- function(
   # For NULL arguments, use the identity as pipeline step
   vis_funcs <- purrr::map_if(vis_funcs, is.null, ~ . %>% identity())
   return(
-    network_global %>%
+    network_skeleton %>%
       (vis_funcs$nodes_global) %>%
       (vis_funcs$edges_global) %>%
       (vis_funcs$layout) %>%
