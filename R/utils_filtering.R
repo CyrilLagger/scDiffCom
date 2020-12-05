@@ -86,7 +86,7 @@ run_filtering_and_ora <- function(
     object@ora_default <- list()
   } else {
     object@cci_detected <- cci_dt
-    #validate object
+    #validate object?
     if (skip_ora) {
       object@ora_default <- list()
     } else {
@@ -100,6 +100,19 @@ run_filtering_and_ora <- function(
         class_signature = class_signature,
         global = FALSE
       )
+      if (class_signature == "scDiffComCombined") {
+        if (verbose) message("Running global ORA.")
+        object <- run_ora(
+          object = object,
+          categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "ID"),
+          overwrite = TRUE,
+          stringent_or_default = "default",
+          stringent_logfc_threshold = NULL,
+          verbose = verbose,
+          class_signature = class_signature,
+          global = TRUE
+        )
+      }
     }
   }
   return(object)

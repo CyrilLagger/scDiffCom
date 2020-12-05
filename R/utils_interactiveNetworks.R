@@ -375,14 +375,25 @@ sort_layout_vertices <- function(layout, G, config, disperse) {
 }
 
 #### Interactive networks ####
-extract_from_object <- function(object) {
+extract_from_object <- function(object, class_signature, subobject_name) {
   tryCatch(
     error = function(cnd) {
-      return(list(
-        tissue = object@parameters$object_name,
-        ora = object@ora_default,
-        dt_filtered = object@cci_detected
-      ))
+      if (class_signature == "scDiffCom") {
+        return(list(
+          tissue = object@parameters$object_name,
+          ora = object@ora_default,
+          dt_filtered = object@cci_detected
+        ))
+      }
+      if (class_signature == "scDiffComCombined") {
+        ora <- object@ora_default
+        ora$ER_CELLTYPES <- ora$ER_CELLTYPES[ID == subobject_name][, ID := NULL]
+        return(list(
+          tissue = subobject_name,
+          ora = ora,
+          dt_filtered = object@cci_detected[ID == subobject_name][, ID := NULL]
+        ))
+      }
     },
     stop("Can't extract necessary data from object. Maybe check scDiffCom object.")
   )
@@ -624,11 +635,14 @@ interactive_from_igraph <- function(
   return(interactive_network)
 }
 build_interactive_network <- function(
-                                      object,
-                                      network_type) {
+  object,
+  network_type,
+  class_signature,
+  subobject_name
+) {
   check_network_type_arg(network_type)
 
-  extracted <- extract_from_object(object)
+  extracted <- extract_from_object(object, class_signature, subobject_name)
   tissue <- extracted$tissue
   ora <- extracted$ora
   dt_filtered <- extracted$dt_filtered

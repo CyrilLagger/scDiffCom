@@ -5,7 +5,8 @@
 \alias{scDiffComCombined-class}
 \title{The scDiffComCombined Class}
 \description{
-A scDiffComCombined object ...
+A scDiffComCombined object stores the results of multiple scDiffCom objects at a single place.
+ It also allows to run a global over-representation analysis.
 }
 \section{Slots}{
 
@@ -22,6 +23,8 @@ performed on the \code{cci_detected} table.}
 
 \item{\code{ora_stringent}}{Same as \code{ora_default} but with a more stringent logfc threshold to specifically focus on strong signals.}
 
-\item{\code{combined_object}}{xxx}
+\item{\code{ora_combined_default}}{Same as \code{ora_default} but for the global analysis.}
+
+\item{\code{ora_combined_default}}{Same as \code{ora_stringent} but for the global analysis.}
 }}
 

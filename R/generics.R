@@ -42,3 +42,19 @@ RunORA <- function(object, ...) {
 PlotORA <- function(object, ...) {
   UseMethod(generic = "PlotORA", object = object)
 }
+
+#' xxx
+#'
+#' xxx
+#'
+#' @param object An scDiffCom object previously returned by \code{run_interaction_analysis}.
+#' @param ... xxx
+#'
+#' @return xxx
+#'
+#' @rdname BuildNetwork
+#' @export BuildNetwork
+#'
+BuildNetwork <- function(object, ...) {
+  UseMethod(generic = "BuildNetwork", object = object)
+}

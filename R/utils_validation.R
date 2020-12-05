@@ -97,8 +97,7 @@ validate_parameters <- function(
     res <- c(res, "`iterations` must be a numeric vector of length 1")
   } else if (params$iterations <= 0) {
     res <- c(res, "`iterations` must be a positive integer")
-  }
-  if (params$iterations > 20000) {
+  } else  if (params$iterations > 20000) {
     warning("performing more than 20'000 `iterations` will require a lot of memory")
   }
   if (!is.numeric(params$threshold_quantile_score) | length(params$threshold_quantile_score) != 1) {

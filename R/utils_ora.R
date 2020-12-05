@@ -135,7 +135,7 @@ run_ora <- function(
           )
           if (global == TRUE) {
             if (class_signature == "scDiffComCombined") {
-              object@ora_global_stringent <- ora_stringent
+              object@ora_combined_stringent <- ora_stringent
             } else {
               stop("No ORA global analysis allowed for object of class `scDiffComCombined`")
             }

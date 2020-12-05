@@ -31,7 +31,7 @@ FilterCCI(object, ...)
 )
 }
 \arguments{
-\item{object}{An object}
+\item{object}{xxx}
 
 \item{...}{Arguments passed to other methods}
 
