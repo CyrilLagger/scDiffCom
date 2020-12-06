@@ -1,74 +1,211 @@
-get_celltypes_enrichment <- function(dt) {
-  COL_LIGAND_RECEPTOR_CELLTYPES <- "ER_CELLTYPES"
-  COL_pval <- "P_VALUE_DIFF"
-  COL_P_VALUE_UP <- "P_VALUE_UP"
-  COL_P_VALUE_DOWN <- "P_VALUE_DOWN"
+# make_empty_scDiffCom <- function() {
+#   return(new("scDiffCom"))
+# }
+# make_empty_igraph <- function() {
+#   return(igraph::make_empty_graph())
+# }
+# make_empty_visNet <- function() {
+#   return(visNetwork::visIgraph(make_empty_igraph()))
+# }
+# 
+# setOldClass("igraph", make_empty_igraph())
+# setOldClass("visNetwork", NULL)
+# 
+# setClass('InteractiveNetsBuilder',
+#          slots = c(
+#            INTERACTIONS = 'scDiffCom',
+#            IGRAPH = "igraph",
+#            VISNET = 'visNetwork',
+#            CONFIG = 'list'
+#          ),
+#          prototype = list(
+#            INTERACTIONS = make_empty_scDiffCom(),
+#            IGRAPH = make_empty_igraph(),
+#            VISNET = NULL,
+#            CONFIG = list()
+#          )
+# )
+# 
+# setValidity('InteractiveNetsBuilder', function(object) {
+#   # TODO
+#   return(TRUE)
+# })
+# 
+# 
+# setGeneric('step01_scDiffCom_to_igraph',
+#            function(x) standardGeneric('step01_scDiffCom_to_igraph'),
+#            signature = 'x'
+# )
+# setMethod('step01_scDiffCom_to_igraph', "InteractiveNetsBuilder", 
+#           function(x) {
+#             build_igraph()
+# })
 
-  # These indicate p-values that have been readjusted
-  #  at celltype level for keeping the signal.
-  COL_pval_readj <- "pval_readj_on_celltypes"
-  COL_pval_readj_UP <- "pval_readj_on_celltypes_UP"
-  COL_pval_readj_DOWN <- "pval_readj_on_celltypes_DOWN"
 
-  dt_ctypes <- dt[
-    CATEGORY == COL_LIGAND_RECEPTOR_CELLTYPES
-  ][
-    ,
-    c(COL_pval_readj, COL_pval_readj_UP, COL_pval_readj_DOWN) := .(
-      stats::p.adjust(get(COL_pval), method = "BH"),
-      stats::p.adjust(get(COL_P_VALUE_UP), method = "BH"),
-      stats::p.adjust(get(COL_P_VALUE_DOWN), method = "BH")
-    )
+
+construct_graph <- function(object) {
+
+  dt_edge <- process_celltype_pairs_enrichment(object@ora_default$ER_CELLTYPES)
+  
+  dt_edge[,
+    "Ligand_cell_clean" := Ligand_cell][,
+    "Receptor_cell_clean" := Receptor_cell][,
+    "Ligand_cell" := paste0(Ligand_cell, " (L)")][,
+    "Receptor_cell" := paste0(Receptor_cell, " (R)")
   ]
+  dt_edge = na_handler(dt_edge, 'construct_graph: ')
+  dt_edge = inf_handler(dt_edge, 'construct_graph: ')
 
-  dt_ctypes <- dt_ctypes[, c("Ligand_cell", "Receptor_cell") := list(
-    sub("_.*", "", VALUE), # substitute w/ regex
-    sub(".*_", "", VALUE)
-  )]
-
-  cols_to_select <- c(
-    "Tissue", "Ligand_cell", "Receptor_cell", "OR_DIFF", "OR_UP", "OR_DOWN",
-    COL_pval, COL_P_VALUE_UP, COL_P_VALUE_DOWN,
-    COL_pval_readj, COL_pval_readj_UP, COL_pval_readj_DOWN
+  dt_edge[, edge_type := classify_edges(dt_edge)]
+  
+  add_celltype_average_counts <- function(dt_edge, object) {
+    counts = average_celltype_counts(object)
+    dt_edge = merge(dt_edge, counts, 
+                    by.x = 'Ligand_cell_clean',
+                    by.y = 'name',
+                    all = FALSE)
+    dt_edge[, 'Ligand_cell_counts' := counts]
+    dt_edge = merge(dt_edge, counts,
+                    by.x = 'Receptor_cell_clean',
+                    by.y = 'name',
+                    all = FALSE)
+    dt_edge[, 'Receptor_cell_counts' := counts.y]
+    dt_edge[, counts.x := NULL]
+    dt_edge[, counts.y := NULL]
+    setcolorder(dt_edge, c(3:dim(dt_edge)[2], 2, 1))
+    return(dt_edge)
+  }
+  dt_edge = add_celltype_average_counts(dt_edge, object)
+  
+  # TODO: Enrich with other info: cell families, GOs, ORA on cell types.
+  dt_vertex = funion(
+    dt_edge[, .(
+      name=Ligand_cell,
+      counts=Ligand_cell_counts)],
+    dt_edge[, .(
+      name=Receptor_cell,
+      counts=Receptor_cell_counts)]
+  )
+  
+  
+  G <- igraph::graph_from_data_frame(
+    d = dt_edge,
+    directed = TRUE,
+    vertices = dt_vertex
   )
 
-  dt_ctypes <- dt_ctypes[, ..cols_to_select]
-
+  G$scDiffCom <- object
+  
+  # TODO: Remove, this info is redundant.
+  # extracted <- extract_from_object(object)
+  # tissue = extracted$tissue
+  # G$interacts_counts <- num_interactions_cellpairs(object)
+  # G$celltype_counts <- average_celltype_counts(object)
+  return(G)
+}
+process_celltype_pairs_enrichment <- function(ora_ER_cells) {
+  
+  COL_LIGAND_RECEPTOR_CELLTYPES <- "ER_CELLTYPES"
+  COL_P_VALUE_DIFF <- "P_VALUE_DIFF"
+  COL_P_VALUE_UP <- "P_VALUE_UP"
+  COL_P_VALUE_DOWN <- "P_VALUE_DOWN"
+  
+  COL_BH_P_VALUE_DIFF <- "BH_P_VALUE_DIFF"
+  COL_BH_P_VALUE_UP <- "BH_P_VALUE_UP"
+  COL_BH_P_VALUE_DOWN <- "BH_P_VALUE_DOWN"
+  
+  dt_ctypes = copy(ora_ER_cells)
+  dt_ctypes <- dt_ctypes[, c("Ligand_cell", "Receptor_cell") := list(
+    sub("_.*", "", VALUE),
+    sub(".*_", "", VALUE)
+  )]
+  
+  dt_ctypes <- dt_ctypes[,
+    'COUNTS_UP' := COUNTS_VALUE_REGULATED_UP][,
+    'COUNTS_DOWN' := COUNTS_VALUE_REGULATED_DOWN][,
+    'COUNTS_DIFF' := COUNTS_VALUE_REGULATED_DIFF][,
+    'COUNTS_FLAT' := COUNTS_VALUE_REGULATED_FLAT][,
+    'COUNTS_TOTAL' := COUNTS_VALUE_REGULATED_DIFF + COUNTS_VALUE_REGULATED_FLAT
+  ]
+  
+  subset_celltypes_dt_columns <- function(dt, cols) {
+    if (length(cols) != 16) {
+      stop('Not implemented')
+    }
+    dt <- dt[, list(
+      get(cols[1]), get(cols[2]), get(cols[3]),
+      get(cols[4]), get(cols[5]), get(cols[6]),
+      get(cols[7]), get(cols[8]), get(cols[9]),
+      get(cols[10]), get(cols[11]), get(cols[12]),
+      get(cols[13]), get(cols[14]), get(cols[15]),
+      get(cols[16])
+    )]
+    names(dt) = cols
+    return(dt)
+  }
+  
+  cols_to_select <- c(
+    "Ligand_cell", "Receptor_cell", "OR_DIFF", "OR_UP", "OR_DOWN",
+    COL_P_VALUE_DIFF, COL_P_VALUE_UP, COL_P_VALUE_DOWN,
+    COL_BH_P_VALUE_DIFF, COL_BH_P_VALUE_UP, COL_BH_P_VALUE_DOWN,
+    'COUNTS_UP', 'COUNTS_DOWN', 'COUNTS_DIFF', 'COUNTS_FLAT', 'COUNTS_TOTAL'
+  )
+  dt_ctypes = subset_celltypes_dt_columns(dt_ctypes, cols_to_select)
   return(dt_ctypes)
+}
+na_handler <- function(dt, message) {
+  has_na = sum(is.na(dt)) > 0
+  if (has_na) {
+    message(paste0(
+      message,
+      "na_handler: #NAs", ":", sum(is.na(dt)), "; NA->1"
+    ))
+    dt[is.na(dt)] <- 1
+  }
+  return(dt)
+}
+inf_handler <- function(dt, message) {
+  has_inf = sum(dt_edge == Inf) > 0
+  if (has_inf) {
+    stop("construct_graph: Inf values in dt_edge")
+  }
+  return(dt)
 }
 classify_edges <- function(dt_edge,
                            config = setup_graph_config(),
                            use_adjpval = TRUE) {
-  LABEL_DIFF <- "diff" # label UP or DOWN
+  # TODO: Use setup_graph_config()
+  LABEL_DIFF <- "diff"
   LABEL_UP <- "up"
   LABEL_DOWN <- "down"
   LABEL_ROBUST <- "robust"
   LABEL_NONE <- "none"
-
-  CUTOFF_CHANGE_UP <- config$EDGE_COLORING$CUTOFF_UP
-  CUTOFF_CHANGE_DOWN <- config$EDGE_COLORING$CUTOFF_DOWN
+  
+  # TODO
+  CUTOFF_CHANGE_UP <- config$EDGE_COLORING$CUTOFF_UP  # Change name
+  CUTOFF_CHANGE_DOWN <- config$EDGE_COLORING$CUTOFF_DOWN  # Change name
   CUTOFF_ROBUST_UP <- 0.99
   CUTOFF_ROBUST_DOWN <- 0.99
-
+  
   edges_classification <- purrr::pmap_chr(
     dt_edge,
     function(OR_DIFF, OR_UP, OR_DOWN,
              P_VALUE_DIFF, P_VALUE_UP, P_VALUE_DOWN,
-             pval_adj, pval_adj_UP, pval_adj_DOWN,
+             BH_P_VALUE_DIFF, BH_P_VALUE_UP, BH_P_VALUE_DOWN,
              ...) {
       if (use_adjpval) {
-        is_P_VALUE_UP <- pval_adj_UP < 0.05
-        is_P_VALUE_DOWN <- pval_adj_DOWN < 0.05
+        is_P_VALUE_UP <- BH_P_VALUE_UP < 0.05
+        is_P_VALUE_DOWN <- BH_P_VALUE_DOWN < 0.05
       } else {
         is_P_VALUE_UP <- P_VALUE_UP < 0.05
         is_P_VALUE_DOWN <- P_VALUE_DOWN < 0.05
       }
-
+      
       is_OR_UP_CHANGE <- OR_UP >= CUTOFF_CHANGE_UP
       is_OR_DOWN_CHANGE <- OR_DOWN >= CUTOFF_CHANGE_DOWN
       is_OR_UP_ROBUST <- OR_UP <= CUTOFF_ROBUST_UP
       is_OR_DOWN_ROBUST <- OR_DOWN <= CUTOFF_ROBUST_DOWN
-
+      
       if (is_OR_UP_CHANGE & is_OR_DOWN_CHANGE & is_P_VALUE_UP & is_P_VALUE_DOWN) {
         return(LABEL_DIFF)
       } else if (is_OR_UP_CHANGE & is_P_VALUE_UP) {
@@ -84,12 +221,14 @@ classify_edges <- function(dt_edge,
   )
 }
 map_edgetype_to_color <- function(edge_label, config = setup_graph_config()) {
+  
+  # TODO: Inline variables
   COLOR_DIFF <- config$EDGE_COLORING$COLOR_BOTH
   COLOR_UP <- config$EDGE_COLORING$COLOR_UP
   COLOR_DOWN <- config$EDGE_COLORING$COLOR_DOWN
   COLOR_ROBUST <- config$EDGE_COLORING$COLOR_ROBUST
   COLOR_NONE <- config$EDGE_COLORING$COLOR_NONE
-
+  
   label_to_color_map <- list(
     "diff" = COLOR_DIFF,
     "up" = COLOR_UP,
@@ -98,60 +237,6 @@ map_edgetype_to_color <- function(edge_label, config = setup_graph_config()) {
     "none" = COLOR_NONE
   )
   return(label_to_color_map[[edge_label]])
-}
-construct_graph <- function(dt_ora, tissue, dt_filtered = NULL) {
-  dt_ctypes <- get_celltypes_enrichment(dt_ora)
-  dt_edge <- dt_ctypes[Tissue == tissue, .SD, .SDcols = !c("Tissue")]
-
-  # TODO: Add counts for Ligand_cell > Receptor_cell
-  dt_edge <- dt_edge[, .(
-    "Ligand_cell" = paste0(Ligand_cell, " (L)"),
-    "Receptor_cell" = paste0(Receptor_cell, " (R)"),
-    # 'OR' = OR,
-    "OR_DIFF" = OR_DIFF,
-    "OR_UP" = OR_UP,
-    "OR_DOWN" = OR_DOWN,
-    # 'pval' = pval,
-    "P_VALUE_DIFF" = P_VALUE_DIFF,
-    "P_VALUE_UP" = P_VALUE_UP,
-    "P_VALUE_DOWN" = P_VALUE_DOWN,
-    "pval_adj" = pval_readj_on_celltypes,
-    "pval_adj_UP" =  pval_readj_on_celltypes_UP,
-    "pval_adj_DOWN" = pval_readj_on_celltypes_DOWN
-  )]
-
-  has_na = sum(is.na(dt_edge)) > 0
-  if (has_na) {
-    message(paste0(
-        "process_edge_dt: #NAs in ORA:celltypes for ",
-         tissue, ":", sum(is.na(dt_edge)), "; NA->1"
-      ))
-    dt_edge[is.na(dt_edge)] <- 1
-  }
-
-  has_inf = sum(dt_edge == Inf) > 0
-  if (has_inf) {
-    stop("construct_graph: Inf values in dt_edge")
-  }
-
-  # Annotate edges
-  dt_edge[, edge_type := classify_edges(dt_edge)]
-
-  G <- igraph::graph_from_data_frame(
-    d = dt_edge,
-    directed = TRUE,
-    vertices = NULL  # TODO: Add data on vertices (counts)
-  )
-
-  # Set graph tissue attribute
-  G$tissue <- tissue
-  G$ora <- dt_ora
-  G$dt <- dt_filtered
-  G$interacts_counts <- count_interactions_cellpairs_tissue(dt_filtered, tissue)
-  G$celltype_counts <- count_celltypes_tissue(dt_filtered, tissue)
-
-  message("construct_graph: igraph G holds as graph attributes dt_ora and dt_filtered.")
-  return(G)
 }
 infer_vertex_types <- function(vertex_names) {
   vertex_types <- purrr::map_lgl(
@@ -166,11 +251,9 @@ setup_graph <- function(G, config = setup_graph_config(), use_adjpval, disperse)
   G <- setup_layout(G, config, disperse)
   return(G)
 }
-count_celltypes_tissue <- function(dt, tissue) {
-  # @dt - dt_filtered
-
-  # dt_t = dt[TISSUE == tissue]
-  dt_t <- data.table::copy(dt)
+average_celltype_counts <- function(object) {
+  
+  dt_t <- data.table::copy(object@cci_detected)
 
   counts_dt <- data.table::funion(
     dt_t[, .(
@@ -186,48 +269,18 @@ count_celltypes_tissue <- function(dt, tissue) {
   return(counts_dt)
 }
 add_vertex_size <- function(G) {
-  igraph::V(G)$vertex.size <- 30
   MAXSIZE <- 20
   MINSIZE <- 5
-
-  vertex_names <- igraph::V(G)$name
-
-  celltypes_to_vertexnames <- function(counts_dt) {
-    vertex_dt <- data.table::funion(
-      counts_dt[, .(
-        name = paste0(name, " (L)"),
-        counts = counts
-      )],
-      counts_dt[, .(
-        name = paste0(name, " (R)"),
-        counts = counts
-      )]
-    )
-
-    return(vertex_dt)
-  }
-
-  vertex_counts_dt <- celltypes_to_vertexnames(G$celltype_counts)
-  vertex_counts_dt <- vertex_counts_dt[vertex_counts_dt$name %in% vertex_names]
-
-  # Order data.table by vertex_names order and extract counts in correct order.
-  ord <- match(vertex_names, vertex_counts_dt$name)
-  vertex_counts <- vertex_counts_dt[ord, counts]
-
-  igraph::V(G)$vertex.counts <- vertex_counts
-  vertex_sizes <- rescale(vertex_counts, MINSIZE, MAXSIZE)
-
-  igraph::V(G)$vertex.size <- vertex_sizes
-
+  igraph::V(G)$vertex.size <- rescale(V(G)$counts, MINSIZE, MAXSIZE)
   return(G)
 }
-count_interactions_cellpairs_tissue <- function(dt_filtered, tissue) {
+num_interactions_cellpairs <- function(object) {
   return(
-    dt_filtered[,
+    object@cci_detected[,
       .(count = .N),
       by = .(EMITTER_CELLTYPE, RECEIVER_CELLTYPE)
     ][, .(
-      "Ligand_celltype" = EMITTER_CELLTYPE,
+      "Ligand_celltype" = EMITTER_CELLTYPE,  # TODO: Change these colnames
       "Receptor_celltype" = RECEIVER_CELLTYPE,
       "num_interacts" = count
     )]
@@ -236,33 +289,8 @@ count_interactions_cellpairs_tissue <- function(dt_filtered, tissue) {
 add_edge_width <- function(G) {
   WIDTH_MIN <- 0
   WIDTH_MAX <- 10
-
-  edge_dt <- data.table::data.table(
-    igraph::as_data_frame(G)[, c("from", "to")]
-  )
-  names(edge_dt) <- c("Ligand_celltype", "Receptor_celltype")
-
-  edge_dt[, Ligand_celltype :=
-    sub("(*) [(]L[)]", "", Ligand_celltype)][
-    ,
-    Receptor_celltype :=
-      sub("(*) [(]R[)]", "", Receptor_celltype)
-  ]
-
-  edge_dt <- merge(
-    edge_dt, G$interacts_counts,
-    by = c("Ligand_celltype", "Receptor_celltype"),
-    all.x = TRUE,
-    sort = FALSE
-  )
-
-  edge_dt[is.na(edge_dt)] <- 0
-  message("add_edge_width: Some NAs occur, unclear reason. For now NA->0.")
-
-  # Correct order is accomplished by the merge.
-  num_interacts <- edge_dt[, num_interacts]
+  num_interacts <- igraph::as_data_frame(G, 'edges')$COUNTS_TOTAL
   igraph::E(G)$width <- rescale(sqrt(num_interacts), WIDTH_MIN, WIDTH_MAX)
-
   return(G)
 }
 setup_vertices <- function(G, config) {
@@ -292,7 +320,7 @@ rescale <- function(v, min_, max_) {
   (v - min(v)) / (max(v) - min(v)) * (max_ - min_) + min_
 }
 
-#### Functions for layout ####
+#### Functions for improved layout of biparite type ####
 get_edges_from_vertex <- function(v_name, G) {
   return(igraph::incident(G, v_name, mode = "out"))
 }
@@ -344,16 +372,14 @@ sort_layout_vertices <- function(layout, G, config, disperse) {
   ligand_keys <- vertex_sort_keys(ligand_vertices, from = TRUE, G, config)
   receptor_keys <- vertex_sort_keys(receptor_vertices, from = FALSE, G, config)
 
-  # TODO: refactor into clear code
-  # The reorders layout rows to achieve sorting
+  # Reorders vertices to sort
   layout_copy <- copy(layout)
   new_layout <- copy(layout)
   new_layout[order(ligand_keys), ] <- layout_copy[1:midpoint, ]
   new_layout[midpoint + order(receptor_keys), ] <- layout_copy[(midpoint + 1):num_v, ]
 
   if (disperse) {
-    ## Make as function
-    # Get hgap
+
     vgap <- config$LAYOUT$HGAP
     scale_factor <- 3
 
@@ -390,14 +416,12 @@ extract_from_object <- function(object) {
   )
 }
 check_network_type_arg <- function(network_type) {
-  if (!(network_type %in% c("bipartite", "cells"))) {
-    message <- sprintf('network_type "%s" not in "bipartite", "cells"', network_type)
+  if (!(network_type %in% c("bipartite", "celltypes"))) {
+    message <- sprintf('network_type "%s" not in "bipartite", "celltypes"', network_type)
     stop(message)
   }
 }
 remove_LR_label <- function(s) {
-  # Removes (L) or (R) label from celltype name.
-  # s: string vector
   return(
     sub(" [(][LR][)]", "", s)
   )
@@ -407,9 +431,9 @@ map_bipartite_to_community <- function(G) {
   edges <- data.table::data.table(igraph::as_data_frame(G, what = "edges"))
 
   # Process edges
-  edges[, from := remove_LR_label(from)][
-    ,
-    to := remove_LR_label(to)
+  edges[, 
+        from := remove_LR_label(from)][,
+        to := remove_LR_label(to)
   ]
 
   # Process nodes
@@ -417,16 +441,15 @@ map_bipartite_to_community <- function(G) {
   nodes[, vertex_types := NULL]
   nodes <- nodes[, list(
     vertex.size = mean(vertex.size),
-    vertex.counts = mean(vertex.counts)
+    vertex.counts = mean(vertex.counts)  # TODO: Not sure still works
   ), by = name]
 
-  # Return new graph with similar properties for plotting
   G_new <- igraph::graph_from_data_frame(vertices = nodes, d = edges)
-  G_new$tissue <- G$tissue
-  G_new$ora <- G$ora
-  G_new$dt <- G$dt
-  G_new$interacts_counts <- G$interacts_counts
-  G_new$celltype_counts <- G$celltype_counts
+  # G_new$tissue <- G$tissue
+  # G_new$ora <- G$ora
+  # G_new$dt <- G$dt
+  # G_new$interacts_counts <- G$interacts_counts
+  # G_new$celltype_counts <- G$celltype_counts
 
   # New layout
   # layout = igraph::layout_nicely(G_new, dim=2)  # determines best layout, likely calls fr
@@ -437,16 +460,11 @@ map_bipartite_to_community <- function(G) {
 
   return(G_new)
 }
-build_igraph <- function(
-                         ora,
-                         dt_filtered,
-                         tissue,
+build_igraph <- function(object,
                          network_type) {
-  ora_ct <- ora$ER_CELLTYPES
-  ora_ct[, Tissue := tissue]
-  G <- construct_graph(ora_ct, tissue, dt_filtered = dt_filtered)  # TODO: add scDiffCom object as parameter
+  G <- construct_graph(object)
   G <- setup_graph(G, use_adjpval = TRUE, disperse = TRUE)
-  if (network_type == "cells") {
+  if (network_type == "celltypes") {
     G <- map_bipartite_to_community(G)
   }
   return(G)
@@ -456,7 +474,7 @@ extract_node_edges <- function(G, exclude_nonsign = TRUE) {
   edges <- data.table::data.table(igraph::as_data_frame(G, what = "edges"))
 
   if (exclude_nonsign) {
-    # Will be moved into construct_graph
+    # TODO: Move to construct_graph
     edges <- edges[edge_type != "none"]
   }
 
@@ -471,6 +489,7 @@ build_network_skeleton <- function(
   nodes_ <- data.table::copy(nodes)
   edges_ <- data.table::copy(edges)
   
+  # TODO: Extract function
   node_annotation_html <- function() {
       temp_dt = data.table::data.table(
           Type=c("Tissue counts", "Cell counts", "Cell OR"),
@@ -513,9 +532,9 @@ build_network_skeleton <- function(
       ,
       "level" := ifelse(vertex_types == TRUE, 1, 2) # For hierarchical layout from vis
     ]
-  } else if (network_type == "cells") {
+  } else if (network_type == "celltypes") {
   } else {
-    stop('argument network_type not in "bipartite", "cells"')
+    stop('argument network_type not in "bipartite", "celltypes"')
   }
   
   edge_annotation_html <- function() {
@@ -647,18 +666,13 @@ build_interactive_network <- function(
                                       object,
                                       network_type) {
   check_network_type_arg(network_type)
-
-  extracted <- extract_from_object(object)
-  tissue <- extracted$tissue
-  ora <- extracted$ora
-  dt_filtered <- extracted$dt_filtered
-
-  G <- build_igraph(ora, dt_filtered, tissue, network_type)
+  G <- build_igraph(object, network_type)
   interactive_net <- interactive_from_igraph(G, network_type)
   return(interactive_net)
 }
 
 setup_graph_config <- function() {
+  # TODO: Review
   GRAPH_CONFIG <- list(
     EDGE_COLORING = list(
       COLOR_UP = "#4285F4", # blue
@@ -667,13 +681,12 @@ setup_graph_config <- function() {
       CUTOFF_DOWN = 1.1,
       COLOR_BOTH = "#F4B400",
       COLOR_ROBUST = "#0F9D58",
-      # COLOR_NONE = "#dde2e4"
       COLOR_NONE = rgb(0.2, 0.2, 0.2, alpha = 0.1)
     ),
 
     EDGE_STYLE = list(
       ARROW_SIZE = 0.5,
-      WIDTH = 2.5 # will be adjusted by |OR|
+      WIDTH = 2.5
     ),
 
     LAYOUT = list(
