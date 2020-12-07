@@ -77,6 +77,20 @@ construct_graph <- function(object) {
   }
   dt_edge = add_celltype_average_counts(dt_edge, object)
   
+  # Add top LR
+  MAX_NUM_LR_TO_DISPLAY = 10
+  dt_edge$TISSUE_ENRICHED_LR = purrr::pmap_chr(
+    dt_edge,
+    function(Ligand_cell_clean, Receptor_cell_clean, ...) {
+      cellpair_lr = get_cellpair_LRGenes(object, Ligand_cell_clean, Receptor_cell_clean)
+      LR_sorted = object@ora_default$LR_GENES[order(-OR_DIFF), VALUE]
+      LR_sorted = LR_sorted[LR_sorted %in% cellpair_lr]
+      selected = LR_sorted[1:(min(MAX_NUM_LR_TO_DISPLAY, length(LR_sorted)))]
+      selected_as_str = paste0(selected, collapse=', ')
+      return(selected_as_str)
+    }
+  )
+  
   # TODO: Enrich with other info: cell families, GOs, ORA on cell types.
   dt_vertex = funion(
     dt_edge[, .(
@@ -165,7 +179,7 @@ na_handler <- function(dt, message) {
   return(dt)
 }
 inf_handler <- function(dt, message) {
-  has_inf = sum(dt_edge == Inf) > 0
+  has_inf = sum(dt == Inf) > 0
   if (has_inf) {
     stop("construct_graph: Inf values in dt_edge")
   }
@@ -182,6 +196,7 @@ classify_edges <- function(dt_edge,
   LABEL_NONE <- "none"
   
   # TODO
+  CUTOFF_CHANGE_DIFF <- config$EDGE_COLORING$CUTOFF_DIFF
   CUTOFF_CHANGE_UP <- config$EDGE_COLORING$CUTOFF_UP  # Change name
   CUTOFF_CHANGE_DOWN <- config$EDGE_COLORING$CUTOFF_DOWN  # Change name
   CUTOFF_ROBUST_UP <- 0.99
@@ -194,19 +209,23 @@ classify_edges <- function(dt_edge,
              BH_P_VALUE_DIFF, BH_P_VALUE_UP, BH_P_VALUE_DOWN,
              ...) {
       if (use_adjpval) {
+        is_P_VALUE_DIFF <- BH_P_VALUE_DIFF < 0.05
         is_P_VALUE_UP <- BH_P_VALUE_UP < 0.05
         is_P_VALUE_DOWN <- BH_P_VALUE_DOWN < 0.05
       } else {
+        is_P_VALUE_DIFF <- P_VALUE_DIFF < 0.05
         is_P_VALUE_UP <- P_VALUE_UP < 0.05
         is_P_VALUE_DOWN <- P_VALUE_DOWN < 0.05
       }
       
+      is_OR_DIFF_CHANGE <- OR_DIFF >= CUTOFF_CHANGE_DIFF
       is_OR_UP_CHANGE <- OR_UP >= CUTOFF_CHANGE_UP
       is_OR_DOWN_CHANGE <- OR_DOWN >= CUTOFF_CHANGE_DOWN
       is_OR_UP_ROBUST <- OR_UP <= CUTOFF_ROBUST_UP
       is_OR_DOWN_ROBUST <- OR_DOWN <= CUTOFF_ROBUST_DOWN
       
-      if (is_OR_UP_CHANGE & is_OR_DOWN_CHANGE & is_P_VALUE_UP & is_P_VALUE_DOWN) {
+      # TODO: Add diff in terms of OR_DIFF
+      if (is_OR_DIFF_CHANGE & is_P_VALUE_DIFF) {  # TODO is_OR_UP_CHANGE & is_OR_DOWN_CHANGE & is_P_VALUE_UP & is_P_VALUE_DOWN
         return(LABEL_DIFF)
       } else if (is_OR_UP_CHANGE & is_P_VALUE_UP) {
         return(LABEL_UP)
@@ -223,7 +242,7 @@ classify_edges <- function(dt_edge,
 map_edgetype_to_color <- function(edge_label, config = setup_graph_config()) {
   
   # TODO: Inline variables
-  COLOR_DIFF <- config$EDGE_COLORING$COLOR_BOTH
+  COLOR_DIFF <- config$EDGE_COLORING$COLOR_DIFF
   COLOR_UP <- config$EDGE_COLORING$COLOR_UP
   COLOR_DOWN <- config$EDGE_COLORING$COLOR_DOWN
   COLOR_ROBUST <- config$EDGE_COLORING$COLOR_ROBUST
@@ -271,7 +290,7 @@ average_celltype_counts <- function(object) {
 add_vertex_size <- function(G) {
   MAXSIZE <- 20
   MINSIZE <- 5
-  igraph::V(G)$vertex.size <- rescale(V(G)$counts, MINSIZE, MAXSIZE)
+  igraph::V(G)$vertex.size <- rescale(igraph::V(G)$counts, MINSIZE, MAXSIZE)
   return(G)
 }
 num_interactions_cellpairs <- function(object) {
@@ -452,7 +471,7 @@ map_bipartite_to_community <- function(G) {
   nodes[, vertex_types := NULL]
   nodes <- nodes[, list(
     vertex.size = mean(vertex.size),
-    vertex.counts = mean(vertex.counts)  # TODO: Not sure still works
+    counts = mean(counts)  # TODO: Not sure still works
   ), by = name]
 
   G_new <- igraph::graph_from_data_frame(vertices = nodes, d = edges)
@@ -493,7 +512,13 @@ extract_node_edges <- function(G, exclude_nonsign = TRUE) {
     list(nodes = nodes, edges = edges)
   )
 }
-build_network_skeleton <- function(
+get_cellpair_LRGenes <- function(object, emmiter_cell, receptor_cell) {
+  ER_celltype = paste0(emmiter_cell, "_", receptor_cell)
+  cci = object@cci_detected
+  lr_genes = cci[ER_CELLTYPES == ER_celltype, LR_GENES]
+  return(lr_genes)
+}
+build_network_skeleton <- function(object,
                                  nodes,
                                  edges,
                                  network_type) {
@@ -501,18 +526,26 @@ build_network_skeleton <- function(
   edges_ <- data.table::copy(edges)
   
   # TODO: Extract function
-  node_annotation_html <- function() {
-      temp_dt = data.table::data.table(
-          Type=c("Tissue counts", "Cell counts", "Cell OR"),
-          Total=1:3,
-          UP=1:3,
-          DOWN=1:3,
-          FLAT=1:3,
-          DIFF=1:3
-      )
-      table_html = kableExtra::kbl(temp_dt)
-      html = paste0("<p>CELLNAME</p>", as.character(table_html), "<p>Num cells: ?</p>")
-    return(html)
+  node_annotation_html <- function(nodes) {
+    annotations = purrr::pmap_chr(
+      nodes,
+      function(name, counts, ...) {
+        temp_dt = data.table::data.table(
+          Type=c("Cell counts", "Cell OR"),
+          Total=NA,
+          UP=NA,
+          DOWN=NA,
+          FLAT=NA,
+          DIFF=NA
+        )
+        header = sprintf("<h3> %s </h3>", name)
+        table_html = as.character(kableExtra::kbl(temp_dt))
+        num_cells_paragraph = sprintf("<p> Average num cells: %g", counts)
+        html = paste0(header, table_html, num_cells_paragraph)
+        return(html) 
+      }
+    )
+    return(annotations)
   }
   nodes_[
     ,
@@ -532,7 +565,7 @@ build_network_skeleton <- function(
   ][
     ,
     # 'shapeProperties' := NULL][,
-    "title" := node_annotation_html()
+    "title" := node_annotation_html(nodes_)
   ]
 
   if (network_type == "bipartite") {
@@ -548,8 +581,37 @@ build_network_skeleton <- function(
     stop('argument network_type not in "bipartite", "celltypes"')
   }
   
-  edge_annotation_html <- function() {
-    paste0("<p>E cell > R cell</p>", as.character(kableExtra::kbl(data.table::data.table(Type=c('Counts', 'OR'), Total=1:2, UP=1:2, DOWN=1:2, FLAT=1:2, DIFF=1:2))) )
+  edge_annotation_html <- function(edges) {
+    annotations = purrr::pmap_chr(
+      edges,
+      function(COUNTS_TOTAL, COUNTS_UP, COUNTS_DOWN, COUNTS_DIFF, COUNTS_FLAT,
+               OR_UP, OR_DOWN, OR_DIFF, Ligand_cell_clean, Receptor_cell_clean, 
+               TISSUE_ENRICHED_LR, ...) {
+        format_float = function(x) sprintf("%.1f", x)
+        cellpair_counts_ora = data.table::data.table(
+          TYPE = c("Counts", "OR"),
+          TOTAL = c(as.integer(COUNTS_TOTAL), NA),
+          UP = c(as.integer(COUNTS_UP), format_float(OR_UP)),
+          DOWN = c(as.integer(COUNTS_DOWN), format_float(OR_DOWN)),
+          DIFF = c(as.integer(COUNTS_DIFF), format_float(OR_DIFF)),
+          FLAT = c(as.integer(COUNTS_FLAT), NA)
+        )
+        
+        header = sprintf("<h3> %s -> %s </h3>", Ligand_cell_clean, Receptor_cell_clean)
+        
+        LRs_sorted = get_cellpair_LRGenes(object, Ligand_cell_clean, Receptor_cell_clean)
+        # TODO:
+        top_LR_table = object@cci_detected[LR_GENES %in% LRs_sorted & EMITTER_CELLTYPE==Ligand_cell_clean & RECEIVER_CELLTYPE==Receptor_cell_clean][
+          match(LRs_sorted, LR_GENES), .(LR_GENES, LOGFC)]
+        top_LR_table = kableExtra::kbl(top_LR_table)
+        
+        html = paste0(header,
+                      as.character(kableExtra::kbl(cellpair_counts_ora)),
+                      top_LR_table)
+        return(html)
+      }
+    )
+    return(annotations)
   }
   edges_[
     ,
@@ -565,7 +627,7 @@ build_network_skeleton <- function(
     smooth := TRUE
   ][
     ,
-    title := edge_annotation_html()  # "Num_UP=10, Num_DOWN=10, Num_FLAT=30"
+    title := edge_annotation_html(edges_)
   ]
 
   return(
@@ -579,7 +641,7 @@ build_network_skeleton <- function(
     )
   )
 }
-get_network_components <- function(
+get_network_components <- function(object,
                                    nodes,
                                    edges,
                                    layout,
@@ -596,6 +658,7 @@ get_network_components <- function(
 
   network_components <- list(
     network_skeleton = build_network_skeleton(
+      object,
       nodes, edges,
       network_type = network_type
     ),
@@ -661,7 +724,7 @@ build_network <- function(
       (vis_funcs$configure)
   )
 }
-interactive_from_igraph <- function(
+interactive_from_igraph <- function(object,
                                     G,
                                     network_type,
                                     exclude_nonsign = TRUE) {
@@ -669,7 +732,7 @@ interactive_from_igraph <- function(
   nodes <- ne$nodes
   edges <- ne$edges
 
-  network_components <- get_network_components(nodes, edges, G$layout, network_type)
+  network_components <- get_network_components(object, nodes, edges, G$layout, network_type)
   interactive_network <- do.call(build_network, network_components)
   return(interactive_network)
 }
@@ -682,7 +745,7 @@ build_interactive_network <- function(
   check_network_type_arg(network_type)
   G <- build_igraph(object, network_type)
 
-  interactive_net <- interactive_from_igraph(G, network_type)
+  interactive_net <- interactive_from_igraph(object, G, network_type)
   return(interactive_net)
 }
 
@@ -694,7 +757,8 @@ setup_graph_config <- function() {
       CUTOFF_UP = 1.1,
       COLOR_DOWN = "#DB4437", # red
       CUTOFF_DOWN = 1.1,
-      COLOR_BOTH = "#F4B400",
+      COLOR_DIFF = "#F4B400",
+      CUTOFF_DIFF = 1.1,
       COLOR_ROBUST = "#0F9D58",
       COLOR_NONE = rgb(0.2, 0.2, 0.2, alpha = 0.1)
     ),

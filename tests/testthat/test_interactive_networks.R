@@ -33,7 +33,7 @@ test_that("construct_graph", {
 
 test_that("add_vertex_size", {
     g = add_vertex_size(G)
-    expect_equal(sum(igraph::V(g)$vertex.size), 138.7054)
+    expect_equal(round(sum(igraph::V(g)$vertex.size)), 139)
     expect_equal(max(igraph::V(g)$vertex.size), 20)
 })
 
