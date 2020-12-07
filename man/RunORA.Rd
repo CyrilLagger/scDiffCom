@@ -3,6 +3,7 @@
 \name{RunORA}
 \alias{RunORA}
 \alias{RunORA.scDiffCom}
+\alias{RunORA.scDiffComCombined}
 \title{Perform over-representation analysis on detected intercellular communication patterns}
 \usage{
 RunORA(object, ...)
@@ -13,6 +14,17 @@ RunORA(object, ...)
   overwrite = TRUE,
   stringent_or_default = "default",
   stringent_logfc_threshold = NULL,
+  verbose = TRUE,
+  ...
+)
+
+\method{RunORA}{scDiffComCombined}(
+  object,
+  categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS"),
+  overwrite = TRUE,
+  stringent_or_default = "default",
+  stringent_logfc_threshold = NULL,
+  global = TRUE,
   verbose = TRUE,
   ...
 )

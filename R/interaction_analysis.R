@@ -66,17 +66,39 @@ run_interaction_analysis <- function(
   if (!methods::is(seurat_object, "Seurat")) {
     stop("`seurat_object` must be a Seurat object")
   }
-  analysis_parameters <- as.list(match.call())[-1]
-  formal_temp <- formals(run_interaction_analysis)
-  for (arg_temp in names(formal_temp)) {
-    if (!(arg_temp %in% names(analysis_parameters)))
-      analysis_parameters <- append(analysis_parameters, formal_temp[arg_temp])
-  }
-  analysis_parameters$seurat_object <- NULL
-  analysis_parameters <- lapply(
-    analysis_parameters,
-    eval
+  analysis_parameters <- list(
+    LRdb_species = LRdb_species,
+    seurat_celltype_id = seurat_celltype_id,
+    seurat_condition_id = seurat_condition_id,
+    cond1_name = cond1_name,
+    cond2_name = cond2_name,
+    seurat_assay = seurat_assay,
+    seurat_slot = seurat_slot,
+    log_scale = log_scale,
+    threshold_min_cells = threshold_min_cells,
+    threshold_pct = threshold_pct,
+    object_name = object_name,
+    permutation_analysis = permutation_analysis,
+    iterations = iterations,
+    threshold_quantile_score = threshold_quantile_score,
+    threshold_p_value_specificity = threshold_p_value_specificity,
+    threshold_p_value_de = threshold_p_value_de,
+    threshold_logfc = threshold_logfc,
+    return_distributions = return_distributions,
+    seed = seed,
+    verbose = verbose
   )
+  #analysis_parameters <- as.list(match.call())[-1]
+  #formal_temp <- formals(run_interaction_analysis)
+  #for (arg_temp in names(formal_temp)) {
+  #  if (!(arg_temp %in% names(analysis_parameters)))
+  #    analysis_parameters <- append(analysis_parameters, formal_temp[arg_temp])
+  #}
+  #analysis_parameters$seurat_object <- NULL
+  #analysis_parameters <- lapply(
+  #  analysis_parameters,
+  #  eval
+  #)
   check_parameters <- validate_parameters(
     params = analysis_parameters,
     from_inputs = TRUE
