@@ -77,20 +77,6 @@ construct_graph <- function(object) {
   }
   dt_edge = add_celltype_average_counts(dt_edge, object)
   
-  # Add top LR
-  MAX_NUM_LR_TO_DISPLAY = 10
-  dt_edge$TISSUE_ENRICHED_LR = purrr::pmap_chr(
-    dt_edge,
-    function(Ligand_cell_clean, Receptor_cell_clean, ...) {
-      cellpair_lr = get_cellpair_LRGenes(object, Ligand_cell_clean, Receptor_cell_clean)
-      LR_sorted = object@ora_default$LR_GENES[order(-OR_DIFF), VALUE]
-      LR_sorted = LR_sorted[LR_sorted %in% cellpair_lr]
-      selected = LR_sorted[1:(min(MAX_NUM_LR_TO_DISPLAY, length(LR_sorted)))]
-      selected_as_str = paste0(selected, collapse=', ')
-      return(selected_as_str)
-    }
-  )
-  
   # TODO: Enrich with other info: cell families, GOs, ORA on cell types.
   dt_vertex = funion(
     dt_edge[, .(
@@ -121,10 +107,12 @@ process_celltype_pairs_enrichment <- function(ora_ER_cells) {
   
   COL_LIGAND_RECEPTOR_CELLTYPES <- "ER_CELLTYPES"
   COL_P_VALUE_DIFF <- "P_VALUE_DIFF"
+  COL_P_VALUE_FLAT <- "P_VALUE_FLAT"
   COL_P_VALUE_UP <- "P_VALUE_UP"
   COL_P_VALUE_DOWN <- "P_VALUE_DOWN"
   
   COL_BH_P_VALUE_DIFF <- "BH_P_VALUE_DIFF"
+  COL_BH_P_VALUE_FLAT <- "BH_P_VALUE_FLAT"
   COL_BH_P_VALUE_UP <- "BH_P_VALUE_UP"
   COL_BH_P_VALUE_DOWN <- "BH_P_VALUE_DOWN"
   
@@ -143,7 +131,7 @@ process_celltype_pairs_enrichment <- function(ora_ER_cells) {
   ]
   
   subset_celltypes_dt_columns <- function(dt, cols) {
-    if (length(cols) != 16) {
+    if (length(cols) != 19) {
       stop('Not implemented')
     }
     dt <- dt[, list(
@@ -152,16 +140,17 @@ process_celltype_pairs_enrichment <- function(ora_ER_cells) {
       get(cols[7]), get(cols[8]), get(cols[9]),
       get(cols[10]), get(cols[11]), get(cols[12]),
       get(cols[13]), get(cols[14]), get(cols[15]),
-      get(cols[16])
+      get(cols[16]), get(cols[17]), get(cols[18]),
+      get(cols[19])
     )]
     names(dt) = cols
     return(dt)
   }
   
   cols_to_select <- c(
-    "Ligand_cell", "Receptor_cell", "OR_DIFF", "OR_UP", "OR_DOWN",
-    COL_P_VALUE_DIFF, COL_P_VALUE_UP, COL_P_VALUE_DOWN,
-    COL_BH_P_VALUE_DIFF, COL_BH_P_VALUE_UP, COL_BH_P_VALUE_DOWN,
+    "Ligand_cell", "Receptor_cell", "OR_DIFF", "OR_UP", "OR_DOWN", "OR_FLAT",
+    COL_P_VALUE_DIFF, COL_P_VALUE_UP, COL_P_VALUE_DOWN, COL_P_VALUE_FLAT,
+    COL_BH_P_VALUE_DIFF, COL_BH_P_VALUE_UP, COL_BH_P_VALUE_DOWN, COL_BH_P_VALUE_FLAT,
     'COUNTS_UP', 'COUNTS_DOWN', 'COUNTS_DIFF', 'COUNTS_FLAT', 'COUNTS_TOTAL'
   )
   dt_ctypes = subset_celltypes_dt_columns(dt_ctypes, cols_to_select)
@@ -224,14 +213,13 @@ classify_edges <- function(dt_edge,
       is_OR_UP_ROBUST <- OR_UP <= CUTOFF_ROBUST_UP
       is_OR_DOWN_ROBUST <- OR_DOWN <= CUTOFF_ROBUST_DOWN
       
-      # TODO: Add diff in terms of OR_DIFF
-      if (is_OR_DIFF_CHANGE & is_P_VALUE_DIFF) {  # TODO is_OR_UP_CHANGE & is_OR_DOWN_CHANGE & is_P_VALUE_UP & is_P_VALUE_DOWN
+      if (is_OR_UP_CHANGE & is_P_VALUE_UP & is_OR_DOWN_CHANGE & is_P_VALUE_DOWN) {
         return(LABEL_DIFF)
       } else if (is_OR_UP_CHANGE & is_P_VALUE_UP) {
         return(LABEL_UP)
       } else if (is_OR_DOWN_CHANGE & is_P_VALUE_DOWN) {
         return(LABEL_DOWN)
-      } else if (is_OR_UP_ROBUST & is_OR_DOWN_ROBUST & is_P_VALUE_UP & is_P_VALUE_DOWN) {
+      } else if (is_OR_UP_ROBUST & is_P_VALUE_UP & is_OR_DOWN_ROBUST & is_P_VALUE_DOWN) {
         return(LABEL_ROBUST)
       } else {
         return(LABEL_NONE)
@@ -293,6 +281,20 @@ add_vertex_size <- function(G) {
   igraph::V(G)$vertex.size <- rescale(igraph::V(G)$counts, MINSIZE, MAXSIZE)
   return(G)
 }
+num_interactions_object <- function(object) {
+  TOTAL = object@cci_detected[, .N]
+  UP = object@cci_detected[REGULATION_SIMPLE=='UP', .N]
+  DOWN = object@cci_detected[REGULATION_SIMPLE=='DOWN', .N]
+  DIFF = object@cci_detected[REGULATION_SIMPLE=='DOWN' | REGULATION_SIMPLE=='UP', .N]
+  FLAT = object@cci_detected[REGULATION_SIMPLE=='FLAT', .N]
+  return(list(
+    TOTAL = TOTAL,
+    UP = UP,
+    DOWN = DOWN,
+    DIFF = DIFF,
+    FLAT = FLAT
+  ))
+}
 num_interactions_cellpairs <- function(object) {
   return(
     object@cci_detected[,
@@ -343,11 +345,9 @@ rescale <- function(v, min_, max_) {
 get_edges_from_vertex <- function(v_name, G) {
   return(igraph::incident(G, v_name, mode = "out"))
 }
-
 get_edges_to_vertex <- function(v_name, G) {
   return(igraph::incident(G, v_name, mode = "in"))
 }
-
 count_up_and_down_edges <- function(edges, config) {
   color_up <- config$EDGE_COLORING$COLOR_UP
   color_down <- config$EDGE_COLORING$COLOR_DOWN
@@ -361,7 +361,6 @@ count_up_and_down_edges <- function(edges, config) {
 
   return(list(N_UP = num_up, N_DOWN = num_down))
 }
-
 vertex_sort_key_atomic <- function(v_name, from, G, config) {
   if (from) {
     edges <- get_edges_from_vertex(v_name, G)
@@ -373,7 +372,6 @@ vertex_sort_key_atomic <- function(v_name, from, G, config) {
   sort_key <- as.integer(counts$N_UP - counts$N_DOWN)
   return(sort_key)
 }
-
 vertex_sort_keys <- function(v_names, from, G, config) {
   sort_keys <- purrr::map_dbl(
     v_names,
@@ -490,8 +488,7 @@ map_bipartite_to_community <- function(G) {
 
   return(G_new)
 }
-build_igraph <- function(object,
-                         network_type) {
+build_igraph <- function(object, network_type) {
   G <- construct_graph(object)
   G <- setup_graph(G, use_adjpval = TRUE, disperse = TRUE)
   if (network_type == "celltypes") {
@@ -512,16 +509,19 @@ extract_node_edges <- function(G, exclude_nonsign = TRUE) {
     list(nodes = nodes, edges = edges)
   )
 }
-get_cellpair_LRGenes <- function(object, emmiter_cell, receptor_cell) {
-  ER_celltype = paste0(emmiter_cell, "_", receptor_cell)
-  cci = object@cci_detected
-  lr_genes = cci[ER_CELLTYPES == ER_celltype, LR_GENES]
-  return(lr_genes)
-}
+# get_cellpair_LRGenes <- function(object, emmiter_cell, receptor_cell) {
+#   ER_celltype = paste0(emmiter_cell, "_", receptor_cell)
+#   cci = object@cci_detected
+#   lr_genes_significant_sorted = cci[ER_CELLTYPES == ER_celltype 
+#                                     & REGULATION_SIMPLE %in% c('UP', 'DOWN')][
+#                                       order(-LOGFC_ABS),
+#                                       LR_GENES]
+#   return(lr_genes_significant_sorted)
+# }
 build_network_skeleton <- function(object,
-                                 nodes,
-                                 edges,
-                                 network_type) {
+                                   nodes,  # replace with igraph? would carry more attributes
+                                   edges,
+                                   network_type) {
   nodes_ <- data.table::copy(nodes)
   edges_ <- data.table::copy(edges)
   
@@ -581,33 +581,61 @@ build_network_skeleton <- function(object,
     stop('argument network_type not in "bipartite", "celltypes"')
   }
   
+  num_interacts = num_interactions_object(object)
   edge_annotation_html <- function(edges) {
     annotations = purrr::pmap_chr(
       edges,
       function(COUNTS_TOTAL, COUNTS_UP, COUNTS_DOWN, COUNTS_DIFF, COUNTS_FLAT,
-               OR_UP, OR_DOWN, OR_DIFF, Ligand_cell_clean, Receptor_cell_clean, 
+               OR_UP, OR_DOWN, OR_DIFF, OR_FLAT,
+               BH_P_VALUE_UP, BH_P_VALUE_DOWN, BH_P_VALUE_DIFF, BH_P_VALUE_FLAT,
+               Ligand_cell_clean, Receptor_cell_clean, 
                TISSUE_ENRICHED_LR, ...) {
         format_float = function(x) sprintf("%.1f", x)
+        format_pval = function(x) round(x, digits=3)
         cellpair_counts_ora = data.table::data.table(
-          TYPE = c("Counts", "OR"),
-          TOTAL = c(as.integer(COUNTS_TOTAL), NA),
-          UP = c(as.integer(COUNTS_UP), format_float(OR_UP)),
-          DOWN = c(as.integer(COUNTS_DOWN), format_float(OR_DOWN)),
-          DIFF = c(as.integer(COUNTS_DIFF), format_float(OR_DIFF)),
-          FLAT = c(as.integer(COUNTS_FLAT), NA)
+          TYPE = c("Tissue counts", "Counts", "OR", "BH_P_VALUE"),
+          TOTAL = c(num_interacts$TOTAL, as.integer(COUNTS_TOTAL), NA, NA),
+          UP = c(num_interacts$UP, as.integer(COUNTS_UP), format_float(OR_UP), format_pval(BH_P_VALUE_UP)),
+          DOWN = c(num_interacts$DOWN, as.integer(COUNTS_DOWN), format_float(OR_DOWN), format_pval(BH_P_VALUE_DOWN)),
+          DIFF = c(num_interacts$DIFF, as.integer(COUNTS_DIFF), format_float(OR_DIFF), format_pval(BH_P_VALUE_DIFF)),
+          FLAT = c(num_interacts$FLAT, as.integer(COUNTS_FLAT), format_float(OR_FLAT), format_pval(BH_P_VALUE_FLAT))
         )
         
-        header = sprintf("<h3> %s -> %s </h3>", Ligand_cell_clean, Receptor_cell_clean)
+        header = sprintf("<h3> %s -(to)-> %s </h3>", Ligand_cell_clean, Receptor_cell_clean)
         
-        LRs_sorted = get_cellpair_LRGenes(object, Ligand_cell_clean, Receptor_cell_clean)
-        # TODO:
-        top_LR_table = object@cci_detected[LR_GENES %in% LRs_sorted & EMITTER_CELLTYPE==Ligand_cell_clean & RECEIVER_CELLTYPE==Receptor_cell_clean][
-          match(LRs_sorted, LR_GENES), .(LR_GENES, LOGFC)]
-        top_LR_table = kableExtra::kbl(top_LR_table)
+        # TOP LR for cellpair
+        # TODO: Extract function. Adds the LR table
+        NUM_TOP_LR = 5
+        ER_celltype = paste0(Ligand_cell_clean, "_", Receptor_cell_clean)
+        lr_genes_significant_sorted = cci[ER_CELLTYPES == ER_celltype 
+                                          & REGULATION_SIMPLE %in% c('UP', 'DOWN')][
+                                            order(-LOGFC_ABS),
+                                            .(LR_GENES, LOGFC, REGULATION)][  # ORA_SCORE might overflow
+                                              1:min(NUM_TOP_LR, data.table::.N),]  
+        top_LR_table = kableExtra::kbl(lr_genes_significant_sorted, caption=sprintf('Top %s LR by LOGFC_ABS', NUM_TOP_LR))
         
+        # Activity of LR found in most cellpairs of tissue
+        # TODO: Extract function
+        NUM_FREQ_LR = 5
+        LR_freq = object@ora_default$LR_GENES[order(-COUNTS_VALUE_REGULATED_DIFF), VALUE][1:NUM_FREQ_LR]
+        dt = cci[
+          ER_CELLTYPES == ER_celltype][
+            match(LR_freq, LR_GENES)][
+              , list(LR_GENES, LOGFC, REGULATION)]
+        dt[, LR_GENES := LR_freq]
+        # TODO: -> log base 2
+        dt[, LOGFC := as.character(LOGFC)]
+        dt[is.na(LOGFC), LOGFC := 'Not detected']
+        freq_LR_table = as.character(kableExtra::kbl(dt, caption=sprintf('Most frequent %s LR that change in tissue', NUM_FREQ_LR)))
+        
+        # TODO: Extract function
+        html_break = '</br>'
         html = paste0(header,
-                      as.character(kableExtra::kbl(cellpair_counts_ora)),
-                      top_LR_table)
+                      as.character(kableExtra::kbl(cellpair_counts_ora, caption='Cell pair counts and ORA')),
+                      html_break,
+                      top_LR_table,
+                      html_break,
+                      freq_LR_table)
         return(html)
       }
     )
@@ -634,9 +662,9 @@ build_network_skeleton <- function(object,
     visNetwork::visNetwork(
       nodes_, edges_,
       width = "100%", # height='100%',
-      main = sprintf("%s", 'tissue name'),
-      submain = sprintf("%s", network_type),
-      footer = "Ageing of intercellular communication",
+      main = "Ageing of intercellular communication",
+      submain = sprintf("%s", object@parameters$object_name),
+      footer = sprintf("Network type: %s", network_type),
       background = "white"
     )
   )
@@ -693,8 +721,7 @@ get_network_components <- function(object,
   )
   return(network_components)
 }
-build_network <- function(
-                          network_skeleton,
+build_network <- function(network_skeleton,
                           nodes_global = NULL,
                           edges_global = NULL,
                           layout = NULL,
@@ -736,11 +763,10 @@ interactive_from_igraph <- function(object,
   interactive_network <- do.call(build_network, network_components)
   return(interactive_network)
 }
-build_interactive_network <- function(
-  object,
-  network_type,
-  class_signature,
-  subobject_name
+build_interactive_network <- function(object,
+                                      network_type,
+                                      class_signature,
+                                      subobject_name
 ) {
   check_network_type_arg(network_type)
   G <- build_igraph(object, network_type)
@@ -754,12 +780,12 @@ setup_graph_config <- function() {
   GRAPH_CONFIG <- list(
     EDGE_COLORING = list(
       COLOR_UP = "#4285F4", # blue
-      CUTOFF_UP = 1.1,
       COLOR_DOWN = "#DB4437", # red
-      CUTOFF_DOWN = 1.1,
       COLOR_DIFF = "#F4B400",
-      CUTOFF_DIFF = 1.1,
       COLOR_ROBUST = "#0F9D58",
+      CUTOFF_UP = 1,  # TODO
+      CUTOFF_DOWN = 1,
+      CUTOFF_DIFF = 1,
       COLOR_NONE = rgb(0.2, 0.2, 0.2, alpha = 0.1)
     ),
 

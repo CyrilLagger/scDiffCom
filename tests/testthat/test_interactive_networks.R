@@ -5,7 +5,7 @@ G = construct_graph(object)
 
 test_that("process_celltype_pairs_enrichment", {
     res = process_celltype_pairs_enrichment(object@ora_default$ER_CELLTYPES)
-    expect_equal(dim(res), c(49, 16))
+    expect_equal(dim(res), c(49, 19))
     expect_true( !('tissue' %in% tolower(names(res))) )
     expect_equal(
         sum(object@cci_detected$ER_CELLTYPES == 'natural killer cell_natural killer cell'),
