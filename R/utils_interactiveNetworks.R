@@ -281,7 +281,6 @@ classify_edges <- function(dt_edge,
     }
   )
 }
->>>>>>> c115cf814032e3e5b99f772c73afd1164bded162
 map_edgetype_to_color <- function(edge_label, config = setup_graph_config()) {
   
   # TODO: Inline variables
@@ -789,7 +788,6 @@ build_network_skeleton <- function(object,
     ,
     title := edge_annotation_html(edges_, network_representation_type)
   ]
-  print(edges_)
   return(
     visNetwork::visNetwork(
       nodes_, edges_,
