@@ -228,6 +228,60 @@ process_celltype_pairs_enrichment <- function(ora_ER_cells) {
   dt_ctypes = subset_celltypes_dt_columns(dt_ctypes, cols_to_select)
   return(dt_ctypes)
 }
+classify_edges <- function(dt_edge,
+                           config = setup_graph_config(),
+                           use_adjpval = TRUE) {
+  # TODO: Use setup_graph_config()
+  LABEL_DIFF <- "diff"
+  LABEL_UP <- "up"
+  LABEL_DOWN <- "down"
+  LABEL_ROBUST <- "robust"
+  LABEL_NONE <- "none"
+  
+  # TODO
+  CUTOFF_CHANGE_DIFF <- config$EDGE_COLORING$CUTOFF_DIFF
+  CUTOFF_CHANGE_UP <- config$EDGE_COLORING$CUTOFF_UP  # Change name
+  CUTOFF_CHANGE_DOWN <- config$EDGE_COLORING$CUTOFF_DOWN  # Change name
+  CUTOFF_ROBUST_UP <- 0.99
+  CUTOFF_ROBUST_DOWN <- 0.99
+  
+  edges_classification <- purrr::pmap_chr(
+    dt_edge,
+    function(OR_DIFF, OR_UP, OR_DOWN,
+             P_VALUE_DIFF, P_VALUE_UP, P_VALUE_DOWN,
+             BH_P_VALUE_DIFF, BH_P_VALUE_UP, BH_P_VALUE_DOWN,
+             ...) {
+      if (use_adjpval) {
+        is_P_VALUE_DIFF <- BH_P_VALUE_DIFF < 0.05
+        is_P_VALUE_UP <- BH_P_VALUE_UP < 0.05
+        is_P_VALUE_DOWN <- BH_P_VALUE_DOWN < 0.05
+      } else {
+        is_P_VALUE_DIFF <- P_VALUE_DIFF < 0.05
+        is_P_VALUE_UP <- P_VALUE_UP < 0.05
+        is_P_VALUE_DOWN <- P_VALUE_DOWN < 0.05
+      }
+      
+      is_OR_DIFF_CHANGE <- OR_DIFF >= CUTOFF_CHANGE_DIFF
+      is_OR_UP_CHANGE <- OR_UP >= CUTOFF_CHANGE_UP
+      is_OR_DOWN_CHANGE <- OR_DOWN >= CUTOFF_CHANGE_DOWN
+      is_OR_UP_ROBUST <- OR_UP <= CUTOFF_ROBUST_UP
+      is_OR_DOWN_ROBUST <- OR_DOWN <= CUTOFF_ROBUST_DOWN
+      
+      if (is_OR_UP_CHANGE & is_P_VALUE_UP & is_OR_DOWN_CHANGE & is_P_VALUE_DOWN) {
+        return(LABEL_DIFF)
+      } else if (is_OR_UP_CHANGE & is_P_VALUE_UP) {
+        return(LABEL_UP)
+      } else if (is_OR_DOWN_CHANGE & is_P_VALUE_DOWN) {
+        return(LABEL_DOWN)
+      } else if (is_OR_UP_ROBUST & is_P_VALUE_UP & is_OR_DOWN_ROBUST & is_P_VALUE_DOWN) {
+        return(LABEL_ROBUST)
+      } else {
+        return(LABEL_NONE)
+      }
+    }
+  )
+}
+>>>>>>> c115cf814032e3e5b99f772c73afd1164bded162
 map_edgetype_to_color <- function(edge_label, config = setup_graph_config()) {
   
   # TODO: Inline variables
@@ -377,7 +431,7 @@ sort_layout_vertices <- function(layout, G, config, disperse) {
     )
     return(sort_keys)
   }
-  
+
   vertex_names <- igraph::V(G)$name
   num_v <- length(vertex_names)
   midpoint <- num_v / 2
@@ -513,6 +567,7 @@ build_network_skeleton <- function(object,
                                    network_representation_type,
                                    network_layout_type,
                                    config = setup_graph_config()) {
+
   nodes_ <- data.table::copy(nodes)
   edges_ <- data.table::copy(edges)
   
@@ -594,7 +649,6 @@ build_network_skeleton <- function(object,
         if ( network_representation_type != "ORA" ) {
           return(NULL)
         }
-        
         format_float = function(x) sprintf("%.1f", x)
         format_pval = function(x) round(x, digits=3)
         cellpair_counts_ora = data.table::data.table(
