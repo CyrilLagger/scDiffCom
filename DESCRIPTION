@@ -43,7 +43,9 @@ Imports:
     igraph,
     purrr,
     scales,
-    visNetwork
+    visNetwork,
+    kableExtra,
+    RColorBrewer
 VignetteBuilder: knitr
 Collate: 
     'cellphonedb_wrapper.R'
