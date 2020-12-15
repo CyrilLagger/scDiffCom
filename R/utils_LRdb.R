@@ -1,15 +1,8 @@
-#' Build a data.table of curated ligand-receptor interactions obtained from 6 databases.
-#'
-#' @param species human or mouse
-#'
-#' @return A data.table with ligands, receptors and some annotations (database of origin and source of curation).
 build_LRdb <- function(
-  species
+  species = c("mouse", "human")
 ) {
-  if (!(species %in% c("human", "mouse"))) {
-    stop("`species` muste be either 'mouse' or 'human'")
-  }
-  LRdb_notCurated <- combine_LR_db(
+  species <- match.arg(species)
+  LRdb_not_curated <- combine_LR_db(
     species = species,
     one2one = FALSE,
     curated = FALSE
@@ -24,7 +17,7 @@ build_LRdb <- function(
     LR_db = LRdb_curated
   )
   return(list(
-    LRdb_notCurated = LRdb_notCurated,
+    LRdb_not_curated = LRdb_not_curated,
     LRdb_curated = LRdb_curated,
     LRdb_curated_GO = LRdb_GO$LR_GO_intersection
   ))
@@ -35,9 +28,6 @@ get_GO_interactions <- function(
   LR_db
 ) {
   GO_NAME <- i.GO_name <- NULL
-  if (!(species %in% c("human", "mouse"))) {
-    stop("`species` muste be either 'mouse' or 'human'")
-  }
   if (!requireNamespace("biomaRt", quietly = TRUE)) {
     stop("Package \"biomaRt\" needed for this function to work. Please install it.",
          call. = FALSE
@@ -53,8 +43,8 @@ get_GO_interactions <- function(
          call. = FALSE
     )
   }
-  LR_genes <- unique(unlist(LR_db[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]))
-  LR_genes <- LR_genes[!is.na(LR_genes)]
+  ALL_LR_genes <- unique(unlist(LR_db[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]))
+  ALL_LR_genes <- ALL_LR_genes[!is.na(ALL_LR_genes)]
   if (species == "mouse") {
     dataset <- "mmusculus_gene_ensembl"
     id_gene <- "mgi_symbol"
@@ -67,7 +57,7 @@ get_GO_interactions <- function(
     "ensembl",
     dataset = dataset
   )
-  LR_genes_info <- biomaRt::getBM(
+  ALL_LR_genes_info <- biomaRt::getBM(
     attributes = c(
       id_gene,
       "go_id",
@@ -75,15 +65,15 @@ get_GO_interactions <- function(
     ),
     filters = id_gene,
     mart = mart,
-    values = LR_genes
+    values = ALL_LR_genes
   )
-  setDT(LR_genes_info)
+  setDT(ALL_LR_genes_info)
   onto_go_terms <- ontoProc::getGeneOnto()
   go_names <- onto_go_terms$name
-  LR_genes_go <- sapply(
-    LR_genes,
+  ALL_LR_genes_go <- sapply(
+    ALL_LR_genes,
     function(gene) {
-      temp_go <- unique(LR_genes_info[get(id_gene) == gene]$name_1006)
+      temp_go <- unique(ALL_LR_genes_info[get(id_gene) == gene]$name_1006)
       ontologyIndex::get_ancestors(onto_go_terms, names(go_names[go_names %in% temp_go]))
     },
     USE.NAMES = TRUE,
@@ -95,13 +85,13 @@ get_GO_interactions <- function(
       MARGIN = 1,
       function(row) {
         LIGAND_GO <- unique(c(
-          LR_genes_go[[row[["LIGAND_1"]]]],
-          LR_genes_go[[row[["LIGAND_2"]]]]
+          ALL_LR_genes_go[[row[["LIGAND_1"]]]],
+          ALL_LR_genes_go[[row[["LIGAND_2"]]]]
         ))
         RECEPTOR_GO <- unique(c(
-          LR_genes_go[[row[["RECEPTOR_1"]]]],
-          LR_genes_go[[row[["RECEPTOR_2"]]]],
-          LR_genes_go[[row[["RECEPTOR_3"]]]]
+          ALL_LR_genes_go[[row[["RECEPTOR_1"]]]],
+          ALL_LR_genes_go[[row[["RECEPTOR_2"]]]],
+          ALL_LR_genes_go[[row[["RECEPTOR_3"]]]]
         ))
         res_inter <- intersect(LIGAND_GO, RECEPTOR_GO)
         if (length(res_inter) > 0) {
@@ -137,37 +127,34 @@ combine_LR_db <- function(
 ) {
   DATABASE <- SOURCE <- ANNOTATION <- FAMILY <- SUBFAMILY <- keep_subLR <-
     SOURCE_CLEAN <- SOURCE_no_digit <- is_complex_temp <- LIGAND_2 <- RECEPTOR_2 <- LR_vectorized_temp <-
-    N_IS_SUBPART <- i.N_IS_SUBPART <- NULL
-  if (!(species %in% c("human", "mouse"))) {
-    stop("`species` muste be either 'mouse' or 'human'")
-  }
+    N_IS_SUBPART <- i.N_IS_SUBPART <- LR_GENES <- LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_3 <- NULL
   #already curated
-  LR_CONNECTOMEDB <- prepare_LR_CONNECTOMEDB(species = species, one2one = one2one) #PMID:
-  LR_celltalk <- prepare_LR_CellTalkDB(species = species) #PMID:
-  LR_ic <- prepare_LR_ICELLNET(species = species, one2one = one2one) #PMID:
-  LR_cpdb <- prepare_LR_cpdb(species = species, one2one = one2one, deconvoluted = FALSE) #CPDB
-  LR_cc <- prepare_LR_CellChat(species = species) #PMID: KEGG: PMC: PMC
+  LR_connectomeDB2020 <- prepare_LR_connectomeDB2020(species = species, one2one = one2one) #PMID
+  LR_CellTalkDB <- prepare_LR_CellTalkDB(species = species) #PMID
+  LR_ICELLNET <- prepare_LR_ICELLNET(species = species, one2one = one2one) #PMID
+  LR_CellPhoneDB <- prepare_LR_CellPhoneDB(species = species, one2one = one2one, deconvoluted = FALSE) #CellPhoneDB
+  LR_CellChat <- prepare_LR_CellChat(species = species) #PMID KEGG PMC PMC
   #not fully curated
-  LR_scsr <- prepare_LR_scsr(species = species, one2one = one2one) #"PMID:" "Ramilowski2015" "HPMR" "HPRD" and
+  LR_SingleCellSignalR <- prepare_LR_SingleCellSignalR(species = species, one2one = one2one) #"PMID" "FANTOM5" "HPMR" "HPRD" and
   #"reactome" "IUPHAR" "PPI" "cellsignal.com"
-  LR_niche <- prepare_LR_nichenet(species = species, one2one = one2one) #"KEGG:nichenet"  "IUPHAR" "Ramilowski2015" "PPI"
-  LR_sct <- prepare_LR_scTensor(species = species) #"SCT:DLRP" "IUPHAR" "HPMR" "SCT:CPDB" "SCT:SCSR"   "PPI"
-  #"HPRD" SCT:Ramilowski2015"
+  LR_NicheNet <- prepare_LR_NicheNet(species = species, one2one = one2one) #"KEGG:NicheNet"  "IUPHAR" "FANTOM5" "PPI"
+  LR_scTensor <- prepare_LR_scTensor(species = species) #"SCT:DLRP" "IUPHAR" "HPMR" "SCT:CellPhoneDB" "SCT:SingleCellSignalR"   "PPI"
+  #"HPRD" SCT:FANTOM5"
   if (curated) {
-    LR_scsr <- LR_scsr[SOURCE != "PPI"]
-    LR_niche <- LR_niche[SOURCE != "PPI"]
-    LR_sct <- LR_sct[SOURCE != "PPI"]
+    LR_SingleCellSignalR <- LR_SingleCellSignalR[SOURCE != "PPI"]
+    LR_NicheNet <- LR_NicheNet[SOURCE != "PPI"]
+    LR_scTensor <- LR_scTensor[SOURCE != "PPI"]
   }
   LR_full <- rbindlist(
     list(
-      "CONNECTOMEDB" = LR_CONNECTOMEDB,
-      "CELLTALK" = LR_celltalk,
-      "SCTENSOR" = LR_sct,
-      "SCSR" = LR_scsr,
-      "NICHENET" = LR_niche,
-      "CELLPHONEDB" = LR_cpdb,
-      "CELLCHAT" = LR_cc,
-      "ICELLNET" = LR_ic
+      "connectomeDB2020" = LR_connectomeDB2020,
+      "CellTalkDB" = LR_CellTalkDB,
+      "scTensor" = LR_scTensor,
+      "SingleCellSignalR" = LR_SingleCellSignalR,
+      "NicheNet" = LR_NicheNet,
+      "CellPhoneDB" = LR_CellPhoneDB,
+      "CellChat" = LR_CellChat,
+      "ICELLNET" = LR_ICELLNET
     ),
     use.names = TRUE,
     fill = TRUE,
@@ -175,7 +162,7 @@ combine_LR_db <- function(
   )
   col_md <- colnames(LR_full)
   col_md <- col_md[col_md != "LR_SORTED"]
-  db_names <- c("CONNECTOMEDB", "CELLTALK", "CELLCHAT", "CELLPHONEDB", "SCSR", "SCTENSOR", "ICELLNET", "NICHENET")
+  db_names <- c("connectomeDB2020", "CellTalkDB", "CellChat", "CellPhoneDB", "SingleCellSignalR", "scTensor", "ICELLNET", "NicheNet")
   LR_full <- dcast.data.table(
     LR_full,
     formula = LR_SORTED ~ DATABASE,
@@ -185,27 +172,27 @@ combine_LR_db <- function(
     1:2,
     function(i) {
       ifelse(
-        !is.na(get(paste0("LIGAND_", i, "_CELLPHONEDB"))),
-        get(paste0("LIGAND_", i, "_CELLPHONEDB")),
+        !is.na(get(paste0("LIGAND_", i, "_CellPhoneDB"))),
+        get(paste0("LIGAND_", i, "_CellPhoneDB")),
         ifelse(
           !is.na(get(paste0("LIGAND_", i, "_ICELLNET"))),
           get(paste0("LIGAND_", i, "_ICELLNET")),
           ifelse(
-            !is.na(get(paste0("LIGAND_", i, "_SCSR"))),
-            get(paste0("LIGAND_", i, "_SCSR")),
+            !is.na(get(paste0("LIGAND_", i, "_SingleCellSignalR"))),
+            get(paste0("LIGAND_", i, "_SingleCellSignalR")),
             ifelse(
-              !is.na(get(paste0("LIGAND_", i, "_SCTENSOR"))),
-              get(paste0("LIGAND_", i, "_SCTENSOR")),
+              !is.na(get(paste0("LIGAND_", i, "_scTensor"))),
+              get(paste0("LIGAND_", i, "_scTensor")),
               ifelse(
-                !is.na(get(paste0("LIGAND_", i, "_NICHENET"))),
-                get(paste0("LIGAND_", i, "_NICHENET")),
+                !is.na(get(paste0("LIGAND_", i, "_NicheNet"))),
+                get(paste0("LIGAND_", i, "_NicheNet")),
                 ifelse(
-                  !is.na(get(paste0("LIGAND_", i, "_CONNECTOMEDB"))),
-                  get(paste0("LIGAND_", i, "_CONNECTOMEDB")),
+                  !is.na(get(paste0("LIGAND_", i, "_connectomeDB2020"))),
+                  get(paste0("LIGAND_", i, "_connectomeDB2020")),
                   ifelse(
-                    !is.na(get(paste0("LIGAND_", i, "_CELLTALK"))),
-                    get(paste0("LIGAND_", i, "_CELLTALK")),
-                    get(paste0("LIGAND_", i, "_CELLCHAT"))
+                    !is.na(get(paste0("LIGAND_", i, "_CellTalkDB"))),
+                    get(paste0("LIGAND_", i, "_CellTalkDB")),
+                    get(paste0("LIGAND_", i, "_CellChat"))
                   )
                 )
               )
@@ -219,27 +206,27 @@ combine_LR_db <- function(
     1:3,
     function(i) {
       ifelse(
-        !is.na(get(paste0("RECEPTOR_", i, "_CELLPHONEDB"))),
-        get(paste0("RECEPTOR_", i, "_CELLPHONEDB")),
+        !is.na(get(paste0("RECEPTOR_", i, "_CellPhoneDB"))),
+        get(paste0("RECEPTOR_", i, "_CellPhoneDB")),
         ifelse(
           !is.na(get(paste0("RECEPTOR_", i, "_ICELLNET"))),
           get(paste0("RECEPTOR_", i, "_ICELLNET")),
           ifelse(
-            !is.na(get(paste0("RECEPTOR_", i, "_SCSR"))),
-            get(paste0("RECEPTOR_", i, "_SCSR")),
+            !is.na(get(paste0("RECEPTOR_", i, "_SingleCellSignalR"))),
+            get(paste0("RECEPTOR_", i, "_SingleCellSignalR")),
             ifelse(
-              !is.na(get(paste0("RECEPTOR_", i, "_SCTENSOR"))),
-              get(paste0("RECEPTOR_", i, "_SCTENSOR")),
+              !is.na(get(paste0("RECEPTOR_", i, "_scTensor"))),
+              get(paste0("RECEPTOR_", i, "_scTensor")),
               ifelse(
-                !is.na(get(paste0("RECEPTOR_", i, "_NICHENET"))),
-                get(paste0("RECEPTOR_", i, "_NICHENET")),
+                !is.na(get(paste0("RECEPTOR_", i, "_NicheNet"))),
+                get(paste0("RECEPTOR_", i, "_NicheNet")),
                 ifelse(
-                  !is.na(get(paste0("RECEPTOR_", i, "_CONNECTOMEDB"))),
-                  get(paste0("RECEPTOR_", i, "_CONNECTOMEDB")),
+                  !is.na(get(paste0("RECEPTOR_", i, "_connectomeDB2020"))),
+                  get(paste0("RECEPTOR_", i, "_connectomeDB2020")),
                   ifelse(
-                    !is.na(get(paste0("RECEPTOR_", i, "_CELLTALK"))),
-                    get(paste0("RECEPTOR_", i, "_CELLTALK")),
-                    get(paste0("RECEPTOR_", i, "_CELLCHAT"))
+                    !is.na(get(paste0("RECEPTOR_", i, "_CellTalkDB"))),
+                    get(paste0("RECEPTOR_", i, "_CellTalkDB")),
+                    get(paste0("RECEPTOR_", i, "_CellChat"))
                   )
                 )
               )
@@ -312,16 +299,26 @@ combine_LR_db <- function(
     LR_full_simple[, N_IS_SUBPART := rm_LR_full]
     LR_full[LR_full_simple, on = "LR_SORTED", N_IS_SUBPART := i.N_IS_SUBPART]
     setnafill(LR_full, fill = 0, cols = "N_IS_SUBPART")
-    LR_full[, keep_subLR := grepl("CELLPHONEDB|CELLCHAT|ICELLNET", DATABASE)]
+    LR_full[, keep_subLR := grepl("CellPhoneDB|CellChat|ICELLNET", DATABASE)]
     LR_full <- LR_full[N_IS_SUBPART == 0 | keep_subLR == TRUE]
-    LR_full <- LR_full[DATABASE != "SCTENSOR"]
+    LR_full <- LR_full[DATABASE != "scTensor"]
     cols_to_keep <- NULL
   } else {
     cols_to_keep <- NULL
   }
+  LR_full[, LR_GENES := list(sapply(1:nrow(.SD), function(i) {
+    temp1 <- c(LIGAND_1[[i]], LIGAND_2[[i]])
+    temp1 <- temp1[!is.na(temp1)]
+    temp1 <- paste0(temp1, collapse = "_")
+    temp2 <- c(RECEPTOR_1[[i]], RECEPTOR_2[[i]], RECEPTOR_3[[i]])
+    temp2 <- temp2[!is.na(temp2)]
+    temp2 <- paste0(temp2, collapse = "_")
+    return(paste(temp1, temp2, sep = ":"))
+  }))]
   if (species == "mouse") {
     cols_to_keep <- c(
       cols_to_keep,
+      "LR_GENES",
       paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3), "LR_SORTED",
       "DATABASE", "N_DB", "SOURCE", "ANNOTATION", "FAMILY", "SUBFAMILY",
       paste0("LIGAND_", 1:2, "_CONF"), paste0("LIGAND_", 1:2, "_TYPE"),
@@ -331,15 +328,33 @@ combine_LR_db <- function(
   if (species == "human") {
     cols_to_keep <- c(
       cols_to_keep,
+      "LR_GENES",
       paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3), "LR_SORTED",
       "DATABASE", "N_DB", "SOURCE", "ANNOTATION", "FAMILY", "SUBFAMILY"
     )
   }
   LR_full <- LR_full[, cols_to_keep, with = FALSE]
+  #clean the columns DATABASE and SOURCE
+  LR_full[, DATABASE := sapply(
+    1:nrow(.SD),
+    function(i) {
+      temp <- unlist(strsplit(.SD[i,]$DATABASE, ";"))
+      paste0(sort(unique(temp)), collapse = ";")
+    }
+  )]
+  LR_full[, SOURCE := gsub(")", "", SOURCE, fixed = TRUE)]
+  LR_full[, SOURCE := gsub(";;", ";", SOURCE, fixed = TRUE)]
+  LR_full[, SOURCE := sapply(
+    1:nrow(.SD),
+    function(i) {
+      temp <- unlist(strsplit(.SD[i,]$SOURCE, ";"))
+      paste0(sort(unique(temp)), collapse = ";")
+    }
+  )]
   return(LR_full)
 }
 
-prepare_LR_CONNECTOMEDB <- function(
+prepare_LR_connectomeDB2020 <- function(
   species,
   one2one = FALSE
 ) {
@@ -415,9 +430,6 @@ prepare_LR_CellTalkDB <- function(
   species
 ) {
   LR_SORTED <- SOURCE <- NULL
-  if (!(species %in% c("human", "mouse"))) {
-    stop("`species` muste be either 'mouse' or 'human'")
-  }
   if (species == "mouse") {
     LR <- CellTalkDB_mouse
   }
@@ -448,8 +460,13 @@ prepare_LR_CellTalkDB <- function(
     "LR_SORTED", "SOURCE",
     "LIGAND_1", "RECEPTOR_1"
   )
+  #some manual fixes to correct bad formatting in their original DB
+  LR[, SOURCE := sub(",$", "", SOURCE)]
+  LR[, SOURCE := gsub(";NO", "", SOURCE, fixed = TRUE)]
+  LR[, SOURCE := gsub(";", ",", SOURCE, fixed = TRUE)]
+  LR[, SOURCE := gsub(",,", ",", SOURCE, fixed = TRUE)]
   LR[, SOURCE := paste0("PMID:", SOURCE)]
-  LR[, SOURCE := gsub(",", ";PMID:", SOURCE)]
+  LR[, SOURCE := gsub(",", ";PMID:", SOURCE, fixed = TRUE)]
   return(LR[, cols_to_keep, with = FALSE])
 }
 
@@ -560,8 +577,8 @@ prepare_LR_scTensor <- function(
     LR[, SOURCE := gsub("ENSEMBL_DLRP|NCBI_DLRP", "SCT:DLRP", SOURCE)]
     LR[, SOURCE := gsub("ENSEMBL_IUPHAR|NCBI_IUPHAR", "IUPHAR", SOURCE)]
     LR[, SOURCE := gsub("ENSEMBL_HPMR|NCBI_HPMR", "HPMR", SOURCE)]
-    LR[, SOURCE := gsub("ENSEMBL_CELLPHONEDB|NCBI_CELLPHONEDB", "SCT:CPDB", SOURCE)]
-    LR[, SOURCE := gsub("ENSEMBL_SINGLECELLSIGNALR|NCBI_SINGLECELLSIGNALR", "SCT:SCSR", SOURCE)]
+    LR[, SOURCE := gsub("ENSEMBL_CELLPHONEDB|NCBI_CELLPHONEDB", "SCT:CellPhoneDB", SOURCE)]
+    LR[, SOURCE := gsub("ENSEMBL_SINGLECELLSIGNALR|NCBI_SINGLECELLSIGNALR", "SCT:SingleCellSignalR", SOURCE)]
     LR[, SOURCE := gsub("SWISSPROT_STRING", "PPI", SOURCE)]
     LR[, SOURCE := gsub("TREMBL_STRING", "PPI", SOURCE)]
   }
@@ -571,14 +588,14 @@ prepare_LR_scTensor <- function(
     LR[, SOURCE := gsub("IUPHAR", "IUPHAR", SOURCE)]
     LR[, SOURCE := gsub("DLRP", "SCT:DLRP", SOURCE)]
     LR[, SOURCE := gsub("HPMR", "HPMR", SOURCE)]
-    LR[, SOURCE := gsub("FANTOM5", "SCT:Ramilowski2015", SOURCE)]
-    LR[, SOURCE := gsub("CELLPHONEDB", "SCT:CPDB", SOURCE)]
-    LR[, SOURCE := gsub("SINGLECELLSIGNALR", "SCT:SCSR", SOURCE)]
+    LR[, SOURCE := gsub("FANTOM5", "SCT:FANTOM5", SOURCE)]
+    LR[, SOURCE := gsub("CELLPHONEDB", "SCT:CellPhoneDB", SOURCE)]
+    LR[, SOURCE := gsub("SINGLECELLSIGNALR", "SCT:SingleCellSignalR", SOURCE)]
   }
   return(LR[, cols_to_keep, with = FALSE])
 }
 
-prepare_LR_scsr <- function(
+prepare_LR_SingleCellSignalR <- function(
   species,
   one2one = FALSE
 ) {
@@ -655,7 +672,7 @@ prepare_LR_scsr <- function(
   LR[, PMIDs := gsub(")", "", PMIDs)]
   LR[, PMIDs := gsub(" ", "", PMIDs)]
   LR[, source := gsub(",", ";", source)]
-  LR[, source := gsub("fantom5", "Ramilowski2015", source)]
+  LR[, source := gsub("fantom5", "FANTOM5", source)]
   LR[, source := gsub("literature;", "", source)]
   LR[, source := gsub("literature", "", source)]
   LR[, source := gsub("uniprot", "PPI", source)]
@@ -666,7 +683,7 @@ prepare_LR_scsr <- function(
   return(LR[, cols_to_keep, with = FALSE])
 }
 
-prepare_LR_nichenet <- function(
+prepare_LR_NicheNet <- function(
   species,
   one2one = FALSE
 ) {
@@ -741,13 +758,13 @@ prepare_LR_nichenet <- function(
   source_temp_kegg <- paste0(source_temp[grepl("kegg", source_temp)], collapse = "|")
   source_temp_ppi <- paste0(source_temp[grepl("ppi", source_temp)], collapse = "|")
   LR[, SOURCE := gsub(source_temp_ppi, "PPI", SOURCE)]
-  LR[, SOURCE := gsub(source_temp_kegg, "KEGG:nichenet", SOURCE)]
+  LR[, SOURCE := gsub(source_temp_kegg, "KEGG:NicheNet", SOURCE)]
   LR[, SOURCE := gsub("pharmacology", "IUPHAR", SOURCE)]
-  LR[, SOURCE := gsub("ramilowski_known", "Ramilowski2015", SOURCE)]
+  LR[, SOURCE := gsub("ramilowski_known", "FANTOM5", SOURCE)]
   return(LR[, cols_to_keep, with = FALSE])
 }
 
-create_LR_cpdb <- function(
+create_LR_CellPhoneDB <- function(
   deconvoluted = FALSE
 ) {
   id_protein_multi_1_1 <- id_protein_multi_1_2 <- id_protein_1 <- id_protein_2 <- temp_id <-
@@ -909,7 +926,7 @@ create_LR_cpdb <- function(
   return(dt_full)
 }
 
-prepare_LR_cpdb <- function(
+prepare_LR_CellPhoneDB <- function(
   species,
   one2one = FALSE,
   deconvoluted = FALSE,
@@ -919,7 +936,7 @@ prepare_LR_cpdb <- function(
   if (!(species %in% c("human", "mouse"))) {
     stop("`species` muste be either 'mouse' or 'human'")
   }
-  LR <- create_LR_cpdb(
+  LR <- create_LR_CellPhoneDB(
     deconvoluted = deconvoluted
   )
   if (species == "mouse") {
@@ -934,7 +951,7 @@ prepare_LR_cpdb <- function(
     if (deconvoluted) {
       nL <- 1
       nR <- 1
-      LR$SOURCE <- "CPDB_DECONV"
+      LR$SOURCE <- "CellPhoneDB_DECONV"
       cols_to_keep <- c(
         "LR_SORTED", "SOURCE",
         "LIGAND_1", "RECEPTOR_1",
@@ -944,7 +961,7 @@ prepare_LR_cpdb <- function(
     } else {
       nL <- 2
       nR <- 3
-      LR$SOURCE <- "CPDB"
+      LR$SOURCE <- "CellPhoneDB"
       cols_to_keep <- c(
         "LR_SORTED", "SOURCE",
         "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3",
@@ -990,7 +1007,7 @@ prepare_LR_cpdb <- function(
       temp <- paste0(temp, collapse = "_")
     }))]
     LR <- LR[!duplicated(LR_SORTED)]
-    LR$SOURCE <- "CPDB"
+    LR$SOURCE <- "CellPhoneDB"
     cols_to_keep <- c(
       "LR_SORTED", "SOURCE",
       "LIGAND_1", "LIGAND_2",
@@ -1034,7 +1051,7 @@ prepare_LR_CellChat <- function(
   LR[, RECEPTOR_1 := gsub(" ", "", RECEPTOR_1)]
   LR[, RECEPTOR_2 := gsub(" ", "", RECEPTOR_2)]
   if (species == "mouse") {
-    # some CELLCHAT gene names (70) are not mgi_symbols and we need to convert them manually...
+    # some CellChat gene names (70) are not mgi_symbols and we need to convert them manually...
     convert_table <- CellChat_conversion
     genes_to_rm <- convert_table[new == "remove"]
     genes_to_change <- convert_table[new != "remove"]
