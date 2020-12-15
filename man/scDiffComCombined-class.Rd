@@ -11,12 +11,12 @@ A scDiffComCombined object stores the results of multiple scDiffCom objects at a
 \section{Slots}{
 
 \describe{
-\item{\code{parameters}}{A list of the parameters passed to \code{run_interaction_analysis}.}
+\item{\code{parameters}}{The list of parameters passed to \code{run_interaction_analysis}.}
 
-\item{\code{cci_raw}}{A data.table of all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \cdot m} rows,
-where n is the number of cell-types and m the number of ligand-receptor pairs.}
+\item{\code{cci_raw}}{A data.table with all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \times m} rows,
+where \eqn{n} is the number of cell-types and \eqn{m} the number of ligand-receptor pairs.}
 
-\item{\code{cci_detected}}{A data.table of the detected CCIs obtained from the raw data.table after filtering.}
+\item{\code{cci_detected}}{A data.table with the detected CCIs obtained from the raw data.table after filtering.}
 
 \item{\code{ora_default}}{A data.table storing the results of the over-representation analysis
 performed on the \code{cci_detected} table.}
@@ -25,6 +25,6 @@ performed on the \code{cci_detected} table.}
 
 \item{\code{ora_combined_default}}{Same as \code{ora_default} but for the global analysis.}
 
-\item{\code{ora_combined_default}}{Same as \code{ora_stringent} but for the global analysis.}
+\item{\code{ora_combined_stringent}}{Same as \code{ora_stringent} but for the global analysis.}
 }}
 

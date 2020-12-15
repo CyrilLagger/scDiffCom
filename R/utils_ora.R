@@ -29,7 +29,11 @@ run_ora <- function(
       condition_inputs$is_cond) {
     logfc_threshold <- temp_param$threshold_logfc
     if (stringent_or_default == "default") {
-      temp_ora <- object@ora_default
+      if (!global) {
+        temp_ora <- object@ora_default
+      } else {
+        temp_ora <- object@ora_combined_default
+      }
       categories_old <- names(temp_ora)
       if (is.null(categories_old)) {
         mes <- paste0(
@@ -75,7 +79,8 @@ run_ora <- function(
               logfc_threshold = logfc_threshold,
               regulation = regulation,
               category = category,
-              species = temp_param$LRdb_species
+              species = temp_param$LRdb_species,
+              global = global
             ),
             by = temp_by
           ]
@@ -92,7 +97,7 @@ run_ora <- function(
           res_ora <- c(temp_ora, ora_default)
         }
       }
-      if (global == TRUE) {
+      if (global) {
         if (class_signature == "scDiffComCombined") {
           object@ora_combined_default <- res_ora
         } else {
@@ -106,17 +111,48 @@ run_ora <- function(
         if (verbose) message("Choose a non-NULL `stringent_logfc_threshold` to perform stringent over-representation analysis.")
       } else  {
         if(stringent_logfc_threshold > logfc_threshold) {
-          mes <- paste0(
-            "Performing stringent over-representation analysis on all specified categories: ",
-            paste0(categories, collapse = ", "),
-            ".\n",
-            "Erasing all previous stringent ORA results."
-          )
-          if (verbose) message(mes)
+          if (!global) {
+            temp_ora_stringent <- object@ora_stringent
+          } else {
+            temp_ora_stringent <- object@ora_combined_stringent
+          }
+          categories_old_stringent <- names(temp_ora_stringent)
+          if (is.null(categories_old_stringent)) {
+            mes <- paste0(
+              "Performing stringent over-representation analysis on the specified categories: ",
+              paste0(categories, collapse = ", "),
+              "."
+            )
+            if (verbose) message(mes)
+            categories_stringent_to_run <- categories
+          } else {
+            if (overwrite) {
+              mes <- paste0(
+                "Performing stringent over-representation analysis on the specified categories: ",
+                paste0(categories, collapse = ", "),
+                ".\n",
+                "Erasing all previous ORA results: ",
+                paste0(categories_old_stringent, collapse = ", "),
+                "."
+              )
+              if (verbose) message(mes)
+              categories_stringent_to_run <- categories
+            } else {
+              categories_stringent_to_run <- setdiff(categories, categories_old_stringent)
+              mes <- paste0(
+                "Performing stringent over-representation analysis on the specified categories: ",
+                paste0(categories_stringent_to_run, collapse = ", "),
+                ".\n",
+                "Keeping previous ORA results: ",
+                paste0(setdiff(categories_old_stringent, categories_stringent_to_run), collapse = ", "),
+                "."
+              )
+              if (verbose) message(mes)
+            }
+          }
           ora_stringent <- sapply(
-            categories,
+            categories_stringent_to_run,
             function(category) {
-
               temp_dt <- object@cci_detected
               res <- temp_dt[
                 ,
@@ -125,7 +161,8 @@ run_ora <- function(
                   logfc_threshold = stringent_logfc_threshold,
                   regulation = regulation,
                   category = category,
-                  species = temp_param$LRdb_species
+                  species = temp_param$LRdb_species,
+                  global = global
                 ),
                 by = temp_by
                 ]
@@ -133,14 +170,23 @@ run_ora <- function(
             USE.NAMES = TRUE,
             simplify = FALSE
           )
+          if (is.null(categories_old_stringent)) {
+            res_ora_stringent <- ora_stringent
+          } else {
+            if (overwrite) {
+              res_ora_stringent <- ora_stringent
+            } else {
+              res_ora_stringent <- c(temp_ora_stringent, ora_stringent)
+            }
+          }
           if (global == TRUE) {
             if (class_signature == "scDiffComCombined") {
-              object@ora_combined_stringent <- ora_stringent
+              object@ora_combined_stringent <- res_ora_stringent
             } else {
               stop("No ORA global analysis allowed for object of class `scDiffComCombined`")
             }
           } else {
-            object@ora_stringent <- ora_stringent
+            object@ora_stringent <- res_ora_stringent
           }
         } else {
           if (verbose) message("The supposedly `stringent` logfc is actually less `stringent` than the default parameter.
@@ -161,14 +207,19 @@ build_ora_dt <- function(
   logfc_threshold,
   regulation,
   category,
-  species
+  species,
+  global
 ) {
   COUNTS_VALUE_REGULATED <- COUNTS_NOTVALUE_REGULATED <-
     COUNTS_NOTVALUE_NOTREGULATED <- COUNTS_VALUE_NOTREGULATED <-
-    COUNTS_VALUE_REGULATED_temp <- COUNTS_VALUE_NOTREGULATED_temp<- CATEGORY <- NULL
+    COUNTS_VALUE_REGULATED_temp <- COUNTS_VALUE_NOTREGULATED_temp<- CATEGORY <-
+    ER_CELLTYPES <- ID <-  NULL
   cci_dt <- data.table::copy(
     cci_detected
   )
+  if (global & (category == "ER_CELLTYPES")) {
+      cci_dt[, ER_CELLTYPES := paste(ID, ER_CELLTYPES, sep = "_")]
+  }
   ora_tables <- lapply(
     X = regulation,
     FUN = function(reg) {
@@ -241,7 +292,6 @@ build_ora_dt <- function(
   ora_full <- Reduce(merge, ora_tables)
   return(ora_full)
 }
-
 extract_category_counts <- function(
   cci_detected,
   category,
