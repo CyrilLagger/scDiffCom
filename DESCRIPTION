@@ -28,7 +28,8 @@ Suggests:
     SingleCellSignalR,
     testthat (>= 2.1.0),
     knitr,
-    rmarkdown
+    rmarkdown,
+    KEGGREST
 Imports: 
     data.table,
     DelayedArray,

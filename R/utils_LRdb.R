@@ -16,11 +16,96 @@ build_LRdb <- function(
     species = species,
     LR_db = LRdb_curated
   )
+  LRdb_KEGG <- get_KEGG_PW_interactions(
+    species = species,
+    LR_db = LRdb_curated
+  )
   return(list(
     LRdb_not_curated = LRdb_not_curated,
     LRdb_curated = LRdb_curated,
-    LRdb_curated_GO = LRdb_GO$LR_GO_intersection
+    LRdb_curated_GO = LRdb_GO,
+    LRdb_curated_KEGG = LRdb_KEGG
   ))
+}
+
+get_KEGG_PW_interactions <- function(
+  species,
+  LR_db
+) {
+  if (!requireNamespace("KEGGREST", quietly = TRUE)) {
+    stop("Package \"KEGGREST\" needed for this function to work. Please install it.",
+         call. = FALSE
+    )
+  }
+  if (species == "mouse") {
+    organism <- "mmu"
+    string_to_remove <- " - Mus musculus (mouse)"
+  }
+  if (species == "human") {
+    organism <- "hsa"
+    string_to_remove <-  " - Homo sapiens (human)"
+  }
+  KEGG_PW <- KEGGREST::keggList(
+    database = "pathway",
+    organism = organism
+  )
+  KEGG_PW <- data.table(
+    "KEGG_ID" = names(KEGG_PW),
+    "KEGG_NAME" = KEGG_PW
+  )
+  KEGG_PW[, KEGG_NAME := gsub(string_to_remove, "", KEGG_NAME, fixed = TRUE)]
+  KEGG_PW_to_genes <- rbindlist(
+    l = lapply(
+      KEGG_PW$KEGG_ID,
+      function(id) {
+        temp <- KEGGREST::keggGet(
+          dbentries = id
+        )
+        temp <- temp[[1]]$GENE
+        temp <- temp[grepl(";", temp)]
+        temp <- sort(gsub(";.*", "", temp))
+        if (length(temp) > 0) {
+          result <- data.table(
+            GENE = temp,
+            KEGG_ID = id
+          )
+        } else {
+          result <- NULL
+        }
+        return(result)
+      }
+    )
+  )
+  LR_KEGG_PW <- rbindlist(
+    apply(
+      LR_db,
+      MARGIN = 1,
+      function(row) {
+        LIGAND_PW <- unique(KEGG_PW_to_genes[
+          GENE %in% c(row[["LIGAND_1"]], row[["LIGAND_2"]])
+          ]$KEGG_ID)
+        RECEPTOR_PW <- unique(KEGG_PW_to_genes[
+          GENE %in% c(row[["RECEPTOR_1"]], row[["RECEPTOR_2"]], row[["RECEPTOR_3"]])
+          ]$KEGG_ID)
+        res_inter <- intersect(LIGAND_PW, RECEPTOR_PW)
+        if (length(res_inter) > 0) {
+          res_inter <- data.table(
+            LR_GENES = rep(row[["LR_GENES"]], length(res_inter)),
+            KEGG_ID = res_inter
+          )
+        } else {
+          res_inter <- NULL
+        }
+        return(res_inter)
+      }
+    )
+  )
+  LR_KEGG_PW[
+    KEGG_PW,
+    on = "KEGG_ID",
+    KEGG_NAME := i.KEGG_NAME
+    ]
+  return(LR_KEGG_PW)
 }
 
 get_GO_interactions <- function(
@@ -96,7 +181,7 @@ get_GO_interactions <- function(
         res_inter <- intersect(LIGAND_GO, RECEPTOR_GO)
         if (length(res_inter) > 0) {
           res_inter <- data.table(
-            LR_SORTED = rep(row[["LR_SORTED"]], length(res_inter)),
+            LR_GENES = rep(row[["LR_GENES"]], length(res_inter)),
             GO_ID = res_inter
           )
         } else {
@@ -115,9 +200,7 @@ get_GO_interactions <- function(
     on = "GO_ID==ID",
     GO_NAME := i.GO_name
     ]
-  return(list(
-    LR_GO_intersection = LR_interactions_go_intersection
-  ))
+  return(LR_interactions_go_intersection)
 }
 
 combine_LR_db <- function(
