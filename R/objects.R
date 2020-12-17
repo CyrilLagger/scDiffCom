@@ -676,15 +676,25 @@ PlotORA.scDiffComCombined <- function(
   category,
   regulation,
   max_terms_show,
+  global = FALSE,
   OR_threshold = 1,
   p_value_threshold = 0.05,
   stringent = FALSE,
   ...
 ) {
+  ID <- NULL
   if (stringent) {
-    ora_dt <- get_ora_stringent(object)
+    if (global) {
+      ora_dt <- object@ora_combined_stringent
+    } else {
+      ora_dt <- object@ora_stringent
+    }
   } else {
-    ora_dt <- get_ora_default(object)
+    if (global) {
+      ora_dt <- object@ora_combined_default
+    } else {
+      ora_dt <- object@ora_default
+    }
   }
   if (identical(ora_dt, list())) {
     stop("No ORA data.table to exctract from scDiffCom object")
@@ -692,8 +702,14 @@ PlotORA.scDiffComCombined <- function(
   if (!(category %in% names(ora_dt))) {
     stop("Can't find the specified ORA category")
   }
-  ID <- NULL
-  ora_dt <- ora_dt[[category]][ID == subID]
+  ora_dt <- ora_dt[[category]]
+  if (!global) {
+    if (!(subID %in% unique(ora_dt$ID))) {
+      stop("`subID` must be present in the scDiffComCombined object")
+    }
+    ora_dt <- ora_dt[ID == subID]
+  }
+
   VALUE_ID <- "VALUE"
   if(regulation == "UP") {
     OR_ID <- "OR_UP"
