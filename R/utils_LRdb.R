@@ -32,6 +32,7 @@ get_KEGG_PW_interactions <- function(
   species,
   LR_db
 ) {
+  KEGG_NAME <- GENE <- i.KEGG_NAME <- NULL
   if (!requireNamespace("KEGGREST", quietly = TRUE)) {
     stop("Package \"KEGGREST\" needed for this function to work. Please install it.",
          call. = FALSE

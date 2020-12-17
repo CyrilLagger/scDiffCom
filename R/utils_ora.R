@@ -223,23 +223,39 @@ build_ora_dt <- function(
   ora_tables <- lapply(
     X = regulation,
     FUN = function(reg) {
-      if ("GO_TERMS" == category) {
+      if (category %in% c("GO_TERMS", "KEGG_PWS")) {
         counts_dt <- extract_category_counts(
           cci_detected = cci_dt,
-          category = "LR_SORTED",
+          category = "LR_GENES",
           reg = reg,
           logfc_threshold = logfc_threshold
         )
-        if (species == "mouse") {
-          go_intersection_dt <- scDiffCom::LRdb_mouse$LRdb_curated_GO
+        if (category == "GO_TERMS") {
+          if (species == "mouse") {
+            new_intersection_dt <- scDiffCom::LRdb_mouse$LRdb_curated_GO
+          }
+          if (species == "human") {
+            new_intersection_dt <- scDiffCom::LRdb_human$LRdb_curated_GO
+          }
+          new_id <- "GO_ID"
+          new_name <- "GO_NAME"
+          new_category <- "GO_intersection"
         }
-        if (species == "human") {
-          go_intersection_dt <- scDiffCom::LRdb_human$LRdb_curated_GO
+        if (category == "KEGG_PWS") {
+          if (species == "mouse") {
+            new_intersection_dt <- scDiffCom::LRdb_mouse$LRdb_curated_KEGG
+          }
+          if (species == "human") {
+            new_intersection_dt <- scDiffCom::LRdb_human$LRdb_curated_KEGG
+          }
+          new_id <- "KEGG_ID"
+          new_name <- "KEGG_NAME"
+          new_category <- "KEGG_intersection"
         }
         counts_intersection_dt <- data.table::merge.data.table(
-          go_intersection_dt,
+          new_intersection_dt,
           counts_dt,
-          by.x = "LR_SORTED",
+          by.x = "LR_GENES",
           by.y = "VALUE"
         )
         counts_intersection_dt[, c("COUNTS_VALUE_REGULATED_temp", "COUNTS_VALUE_NOTREGULATED_temp") :=
@@ -247,22 +263,22 @@ build_ora_dt <- function(
                                    sum(COUNTS_VALUE_REGULATED),
                                    sum(COUNTS_VALUE_NOTREGULATED)
                                  ),
-                               by = "GO_ID"
+                               by = new_id
                                ]
         counts_intersection_dt[, c("COUNTS_NOTVALUE_REGULATED_temp", "COUNTS_NOTVALUE_NOTREGULATED_temp") := list(
           COUNTS_NOTVALUE_REGULATED + COUNTS_VALUE_REGULATED - COUNTS_VALUE_REGULATED_temp,
           COUNTS_NOTVALUE_NOTREGULATED + COUNTS_VALUE_NOTREGULATED - COUNTS_VALUE_NOTREGULATED_temp
         )]
-        counts_intersection_dt[, CATEGORY := "GO_intersection"]
+        counts_intersection_dt[, CATEGORY := new_category]
         counts_intersection_dt[, c(
           "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
           "COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED",
-          "LR_SORTED"
+          "LR_GENES"
         ) := NULL]
         counts_intersection_dt <- unique(counts_intersection_dt)
         data.table::setnames(
           counts_intersection_dt,
-          old = c("GO_ID", "GO_NAME", "COUNTS_VALUE_REGULATED_temp", "COUNTS_VALUE_NOTREGULATED_temp",
+          old = c(new_id, new_name, "COUNTS_VALUE_REGULATED_temp", "COUNTS_VALUE_NOTREGULATED_temp",
                   "COUNTS_NOTVALUE_REGULATED_temp", "COUNTS_NOTVALUE_NOTREGULATED_temp"),
           new = c("VALUE_BIS", "VALUE", "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
                   "COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED")
@@ -292,6 +308,7 @@ build_ora_dt <- function(
   ora_full <- Reduce(merge, ora_tables)
   return(ora_full)
 }
+
 extract_category_counts <- function(
   cci_detected,
   category,
