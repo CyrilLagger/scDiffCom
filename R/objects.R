@@ -666,6 +666,7 @@ PlotORA.scDiffCom <- function(
 #' @param OR_threshold xxx
 #' @param p_value_threshold xxx
 #' @param stringent xxx
+#' @param global xxx
 #'
 #' @rdname PlotORA
 #' @export

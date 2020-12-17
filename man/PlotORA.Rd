@@ -25,6 +25,7 @@ PlotORA(object, ...)
   category,
   regulation,
   max_terms_show,
+  global = FALSE,
   OR_threshold = 1,
   p_value_threshold = 0.05,
   stringent = FALSE,
