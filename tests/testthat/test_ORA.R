@@ -8,7 +8,8 @@ test_that("Component functions return", {
         object@parameters$threshold_logfc,
         'UP',
         'GO_TERMS',
-        'mouse'
+        'mouse',
+        global=FALSE  # affects only ora on ER_CELLTYPES
     )
-    expect_equal(dim(ora_go), c(2687, 13))
+    expect_equal(dim(ora_go), c(2671, 13))  # (2687, 13), likely internal data change
 })

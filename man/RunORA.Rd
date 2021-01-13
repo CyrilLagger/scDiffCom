@@ -45,6 +45,8 @@ for each category. Set to \code{c("ER_CELLTYPES", "LR_GENES", "GO_TERMS")} by de
 Set to \code{NULL} by default, namely no stringent ORA is done.}
 
 \item{verbose}{Should messages be printed?}
+
+\item{global}{xxx}
 }
 \value{
 An S4 object of class \code{scDiffCom} with updated slots \code{ora_defaut} (and potentially \code{ora_stringent}).

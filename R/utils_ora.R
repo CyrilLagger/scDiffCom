@@ -29,7 +29,11 @@ run_ora <- function(
       condition_inputs$is_cond) {
     logfc_threshold <- temp_param$threshold_logfc
     if (stringent_or_default == "default") {
-      temp_ora <- object@ora_default
+      if (!global) {
+        temp_ora <- object@ora_default
+      } else {
+        temp_ora <- object@ora_combined_default
+      }
       categories_old <- names(temp_ora)
       if (is.null(categories_old)) {
         mes <- paste0(
@@ -75,7 +79,8 @@ run_ora <- function(
               logfc_threshold = logfc_threshold,
               regulation = regulation,
               category = category,
-              species = temp_param$LRdb_species
+              species = temp_param$LRdb_species,
+              global = global
             ),
             by = temp_by
           ]
@@ -92,7 +97,7 @@ run_ora <- function(
           res_ora <- c(temp_ora, ora_default)
         }
       }
-      if (global == TRUE) {
+      if (global) {
         if (class_signature == "scDiffComCombined") {
           object@ora_combined_default <- res_ora
         } else {
@@ -106,17 +111,48 @@ run_ora <- function(
         if (verbose) message("Choose a non-NULL `stringent_logfc_threshold` to perform stringent over-representation analysis.")
       } else  {
         if(stringent_logfc_threshold > logfc_threshold) {
-          mes <- paste0(
-            "Performing stringent over-representation analysis on all specified categories: ",
-            paste0(categories, collapse = ", "),
-            ".\n",
-            "Erasing all previous stringent ORA results."
-          )
-          if (verbose) message(mes)
+          if (!global) {
+            temp_ora_stringent <- object@ora_stringent
+          } else {
+            temp_ora_stringent <- object@ora_combined_stringent
+          }
+          categories_old_stringent <- names(temp_ora_stringent)
+          if (is.null(categories_old_stringent)) {
+            mes <- paste0(
+              "Performing stringent over-representation analysis on the specified categories: ",
+              paste0(categories, collapse = ", "),
+              "."
+            )
+            if (verbose) message(mes)
+            categories_stringent_to_run <- categories
+          } else {
+            if (overwrite) {
+              mes <- paste0(
+                "Performing stringent over-representation analysis on the specified categories: ",
+                paste0(categories, collapse = ", "),
+                ".\n",
+                "Erasing all previous ORA results: ",
+                paste0(categories_old_stringent, collapse = ", "),
+                "."
+              )
+              if (verbose) message(mes)
+              categories_stringent_to_run <- categories
+            } else {
+              categories_stringent_to_run <- setdiff(categories, categories_old_stringent)
+              mes <- paste0(
+                "Performing stringent over-representation analysis on the specified categories: ",
+                paste0(categories_stringent_to_run, collapse = ", "),
+                ".\n",
+                "Keeping previous ORA results: ",
+                paste0(setdiff(categories_old_stringent, categories_stringent_to_run), collapse = ", "),
+                "."
+              )
+              if (verbose) message(mes)
+            }
+          }
           ora_stringent <- sapply(
-            categories,
+            categories_stringent_to_run,
             function(category) {
-
               temp_dt <- object@cci_detected
               res <- temp_dt[
                 ,
@@ -125,7 +161,8 @@ run_ora <- function(
                   logfc_threshold = stringent_logfc_threshold,
                   regulation = regulation,
                   category = category,
-                  species = temp_param$LRdb_species
+                  species = temp_param$LRdb_species,
+                  global = global
                 ),
                 by = temp_by
                 ]
@@ -133,14 +170,23 @@ run_ora <- function(
             USE.NAMES = TRUE,
             simplify = FALSE
           )
+          if (is.null(categories_old_stringent)) {
+            res_ora_stringent <- ora_stringent
+          } else {
+            if (overwrite) {
+              res_ora_stringent <- ora_stringent
+            } else {
+              res_ora_stringent <- c(temp_ora_stringent, ora_stringent)
+            }
+          }
           if (global == TRUE) {
             if (class_signature == "scDiffComCombined") {
-              object@ora_combined_stringent <- ora_stringent
+              object@ora_combined_stringent <- res_ora_stringent
             } else {
               stop("No ORA global analysis allowed for object of class `scDiffComCombined`")
             }
           } else {
-            object@ora_stringent <- ora_stringent
+            object@ora_stringent <- res_ora_stringent
           }
         } else {
           if (verbose) message("The supposedly `stringent` logfc is actually less `stringent` than the default parameter.
@@ -161,34 +207,55 @@ build_ora_dt <- function(
   logfc_threshold,
   regulation,
   category,
-  species
+  species,
+  global
 ) {
   COUNTS_VALUE_REGULATED <- COUNTS_NOTVALUE_REGULATED <-
     COUNTS_NOTVALUE_NOTREGULATED <- COUNTS_VALUE_NOTREGULATED <-
-    COUNTS_VALUE_REGULATED_temp <- COUNTS_VALUE_NOTREGULATED_temp<- CATEGORY <- NULL
+    COUNTS_VALUE_REGULATED_temp <- COUNTS_VALUE_NOTREGULATED_temp<- CATEGORY <-
+    ER_CELLTYPES <- ID <-  NULL
   cci_dt <- data.table::copy(
     cci_detected
   )
+  if (global & (category == "ER_CELLTYPES")) {
+      cci_dt[, ER_CELLTYPES := paste(ID, ER_CELLTYPES, sep = "_")]
+  }
   ora_tables <- lapply(
     X = regulation,
     FUN = function(reg) {
-      if ("GO_TERMS" == category) {
+      if (category %in% c("GO_TERMS", "KEGG_PWS")) {
         counts_dt <- extract_category_counts(
           cci_detected = cci_dt,
-          category = "LR_SORTED",
+          category = "LR_GENES",
           reg = reg,
           logfc_threshold = logfc_threshold
         )
-        if (species == "mouse") {
-          go_intersection_dt <- scDiffCom::LRdb_mouse$LRdb_curated_GO
+        if (category == "GO_TERMS") {
+          if (species == "mouse") {
+            new_intersection_dt <- scDiffCom::LRdb_mouse$LRdb_curated_GO
+          }
+          if (species == "human") {
+            new_intersection_dt <- scDiffCom::LRdb_human$LRdb_curated_GO
+          }
+          new_id <- "GO_ID"
+          new_name <- "GO_NAME"
+          new_category <- "GO_intersection"
         }
-        if (species == "human") {
-          go_intersection_dt <- scDiffCom::LRdb_human$LRdb_curated_GO
+        if (category == "KEGG_PWS") {
+          if (species == "mouse") {
+            new_intersection_dt <- scDiffCom::LRdb_mouse$LRdb_curated_KEGG
+          }
+          if (species == "human") {
+            new_intersection_dt <- scDiffCom::LRdb_human$LRdb_curated_KEGG
+          }
+          new_id <- "KEGG_ID"
+          new_name <- "KEGG_NAME"
+          new_category <- "KEGG_intersection"
         }
         counts_intersection_dt <- data.table::merge.data.table(
-          go_intersection_dt,
+          new_intersection_dt,
           counts_dt,
-          by.x = "LR_SORTED",
+          by.x = "LR_GENES",
           by.y = "VALUE"
         )
         counts_intersection_dt[, c("COUNTS_VALUE_REGULATED_temp", "COUNTS_VALUE_NOTREGULATED_temp") :=
@@ -196,22 +263,22 @@ build_ora_dt <- function(
                                    sum(COUNTS_VALUE_REGULATED),
                                    sum(COUNTS_VALUE_NOTREGULATED)
                                  ),
-                               by = "GO_ID"
+                               by = new_id
                                ]
         counts_intersection_dt[, c("COUNTS_NOTVALUE_REGULATED_temp", "COUNTS_NOTVALUE_NOTREGULATED_temp") := list(
           COUNTS_NOTVALUE_REGULATED + COUNTS_VALUE_REGULATED - COUNTS_VALUE_REGULATED_temp,
           COUNTS_NOTVALUE_NOTREGULATED + COUNTS_VALUE_NOTREGULATED - COUNTS_VALUE_NOTREGULATED_temp
         )]
-        counts_intersection_dt[, CATEGORY := "GO_intersection"]
+        counts_intersection_dt[, CATEGORY := new_category]
         counts_intersection_dt[, c(
           "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
           "COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED",
-          "LR_SORTED"
+          "LR_GENES"
         ) := NULL]
         counts_intersection_dt <- unique(counts_intersection_dt)
         data.table::setnames(
           counts_intersection_dt,
-          old = c("GO_ID", "GO_NAME", "COUNTS_VALUE_REGULATED_temp", "COUNTS_VALUE_NOTREGULATED_temp",
+          old = c(new_id, new_name, "COUNTS_VALUE_REGULATED_temp", "COUNTS_VALUE_NOTREGULATED_temp",
                   "COUNTS_NOTVALUE_REGULATED_temp", "COUNTS_NOTVALUE_NOTREGULATED_temp"),
           new = c("VALUE_BIS", "VALUE", "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
                   "COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED")

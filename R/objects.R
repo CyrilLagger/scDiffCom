@@ -6,7 +6,7 @@
 #'
 NULL
 
-#### Class definitions ####
+################  Class definitions ################
 
 setClassUnion(
   name = "list_or_data.table",
@@ -16,12 +16,12 @@ setClassUnion(
 #' The scDiffComBase Class
 #'
 #' The scDiffComBase class is a virtual class that provides a template
-#' for the scDiffCom and scDiffComCombined classes.
+#' for the \code{scDiffCom} and \code{scDiffComCombined} classes.
 #'
-#' @slot parameters A list of the parameters passed to \code{run_interaction_analysis}.
-#' @slot cci_raw A data.table of all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \cdot m} rows,
-#'  where n is the number of cell-types and m the number of ligand-receptor pairs.
-#' @slot cci_detected A data.table of the detected CCIs obtained from the raw data.table after filtering.
+#' @slot parameters The list of parameters passed to \code{run_interaction_analysis}.
+#' @slot cci_raw A data.table with all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \times m} rows,
+#'  where \eqn{n} is the number of cell-types and \eqn{m} the number of ligand-receptor pairs.
+#' @slot cci_detected A data.table with the detected CCIs obtained from the raw data.table after filtering.
 #' @slot ora_default A data.table storing the results of the over-representation analysis
 #'  performed on the \code{cci_detected} table.
 #' @slot ora_stringent Same as \code{ora_default} but with a more stringent logfc threshold to specifically focus on strong signals.
@@ -53,10 +53,10 @@ setClass(
 #'  A scDiffCom object stores the results of the intercellular communication analysis
 #'  performed by \code{run_interaction_analysis} on a Seurat object.
 #'
-#' @slot parameters A list of the parameters passed to \code{run_interaction_analysis}.
-#' @slot cci_raw A data.table of all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \cdot m} rows,
-#'  where n is the number of cell-types and m the number of ligand-receptor pairs.
-#' @slot cci_detected A data.table of the detected CCIs obtained from the raw data.table after filtering.
+#' @slot parameters The list of parameters passed to \code{run_interaction_analysis}.
+#' @slot cci_raw A data.table with all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \times m} rows,
+#'  where \eqn{n} is the number of cell-types and \eqn{m} the number of ligand-receptor pairs.
+#' @slot cci_detected A data.table with the detected CCIs obtained from the raw data.table after filtering.
 #' @slot ora_default A data.table storing the results of the over-representation analysis
 #'  performed on the \code{cci_detected} table.
 #' @slot ora_stringent Same as \code{ora_default} but with a more stringent logfc threshold to specifically focus on strong signals.
@@ -83,15 +83,15 @@ setClass(
 #'  A scDiffComCombined object stores the results of multiple scDiffCom objects at a single place.
 #'  It also allows to run a global over-representation analysis.
 #'
-#' @slot parameters A list of the parameters passed to \code{run_interaction_analysis}.
-#' @slot cci_raw A data.table of all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \cdot m} rows,
-#'  where n is the number of cell-types and m the number of ligand-receptor pairs.
-#' @slot cci_detected A data.table of the detected CCIs obtained from the raw data.table after filtering.
+#' @slot parameters The list of parameters passed to \code{run_interaction_analysis}.
+#' @slot cci_raw A data.table with all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \times m} rows,
+#'  where \eqn{n} is the number of cell-types and \eqn{m} the number of ligand-receptor pairs.
+#' @slot cci_detected A data.table with the detected CCIs obtained from the raw data.table after filtering.
 #' @slot ora_default A data.table storing the results of the over-representation analysis
 #'  performed on the \code{cci_detected} table.
 #' @slot ora_stringent Same as \code{ora_default} but with a more stringent logfc threshold to specifically focus on strong signals.
 #' @slot ora_combined_default Same as \code{ora_default} but for the global analysis.
-#' @slot ora_combined_default Same as \code{ora_stringent} but for the global analysis.
+#' @slot ora_combined_stringent Same as \code{ora_stringent} but for the global analysis.
 #' @name scDiffComCombined-class
 #' @rdname scDiffComCombined-class
 #'
@@ -108,7 +108,8 @@ setClass(
   )
 )
 
-#### Validity functions ####
+
+################  Validity functions ################
 
 setValidity(
   Class = "scDiffComBase",
@@ -174,7 +175,7 @@ setValidity(
   }
 )
 
-#### Accessors ####
+################  Accessors ####
 
 #' Return scDiffCom \code{parameters}
 #'
@@ -186,6 +187,7 @@ setGeneric(
   def = function(object) standardGeneric("parameters")
 )
 
+#' @param object xxx
 #' @describeIn scDiffComBase Return scDiffCom \code{parameters}.
 setMethod(
   f = "parameters",
@@ -203,6 +205,7 @@ setGeneric(
   def = function(object) standardGeneric("get_cci_raw")
 )
 
+#' @param object xxx
 #' @describeIn scDiffComBase Return scDiffCom \code{cci_raw}.
 setMethod(
   f = "get_cci_raw",
@@ -220,6 +223,7 @@ setGeneric(
   def = function(object) standardGeneric("get_cci_detected")
 )
 
+#' @param object xxx
 #' @describeIn scDiffComBase Return scDiffCom \code{cci_detected}.
 setMethod(
   f = "get_cci_detected",
@@ -237,6 +241,7 @@ setGeneric(
   def = function(object) standardGeneric("get_ora_default")
 )
 
+#' @param object xxx
 #' @describeIn scDiffComBase Return scDiffCom \code{ora_default}.
 setMethod(
   f = "get_ora_default",
@@ -254,6 +259,7 @@ setGeneric(
   def = function(object) standardGeneric("get_ora_stringent")
 )
 
+#' @param object xxx
 #' @describeIn scDiffComBase Return scDiffCom \code{ora_stringent}.
 setMethod(
   f = "get_ora_stringent",
@@ -271,6 +277,7 @@ setGeneric(
   def = function(object) standardGeneric("distributions")
 )
 
+#' @param object xxx
 #' @describeIn scDiffCom Return scDiffCom \code{distributions}.
 setMethod(
   f = "distributions",
@@ -278,7 +285,7 @@ setMethod(
   definition = function(object) object@distributions
 )
 
-#### Functions ####
+################  Functions ####
 
 #' Combine several scDiffCom objects together.
 #'
@@ -448,7 +455,7 @@ Combine_scDiffCom <- function(
   return(new_object)
 }
 
-#### Methods for scDiffCom-defined generics ####
+################  Methods for scDiffCom-defined generics ####
 
 #' @param object xxx
 #' @param new_threshold_quantile_score xxx
@@ -557,6 +564,7 @@ RunORA.scDiffCom <- function(
 #' @param stringent_or_default Should the default or more stringent ORA be performed?
 #' @param stringent_logfc_threshold A more stringent logfc threshold compared to the one stored in \code{parameters}.
 #'  Set to \code{NULL} by default, namely no stringent ORA is done.
+#' @param global xxx
 #' @param verbose Should messages be printed?
 #'
 #' @rdname RunORA
@@ -585,27 +593,26 @@ RunORA.scDiffComCombined <- function(
 
 }
 
-
-#' Plot over-represented terms of a given category
+#' @param object xxx
+#' @param category xxx
+#' @param regulation xxx
+#' @param max_terms_show xxx
+#' @param OR_threshold xxx
+#' @param p_value_threshold xxx
+#' @param stringent xxx
 #'
-#' @param object An scDiffCom object.
-#' @param category The category over wich the ORA has been performed (e.g. "GO_TERMS").
-#' @param regulation One from "UP", "DOWN", "DIFF" or "FLAT".
-#' @param max_terms_show The maximal number of terms to show on the plot.
-#' @param OR_threshold Only display terms with an odds ratio bigger than this threshold. Set to \code{1} by default.
-#' @param p_value_threshold Only display terms with a BH-p-value smaller thatn this threshold. Set to \code{0.05} by default.
-#' @param stringent Should we display the default ORA results or the stringent ORA results. Set to \code{FALSE} by default.
-#'
-#' @return A ggplot object.
+#' @rdname PlotORA
 #' @export
-PlotORA <- function(
+#' @method PlotORA scDiffCom
+PlotORA.scDiffCom <- function(
   object,
   category,
   regulation,
   max_terms_show,
   OR_threshold = 1,
   p_value_threshold = 0.05,
-  stringent = FALSE
+  stringent = FALSE,
+  ...
 ) {
   if (stringent) {
     ora_dt <- get_ora_stringent(object)
@@ -652,19 +659,110 @@ PlotORA <- function(
 }
 
 #' @param object xxx
+#' @param subID xxx
+#' @param category xxx
+#' @param regulation xxx
+#' @param max_terms_show xxx
+#' @param OR_threshold xxx
+#' @param p_value_threshold xxx
+#' @param stringent xxx
+#' @param global xxx
+#'
+#' @rdname PlotORA
+#' @export
+#' @method PlotORA scDiffComCombined
+PlotORA.scDiffComCombined <- function(
+  object,
+  subID,
+  category,
+  regulation,
+  max_terms_show,
+  global = FALSE,
+  OR_threshold = 1,
+  p_value_threshold = 0.05,
+  stringent = FALSE,
+  ...
+) {
+  ID <- NULL
+  if (stringent) {
+    if (global) {
+      ora_dt <- object@ora_combined_stringent
+    } else {
+      ora_dt <- object@ora_stringent
+    }
+  } else {
+    if (global) {
+      ora_dt <- object@ora_combined_default
+    } else {
+      ora_dt <- object@ora_default
+    }
+  }
+  if (identical(ora_dt, list())) {
+    stop("No ORA data.table to exctract from scDiffCom object")
+  }
+  if (!(category %in% names(ora_dt))) {
+    stop("Can't find the specified ORA category")
+  }
+  ora_dt <- ora_dt[[category]]
+  if (!global) {
+    if (!(subID %in% unique(ora_dt$ID))) {
+      stop("`subID` must be present in the scDiffComCombined object")
+    }
+    ora_dt <- ora_dt[ID == subID]
+  }
+
+  VALUE_ID <- "VALUE"
+  if(regulation == "UP") {
+    OR_ID <- "OR_UP"
+    p_value_ID <- "BH_P_VALUE_UP"
+    ORA_SCORE_ID <- "ORA_SCORE_UP"
+  } else if(regulation == "DOWN") {
+    OR_ID <- "OR_DOWN"
+    p_value_ID <- "BH_P_VALUE_DOWN"
+    ORA_SCORE_ID <- "ORA_SCORE_DOWN"
+
+  } else if(regulation == "FLAT") {
+    OR_ID <- "OR_FLAT"
+    p_value_ID <- "BH_P_VALUE_FLAT"
+    ORA_SCORE_ID <- "ORA_SCORE_FLAT"
+  } else {
+    stop("Can't find `regulation` type")
+  }
+  ora_dt <- ora_dt[get(OR_ID) > OR_threshold & get(p_value_ID) <= p_value_threshold][order(-get(ORA_SCORE_ID))]
+  if (nrow(ora_dt) == 0) {
+    return("No significant ORA results for the selected parameters.")
+  }
+  n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
+  ora_dt <- ora_dt[1:n_row_tokeep]
+  ggplot2::ggplot(ora_dt, aes(get(ORA_SCORE_ID), stats::reorder(get(VALUE_ID), get(ORA_SCORE_ID)))) +
+    geom_point(aes(size = -log10(get(p_value_ID)), color = log2(get(OR_ID)))) +
+    scale_color_gradient(low = "orange", high = "red") +
+    xlab("ORA score") +
+    ylab(category) +
+    labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
+    theme(text = element_text(size = 16))
+}
+
+#' @param object xxx
+#' @param network_type xxx
+#' @param network_layout xxx
 #'
 #' @rdname BuildNetwork
 #' @export
 #' @method BuildNetwork scDiffCom
 BuildNetwork.scDiffCom = function(
   object,
-  network_type,
+  network_type = c("ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
+  network_layout = c("bipartite", "celltypes"),
   ...
 ) {
+  network_type <- match.arg(network_type)
+  network_layout <- match.arg(network_layout)
   return(
     build_interactive_network(
       object = object,
-      network_type = network_type,
+      network_representation_type = network_type,
+      network_layout_type = network_layout,
       class_signature = "scDiffCom",
       subobject_name = NULL
     )
@@ -672,22 +770,32 @@ BuildNetwork.scDiffCom = function(
 }
 
 #' @param object xxx
+#' @param network_type xxx
+#' @param network_layout xxx
+#' @param ID xxx
 #'
 #' @rdname BuildNetwork
 #' @export
 #' @method BuildNetwork scDiffComCombined
 BuildNetwork.scDiffComCombined = function(
   object,
-  network_type,
-  subobject_name,
+  network_type = c("ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
+  network_layout = c("bipartite", "celltypes"),
+  ID,
   ...
 ) {
+  network_type <- match.arg(network_type)
+  network_layout <- match.arg(network_layout)
+  if (!(ID %in% unique(object@cci_detected$ID))) {
+    stop("`ID` must be present in the scDiffComCombined object")
+  }
   return(
     build_interactive_network(
       object = object,
-      network_type = network_type,
+      network_representation_type = network_type,
+      network_layout_type = network_layout,
       class_signature = "scDiffComCombined",
-      subobject_name = subobject_name
+      subobject_name = ID
     )
   )
 }

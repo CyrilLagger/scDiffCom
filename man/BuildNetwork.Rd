@@ -8,14 +8,31 @@
 \usage{
 BuildNetwork(object, ...)
 
-\method{BuildNetwork}{scDiffCom}(object, network_type, ...)
+\method{BuildNetwork}{scDiffCom}(
+  object,
+  network_type = c("ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
+  network_layout = c("bipartite", "celltypes"),
+  ...
+)
 
-\method{BuildNetwork}{scDiffComCombined}(object, network_type, subobject_name, ...)
+\method{BuildNetwork}{scDiffComCombined}(
+  object,
+  network_type = c("ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
+  network_layout = c("bipartite", "celltypes"),
+  ID,
+  ...
+)
 }
 \arguments{
 \item{object}{xxx}
 
 \item{...}{xxx}
+
+\item{network_type}{xxx}
+
+\item{network_layout}{xxx}
+
+\item{ID}{xxx}
 }
 \value{
 xxx
