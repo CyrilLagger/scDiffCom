@@ -3,6 +3,7 @@ run_stat_analysis <- function(
   cci_dt_simple,
   iterations,
   return_distributions,
+  score_type,
   verbose
 ) {
   P_VALUE <- P_VALUE_DE <- cols_keep <- cols_keep2 <- NULL
@@ -38,7 +39,8 @@ run_stat_analysis <- function(
         if (iter %% 10 == 0) prog(sprintf("iter=%g", iter))
         run_stat_iteration(
           analysis_inputs = analysis_inputs,
-          cci_template = sub_cci_template[, cols_keep, with = FALSE]
+          cci_template = sub_cci_template[, cols_keep, with = FALSE],
+          score_type = score_type
         )
       },
       simplify = "array",
@@ -122,7 +124,8 @@ run_stat_analysis <- function(
 
 run_stat_iteration <- function(
   analysis_inputs,
-  cci_template
+  cci_template,
+  score_type
 ) {
   temp_md <- analysis_inputs$metadata
   if (!analysis_inputs$condition$is_cond) {
@@ -133,6 +136,7 @@ run_stat_iteration <- function(
       analysis_inputs = analysis_inputs,
       cci_template = cci_template,
       log_scale = FALSE,
+      score_type = score_type,
       threshold_min_cells = NULL,
       threshold_pct = NULL,
       compute_fast = TRUE
@@ -147,6 +151,7 @@ run_stat_iteration <- function(
       analysis_inputs = analysis_inputs,
       cci_template = cci_template,
       log_scale = FALSE,
+      score_type = score_type,
       threshold_min_cells = NULL,
       threshold_pct = NULL,
       compute_fast = TRUE
@@ -159,6 +164,7 @@ run_stat_iteration <- function(
       analysis_inputs = analysis_inputs,
       cci_template = cci_template,
       log_scale = FALSE,
+      score_type = score_type,
       threshold_min_cells = NULL,
       threshold_pct = NULL,
       compute_fast = TRUE

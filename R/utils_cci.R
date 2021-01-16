@@ -1,16 +1,34 @@
 create_cci_template <- function(
   analysis_inputs
 ) {
+  ## just to test
+  # all_ligands <- unique(unlist(analysis_inputs$LRdb[, c("LIGAND_1", "LIGAND_2")]))
+  # all_ligands <- all_ligands[!is.na(all_ligands)]
+  # all_receptors <- unique(unlist(analysis_inputs$LRdb[, c("RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]))
+  # all_receptors <- all_receptors[!is.na(all_receptors)]
+  # message("Build CJ")
+  # template <- CJ(
+  #   EMITTER_CELLTYPE = analysis_inputs$cell_types,
+  #   RECEIVER_CELLTYPE = analysis_inputs$cell_types,
+  #   LIGAND_1 = all_ligands,
+  #   RECEPTOR_1 = all_receptors
+  # )
+  # template[, LIGAND_2 := NA]
+  # template[, RECEPTOR_2 := NA]
+  # template[, RECEPTOR_3 := NA]
+  # message("OK template")
+  # return(template)
+  ## real code below
   template <- CJ(
     EMITTER_CELLTYPE = analysis_inputs$cell_types,
     RECEIVER_CELLTYPE = analysis_inputs$cell_types,
-    LR_SORTED = analysis_inputs$LRdb$LR_SORTED
+    LR_GENES = analysis_inputs$LRdb$LR_GENES
   )
   template <- merge.data.table(
     x = template,
     y = analysis_inputs$LRdb,
-    by.x = "LR_SORTED",
-    by.y = "LR_SORTED",
+    by.x = "LR_GENES",
+    by.y = "LR_GENES",
     all.x = TRUE,
     sort = FALSE
   )
@@ -102,6 +120,7 @@ run_simple_cci_analysis <- function(
   analysis_inputs,
   cci_template,
   log_scale,
+  score_type,
   threshold_min_cells,
   threshold_pct,
   compute_fast
@@ -120,7 +139,8 @@ run_simple_cci_analysis <- function(
     condition_inputs = analysis_inputs$condition,
     threshold_min_cells = threshold_min_cells,
     threshold_pct = threshold_pct,
-    cci_or_drate = "cci"
+    cci_or_drate = "cci",
+    score_type = score_type
   )
   if (compute_fast) {
     if (!analysis_inputs$condition$is_cond) {
@@ -145,7 +165,8 @@ run_simple_cci_analysis <- function(
     condition_inputs = analysis_inputs$condition,
     threshold_pct = threshold_pct,
     threshold_min_cells = threshold_min_cells,
-    cci_or_drate = "drate"
+    cci_or_drate = "drate",
+    score_type = score_type
   )
   dt <- merge.data.table(
     x = cci_dt,
@@ -212,7 +233,8 @@ build_cci_or_drate <- function(
   condition_inputs,
   threshold_min_cells,
   threshold_pct,
-  cci_or_drate
+  cci_or_drate,
+  score_type
 ) {
   CONDITION_CELLTYPE <- NULL
   full_dt <- copy(cci_template)
@@ -310,24 +332,46 @@ build_cci_or_drate <- function(
       )
     ]
   if (cci_or_drate == "cci") {
-    full_dt[, (score_id) :=
-              lapply(1:n_id, function(x) {
-                (
-                  do.call(
-                    pmin,
-                    c(lapply(1:max_nL, function(i) {
-                      get(paste0("L", i, "_", name_tag, pmin_id[x]))
-                    }), na.rm = TRUE)
-                  )
-                  +
-                    do.call(
+    if (score_type == "geometric_mean") {
+      full_dt[, (score_id) :=
+                lapply(1:n_id, function(x) {
+                  (
+                    sqrt(do.call(
                       pmin,
-                      c(lapply(1:max_nR, function(i) {
-                        get(paste0("R", i, "_", name_tag, pmin_id[x]))
+                      c(lapply(1:max_nL, function(i) {
+                        get(paste0("L", i, "_", name_tag, pmin_id[x]))
                       }), na.rm = TRUE)
                     )
-                ) / 2
-              })]
+                    *
+                      do.call(
+                        pmin,
+                        c(lapply(1:max_nR, function(i) {
+                          get(paste0("R", i, "_", name_tag, pmin_id[x]))
+                        }), na.rm = TRUE)
+                      )
+                    ))
+                })]
+    }
+    if (score_type == "arithmetic_mean") {
+      full_dt[, (score_id) :=
+                lapply(1:n_id, function(x) {
+                  (
+                    do.call(
+                      pmin,
+                      c(lapply(1:max_nL, function(i) {
+                        get(paste0("L", i, "_", name_tag, pmin_id[x]))
+                      }), na.rm = TRUE)
+                    )
+                    +
+                      do.call(
+                        pmin,
+                        c(lapply(1:max_nR, function(i) {
+                          get(paste0("R", i, "_", name_tag, pmin_id[x]))
+                        }), na.rm = TRUE)
+                      )
+                  ) / 2
+                })]
+    }
   } else if (cci_or_drate == "drate") {
     full_dt[, (dr_id) :=
               lapply(1:n_id, function(x) {
@@ -355,7 +399,7 @@ clean_colnames <- function(
   max_nR,
   permutation_analysis
 ) {
-  first_cols <- c("LR_GENES", "LR_SORTED", "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", "ER_CELLTYPES")
+  first_cols <- c("LR_GENES", "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", "ER_CELLTYPES")
   LR_COLNAMES <- c(
     paste0("LIGAND_", 1:max_nL),
     paste0("RECEPTOR_", 1:max_nR)
@@ -411,6 +455,7 @@ clean_colnames <- function(
         first_cols,
         "LOGFC", "LOGFC_ABS",
         "DIFFERENTIALLY_EXPRESSED", "DIFFERENTIAL_DIRECTION", "REGULATION", "REGULATION_SIMPLE",
+        "REGULATION_RELAXED", "REGULATION_RELAXED_SIMPLE",
         paste0("CCI_SCORE_", condition_inputs$cond1), paste0("CCI_SCORE_", condition_inputs$cond2),
         paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond1), paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond2),
         paste0("CCI_DETECTED_", condition_inputs$cond1), paste0("CCI_DETECTED_", condition_inputs$cond2),

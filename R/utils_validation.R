@@ -17,6 +17,7 @@ validate_parameters <- function(
     "seurat_assay",
     "seurat_slot",
     "log_scale",
+    "score_type",
     "threshold_min_cells",
     "threshold_pct",
     "permutation_analysis",
@@ -77,8 +78,11 @@ validate_parameters <- function(
   if (!(params$seurat_slot %in% c("counts", "data"))) {
     res <- c(res, "`seurat_slot` must be either `data` or `counts`")
   }
-  if(!is.logical(params$log_scale) | length(params$log_scale) != 1) {
+  if (!is.logical(params$log_scale) | length(params$log_scale) != 1) {
     res <- c(res, "`log_scale` must be a logical vector of length 1")
+  }
+  if (!(params$score_type %in% c("geometric_mean", "arithmetic_mean"))) {
+    res <- c(res, "`score_type` must be either 'geometric_mean' or 'arithmetic_mean'")
   }
   if (!is.numeric(params$threshold_min_cells) | length(params$threshold_min_cells) > 1) {
     res <- c(res, "`threshold_min_cells` must be a numeric vector of length 1")

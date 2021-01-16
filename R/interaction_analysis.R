@@ -17,6 +17,7 @@
 #' @param seurat_assay The assay of \code{seurat_object} from which the data are extracted. Set to "RNA" by default.
 #' @param seurat_slot The slot of \code{seurat_object} from which the data are extracted. Set to "data" by default.
 #' @param log_scale Should the data be log-transformed before the analysis? Set to "FALSE" by default (recommended).
+#' @param score_type The method to compute the CCI score. Either "geometric_mean" or "arithmetic_mean".
 #' @param threshold_min_cells The minimal number of cells that a cell-type need to contain to be considered in the analysis.
 #'  Set to \code{5} by default.
 #' @param threshold_pct The minimal percentage of cells that need to express a gene, for the gene to be considered in the analysis.
@@ -50,6 +51,7 @@ run_interaction_analysis <- function(
   seurat_assay = "RNA",
   seurat_slot = "data",
   log_scale = FALSE,
+  score_type = "geometric_mean",
   threshold_min_cells = 5,
   threshold_pct = 0.1,
   object_name = "scDiffCom_object",
@@ -75,6 +77,7 @@ run_interaction_analysis <- function(
     seurat_assay = seurat_assay,
     seurat_slot = seurat_slot,
     log_scale = log_scale,
+    score_type = score_type,
     threshold_min_cells = threshold_min_cells,
     threshold_pct = threshold_pct,
     object_name = object_name,
@@ -127,6 +130,7 @@ run_interaction_analysis <- function(
     analysis_inputs = analysis_inputs,
     cci_template = cci_template,
     log_scale = log_scale,
+    score_type = score_type,
     threshold_min_cells = threshold_min_cells,
     threshold_pct = threshold_pct,
     compute_fast = FALSE
@@ -152,6 +156,7 @@ run_interaction_analysis <- function(
       cci_dt_simple = cci_dt_simple,
       iterations = iterations,
       return_distributions = return_distributions,
+      score_type = score_type,
       verbose = verbose
     )
     cci_raw <- res_stat_analysis$cci_raw
