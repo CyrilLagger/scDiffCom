@@ -58,7 +58,7 @@ run_interaction_analysis <- function(
   threshold_quantile_score = 0.25,
   threshold_p_value_specificity = 0.05,
   threshold_p_value_de = 0.05,
-  threshold_logfc = log(1.2),
+  threshold_logfc = log(1.5),
   return_distributions = FALSE,
   seed = 42,
   verbose = TRUE
@@ -88,17 +88,6 @@ run_interaction_analysis <- function(
     seed = seed,
     verbose = verbose
   )
-  #analysis_parameters <- as.list(match.call())[-1]
-  #formal_temp <- formals(run_interaction_analysis)
-  #for (arg_temp in names(formal_temp)) {
-  #  if (!(arg_temp %in% names(analysis_parameters)))
-  #    analysis_parameters <- append(analysis_parameters, formal_temp[arg_temp])
-  #}
-  #analysis_parameters$seurat_object <- NULL
-  #analysis_parameters <- lapply(
-  #  analysis_parameters,
-  #  eval
-  #)
   check_parameters <- validate_parameters(
     params = analysis_parameters,
     from_inputs = TRUE
@@ -150,7 +139,7 @@ run_interaction_analysis <- function(
     " * ",
     cci_dt_simple[, uniqueN(get("EMITTER_CELLTYPE"))],
     " * ",
-    cci_dt_simple[, uniqueN(get("LR_SORTED"))],
+    cci_dt_simple[, uniqueN(get("LR_GENES"))],
     ")."
   )
   if (verbose) message(mes)
