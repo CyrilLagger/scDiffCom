@@ -46,7 +46,8 @@ Imports:
     scales,
     visNetwork,
     kableExtra,
-    RColorBrewer
+    RColorBrewer,
+    arules
 VignetteBuilder: knitr
 Collate: 
     'cellphonedb_wrapper.R'
