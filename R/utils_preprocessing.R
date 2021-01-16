@@ -165,7 +165,7 @@ extract_LRdb_inputs <- function(
   verbose
 ) {
   LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <- RECEPTOR_3 <- NULL
-  cols_compulsory <- c("LR_SORTED", "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")
+  cols_compulsory <- c("LR_GENES", "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")
   if (!all(cols_compulsory %in% names(LRdb_table))) {
     stop(paste0("`LRdb_table` must contain the columns ", paste0(cols_compulsory, collapse = ", ")))
   }
@@ -186,7 +186,7 @@ extract_LRdb_inputs <- function(
     unique(LRdb_keep$RECEPTOR_3)
   ))
   data_keep <- data[rownames(data) %in% LRdb_genes, ]
-  n_ID <- length(unique(LRdb_keep$LR_SORTED))
+  n_ID <- length(unique(LRdb_keep$LR_GENES))
   if (n_ID == 0) {
     stop("There are no genes from `LRdb_table` in `seurat_object`")
   }
@@ -213,7 +213,7 @@ extract_LRdb_inputs <- function(
   }
   mes <- paste0(
     "Using a ligand-receptor database of ",
-    length(unique(LRdb_table$LR_SORTED)),
+    length(unique(LRdb_table$LR_GENES)),
     " interactions (",
     n_ID,
     " present in the data).\n",
