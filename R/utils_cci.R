@@ -37,6 +37,64 @@ create_cci_template <- function(
     condition_inputs = analysis_inputs$condition,
     metadata = analysis_inputs$metadata
   )
+  if(analysis_inputs$condition$is_samp) {
+    template <- add_sample_number(
+      template_table = template,
+      condition_inputs = analysis_inputs$condition,
+      metadata = analysis_inputs$metadata
+    )
+  }
+  return(template)
+}
+
+add_sample_number <- function(
+  template_table,
+  condition_inputs,
+  metadata
+) {
+  dt_NSAMPLES <- unique(metadata[, c("cell_type", "sample_id", "condition")])[, .N, by = c("cell_type", "condition")]
+  dt_NSAMPLES <- dcast.data.table(
+      data = dt_NSAMPLES,
+      formula = cell_type ~ condition,
+      value.var = "N"
+    )
+    template_table <- merge.data.table(
+      x = template_table,
+      y = dt_NSAMPLES,
+      by.x = "EMITTER_CELLTYPE",
+      by.y = "cell_type",
+      all.x = TRUE,
+      sort = FALSE
+    )
+    template_table <- merge.data.table(
+      x = template_table,
+      y = dt_NSAMPLES,
+      by.x = "RECEIVER_CELLTYPE",
+      by.y = "cell_type",
+      all.x = TRUE,
+      sort = FALSE,
+      suffixes = c("_L", "_R")
+    )
+    new_cols <- c(
+      paste0("EMITTER_NSAMPLES_", condition_inputs$cond1),
+      paste0("EMITTER_NSAMPLES_", condition_inputs$cond2),
+      paste0("RECEIVER_NSAMPLES_", condition_inputs$cond1),
+      paste0("RECEIVER_NSAMPLES_", condition_inputs$cond2)
+    )
+    setnames(
+      x = template_table,
+      old = c(
+        paste0(condition_inputs$cond1, "_L"),
+        paste0(condition_inputs$cond2, "_L"),
+        paste0(condition_inputs$cond1, "_R"),
+        paste0(condition_inputs$cond2, "_R")
+      ),
+      new = new_cols
+    )
+  for (j in new_cols) {
+    set(template_table, i = which(is.na(template_table[[j]])), j = j, value = 0)
+  }
+  return(template_table)
 }
 
 add_cell_number <- function(
