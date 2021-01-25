@@ -50,6 +50,8 @@ PlotORA(object, ...)
 \item{stringent}{xxx}
 
 \item{subID}{xxx}
+
+\item{global}{xxx}
 }
 \value{
 xxx
