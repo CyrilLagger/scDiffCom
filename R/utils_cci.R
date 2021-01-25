@@ -1,24 +1,6 @@
 create_cci_template <- function(
   analysis_inputs
 ) {
-  ## just to test
-  # all_ligands <- unique(unlist(analysis_inputs$LRdb[, c("LIGAND_1", "LIGAND_2")]))
-  # all_ligands <- all_ligands[!is.na(all_ligands)]
-  # all_receptors <- unique(unlist(analysis_inputs$LRdb[, c("RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]))
-  # all_receptors <- all_receptors[!is.na(all_receptors)]
-  # message("Build CJ")
-  # template <- CJ(
-  #   EMITTER_CELLTYPE = analysis_inputs$cell_types,
-  #   RECEIVER_CELLTYPE = analysis_inputs$cell_types,
-  #   LIGAND_1 = all_ligands,
-  #   RECEPTOR_1 = all_receptors
-  # )
-  # template[, LIGAND_2 := NA]
-  # template[, RECEPTOR_2 := NA]
-  # template[, RECEPTOR_3 := NA]
-  # message("OK template")
-  # return(template)
-  ## real code below
   template <- CJ(
     EMITTER_CELLTYPE = analysis_inputs$cell_types,
     RECEIVER_CELLTYPE = analysis_inputs$cell_types,
