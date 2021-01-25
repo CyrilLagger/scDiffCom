@@ -62,10 +62,19 @@ run_stat_analysis <- function(
       sep = "_"
     )
   } else {
-    distr_diff <- cbind(cci_perm[, 1, ], sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond2)]]
-                        - sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond1)]])
+    if (score_type == "geometric_mean") {
+      distr_diff <- cbind(cci_perm[, 1, ], sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond2)]]
+                          - sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond1)]])
+    }
+    if (score_type == "arithmetic_mean") {
+      distr_diff <- cbind(cci_perm[, 1, ], sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond2)]]
+                          - sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond1)]])
+    }
     distr_cond1 <- cbind(cci_perm[, 2, ], sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond1)]])
     distr_cond2 <- cbind(cci_perm[, 3, ], sub_cci_template[[paste0("CCI_SCORE_", analysis_inputs$condition$cond2)]])
+    pvals_diff_U <- rowSums(distr_diff[, 1:iterations] >= distr_diff[, (iterations + 1)] ) / iterations
+    pvals_diff_L <- rowSums(distr_diff[, 1:iterations] <= distr_diff[, (iterations + 1)] ) / iterations
+    pvals_diff <- 2*min(pvals_diff_U, pvals_diff_L)
     pvals_diff <- rowSums(abs(distr_diff[, 1:iterations]) >= abs(distr_diff[, (iterations + 1)])) / iterations
     pvals_cond1 <- rowSums(distr_cond1[, 1:iterations] >= distr_cond1[, (iterations + 1)]) / iterations
     pvals_cond2 <- rowSums(distr_cond2[, 1:iterations] >= distr_cond2[, (iterations + 1)]) / iterations
@@ -127,9 +136,8 @@ run_stat_iteration <- function(
   cci_template,
   score_type
 ) {
-  temp_md <- analysis_inputs$metadata
   if (!analysis_inputs$condition$is_cond) {
-    meta_ct <- temp_md
+    meta_ct <- copy(analysis_inputs$metadata)
     meta_ct$cell_type <- sample(meta_ct$cell_type)
     analysis_inputs$metadata <- meta_ct
     return(run_simple_cci_analysis(
@@ -142,11 +150,29 @@ run_stat_iteration <- function(
       compute_fast = TRUE
     ))
   } else {
-    meta_cond <- temp_md
-    for (x in unique(meta_cond$cell_type)) {
-      meta_cond$condition[meta_cond$cell_type == x] <- sample(meta_cond$condition[meta_cond$cell_type == x])
+    if(analysis_inputs$condition$is_samp) {
+      meta_cond <- copy(analysis_inputs$metadata)
+      meta_cond <- meta_cond[, {
+        temp <- unique(.SD[, c("sample_id", "condition")])
+        temp[, sample_temp := sample(sample_id, replace = TRUE)]
+        rbindlist(apply(temp, MARGIN = 1, function(i) {
+          temp2 <- .SD[sample_id == i[["sample_temp"]]]
+          temp2[, condition := i[["condition"]]]
+          return(temp2)
+        }))
+      }, by = c("cell_type")]
+      analysis_inputs$data_tr <- analysis_inputs$data_tr[meta_cond$cell_id, ]
+      #for (x in unique(meta_cond$cell_type)) {
+      #  meta_cond$condition[meta_cond$cell_type == x] <- sample(meta_cond$condition[meta_cond$cell_type == x])
+      #}
+      analysis_inputs$metadata <- meta_cond
+    } else {
+      meta_cond <- copy(analysis_inputs$metadata)
+      for (x in unique(meta_cond$cell_type)) {
+        meta_cond$condition[meta_cond$cell_type == x] <- sample(meta_cond$condition[meta_cond$cell_type == x])
+      }
+      analysis_inputs$metadata <- meta_cond
     }
-    analysis_inputs$metadata <- meta_cond
     permcond_dt <- run_simple_cci_analysis(
       analysis_inputs = analysis_inputs,
       cci_template = cci_template,
@@ -156,7 +182,7 @@ run_stat_iteration <- function(
       threshold_pct = NULL,
       compute_fast = TRUE
     )
-    meta_ct <- temp_md
+    meta_ct <- copy(analysis_inputs$metadata)
     meta_ct$cell_type[meta_ct$condition == analysis_inputs$condition$cond1] <- sample(meta_ct$cell_type[meta_ct$condition == analysis_inputs$condition$cond1])
     meta_ct$cell_type[meta_ct$condition == analysis_inputs$condition$cond2] <- sample(meta_ct$cell_type[meta_ct$condition == analysis_inputs$condition$cond2])
     analysis_inputs$metadata <- meta_ct
@@ -169,6 +195,12 @@ run_stat_iteration <- function(
       threshold_pct = NULL,
       compute_fast = TRUE
     )
-    return(cbind(permcond_dt$cond2 - permcond_dt$cond1, permct_dt$cond1, permct_dt$cond2))
+    if (score_type == "geometric_mean") {
+      permcond_dt_diff <- permcond_dt$cond2 - permcond_dt$cond1
+    }
+    if (score_type == "arithmetic_mean") {
+      permcond_dt_diff <- permcond_dt$cond2 - permcond_dt$cond1
+    }
+    return(cbind(permcond_dt_diff, permct_dt$cond1, permct_dt$cond2))
   }
 }
