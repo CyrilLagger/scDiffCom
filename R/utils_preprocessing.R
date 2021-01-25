@@ -1,6 +1,7 @@
 extract_analysis_inputs <- function(
   seurat_object,
   celltype_column_id,
+  sample_column_id,
   condition_column_id,
   cond1_name,
   cond2_name,
@@ -14,6 +15,7 @@ extract_analysis_inputs <- function(
   seurat_inputs <- extract_seurat_inputs(
     seurat_object = seurat_object,
     celltype_column_id = celltype_column_id,
+    sample_column_id = sample_column_id,
     condition_column_id = condition_column_id,
     assay = assay,
     slot = slot,
@@ -27,6 +29,7 @@ extract_analysis_inputs <- function(
     verbose = verbose
   )
   condition_inputs <- extract_condition_inputs(
+    sample_column_id = sample_column_id,
     condition_column_id = condition_column_id,
     cond1_name = cond1_name,
     cond2_name = cond2_name,
@@ -47,6 +50,7 @@ extract_analysis_inputs <- function(
 extract_seurat_inputs <- function(
   seurat_object,
   celltype_column_id,
+  sample_column_id,
   condition_column_id,
   assay,
   slot,
@@ -94,12 +98,17 @@ extract_seurat_inputs <- function(
   if (!(celltype_column_id %in% names(temp_md))) {
     stop(paste0("Can't find column `", celltype_column_id, "` in the meta.data of `seurat_object`"))
   }
+  if (!is.null(sample_column_id)) {
+    if (!(sample_column_id %in% names(temp_md))) {
+      stop(paste0("Can't find column `", sample_column_id, "` in the meta.data of `seurat_object`"))
+    }
+  }
   if (!is.null(condition_column_id)) {
     if (!(condition_column_id %in% names(temp_md))) {
       stop(paste0("Can't find column `", condition_column_id, "` in the meta.data of `seurat_object`"))
     }
   }
-  cols_to_keep <- c("cell_id", celltype_column_id, condition_column_id)
+  cols_to_keep <- c("cell_id", celltype_column_id, sample_column_id, condition_column_id)
   temp_md <- temp_md[, cols_to_keep, with = FALSE]
   temp_md[, names(temp_md) := lapply(.SD, as.character)]
   if (!is.null(condition_column_id)) {
@@ -108,9 +117,24 @@ extract_seurat_inputs <- function(
       stop(paste0("Column ", condition_column_id, " of `seurat_object` must contain exactly two groups:
                   You have supplied ", length(temp_cond), " groups."))
     }
-    new_colnames <- c("cell_id", "cell_type", "condition")
+    if(!is.null(sample_column_id)) {
+      temp_cols <- c(sample_column_id, condition_column_id)
+      temp_md_sample <- unique(temp_md[, temp_cols, with = FALSE])
+      temp_samples <- unique(temp_md[[sample_column_id]])
+      if (length(temp_samples) != nrow(temp_md_sample)) {
+        stop(paste0("Column ", sample_column_id, " of 'seurat_object' must match to column", condition_column_id))
+      }
+      new_colnames <- c("cell_id", "cell_type", "sample_id", "condition")
+    } else {
+      new_colnames <- c("cell_id", "cell_type", "condition")
+    }
   } else {
-    new_colnames <- c("cell_id", "cell_type")
+    if(!is.null(sample_column_id)) {
+      stop("Parameter `seurat_column_id` must be supplied when parameter `seurat_sample_id` is not NULL")
+    } else {
+
+      new_colnames <- c("cell_id", "cell_type")
+    }
   }
   setnames(
     x = temp_md,
@@ -231,6 +255,7 @@ extract_LRdb_inputs <- function(
 }
 
 extract_condition_inputs <- function(
+  sample_column_id,
   condition_column_id,
   cond1_name,
   cond2_name,
@@ -242,22 +267,27 @@ extract_condition_inputs <- function(
       is_cond = FALSE
     )
     if (!is.null(cond1_name) | !is.null(cond2_name)) {
-      warning("`condition_column_id` is NULL but either `cond1_name` or `cond1_name` is not NULL.")
+      warning("`condition_column_id` is NULL but either `cond1_name` or `cond2_name` is not NULL.")
     }
   } else {
+    if (is.null(sample_column_id)) {
+      cond_info <- list(
+        is_cond = TRUE,
+        is_samp = FALSE
+      )
+    } else {
+      cond_info <- list(
+        is_cond = TRUE,
+        is_samp = TRUE
+      )
+    }
     conds <- unique(metadata$condition)
     if (cond1_name == conds[[1]] & cond2_name == conds[[2]]) {
-      cond_info <- list(
-        is_cond = TRUE,
-        cond1 = conds[[1]],
-        cond2 = conds[[2]]
-      )
+      cond_info$cond1 <- conds[[1]]
+      cond_info$cond2 <- conds[[2]]
     } else if (cond1_name == conds[[2]] & cond2_name == conds[[1]]) {
-      cond_info <- list(
-        is_cond = TRUE,
-        cond1 = conds[[2]],
-        cond2 = conds[[1]]
-      )
+      cond_info$cond1 <- conds[[2]]
+      cond_info$cond2 <- conds[[1]]
     } else {
       stop(paste0(
         "Either `cond1_name` or `cond2_name` does not match with the content of `condition_column_id`:",
@@ -272,7 +302,7 @@ extract_condition_inputs <- function(
   if (!cond_info$is_cond) {
     mes <- paste0(
       mes,
-      " on the full dataset (no differential expression analysis)."
+      " on the full dataset at once (no differential expression analysis)."
     )
   } else {
     mes <- paste0(
@@ -280,9 +310,19 @@ extract_condition_inputs <- function(
       " with differential expression between the groups ",
       cond_info$cond1,
       " and ",
-      cond_info$cond2,
-      "."
+      cond_info$cond2
     )
+    if(cond_info$is_samp) {
+      mes <- paste0(
+        mes,
+        " (based on samples resampling and cells permutation)."
+      )
+    } else {
+      mes <- paste0(
+        mes,
+        " (based on cells permutation)."
+      )
+    }
   }
   if (verbose) message(mes)
   return(cond_info)
