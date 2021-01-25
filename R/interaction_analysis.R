@@ -45,6 +45,7 @@ run_interaction_analysis <- function(
   seurat_object,
   LRdb_species,
   seurat_celltype_id,
+  seurat_sample_id = NULL,
   seurat_condition_id = NULL,
   cond1_name = NULL,
   cond2_name = NULL,
@@ -71,6 +72,7 @@ run_interaction_analysis <- function(
   analysis_parameters <- list(
     LRdb_species = LRdb_species,
     seurat_celltype_id = seurat_celltype_id,
+    seurat_sample_id = seurat_sample_id,
     seurat_condition_id = seurat_condition_id,
     cond1_name = cond1_name,
     cond2_name = cond2_name,
@@ -112,6 +114,7 @@ run_interaction_analysis <- function(
   analysis_inputs <- extract_analysis_inputs(
     seurat_object = seurat_object,
     celltype_column_id = seurat_celltype_id,
+    sample_column_id = seurat_sample_id,
     condition_column_id = seurat_condition_id,
     cond1_name = cond1_name,
     cond2_name = cond2_name,
