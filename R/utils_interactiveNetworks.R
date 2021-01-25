@@ -1,10 +1,9 @@
-
 build_interactive_network <- function(
   object,
   network_representation_type,
   network_layout_type,
-  class_signature,
-  subobject_name
+  class_signature,  # "scDiffCom" | "scDiffComCombined"
+  subobject_name  # NULL | ID
 ) {
   ID <- NULL
   if (network_representation_type == "COUNTS_COND1") {
@@ -212,10 +211,12 @@ construct_graph <- function(
     if (nrow(dt_edge) != nrow(interacts)) {
       stop("Must have same nr rows.") # TODO
     }
+    # TODO: Check that same interactions are covered in both dts
+    # TODO: NA -> 0 to solve the color bug
     dt_merge <- merge(dt_edge, interacts,
       by = c("Ligand_cell_clean", "Receptor_cell_clean"),
       all = FALSE
-    ) # TODO: Check that same interactions are covered in both dts
+    )
     first_2_cols <- c("Ligand_cell", "Receptor_cell")
     data.table::setcolorder(dt_merge, c(first_2_cols, setdiff(names(dt_merge), first_2_cols)))
     return(dt_merge)
@@ -662,7 +663,7 @@ build_network_skeleton <- function(
         )
         header <- sprintf("<h3> %s </h3>", name)
         table_html <- as.character(kableExtra::kbl(temp_dt))
-        num_cells_paragraph <- sprintf("<p> Average num cells: %g", counts)
+        num_cells_paragraph <- sprintf("<p> Average num cells: %g </p>", counts)
         html <- paste0(header, num_cells_paragraph) # table_html
         return(html)
       }
@@ -816,11 +817,11 @@ build_network_skeleton <- function(
       return(edges[, edge.color])
     } else {
       map2colors <- function(x, n) {
-        RColorBrewer::brewer.pal(n, name = "RdYlGn")[cut(x, n)]
+        RColorBrewer::brewer.pal(n, name = "RdBu")[cut(x, n)]  # RdYlGn
       }
       # Discretizing and mapping to colors
       values <- edge_value(edges, network_representation_type)
-      colors <- map2colors(values, n = 3)
+      colors <- map2colors(values, n = 7)
       return(colors)
     }
   }
@@ -833,7 +834,8 @@ build_network_skeleton <- function(
       return(edges[, num_interacts_old])
     } else if (network_representation_type == "COUNTS_DIFF") {
       num_diff <- edges[, num_interacts_diff]
-      num_diff[num_diff == 0] <- NA
+      # num_diff[num_diff == 0] <- NA
+      num_diff[num_diff == 0] <- 0
       return(num_diff)
     } else {
       stop()
@@ -1125,7 +1127,7 @@ classify_edges <- function(
 #           tissue = object@parameters$object_name,
 #           ora = object@ora_default,
 #           dt_filtered = object@cci_detected
-#         ))
+#         )
 #       }
 #       if (class_signature == "scDiffComCombined") {
 #         ora <- object@ora_default
@@ -1140,6 +1142,3 @@ classify_edges <- function(
 #     stop("Can't extract necessary data from object. Maybe check scDiffCom object.")
 #   )
 # }
-
-#### Functions for improved layout of biparite type ####
-#### Interactive networks ####
