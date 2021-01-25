@@ -36,6 +36,10 @@ run_filtering_and_ora <- function(
     condition_inputs = condition_inputs,
     log_scale = temp_param$log_scale,
     permutation_analysis = temp_param$permutation_analysis,
+    threshold_min_cells = temp_param$threshold_min_cells,
+    threshold_pct = temp_param$threshold_pct,
+    max_nL = temp_param$max_nL,
+    max_nR = temp_param$max_nR,
     class_signature = class_signature
   )
   if (temp_param$permutation_analysis) {
@@ -48,16 +52,18 @@ run_filtering_and_ora <- function(
       threshold_logfc = temp_param$threshold_logfc,
       class_signature = class_signature
     )
+
     if (condition_inputs$is_cond) {
-      if (verbose) message("Assigning precise differential regulation.")
-      cci_dt <- assign_regulation(
-        cci_dt = cci_dt,
-        condition_inputs = condition_inputs,
-        threshold_quantile_score = temp_param$threshold_quantile_score,
-        threshold_p_value_specificity = temp_param$threshold_p_value_specificity,
-        class_signature = class_signature
-      )
-      cci_dt <- cci_dt[REGULATION_SIMPLE != "NON_DETECTED"]
+      #if (verbose) message("Assigning precise differential regulation.")
+      # cci_dt <- assign_regulation(
+      #   cci_dt = cci_dt,
+      #   condition_inputs = condition_inputs,
+      #   threshold_quantile_score = temp_param$threshold_quantile_score,
+      #   threshold_p_value_specificity = temp_param$threshold_p_value_specificity,
+      #   class_signature = class_signature
+      # )
+      ##
+      #cci_dt <- cci_dt[REGULATION_SIMPLE != "NON_DETECTED"]
     }
     mes <- paste0(
       "Returning ",
@@ -81,6 +87,7 @@ run_filtering_and_ora <- function(
     permutation_analysis = temp_param$permutation_analysis#,
     #class_signature = class_signature
   )
+  skip_ora <- TRUE
   if (nrow(cci_dt) == 0) {
     object@cci_detected <- list()
     object@ora_default <- list()
@@ -123,11 +130,15 @@ preprocess_cci_raw <- function(
   condition_inputs,
   log_scale,
   permutation_analysis,
+  threshold_min_cells,
+  threshold_pct,
+  max_nL,
+  max_nR,
   class_signature
 ) {
   BH_P_VALUE_DE <- P_VALUE_DE <-
     BH_P_VALUE <- P_VALUE <-
-    LR_GENES <- CCI_DETECTED <- ER_CELLTYPES <- EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <-
+    CCI_DETECTED <- ER_CELLTYPES <- EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <-
     LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <- RECEPTOR_3 <- NULL
   if (class_signature == "scDiffCom") {
     temp_by <- NULL
@@ -140,6 +151,141 @@ preprocess_cci_raw <- function(
       get(paste0("CCI_DETECTED_", condition_inputs$cond1)) == TRUE |
         get(paste0("CCI_DETECTED_", condition_inputs$cond2)) == TRUE
       ]
+
+    ####
+    #additional columns, to remove?
+
+
+    cci_dt[, paste0("EMITTER_NCELLS_EXPR_", condition_inputs$cond1) :=
+             get(paste0("EMITTER_NCELLS_", condition_inputs$cond1))
+           *
+             do.call(
+               pmin,
+               c(lapply(1:max_nL, function(i) {
+                 get(paste0("L", i, "_DETECTED_", condition_inputs$cond1))
+               }), na.rm = TRUE)
+             )
+          ]
+    cci_dt[, paste0("EMITTER_NCELLS_EXPR_", condition_inputs$cond2) :=
+             get(paste0("EMITTER_NCELLS_", condition_inputs$cond2))
+           *
+             do.call(
+               pmin,
+               c(lapply(1:max_nL, function(i) {
+                 get(paste0("L", i, "_DETECTED_", condition_inputs$cond2))
+               }), na.rm = TRUE)
+             )
+           ]
+    cci_dt[, paste0("RECEIVER_NCELLS_EXPR_", condition_inputs$cond1) :=
+             get(paste0("RECEIVER_NCELLS_", condition_inputs$cond1))
+           *
+             do.call(
+               pmin,
+               c(lapply(1:max_nR, function(i) {
+                 get(paste0("R", i, "_DETECTED_", condition_inputs$cond1))
+               }), na.rm = TRUE)
+             )
+           ]
+    cci_dt[, paste0("RECEIVER_NCELLS_EXPR_", condition_inputs$cond2) :=
+             get(paste0("RECEIVER_NCELLS_", condition_inputs$cond2))
+           *
+             do.call(
+               pmin,
+               c(lapply(1:max_nR, function(i) {
+                 get(paste0("R", i, "_DETECTED_", condition_inputs$cond2))
+               }), na.rm = TRUE)
+             )
+           ]
+    cci_dt[,  paste0("IS_EXPRESSED_", condition_inputs$cond1) :=
+             ifelse(
+               (
+                 get(paste0("EMITTER_NCELLS_EXPR_", condition_inputs$cond1)) < threshold_min_cells &
+                   (do.call(
+                     pmin,
+                     c(lapply(1:max_nL, function(i) {
+                       get(paste0("L", i, "_DETECTED_", condition_inputs$cond1))
+                     }), na.rm = TRUE)
+                   ) >= 0.1)
+               ) |
+                 (
+                   get(paste0("RECEIVER_NCELLS_EXPR_", condition_inputs$cond1)) < threshold_min_cells &
+                     (do.call(
+                       pmin,
+                       c(lapply(1:max_nR, function(i) {
+                         get(paste0("R", i, "_DETECTED_", condition_inputs$cond1))
+                       }), na.rm = TRUE)
+                     ) >= 0.1)
+                 ),
+               "UN",
+               ifelse(
+                 (
+                   get(paste0("EMITTER_NCELLS_EXPR_", condition_inputs$cond1)) >= threshold_min_cells &
+                     (do.call(
+                       pmin,
+                       c(lapply(1:max_nL, function(i) {
+                         get(paste0("L", i, "_DETECTED_", condition_inputs$cond1))
+                       }), na.rm = TRUE)
+                     ) >= 0.1)
+                 ) &
+                   (
+                     get(paste0("RECEIVER_NCELLS_EXPR_", condition_inputs$cond1)) >= threshold_min_cells &
+                       (do.call(
+                         pmin,
+                         c(lapply(1:max_nR, function(i) {
+                           get(paste0("R", i, "_DETECTED_", condition_inputs$cond1))
+                         }), na.rm = TRUE)
+                       ) >= 0.1)
+                   ),
+                 "YES",
+                 "NO"
+               )
+             )]
+    cci_dt[,  paste0("IS_EXPRESSED_", condition_inputs$cond2) :=
+             ifelse(
+               (
+                 get(paste0("EMITTER_NCELLS_EXPR_", condition_inputs$cond2)) < threshold_min_cells &
+                   (do.call(
+                     pmin,
+                     c(lapply(1:max_nL, function(i) {
+                       get(paste0("L", i, "_DETECTED_", condition_inputs$cond2))
+                     }), na.rm = TRUE)
+                   ) >= 0.1)
+               ) |
+                 (
+                   get(paste0("RECEIVER_NCELLS_EXPR_", condition_inputs$cond2)) < threshold_min_cells &
+                     (do.call(
+                       pmin,
+                       c(lapply(1:max_nR, function(i) {
+                         get(paste0("R", i, "_DETECTED_", condition_inputs$cond2))
+                       }), na.rm = TRUE)
+                     ) >= 0.1)
+                 ),
+               "UN",
+               ifelse(
+                 (
+                   get(paste0("EMITTER_NCELLS_EXPR_", condition_inputs$cond2)) >= threshold_min_cells &
+                     (do.call(
+                       pmin,
+                       c(lapply(1:max_nL, function(i) {
+                         get(paste0("L", i, "_DETECTED_", condition_inputs$cond2))
+                       }), na.rm = TRUE)
+                     ) >= 0.1)
+                 ) &
+                   (
+                     get(paste0("RECEIVER_NCELLS_EXPR_", condition_inputs$cond2)) >= threshold_min_cells &
+                       (do.call(
+                         pmin,
+                         c(lapply(1:max_nR, function(i) {
+                           get(paste0("R", i, "_DETECTED_", condition_inputs$cond2))
+                         }), na.rm = TRUE)
+                       ) >= 0.1)
+                   ),
+                 "YES",
+                 "NO"
+               )
+             )]
+    ####
+
     if (permutation_analysis) {
       cci_dt[, BH_P_VALUE_DE := stats::p.adjust(P_VALUE_DE, method = "BH"), by = temp_by]
       cci_dt[, paste0("BH_P_VALUE_", condition_inputs$cond1) :=
@@ -153,15 +299,6 @@ preprocess_cci_raw <- function(
       cci_dt[, BH_P_VALUE := stats::p.adjust(P_VALUE, method = "BH"), by = temp_by]
     }
   }
-  cci_dt[, LR_GENES := list(sapply(1:nrow(.SD), function(i) {
-    temp1 <- c(LIGAND_1[[i]], LIGAND_2[[i]])
-    temp1 <- temp1[!is.na(temp1)]
-    temp1 <- paste0(temp1, collapse = "_")
-    temp2 <- c(RECEPTOR_1[[i]], RECEPTOR_2[[i]], RECEPTOR_3[[i]])
-    temp2 <- temp2[!is.na(temp2)]
-    temp2 <- paste0(temp2, collapse = "_")
-    return(paste(temp1, temp2, sep = ":"))
-  }))]
   cci_dt[, ER_CELLTYPES := paste(EMITTER_CELLTYPE, RECEIVER_CELLTYPE, sep = "_")]
   return(cci_dt)
 }
@@ -186,12 +323,16 @@ find_detected_cci <- function(
   if (condition_inputs$is_cond) {
     cci_dt[, c(
       paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond1),
-      paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond2)
+      paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond2),
+      paste0("IS_SCORE_", condition_inputs$cond1),
+      paste0("IS_SCORE_", condition_inputs$cond2),
+      paste0("IS_SPECIFIC_", condition_inputs$cond1),
+      paste0("IS_SPECIFIC_", condition_inputs$cond2)
     ) := {
       threshold_score_temp <- stats::quantile(
         x = c(
-          .SD[[paste0("CCI_SCORE_", condition_inputs$cond1)]],
-          .SD[[paste0("CCI_SCORE_", condition_inputs$cond2)]]
+          .SD[get(paste0("CCI_DETECTED_", condition_inputs$cond1)) == TRUE][[paste0("CCI_SCORE_", condition_inputs$cond1)]],
+          .SD[get(paste0("CCI_DETECTED_", condition_inputs$cond2)) == TRUE][[paste0("CCI_SCORE_", condition_inputs$cond2)]]
         ),
         probs = threshold_quantile_score
       )
@@ -201,35 +342,30 @@ find_detected_cci <- function(
       res2 <- (get(paste0("CCI_DETECTED_", condition_inputs$cond2)) == TRUE) &
         (get(paste0("CCI_SCORE_", condition_inputs$cond2)) >= threshold_score_temp) &
         (get(paste0("BH_P_VALUE_", condition_inputs$cond2)) <= threshold_p_value_specificity)
+      res3 <- (get(paste0("CCI_SCORE_", condition_inputs$cond1)) >= threshold_score_temp)
+      res4 <- (get(paste0("CCI_SCORE_", condition_inputs$cond2)) >= threshold_score_temp)
+      res5 <- (get(paste0("BH_P_VALUE_", condition_inputs$cond1)) <= threshold_p_value_specificity)
+      res6 <- (get(paste0("BH_P_VALUE_", condition_inputs$cond2)) <= threshold_p_value_specificity)
       list(
         res1,
-        res2
+        res2,
+        res3,
+        res4,
+        res5,
+        res6
       )
     },
     by = temp_by
     ]
-    # threshold_score <- stats::quantile(
-    #   x = c(
-    #     cci_dt[[paste0("CCI_SCORE_", condition_inputs$cond1)]],
-    #     cci_dt[[paste0("CCI_SCORE_", condition_inputs$cond2)]]
-    #   ),
-    #   probs = threshold_quantile_score
-    # )
-    # cci_dt[, paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond1) :=
-    #          (get(paste0("CCI_DETECTED_", condition_inputs$cond1)) == TRUE)
-    #        & (get(paste0("CCI_SCORE_", condition_inputs$cond1)) >= threshold_score)
-    #        & (get(paste0("BH_P_VALUE_", condition_inputs$cond1)) <= threshold_p_value_specificity)]
-    # cci_dt[, paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond2) :=
-    #          (get(paste0("CCI_DETECTED_", condition_inputs$cond2)) == TRUE)
-    #        & (get(paste0("CCI_SCORE_", condition_inputs$cond2)) >= threshold_score)
-    #        & (get(paste0("BH_P_VALUE_", condition_inputs$cond2)) <= threshold_p_value_specificity)]
+    cci_dt[, IS_LOGFC := (LOGFC_ABS >= threshold_logfc)]
+    cci_dt[, IS_DE := (BH_P_VALUE_DE <= threshold_p_value_de)]
+    cci_dt[, DIFFERENTIAL_DIRECTION := fifelse(LOGFC > 0, "UP", "DOWN")]
     cci_dt[, DIFFERENTIALLY_EXPRESSED :=
              (get(paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond1))
               | get(paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond2)))
            & (BH_P_VALUE_DE <= threshold_p_value_de)
            & (LOGFC_ABS >= threshold_logfc)]
-    cci_dt[, DIFFERENTIAL_DIRECTION := fifelse(LOGFC > 0, "UP", "DOWN")]
-  } else {
+    } else {
     cci_dt[, "CCI_DETECTED_AND_SIGNIFICANT" := {
       threshold_score_temp <- stats::quantile(
         x = .SD[["CCI_SCORE"]],
@@ -241,14 +377,6 @@ find_detected_cci <- function(
     },
     by = temp_by
     ]
-    #threshold_score <- stats::quantile(
-    #  x = cci_dt[["CCI_SCORE"]],
-    #  probs = threshold_quantile_score
-    #)
-    # cci_dt[, "CCI_DETECTED_AND_SIGNIFICANT" :=
-    #          (CCI_DETECTED == TRUE)
-    #        & (CCI_SCORE >= threshold_score)
-    #        & (BH_P_VALUE <= threshold_p_value_specificity)]
   }
   return(cci_dt)
 }
@@ -267,13 +395,6 @@ assign_regulation <- function(
   if (class_signature == "scDiffComCombined") {
     temp_by <- "ID"
   }
-  # threshold_score <- stats::quantile(
-  #   x = c(
-  #     cci_dt[[paste0("CCI_SCORE_", condition_inputs$cond1)]],
-  #     cci_dt[[paste0("CCI_SCORE_", condition_inputs$cond2)]]
-  #   ),
-  #   probs = threshold_quantile_score
-  # )
   cci_dt[,
          REGULATION := {
            threshold_score_temp <- stats::quantile(
@@ -309,11 +430,10 @@ assign_regulation <- function(
                    DIFFERENTIAL_DIRECTION == "DOWN",
                    "DOWN_DISAPPEARS",
                    ifelse(
-                     sum(c(
-                       get(paste0("BH_P_VALUE_", condition_inputs$cond2)) > threshold_p_value_specificity,
-                       !get(paste0("CCI_DETECTED_", condition_inputs$cond2)),
-                       get(paste0("CCI_SCORE_", condition_inputs$cond2)) < threshold_score_temp
-                     )) == 1,
+                       (get(paste0("BH_P_VALUE_", condition_inputs$cond2)) > threshold_p_value_specificity +
+                          (!get(paste0("CCI_DETECTED_", condition_inputs$cond2))) +
+                          (get(paste0("CCI_SCORE_", condition_inputs$cond2)) < threshold_score_temp))
+                        == 1,
                      "UP",
                      "NON_DETECTED"
                    )
@@ -323,11 +443,10 @@ assign_regulation <- function(
                      !get(paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond2)) &
                      !DIFFERENTIALLY_EXPRESSED,
                    ifelse(
-                     sum(c(
-                       get(paste0("BH_P_VALUE_", condition_inputs$cond2)) > threshold_p_value_specificity,
-                       !get(paste0("CCI_DETECTED_", condition_inputs$cond2)),
-                       get(paste0("CCI_SCORE_", condition_inputs$cond2)) < threshold_score_temp
-                     )) == 1,
+                     ((get(paste0("BH_P_VALUE_", condition_inputs$cond2)) > threshold_p_value_specificity) +
+                        (!get(paste0("CCI_DETECTED_", condition_inputs$cond2))) +
+                        (get(paste0("CCI_SCORE_", condition_inputs$cond2)) < threshold_score_temp))
+                      == 1,
                      ifelse(
                        DIFFERENTIAL_DIRECTION == "UP",
                        "FLAT", # "TTFU",
@@ -343,11 +462,10 @@ assign_regulation <- function(
                        DIFFERENTIAL_DIRECTION == "UP",
                        "UP_APPEARS",
                        ifelse(
-                         sum(c(
-                           get(paste0("BH_P_VALUE_", condition_inputs$cond1)) > threshold_p_value_specificity,
-                           !get(paste0("CCI_DETECTED_", condition_inputs$cond1)),
-                           get(paste0("CCI_SCORE_", condition_inputs$cond1)) < threshold_score_temp
-                         )) == 1,
+                         ((get(paste0("BH_P_VALUE_", condition_inputs$cond1)) > threshold_p_value_specificity) +
+                            (!get(paste0("CCI_DETECTED_", condition_inputs$cond1))) +
+                            (get(paste0("CCI_SCORE_", condition_inputs$cond1)) < threshold_score_temp))
+                         == 1,
                          "DOWN",
                          "NON_DETECTED"
                        )
@@ -357,11 +475,10 @@ assign_regulation <- function(
                          get(paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond2)) &
                          !DIFFERENTIALLY_EXPRESSED,
                        ifelse(
-                         sum(c(
-                           get(paste0("BH_P_VALUE_", condition_inputs$cond1)) > threshold_p_value_specificity,
-                           !get(paste0("CCI_DETECTED_", condition_inputs$cond1)),
-                           get(paste0("CCI_SCORE_", condition_inputs$cond1)) < threshold_score_temp
-                         )) == 1,
+                         ((get(paste0("BH_P_VALUE_", condition_inputs$cond1)) > threshold_p_value_specificity) +
+                            (!get(paste0("CCI_DETECTED_", condition_inputs$cond1))) +
+                            (get(paste0("CCI_SCORE_", condition_inputs$cond1)) < threshold_score_temp))
+                         == 1,
                          ifelse(
                            DIFFERENTIAL_DIRECTION == "UP",
                            "FLAT", # "TTFU",
@@ -392,7 +509,6 @@ assign_regulation <- function(
           REGULATION == "NON_DETECTED",
           "NON_DETECTED",
           "OTHER"
-          # stop("Problem of classification.")
         )
       )
     )

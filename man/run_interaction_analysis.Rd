@@ -8,12 +8,14 @@ run_interaction_analysis(
   seurat_object,
   LRdb_species,
   seurat_celltype_id,
+  seurat_sample_id = NULL,
   seurat_condition_id = NULL,
   cond1_name = NULL,
   cond2_name = NULL,
   seurat_assay = "RNA",
   seurat_slot = "data",
   log_scale = FALSE,
+  score_type = "geometric_mean",
   threshold_min_cells = 5,
   threshold_pct = 0.1,
   object_name = "scDiffCom_object",
@@ -22,7 +24,7 @@ run_interaction_analysis(
   threshold_quantile_score = 0.25,
   threshold_p_value_specificity = 0.05,
   threshold_p_value_de = 0.05,
-  threshold_logfc = log(1.2),
+  threshold_logfc = log(1.5),
   return_distributions = FALSE,
   seed = 42,
   verbose = TRUE
@@ -49,6 +51,8 @@ testing for differential expression.}
 \item{seurat_slot}{The slot of \code{seurat_object} from which the data are extracted. Set to "data" by default.}
 
 \item{log_scale}{Should the data be log-transformed before the analysis? Set to "FALSE" by default (recommended).}
+
+\item{score_type}{The method to compute the CCI score. Either "geometric_mean" or "arithmetic_mean".}
 
 \item{threshold_min_cells}{The minimal number of cells that a cell-type need to contain to be considered in the analysis.
 Set to \code{5} by default.}

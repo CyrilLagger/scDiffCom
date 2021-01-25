@@ -8,6 +8,7 @@
 #' @param seurat_object A Seurat object that contains pre-normalized data as well as cell-type annotations.
 #' @param LRdb_species Either "mouse" or "human". It specifies which internal ligand-receptor database to use.
 #' @param seurat_celltype_id The \code{meta.data} name of \code{seurat_object} that indicates the cell-type of each cell (e.g.: "CELL-TYPE")
+#' @param seurat_sample_id temporary
 #' @param seurat_condition_id The \code{meta.data} name of \code{seurat_object} that indicates the two groups of cells
 #'  on which to perform the differential analysis (e.g: "AGE"). Set to \code{NULL} (default) to perform a detection analysis without
 #'  testing for differential expression.
