@@ -8,11 +8,11 @@ run_stat_analysis <- function(
 ) {
   P_VALUE <- P_VALUE_DE <- cols_keep <- cols_keep2 <- NULL
   if (!analysis_inputs$condition$is_cond) {
-    sub_cci_template <- cci_dt_simple[get("CCI_DETECTED") == TRUE]
+    sub_cci_template <- cci_dt_simple[get("IS_CCI_EXPRESSED") == TRUE]
   } else {
     sub_cci_template <- cci_dt_simple[
-      get(paste0("CCI_DETECTED_", analysis_inputs$condition$cond1)) == TRUE |
-        get(paste0("CCI_DETECTED_", analysis_inputs$condition$cond2)) == TRUE
+      get(paste0("IS_CCI_EXPRESSED_", analysis_inputs$condition$cond1)) == TRUE |
+        get(paste0("IS_CCI_EXPRESSED_", analysis_inputs$condition$cond2)) == TRUE
       ]
   }
   mes <- paste0(

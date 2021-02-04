@@ -197,7 +197,7 @@ run_ora <- function(
       stop("Can't recognize parameter `stringent_or_default")
     }
   } else {
-    if (verbose) message("No over-representation analysis analysis available for the selected parameters.")
+    if (verbose) message("No over-representation analysis available for the selected parameters.")
   }
   return(object)
 }
@@ -315,19 +315,19 @@ extract_category_counts <- function(
   reg,
   logfc_threshold
 ) {
-  REGULATION_SIMPLE <- COUNTS_VALUE_REGULATED <- COUNTS_VALUE_NOTREGULATED <- LOGFC <- NULL
+  REGULATION <- COUNTS_VALUE_REGULATED <- COUNTS_VALUE_NOTREGULATED <- LOGFC <- NULL
   if (reg == "UP") {
-    dt_regulated <- cci_detected[REGULATION_SIMPLE == "UP" & LOGFC >= logfc_threshold]
-    dt_notregulated <- cci_detected[!(REGULATION_SIMPLE == "UP" & LOGFC >= logfc_threshold)]
+    dt_regulated <- cci_detected[REGULATION == "UP" & LOGFC >= logfc_threshold]
+    dt_notregulated <- cci_detected[!(REGULATION == "UP" & LOGFC >= logfc_threshold)]
   } else if (reg == "DOWN") {
-    dt_regulated <- cci_detected[REGULATION_SIMPLE == "DOWN" & LOGFC <= -logfc_threshold]
-    dt_notregulated <- cci_detected[!(REGULATION_SIMPLE == "DOWN" & LOGFC <= -logfc_threshold)]
+    dt_regulated <- cci_detected[REGULATION == "DOWN" & LOGFC <= -logfc_threshold]
+    dt_notregulated <- cci_detected[!(REGULATION == "DOWN" & LOGFC <= -logfc_threshold)]
   } else if (reg == "DIFF") {
-    dt_regulated <- cci_detected[REGULATION_SIMPLE %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold]
-    dt_notregulated <- cci_detected[!(REGULATION_SIMPLE %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold)]
+    dt_regulated <- cci_detected[REGULATION %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold]
+    dt_notregulated <- cci_detected[!(REGULATION %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold)]
   } else if (reg == "FLAT") {
-    dt_regulated <- cci_detected[REGULATION_SIMPLE == "FLAT"]
-    dt_notregulated <- cci_detected[REGULATION_SIMPLE != "FLAT"]
+    dt_regulated <- cci_detected[REGULATION == "FLAT"]
+    dt_notregulated <- cci_detected[REGULATION != "FLAT"]
   } else {
     stop("Type of ORA not supported.")
   }

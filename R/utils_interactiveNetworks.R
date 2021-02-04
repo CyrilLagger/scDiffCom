@@ -65,8 +65,8 @@ construct_graph <- function(
   ora_default_ER
 ) {
   Ligand_cell <- Receptor_cell <- edge_type <- counts.x <-
-    counts.y <- CCI_DETECTED_YOUNG <- EMITTER_CELLTYPE <-
-    RECEIVER_CELLTYPE <- count <- CCI_DETECTED_OLD <- num_interacts_diff <-
+    counts.y <- IS_CCI_EXPRESSED_YOUNG <- EMITTER_CELLTYPE <-
+    RECEIVER_CELLTYPE <- count <- IS_CCI_EXPRESSED_OLD <- num_interacts_diff <-
     num_interacts_old <- num_interacts_young <- Ligand_cell_counts <-
     Receptor_cell_counts <- VALUE <-  NULL
   dt_edge <- process_celltype_pairs_enrichment(ora_ER_cells = ora_default_ER)
@@ -181,11 +181,11 @@ construct_graph <- function(
       # cond1 = object@parameters$cond1_name
       # cond2 = object@parameters$cond2_name
       # cond1 = 'YOUNG'
-      # colname1 = sprintf("CCI_DETECTED_%s", cond1)
+      # colname1 = sprintf("IS_CCI_EXPRESSED_%s", cond1)
       # cond2 = 'OLD'
-      # colname2 = sprintf("CCI_DETECTED_%s", cond2)
+      # colname2 = sprintf("IS_CCI_EXPRESSED_%s", cond2)
 
-      counts_y <- cci_detected[CCI_DETECTED_YOUNG == TRUE,
+      counts_y <- cci_detected[IS_CCI_EXPRESSED_YOUNG == TRUE,
         list(count = .N),
         by = list(EMITTER_CELLTYPE, RECEIVER_CELLTYPE)
       ][, list(
@@ -193,7 +193,7 @@ construct_graph <- function(
         "Receptor_cell_clean" = RECEIVER_CELLTYPE,
         "num_interacts_young" = count
       )]
-      counts_o <- cci_detected[CCI_DETECTED_OLD == TRUE,
+      counts_o <- cci_detected[IS_CCI_EXPRESSED_OLD == TRUE,
         list(count = .N),
         by = list(EMITTER_CELLTYPE, RECEIVER_CELLTYPE)
       ][, list(

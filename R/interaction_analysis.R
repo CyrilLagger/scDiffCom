@@ -8,7 +8,6 @@
 #' @param seurat_object A Seurat object that contains pre-normalized data as well as cell-type annotations.
 #' @param LRdb_species Either "mouse" or "human". It specifies which internal ligand-receptor database to use.
 #' @param seurat_celltype_id The \code{meta.data} name of \code{seurat_object} that indicates the cell-type of each cell (e.g.: "CELL-TYPE")
-#' @param seurat_sample_id temporary
 #' @param seurat_condition_id The \code{meta.data} name of \code{seurat_object} that indicates the two groups of cells
 #'  on which to perform the differential analysis (e.g: "AGE"). Set to \code{NULL} (default) to perform a detection analysis without
 #'  testing for differential expression.
@@ -46,7 +45,6 @@ run_interaction_analysis <- function(
   seurat_object,
   LRdb_species,
   seurat_celltype_id,
-  seurat_sample_id = NULL,
   seurat_condition_id = NULL,
   cond1_name = NULL,
   cond2_name = NULL,
@@ -59,7 +57,7 @@ run_interaction_analysis <- function(
   object_name = "scDiffCom_object",
   permutation_analysis = TRUE,
   iterations = 1000,
-  threshold_quantile_score = 0.25,
+  threshold_quantile_score = 0.2,
   threshold_p_value_specificity = 0.05,
   threshold_p_value_de = 0.05,
   threshold_logfc = log(1.5),
@@ -73,7 +71,7 @@ run_interaction_analysis <- function(
   analysis_parameters <- list(
     LRdb_species = LRdb_species,
     seurat_celltype_id = seurat_celltype_id,
-    seurat_sample_id = seurat_sample_id,
+    seurat_sample_id = NULL,
     seurat_condition_id = seurat_condition_id,
     cond1_name = cond1_name,
     cond2_name = cond2_name,
@@ -115,7 +113,7 @@ run_interaction_analysis <- function(
   analysis_inputs <- extract_analysis_inputs(
     seurat_object = seurat_object,
     celltype_column_id = seurat_celltype_id,
-    sample_column_id = seurat_sample_id,
+    sample_column_id = NULL,
     condition_column_id = seurat_condition_id,
     cond1_name = cond1_name,
     cond2_name = cond2_name,

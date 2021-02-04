@@ -264,7 +264,8 @@ extract_condition_inputs <- function(
 ) {
   if (is.null(condition_column_id)) {
     cond_info <- list(
-      is_cond = FALSE
+      is_cond = FALSE,
+      is_samp = FALSE
     )
     if (!is.null(cond1_name) | !is.null(cond2_name)) {
       warning("`condition_column_id` is NULL but either `cond1_name` or `cond2_name` is not NULL.")

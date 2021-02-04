@@ -103,7 +103,7 @@ add_cell_number <- function(
       sort = FALSE,
       suffixes = c("_L", "_R")
     )
-    new_cols <- c("EMITTER_NCELLS", "RECEIVER_NCELLS")
+    new_cols <- c("NCELLS_EMITTER", "NCELLS_RECEIVER")
     setnames(
       x = template_table,
       old = c("N_L", "N_R"),
@@ -134,10 +134,10 @@ add_cell_number <- function(
       suffixes = c("_L", "_R")
     )
     new_cols <- c(
-      paste0("EMITTER_NCELLS_", condition_inputs$cond1),
-      paste0("EMITTER_NCELLS_", condition_inputs$cond2),
-      paste0("RECEIVER_NCELLS_", condition_inputs$cond1),
-      paste0("RECEIVER_NCELLS_", condition_inputs$cond2)
+      paste0("NCELLS_EMITTER_", condition_inputs$cond1),
+      paste0("NCELLS_EMITTER_", condition_inputs$cond2),
+      paste0("NCELLS_RECEIVER_", condition_inputs$cond1),
+      paste0("NCELLS_RECEIVER_", condition_inputs$cond2)
     )
     setnames(
       x = template_table,
@@ -281,7 +281,7 @@ build_cci_or_drate <- function(
   if (cci_or_drate == "cci") {
     name_tag <- "EXPRESSION"
   } else if (cci_or_drate == "drate") {
-    name_tag <- "DETECTED"
+    name_tag <- "DETECTION_RATE"
   } else {
     stop("Error in build_cci_drate_dt.")
   }
@@ -292,7 +292,7 @@ build_cci_or_drate <- function(
     cond2_id <- NULL
     merge_id <- name_tag
     score_id <- "CCI_SCORE"
-    dr_id <- "CCI_DETECTED"
+    dr_id <- "IS_CCI_EXPRESSED"
     n_id <- 1
     pmin_id <- NULL
   } else {
@@ -302,7 +302,7 @@ build_cci_or_drate <- function(
     cond2_id <- paste0("_", condition_inputs$cond2)
     merge_id <- c(condition_inputs$cond1, condition_inputs$cond2)
     score_id <- paste0("CCI_SCORE_", c(condition_inputs$cond1, condition_inputs$cond2))
-    dr_id <- paste0("CCI_DETECTED_", c(condition_inputs$cond1, condition_inputs$cond2))
+    dr_id <- paste0("IS_CCI_EXPRESSED_", c(condition_inputs$cond1, condition_inputs$cond2))
     n_id <- 2
     pmin_id <- c(cond1_id, cond2_id)
   }
@@ -419,109 +419,17 @@ build_cci_or_drate <- function(
                   x_dr = do.call(pmin, c(lapply(1:max_nL, function(i) {
                     get(paste0("L", i, "_", name_tag, pmin_id[x]))
                   }), na.rm = TRUE)),
-                  x_ncells = get(paste0("EMITTER_NCELLS", pmin_id[x])),
+                  x_ncells = get(paste0("NCELLS_EMITTER", pmin_id[x])),
                   y_dr = do.call(pmin, c(lapply(1:max_nR, function(i) {
                     get(paste0("R", i, "_", name_tag, pmin_id[x]))
                   }), na.rm = TRUE)),
-                  y_ncells = get(paste0("RECEIVER_NCELLS", pmin_id[x])),
+                  y_ncells = get(paste0("NCELLS_RECEIVER", pmin_id[x])),
                   dr_thr = threshold_pct,
                   threshold_min_cells = threshold_min_cells
                 )
               })]
   }
   return(full_dt)
-}
-
-clean_colnames <- function(
-  cci_dt,
-  condition_inputs,
-  max_nL,
-  max_nR,
-  permutation_analysis
-) {
-  first_cols <- c("LR_GENES", "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", "ER_CELLTYPES")
-  LR_COLNAMES <- c(
-    paste0("LIGAND_", 1:max_nL),
-    paste0("RECEPTOR_", 1:max_nR)
-  )
-  first_cols <- c(first_cols, LR_COLNAMES)
-  if (!condition_inputs$is_cond) {
-    last_cols <- c(
-      "EMITTER_NCELLS",
-      paste0("L", 1:max_nL, "_EXPRESSION"),
-      paste0("L", 1:max_nL, "_DETECTED"),
-      "RECEIVER_NCELLS",
-      paste0("R", 1:max_nR, "_EXPRESSION"),
-      paste0("R", 1:max_nR, "_DETECTED")
-    )
-    if (!permutation_analysis) {
-      ordered_cols <- c(
-        first_cols,
-        "CCI_SCORE", "CCI_DETECTED",
-        last_cols
-      )
-    } else {
-      ordered_cols <- c(
-        first_cols,
-        "CCI_SCORE", "CCI_DETECTED_AND_SIGNIFICANT", "CCI_DETECTED", "P_VALUE", "BH_P_VALUE",
-        last_cols
-      )
-    }
-  } else {
-    last_cols <- c(
-      paste0("EMITTER_NCELLS_", condition_inputs$cond1),
-      paste0("EMITTER_NCELLS_EXPR_", condition_inputs$cond1),
-      paste0("L", 1:max_nL, "_EXPRESSION_", condition_inputs$cond1),
-      paste0("L", 1:max_nL, "_DETECTED_", condition_inputs$cond1),
-      paste0("RECEIVER_NCELLS_", condition_inputs$cond1),
-      paste0("RECEIVER_NCELLS_EXPR_", condition_inputs$cond1),
-      paste0("R", 1:max_nR, "_EXPRESSION_", condition_inputs$cond1),
-      paste0("R", 1:max_nR, "_DETECTED_", condition_inputs$cond1),
-      paste0("EMITTER_NCELLS_", condition_inputs$cond2),
-      paste0("EMITTER_NCELLS_EXPR_", condition_inputs$cond2),
-      paste0("L", 1:max_nL, "_EXPRESSION_", condition_inputs$cond2),
-      paste0("L", 1:max_nL, "_DETECTED_", condition_inputs$cond2),
-      paste0("RECEIVER_NCELLS_", condition_inputs$cond2),
-      paste0("RECEIVER_NCELLS_EXPR_", condition_inputs$cond2),
-      paste0("R", 1:max_nR, "_EXPRESSION_", condition_inputs$cond2),
-      paste0("R", 1:max_nR, "_DETECTED_", condition_inputs$cond2)
-    )
-    if (!permutation_analysis) {
-      ordered_cols <- c(
-        first_cols,
-        "LOGFC", "LOGFC_ABS",
-        paste0("CCI_SCORE_", condition_inputs$cond1), paste0("CCI_SCORE_", condition_inputs$cond2),
-        paste0("CCI_DETECTED_", condition_inputs$cond1), paste0("CCI_DETECTED_", condition_inputs$cond2),
-        last_cols
-      )
-    } else {
-      ordered_cols <- c(
-        first_cols,
-        "LOGFC", "LOGFC_ABS",
-        "DIFFERENTIALLY_EXPRESSED", "DIFFERENTIAL_DIRECTION",# "REGULATION", "REGULATION_SIMPLE",
-        paste0("IS_EXPRESSED_", condition_inputs$cond1), paste0("IS_EXPRESSED_", condition_inputs$cond2),
-        paste0("IS_SCORE_", condition_inputs$cond1), paste0("IS_SCORE_", condition_inputs$cond2),
-        paste0("IS_SPECIFIC_", condition_inputs$cond1), paste0("IS_SPECIFIC_", condition_inputs$cond2),
-        #"REGULATION_RELAXED", "REGULATION_RELAXED_SIMPLE",
-        paste0("CCI_SCORE_", condition_inputs$cond1), paste0("CCI_SCORE_", condition_inputs$cond2),
-        paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond1), paste0("CCI_DETECTED_AND_SIGNIFICANT_IN_", condition_inputs$cond2),
-        paste0("CCI_DETECTED_", condition_inputs$cond1), paste0("CCI_DETECTED_", condition_inputs$cond2),
-        "P_VALUE_DE",
-        "BH_P_VALUE_DE",
-        "IS_LOGFC", "IS_DE",
-        paste0("P_VALUE_", condition_inputs$cond1),
-        paste0("BH_P_VALUE_", condition_inputs$cond1),
-        paste0("P_VALUE_", condition_inputs$cond2),
-        paste0("BH_P_VALUE_", condition_inputs$cond2),
-        last_cols
-      )
-    }
-  }
-  setcolorder(
-    x = cci_dt,
-    neworder = ordered_cols
-  )
-  return(cci_dt)
 }
 
 is_detected_full <- Vectorize(
