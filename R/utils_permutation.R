@@ -73,7 +73,6 @@ run_stat_analysis <- function(
             future.label = "future_replicate-%d"
           )
         })
-
         if (!analysis_inputs$condition$is_cond) {
           temp_distr <- cbind(cci_perm, cci_score_actual)
           temp_counts <- rowSums(temp_distr[, 1:n_temp_iter] >= temp_distr[, (n_temp_iter + 1)])
@@ -87,20 +86,29 @@ run_stat_analysis <- function(
           temp_counts_cond2 <- rowSums(temp_distr_cond2[, 1:n_temp_iter] >= temp_distr_cond2[, (n_temp_iter + 1)])
           return(cbind(temp_counts_diff, temp_counts_cond1, temp_counts_cond2))
         }
-
       },
       simplify = "array"
     )
     if (!analysis_inputs$condition$is_cond) {
-      pvals <- rowSums(array_counts) / iterations
+      if (n_broad_iter == 1) {
+        pvals <- array_counts / iterations
+      } else {
+        pvals <- rowSums(array_counts) / iterations
+      }
       sub_cci_template[, P_VALUE := pvals]
       cols_new <- c("P_VALUE")
       cols_keep2 <- c(cols_keep, cols_new)
       sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
     } else {
-      pvals_diff <- rowSums(array_counts[, 1, ]) / iterations
-      pvals_cond1 <-  rowSums(array_counts[, 2, ]) / iterations
-      pvals_cond2 <-  rowSums(array_counts[, 3, ]) / iterations
+      if (n_broad_iter == 1) {
+        pvals_diff <- array_counts[, 1, ] / iterations
+        pvals_cond1 <-  array_counts[, 2, ] / iterations
+        pvals_cond2 <-  array_counts[, 3, ] / iterations
+      } else {
+        pvals_diff <- rowSums(array_counts[, 1, ]) / iterations
+        pvals_cond1 <-  rowSums(array_counts[, 2, ]) / iterations
+        pvals_cond2 <-  rowSums(array_counts[, 3, ]) / iterations
+      }
       sub_cci_template[, paste0("P_VALUE_", c(analysis_inputs$condition$cond1, analysis_inputs$condition$cond2)) := list(pvals_cond1, pvals_cond2)]
       sub_cci_template[, P_VALUE_DE := pvals_diff]
       cols_new <- c(paste0("P_VALUE_", analysis_inputs$condition$cond1), paste0("P_VALUE_", analysis_inputs$condition$cond2), "P_VALUE_DE")
@@ -162,9 +170,7 @@ run_stat_analysis <- function(
       )
     }
   }
-
   ###
-
   cci_dt <- data.table::merge.data.table(
     x = cci_dt_simple,
     y = sub_cci_template,
