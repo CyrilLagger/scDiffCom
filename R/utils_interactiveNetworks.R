@@ -596,27 +596,8 @@ get_network_components <- function(
       layout = "layout.norm",
       layoutMatrix = layout
     ),
-    options = . %>% visNetwork::visOptions(
-      height = NULL, #"1000px",
-      width = NULL, #"100%",
-      highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE),
-      autoResize = TRUE,
-      selectedBy = list(
-        variable = "name", multiple = TRUE,
-        style = "width: 200px; height: 26px;
-        background: #f8f8f8;
-        color: darkblue;
-        border:none;
-        outline:none;"
-      ),
-      collapse = TRUE,
-      manipulation = TRUE
-    ),
-    interactive = . %>% visNetwork::visInteraction(
-      keyboard = list(enabled = TRUE),
-      multiselect = TRUE,
-      navigationButtons = FALSE
-    ),
+    options = get_visnetwork_options(selectionByName=TRUE),
+    interactive = get_visnetwork_interactive(),
     configure = configure_component,
     legend = . %>% visNetwork::visLegend(
       enabled = TRUE,
@@ -635,6 +616,43 @@ get_network_components <- function(
     )
   )
   return(network_components)
+}
+
+get_visnetwork_options <- function(selectionByName = FALSE, highlightNearestDegree = 0) {
+  
+  if(selectionByName) {
+    selectionOptions = list(
+      variable = "name", multiple = TRUE,
+      style = "width: 200px; height: 26px;
+          background: #f8f8f8;
+          color: darkblue;
+          border:none;
+          outline:none;"
+    )
+  } else {
+    selectionOptions = NULL
+  }
+  
+  return(
+    . %>% visNetwork::visOptions(
+      height = NULL, #"1000px",
+      width = NULL, #"100%",
+      highlightNearest = list(enabled = TRUE, degree = highlightNearestDegree, hover = TRUE),
+      autoResize = TRUE,
+      selectedBy = selectionOptions,
+      collapse = TRUE,
+      manipulation = TRUE
+    )
+  )
+}
+get_visnetwork_interactive <- function() {
+  return(
+    . %>% visNetwork::visInteraction(
+      keyboard = list(enabled = TRUE),
+      multiselect = TRUE,
+      navigationButtons = FALSE
+    )
+  )
 }
 
 build_network_skeleton <- function(
