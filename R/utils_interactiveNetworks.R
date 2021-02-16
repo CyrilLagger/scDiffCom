@@ -585,7 +585,7 @@ get_network_components <- function(
     ),
     nodes_global = . %>% visNetwork::visNodes(
       shape = "dot",
-      physics = TRUE # TODO
+      physics = FALSE
     ),
     edges_global = . %>% visNetwork::visEdges(
       shadow = TRUE,
@@ -596,26 +596,8 @@ get_network_components <- function(
       layout = "layout.norm",
       layoutMatrix = layout
     ),
-    options = . %>% visNetwork::visOptions(
-      height = "1000px",
-      width = "100%",
-      highlightNearest = list(enabled = TRUE, degree = 1, hover = TRUE),
-      selectedBy = list(
-        variable = "name", multiple = TRUE,
-        style = "width: 200px; height: 26px;
-        background: #f8f8f8;
-        color: darkblue;
-        border:none;
-        outline:none;"
-      ),
-      collapse = TRUE,
-      manipulation = TRUE
-    ),
-    interactive = . %>% visNetwork::visInteraction(
-      keyboard = list(enabled = TRUE),
-      multiselect = TRUE,
-      navigationButtons = FALSE
-    ),
+    options = get_visnetwork_options(selectionByName=TRUE),
+    interactive = get_visnetwork_interactive(),
     configure = configure_component,
     legend = . %>% visNetwork::visLegend(
       enabled = TRUE,
@@ -625,9 +607,52 @@ get_network_components <- function(
       addNodes = nodes_legend(network_representation_type),
       useGroups = FALSE,
       zoom = TRUE
+    ),
+    physics = . %>% visNetwork::visPhysics(
+      enabled = FALSE,
+      maxVelocity = 10,
+      timestep = 0.5,
+      repulsion = list(damping=0.5)
     )
   )
   return(network_components)
+}
+
+get_visnetwork_options <- function(selectionByName = FALSE, highlightNearestDegree = 0) {
+  
+  if(selectionByName) {
+    selectionOptions = list(
+      variable = "name", multiple = TRUE,
+      style = "width: 200px; height: 26px;
+          background: #f8f8f8;
+          color: darkblue;
+          border:none;
+          outline:none;"
+    )
+  } else {
+    selectionOptions = NULL
+  }
+  
+  return(
+    . %>% visNetwork::visOptions(
+      height = NULL, #"1000px",
+      width = NULL, #"100%",
+      highlightNearest = list(enabled = TRUE, degree = highlightNearestDegree, hover = TRUE),
+      autoResize = TRUE,
+      selectedBy = selectionOptions,
+      collapse = TRUE,
+      manipulation = TRUE
+    )
+  )
+}
+get_visnetwork_interactive <- function() {
+  return(
+    . %>% visNetwork::visInteraction(
+      keyboard = list(enabled = TRUE),
+      multiselect = TRUE,
+      navigationButtons = FALSE
+    )
+  )
 }
 
 build_network_skeleton <- function(
@@ -825,45 +850,49 @@ build_network_skeleton <- function(
       return(colors)
     }
   }
-  edge_value <- function(edges, network_representation_type) {
-    if (network_representation_type == "ORA") {
-      return(NULL)
-    } else if (network_representation_type == "COUNTS_YOUNG") {
-      return(edges[, num_interacts_young])
-    } else if (network_representation_type == "COUNTS_OLD") {
-      return(edges[, num_interacts_old])
-    } else if (network_representation_type == "COUNTS_DIFF") {
-      num_diff <- edges[, num_interacts_diff]
-      # num_diff[num_diff == 0] <- NA
-      num_diff[num_diff == 0] <- 0
-      return(num_diff)
-    } else {
-      stop()
+
+  if (network_representation_type != 'ORA') {
+    edge_value <- function(edges, network_representation_type) {
+      if (network_representation_type == "ORA") {
+        return(NULL)
+      } else if (network_representation_type == "COUNTS_YOUNG") {
+        return(edges[, num_interacts_young])
+      } else if (network_representation_type == "COUNTS_OLD") {
+        return(edges[, num_interacts_old])
+      } else if (network_representation_type == "COUNTS_DIFF") {
+        num_diff <- edges[, num_interacts_diff]
+        # num_diff[num_diff == 0] <- NA
+        num_diff[num_diff == 0] <- 0
+        return(num_diff)
+      } else {
+        stop()
+      }
     }
-  }
-  edge_label <- function(edges, network_representation_type) {
-    if (network_representation_type == "ORA") {
-      return(NULL)
-    } else {
-      value <- edge_value(edges, network_representation_type)
-      return(as.character(value))
+    edge_label <- function(edges, network_representation_type) {
+      if (network_representation_type == "ORA") {
+        return(NULL)
+      } else {
+        value <- edge_value(edges, network_representation_type)
+        return(as.character(value))
+      }
     }
-  }
-  abs_or_null <- function(v) {
-    if (is.null(v)) {
-      return(NULL)
-    }
-    v_ <- copy(v)
-    v_[!is.null(v_)] <- abs(v_[!is.null(v_)])
-    return(v_)
-  }
-  edges_[
-    ,
-    value := abs_or_null(edge_value(edges_, network_representation_type)) # TODO: bad practice
+    abs_or_null <- function(v) {
+        if (is.null(v)) {
+          return(NULL)
+        }
+        v_ <- copy(v)
+        v_[!is.null(v_)] <- abs(v_[!is.null(v_)])
+        return(v_)
+      }
+    edges_[
+      ,
+      value := abs_or_null(edge_value(edges_, network_representation_type))  # 
     ][
       ,
       label := as.character(edge_value(edges_, network_representation_type))
-      ][
+    ]
+  }
+  edges_[
         ,
         color.color := edge_color(edges_, network_representation_type)
         ][
@@ -1036,7 +1065,8 @@ build_network <- function(
   legend = NULL,
   options = NULL,
   interactive = NULL,
-  configure = NULL
+  configure = NULL,
+  physics = NULL
 ) {
   vis_funcs <- list(
     nodes_global = nodes_global,
@@ -1045,7 +1075,8 @@ build_network <- function(
     legend = legend,
     options = options,
     interactive = interactive,
-    configure = configure
+    configure = configure,
+    physics = physics
   )
   # For NULL arguments, use the identity as pipeline step
   vis_funcs <- purrr::map_if(vis_funcs, is.null, ~ . %>% identity())
@@ -1057,7 +1088,8 @@ build_network <- function(
       (vis_funcs$legend) %>%
       (vis_funcs$options) %>%
       (vis_funcs$interactive) %>%
-      (vis_funcs$configure)
+      (vis_funcs$configure) %>%
+      (vis_funcs$physics)
   )
 }
 
