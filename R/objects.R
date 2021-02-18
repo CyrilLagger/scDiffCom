@@ -539,7 +539,7 @@ FilterCCI.scDiffComCombined <- function(
 #' @method RunORA scDiffCom
 RunORA.scDiffCom <- function(
   object,
-  categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS"),
+  categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS"),
   overwrite = TRUE,
   stringent_or_default = "default",
   stringent_logfc_threshold = NULL,
@@ -548,7 +548,7 @@ RunORA.scDiffCom <- function(
 ) {
   run_ora(
     object = object,
-    categories = categories,
+    categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS", "ID"),
     overwrite = overwrite,
     stringent_or_default = stringent_or_default,
     stringent_logfc_threshold = stringent_logfc_threshold,

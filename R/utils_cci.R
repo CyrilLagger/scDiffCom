@@ -225,21 +225,26 @@ run_simple_cci_analysis <- function(
          LOGFC := log(get(paste0("CCI_SCORE_", analysis_inputs$condition$cond2)) /
                         get(paste0("CCI_SCORE_", analysis_inputs$condition$cond1)))
          ]
-      max_logfc <- max(dt[is.finite(LOGFC)][["LOGFC"]])
-      min_logfc <- min(dt[is.finite(LOGFC)][["LOGFC"]])
       dt[, LOGFC := ifelse(
-        is.finite(LOGFC),
-        LOGFC,
-        ifelse(
-          is.nan(LOGFC),
-          0,
-          ifelse(
-            LOGFC > 0,
-            max_logfc,
-            min_logfc
-          )
-        )
+        is.nan(LOGFC),
+        0,
+        LOGFC
       )]
+      #max_logfc <- max(dt[is.finite(LOGFC)][["LOGFC"]])
+      #min_logfc <- min(dt[is.finite(LOGFC)][["LOGFC"]])
+      # dt[, LOGFC := ifelse(
+      #   is.finite(LOGFC),
+      #   LOGFC,
+      #   ifelse(
+      #     is.nan(LOGFC),
+      #     0,
+      #     ifelse(
+      #       LOGFC > 0,
+      #       max_logfc,
+      #       min_logfc
+      #     )
+      #   )
+      # )]
     }
     dt[, LOGFC_ABS := abs(LOGFC)]
   }

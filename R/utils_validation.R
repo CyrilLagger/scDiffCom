@@ -11,17 +11,13 @@ validate_parameters <- function(
     "object_name",
     "LRdb_species",
     "seurat_celltype_id",
-    "seurat_sample_id",
     "seurat_condition_id",
-    "cond1_name",
-    "cond2_name",
     "seurat_assay",
     "seurat_slot",
     "log_scale",
     "score_type",
     "threshold_min_cells",
     "threshold_pct",
-    "permutation_analysis",
     "iterations",
     "threshold_quantile_score",
     "threshold_p_value_specificity",
@@ -33,6 +29,7 @@ validate_parameters <- function(
   )
   params_names_additional <- c(
     "conditional_analysis",
+    "permutation_analysis",
     "max_nL",
     "max_nR"
   )
@@ -53,29 +50,22 @@ validate_parameters <- function(
     res <- c(res, "`object_name` must be a character vector of length 1")
   }
   if (!(params$LRdb_species %in% c("mouse", "human"))) {
-    res <- c(res, "`LRdb_species` must be either 'human' or 'mouse'")
+    res <- c(res, "`LRdb_species` must be either 'mouse' or 'human'")
   }
   if (!is.character(params$seurat_celltype_id) | length(params$seurat_celltype_id) != 1) {
     res <- c(res, "`seurat_celltype_id` must be a character vector of length 1")
   }
-  if (!is.null(params$seurat_sample_id)) {
-    if (!is.character(params$seurat_sample_id) | length(params$seurat_sample_id) != 1) {
-      res <- c(res, "`seurat_sample_id` must be a character vector of length 1")
-    }
-  }
+  # if (!is.null(params$seurat_sample_id)) {
+  #   if (!is.character(params$seurat_sample_id) | length(params$seurat_sample_id) != 1) {
+  #     res <- c(res, "`seurat_sample_id` must be a character vector of length 1")
+  #   }
+  # }
   if (!is.null(params$seurat_condition_id)) {
-    if (!is.character(params$seurat_condition_id) | length(params$seurat_condition_id) != 1) {
-      res <- c(res, "`seurat_condition_id` must be NULL or a character vector of length 1")
-    }
-  }
-  if (!is.null(params$cond1_name)) {
-    if (!is.character(params$cond1_name) | length(params$cond1_name) != 1) {
-      res <- c(res, "`cond1_name` must be NULL or a character vector of length 1")
-    }
-  }
-  if (!is.null(params$cond2_name)) {
-    if (!is.character(params$cond2_name) | length(params$cond2_name) != 1) {
-      res <- c(res, "`cond2_name` must be NULL or a character vector of length 1")
+    if (!is.list(params$seurat_condition_id) || length(params$seurat_condition_id) != 3 ||
+        !identical(names(params$seurat_condition_id), c("column_name", "cond1_name", "cond2_name"))) {
+      res <- c(
+        res,
+      "`seurat_condition_id` must be NULL or a length-3 list with names 'column_name', 'cond1_name', 'cond2_name'")
     }
   }
   if (!is.character(params$seurat_assay) | length(params$seurat_assay) != 1) {
@@ -92,23 +82,18 @@ validate_parameters <- function(
   }
   if (!is.numeric(params$threshold_min_cells) | length(params$threshold_min_cells) > 1) {
     res <- c(res, "`threshold_min_cells` must be a numeric vector of length 1")
-  } else if (params$threshold_min_cells < 0) {
-    res <- c(res, "`threshold_min_cells` must be a non-negative numeric")
+  } else if (params$threshold_min_cells < 0 | params$threshold_min_cells %% 1 != 0) {
+    res <- c(res, "`threshold_min_cells` must be a non-negative integer")
   }
   if (!is.numeric(params$threshold_pct) | length(params$threshold_pct) != 1) {
     res <- c(res, "`threshold_pct` must be a numeric vector of length 1")
   } else if(params$threshold_pct < 0 | params$threshold_pct >= 1) {
     res <- c(res, "`threshold_pct` must be a numeric in [0,1[")
   }
-  if(!is.logical(params$permutation_analysis) | length(params$permutation_analysis) != 1) {
-    res <- c(res, "`permutation_analysis` must be a logical vector of length 1")
-  }
   if (!is.numeric(params$iterations) | length(params$iterations) > 1) {
     res <- c(res, "`iterations` must be a numeric vector of length 1")
-  } else if (params$iterations <= 0) {
-    res <- c(res, "`iterations` must be a positive integer")
-  } else  if (params$iterations > 20000) {
-    warning("performing more than 20'000 `iterations` will require a lot of memory")
+  } else if (params$iterations < 0 | params$iterations %% 1 != 0) {
+    res <- c(res, "`iterations` must be a positive integer or zero")
   }
   if (!is.numeric(params$threshold_quantile_score) | length(params$threshold_quantile_score) != 1) {
     res <- c(res, "`threshold_quantile_score` must be a numeric vector of length 1")
@@ -133,12 +118,20 @@ validate_parameters <- function(
   if(!is.logical(params$return_distributions) | length(params$return_distributions) != 1) {
     res <- c(res, "`return_distributions` must be a logical vector of length 1")
   }
+  if (!is.numeric(params$seed) | length(params$seed) > 1) {
+    res <- c(res, "`seed` must be a numeric vector of length 1")
+  } else if (params$seed < 0 | params$seed %% 1 != 0) {
+    res <- c(res, "`seed` must be a non-negative integer")
+  }
   if(!is.logical(params$verbose) | length(params$verbose) != 1) {
     res <- c(res, "`verbose` must be a logical vector of length 1")
   }
   if(!from_inputs) {
     if(!is.logical(params$conditional_analysis) | length(params$conditional_analysis) != 1) {
       res <- c(res, "`conditional_analysis` must be a logical vector of length 1")
+    }
+    if(!is.logical(params$permutation_analysis) | length(params$permutation_analysis) != 1) {
+      res <- c(res, "`permutation_analysis` must be a logical vector of length 1")
     }
     if (!is.numeric(params$max_nL) | length(params$max_nL) != 1) {
       res <- c(res, "`max_nL` must be a numeric vector of length 1")
