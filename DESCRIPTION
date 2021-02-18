@@ -29,7 +29,15 @@ Suggests:
     testthat (>= 2.1.0),
     knitr,
     rmarkdown,
-    KEGGREST
+    KEGGREST,
+    arules,
+    RColorBrewer,
+    kableExtra,
+    ggplot2,
+    igraph,
+    purrr,
+    scales,
+    visNetwork,
 Imports: 
     data.table,
     DelayedArray,
@@ -39,15 +47,7 @@ Imports:
     progressr,
     Seurat,
     stats,
-    utils,
-    ggplot2,
-    igraph,
-    purrr,
-    scales,
-    visNetwork,
-    kableExtra,
-    RColorBrewer,
-    arules
+    utils
 VignetteBuilder: knitr
 Collate: 
     'cellphonedb_wrapper.R'
