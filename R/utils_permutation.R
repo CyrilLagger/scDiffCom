@@ -55,15 +55,16 @@ run_stat_analysis <- function(
             n_temp_iter <- internal_iter
           }
         }
+        sub_cci_template_iter <- sub_cci_template[, cols_keep, with = FALSE]
         progressr::with_progress({
           prog <- progressr::progressor(steps = n_temp_iter)
           cci_perm <- future.apply::future_sapply(
             X = integer(n_temp_iter),
             FUN = function(iter) {
-              if (iter %% 10 == 0) prog(sprintf("iter=%g", iter))
+              if (iter %% 20 == 0) prog(sprintf("iter=%g", iter))
               run_stat_iteration(
                 analysis_inputs = analysis_inputs,
-                cci_template = sub_cci_template[, cols_keep, with = FALSE],
+                cci_template = sub_cci_template_iter,
                 score_type = score_type
               )
             },
@@ -117,15 +118,16 @@ run_stat_analysis <- function(
       sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
     }
   } else {
+    sub_cci_template_iter <- sub_cci_template[, cols_keep, with = FALSE]
     progressr::with_progress({
       prog <- progressr::progressor(steps = iterations)
       cci_perm <- future.apply::future_sapply(
         X = integer(iterations),
         FUN = function(iter) {
-          if (iter %% 10 == 0) prog(sprintf("iter=%g", iter))
+          if (iter %% 20 == 0) prog(sprintf("iter=%g", iter))
           run_stat_iteration(
             analysis_inputs = analysis_inputs,
-            cci_template = sub_cci_template[, cols_keep, with = FALSE],
+            cci_template = sub_cci_template_iter,
             score_type = score_type
           )
         },
@@ -243,9 +245,6 @@ run_stat_iteration <- function(
         }))
       }, by = c("cell_type")]
       analysis_inputs$data_tr <- analysis_inputs$data_tr[meta_cond$cell_id, ]
-      #for (x in unique(meta_cond$cell_type)) {
-      #  meta_cond$condition[meta_cond$cell_type == x] <- sample(meta_cond$condition[meta_cond$cell_type == x])
-      #}
       analysis_inputs$metadata <- meta_cond
     } else {
       meta_cond <- copy(analysis_inputs$metadata)
@@ -278,12 +277,7 @@ run_stat_iteration <- function(
       threshold_pct = NULL,
       compute_fast = TRUE
     )
-    if (score_type == "geometric_mean") {
-      permcond_dt_diff <- permcond_dt$cond2 - permcond_dt$cond1
-    }
-    if (score_type == "arithmetic_mean") {
-      permcond_dt_diff <- permcond_dt$cond2 - permcond_dt$cond1
-    }
+    permcond_dt_diff <- permcond_dt$cond2 - permcond_dt$cond1
     return(cbind(permcond_dt_diff, permct_dt$cond1, permct_dt$cond2))
   }
 }
