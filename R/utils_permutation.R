@@ -56,24 +56,35 @@ run_stat_analysis <- function(
           }
         }
         sub_cci_template_iter <- sub_cci_template[, cols_keep, with = FALSE]
-        progressr::with_progress({
-          prog <- progressr::progressor(steps = n_temp_iter)
-          cci_perm <- future.apply::future_sapply(
-            X = integer(n_temp_iter),
-            FUN = function(iter) {
-              if (iter %% 20 == 0) prog(sprintf("iter=%g", iter))
-              run_stat_iteration(
-                analysis_inputs = analysis_inputs,
-                cci_template = sub_cci_template_iter,
-                score_type = score_type
-              )
-            },
-            simplify = "array",
-            future.seed = TRUE,
-            future.label = "future_replicate-%d"
-          )
-        },
-        enable = verbose
+
+        # progressr::with_progress({
+        #   prog <- progressr::progressor(steps = n_temp_iter)
+        #   cci_perm <- future.apply::future_sapply(
+        #     X = integer(n_temp_iter),
+        #     FUN = function(iter) {
+        #       if (iter %% 20 == 0) prog(sprintf("iter=%g", iter))
+        #       run_stat_iteration(
+        #         analysis_inputs = analysis_inputs,
+        #         cci_template = sub_cci_template_iter,
+        #         score_type = score_type
+        #       )
+        #     },
+        #     simplify = "array",
+        #     future.seed = TRUE,
+        #     future.label = "future_replicate-%d"
+        #   )
+        # },
+        # enable = verbose
+        # )
+        cci_perm <- future.apply::future_replicate(
+          n = n_temp_iter,
+          expr = run_stat_iteration(
+            analysis_inputs = analysis_inputs,
+            cci_template = sub_cci_template_iter,
+            score_type = score_type
+          ),
+          simplify = "array",
+          future.seed = TRUE
         )
         if (!analysis_inputs$condition$is_cond) {
           temp_distr <- cbind(cci_perm, cci_score_actual)
@@ -119,25 +130,40 @@ run_stat_analysis <- function(
     }
   } else {
     sub_cci_template_iter <- sub_cci_template[, cols_keep, with = FALSE]
-    progressr::with_progress({
-      prog <- progressr::progressor(steps = iterations)
-      cci_perm <- future.apply::future_sapply(
-        X = integer(iterations),
-        FUN = function(iter) {
-          if (iter %% 20 == 0) prog(sprintf("iter=%g", iter))
-          run_stat_iteration(
-            analysis_inputs = analysis_inputs,
-            cci_template = sub_cci_template_iter,
-            score_type = score_type
-          )
-        },
-        simplify = "array",
-        future.seed = TRUE,
-        future.label = "future_replicate-%d"
-      )
-    },
-    enable = verbose
+
+    # progressr::with_progress({
+    #   prog <- progressr::progressor(steps = iterations)
+    #   cci_perm <- future.apply::future_sapply(
+    #     X = integer(iterations),
+    #     FUN = function(iter) {
+    #       if (iter %% 20 == 0) prog(sprintf("iter=%g", iter))
+    #       run_stat_iteration(
+    #         analysis_inputs = analysis_inputs,
+    #         cci_template = sub_cci_template_iter,
+    #         score_type = score_type
+    #       )
+    #     },
+    #     simplify = "array",
+    #     future.seed = TRUE,
+    #     future.label = "future_replicate-%d"
+    #   )
+    # },
+    # enable = verbose
+    # )
+
+    cci_perm <- future.apply::future_replicate(
+      n = n_temp_iter,
+      expr = run_stat_iteration(
+        analysis_inputs = analysis_inputs,
+        cci_template = sub_cci_template_iter,
+        score_type = score_type
+      ),
+      simplify = "array",
+      future.seed = TRUE
     )
+
+
+
     if (!analysis_inputs$condition$is_cond) {
       distr <- cbind(cci_perm, cci_score_actual)
       pvals <- rowSums(distr[, 1:iterations] >= distr[, (iterations + 1)]) / iterations
