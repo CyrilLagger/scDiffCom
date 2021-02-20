@@ -37,17 +37,18 @@ run_stat_analysis <- function(
   cols_keep <- c("LR_GENES", "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", LR_COLNAMES)
   if (!return_distributions) {
     internal_iter <- 1000
-    if (iterations <= internal_iter) {
-      n_broad_iter <- 1
-    } else {
-      n_broad_iter <- floor(iterations/internal_iter)
-    }
-    array_counts <- sapply(
-      X = 1:n_broad_iter,
-      FUN = function(i) {
-        mes <- paste0("Performing batch ", i, " of ", n_broad_iter, ".")
+    #if (iterations <= internal_iter) {
+    #  n_broad_iter <- 1
+    #} else {
+    #  n_broad_iter <- floor(iterations/internal_iter)
+    #}
+    n_broad_iter <- 1
+    #array_counts <- sapply(
+    #  X = 1:n_broad_iter,
+    #  FUN = function(i) {
+        mes <- paste0("Performing batch ", 1, " of ", n_broad_iter, ".")
         if (verbose) message(mes)
-        if (i < n_broad_iter) {
+        if (1 < n_broad_iter) {
           n_temp_iter <- internal_iter
         } else {
           n_temp_iter <- iterations %% internal_iter
@@ -78,7 +79,7 @@ run_stat_analysis <- function(
         if (!analysis_inputs$condition$is_cond) {
           temp_distr <- cbind(cci_perm, cci_score_actual)
           temp_counts <- rowSums(temp_distr[, 1:n_temp_iter] >= temp_distr[, (n_temp_iter + 1)])
-          return(temp_counts)
+          #return(temp_counts)
         } else {
           temp_distr_diff <- cbind(cci_perm[, 1, ], cci_score_diff_actual)
           temp_distr_cond1 <- cbind(cci_perm[, 2, ], cci_score_cond1_actual)
@@ -86,11 +87,12 @@ run_stat_analysis <- function(
           temp_counts_diff <- rowSums(abs(temp_distr_diff[, 1:n_temp_iter]) >= abs(temp_distr_diff[, (n_temp_iter + 1)]))
           temp_counts_cond1 <- rowSums(temp_distr_cond1[, 1:n_temp_iter] >= temp_distr_cond1[, (n_temp_iter + 1)])
           temp_counts_cond2 <- rowSums(temp_distr_cond2[, 1:n_temp_iter] >= temp_distr_cond2[, (n_temp_iter + 1)])
-          return(cbind(temp_counts_diff, temp_counts_cond1, temp_counts_cond2))
+          #return(cbind(temp_counts_diff, temp_counts_cond1, temp_counts_cond2))
+          array_counts <- cbind(temp_counts_diff, temp_counts_cond1, temp_counts_cond2)
         }
-      },
-      simplify = "array"
-    )
+      #},
+     # simplify = "array"
+    #)
     if (!analysis_inputs$condition$is_cond) {
       if (n_broad_iter == 1) {
         pvals <- array_counts / iterations
@@ -103,9 +105,14 @@ run_stat_analysis <- function(
       sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
     } else {
       if (n_broad_iter == 1) {
-        pvals_diff <- array_counts[, 1, ] / iterations
-        pvals_cond1 <-  array_counts[, 2, ] / iterations
-        pvals_cond2 <-  array_counts[, 3, ] / iterations
+        #pvals_diff <- array_counts[, 1, ] / iterations
+        #pvals_cond1 <-  array_counts[, 2, ] / iterations
+        #pvals_cond2 <-  array_counts[, 3, ] / iterations
+
+        pvals_diff <- array_counts[, 1] / iterations
+        pvals_cond1 <-  array_counts[, 2] / iterations
+        pvals_cond2 <-  array_counts[, 3] / iterations
+
       } else {
         pvals_diff <- rowSums(array_counts[, 1, ]) / iterations
         pvals_cond1 <-  rowSums(array_counts[, 2, ]) / iterations
