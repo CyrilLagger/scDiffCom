@@ -287,8 +287,6 @@ build_cci_or_drate <- function(
     name_tag <- "EXPRESSION"
   } else if (cci_or_drate == "drate") {
     name_tag <- "DETECTION_RATE"
-  } else {
-    stop("Error in build_cci_drate_dt.")
   }
   if (!condition_inputs$is_cond) {
     row_id <- "CELLTYPE"
@@ -311,28 +309,68 @@ build_cci_or_drate <- function(
     n_id <- 2
     pmin_id <- c(cond1_id, cond2_id)
   }
+  #new faster version
   dt <- as.data.table(
-    x = averaged_expr,
-    keep.rownames = row_id,
+    x = t(averaged_expr),
+    keep.rownames = "GENE",
     sorted = FALSE
   )
   if (condition_inputs$is_cond) {
-    dt[, c("CONDITION", "CELLTYPE") := split_cond_string(CONDITION_CELLTYPE, condition_inputs$cond1, condition_inputs$cond2)]
-    dt[, CONDITION_CELLTYPE := NULL]
-  }
-  dt <- melt.data.table(
-    data = dt,
-    id.vars = vars_id,
-    variable.name = "GENE",
-    value.name = name_tag
-  )
-  if (condition_inputs$is_cond) {
-    dt <- dcast.data.table(
+    ct_temp <- strsplit(colnames(dt)[-1], "_")
+    lct_temp <- length(ct_temp)
+    if(lct_temp %% 2 !=0 ) stop("Internal error in `build_cci_or_drate`")
+    ct_temp_keep <- unlist(lapply(ct_temp, function(i) i[[2]]))[1:(lct_temp/2)]
+    ct_temp_check <- unlist(lapply(ct_temp, function(i) i[[2]]))[(lct_temp/2+1):lct_temp]
+    if(!identical(ct_temp_check, ct_temp_keep)) stop("Internal error in `build_cci_or_drate`")
+    dt <- melt.data.table(
       data = dt,
-      formula = CELLTYPE + GENE ~ CONDITION,
-      value.var = name_tag
+      id.vars = "GENE",
+      measure.vars = patterns(
+        paste0("^", condition_inputs$cond1, "_"),
+        paste0("^", condition_inputs$cond2, "_")),
+      value.factor = FALSE,
+      variable.factor = TRUE,
+      value.name = c(condition_inputs$cond1, condition_inputs$cond2),
+      variable.name = "CELLTYPE"
+    )
+    dt[, CELLTYPE := ct_temp_keep[CELLTYPE]]
+  } else {
+    dt <- melt.data.table(
+      data = dt,
+      id.vars = "GENE",
+      value.factor = FALSE,
+      variable.factor = FALSE,
+      value.name = name_tag ,
+      variable.name = "CELLTYPE"
     )
   }
+  ##old slower version
+  # dt <- as.data.table(
+  #   x = averaged_expr,
+  #   keep.rownames = row_id,
+  #   sorted = FALSE
+  # )
+  # if (condition_inputs$is_cond) {
+  #   dt[, c("CONDITION", "CELLTYPE") := split_cond_string(
+  #     CONDITION_CELLTYPE,
+  #     condition_inputs$cond1,
+  #     condition_inputs$cond2)]
+  #   dt[, CONDITION_CELLTYPE := NULL]
+  # }
+  # dt <- melt.data.table(
+  #   data = dt,
+  #   id.vars = vars_id,
+  #   variable.name = "GENE",
+  #   value.name = name_tag
+  # )
+  # if (condition_inputs$is_cond) {
+  #   dt <- dcast.data.table(
+  #     data = dt,
+  #     formula = CELLTYPE + GENE ~ CONDITION,
+  #     value.var = name_tag
+  #   )
+  # }
+  ##back to previous version
   dt[is.na(dt)] <- 0
   out_names <- c(
     sapply(
@@ -348,6 +386,13 @@ build_cci_or_drate <- function(
       }
     )
   )
+  # full_dt[dt, on =  c("LIGAND_1==GENE", "EMITTER_CELLTYPE==CELLTYPE"), c("test1", "test2") := mget(paste0("i.", merge_id)) ]
+  # full_dt[dt, on =  c("LIGAND_2==GENE", "EMITTER_CELLTYPE==CELLTYPE"), c("testa1", "testa2") := mget(paste0("i.", merge_id)) ]
+  # full_dt[dt, on =  c("RECEPTOR_1==GENE", "EMITTER_CELLTYPE==CELLTYPE"), c("testb1", "testb2") := mget(paste0("i.", merge_id)) ]
+  # full_dt[dt, on =  c("RECEPTOR_2==GENE", "EMITTER_CELLTYPE==CELLTYPE"), c("testc1", "testc2") := mget(paste0("i.", merge_id)) ]
+  # full_dt[dt, on =  c("RECEPTOR_3==GENE", "EMITTER_CELLTYPE==CELLTYPE"), c("testd1", "testd2") := mget(paste0("i.", merge_id)) ]
+  # #full_dt[dt, on =  c("LIGAND_1==GENE", "EMITTER_CELLTYPE==CELLTYPE"), test2 := i.OLD ]
+  # return(full_dt)
   full_dt[
     ,
     c(out_names) :=
