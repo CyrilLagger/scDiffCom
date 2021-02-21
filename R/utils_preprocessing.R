@@ -64,7 +64,7 @@ extract_seurat_inputs <- function(
     mes <- paste0(
       mes,
       assay,
-      " and slot 'data' (assuming normalized log1p-transformed data)."
+      "` and slot 'data' (assuming normalized log1p-transformed data)."
     )
   } else if (slot == "counts") {
     mes <- paste0(
@@ -141,6 +141,14 @@ extract_seurat_inputs <- function(
     old = cols_to_keep,
     new = new_colnames
   )
+  if(any(grepl("_", temp_md[["cell_type"]], fixed = TRUE))) {
+    warning("Underscores `_` are not allowed in cell-type names: replacing with `-`")
+    temp_md[, cell_type := gsub(
+      pattern = "_",
+      replacement = "-",
+      x = cell_type,
+      fixed = TRUE)]
+  }
   celltypes_filtered <- filter_celltypes(
     metadata = temp_md,
     threshold_min_cells = threshold_min_cells
@@ -321,7 +329,7 @@ extract_condition_inputs <- function(
     } else {
       mes <- paste0(
         mes,
-        " (based on cells permutation)."
+        "."
       )
     }
   }
