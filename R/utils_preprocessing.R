@@ -188,7 +188,14 @@ filter_celltypes <- function(
   } else {
     filt <- table(metadata$cell_type) >= threshold_min_cells
   }
-  names(filt[filt])
+  res <- names(filt[filt])
+  if(length(res) < 2) {
+    stop(paste0(
+      "Inputs must contain at least 2 cell-types with at least ",
+      threshold_min_cells, " cells (in each condition)."
+      ))
+  }
+  res
 }
 
 extract_LRdb_inputs <- function(
