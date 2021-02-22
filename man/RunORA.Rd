@@ -10,7 +10,7 @@ RunORA(object, ...)
 
 \method{RunORA}{scDiffCom}(
   object,
-  categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS"),
+  categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS"),
   overwrite = TRUE,
   stringent_or_default = "default",
   stringent_logfc_threshold = NULL,

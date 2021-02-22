@@ -6,6 +6,7 @@ run_stat_analysis <- function(
   score_type,
   verbose
 ) {
+  P_VALUE <- P_VALUE_DE <- NULL
   if (!analysis_inputs$condition$is_cond) {
     sub_cci_template <- cci_dt_simple[get("IS_CCI_EXPRESSED") == TRUE]
     cci_score_actual <- sub_cci_template[["CCI_SCORE"]]
@@ -34,9 +35,7 @@ run_stat_analysis <- function(
                                            unique(unlist(sub_cci_template[, LR_COLNAMES, with = FALSE]))]
   analysis_inputs$data_tr <- sub_data_tr
   cols_keep <- c("LR_GENES", "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", LR_COLNAMES)
-
   if (!return_distributions) {
-    ##
     internal_iter <- 1000
     if (iterations <= internal_iter) {
       n_broad_iter <- 1
@@ -56,24 +55,37 @@ run_stat_analysis <- function(
             n_temp_iter <- internal_iter
           }
         }
-        progressr::with_progress({
-          prog <- progressr::progressor(steps = n_temp_iter)
-          cci_perm <- future.apply::future_sapply(
-            X = integer(n_temp_iter),
-            FUN = function(iter) {
-              if (iter %% 10 == 0) prog(sprintf("iter=%g", iter))
-              run_stat_iteration(
-                analysis_inputs = analysis_inputs,
-                cci_template = sub_cci_template[, cols_keep, with = FALSE],
-                score_type = score_type
-              )
-            },
-            simplify = "array",
-            future.seed = TRUE,
-            future.label = "future_replicate-%d"
-          )
-        })
+        sub_cci_template_iter <- sub_cci_template[, cols_keep, with = FALSE]
 
+        # progressr::with_progress({
+        #   prog <- progressr::progressor(steps = n_temp_iter)
+        #   cci_perm <- future.apply::future_sapply(
+        #     X = integer(n_temp_iter),
+        #     FUN = function(iter) {
+        #       if (iter %% 20 == 0) prog(sprintf("iter=%g", iter))
+        #       run_stat_iteration(
+        #         analysis_inputs = analysis_inputs,
+        #         cci_template = sub_cci_template_iter,
+        #         score_type = score_type
+        #       )
+        #     },
+        #     simplify = "array",
+        #     future.seed = TRUE,
+        #     future.label = "future_replicate-%d"
+        #   )
+        # },
+        # enable = verbose
+        # )
+        cci_perm <- future.apply::future_replicate(
+          n = n_temp_iter,
+          expr = run_stat_iteration(
+            analysis_inputs = analysis_inputs,
+            cci_template = sub_cci_template_iter,
+            score_type = score_type
+          ),
+          simplify = "array",
+          future.seed = TRUE
+        )
         if (!analysis_inputs$condition$is_cond) {
           temp_distr <- cbind(cci_perm, cci_score_actual)
           temp_counts <- rowSums(temp_distr[, 1:n_temp_iter] >= temp_distr[, (n_temp_iter + 1)])
@@ -87,45 +99,71 @@ run_stat_analysis <- function(
           temp_counts_cond2 <- rowSums(temp_distr_cond2[, 1:n_temp_iter] >= temp_distr_cond2[, (n_temp_iter + 1)])
           return(cbind(temp_counts_diff, temp_counts_cond1, temp_counts_cond2))
         }
-
       },
       simplify = "array"
     )
     if (!analysis_inputs$condition$is_cond) {
-      pvals <- rowSums(array_counts) / iterations
+      if (n_broad_iter == 1) {
+        pvals <- array_counts / iterations
+      } else {
+        pvals <- rowSums(array_counts) / iterations
+      }
       sub_cci_template[, P_VALUE := pvals]
       cols_new <- c("P_VALUE")
       cols_keep2 <- c(cols_keep, cols_new)
       sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
     } else {
-      pvals_diff <- rowSums(array_counts[, 1, ]) / iterations
-      pvals_cond1 <-  rowSums(array_counts[, 2, ]) / iterations
-      pvals_cond2 <-  rowSums(array_counts[, 3, ]) / iterations
+      if (n_broad_iter == 1) {
+        pvals_diff <- array_counts[, 1, ] / iterations
+        pvals_cond1 <-  array_counts[, 2, ] / iterations
+        pvals_cond2 <-  array_counts[, 3, ] / iterations
+      } else {
+        pvals_diff <- rowSums(array_counts[, 1, ]) / iterations
+        pvals_cond1 <-  rowSums(array_counts[, 2, ]) / iterations
+        pvals_cond2 <-  rowSums(array_counts[, 3, ]) / iterations
+      }
       sub_cci_template[, paste0("P_VALUE_", c(analysis_inputs$condition$cond1, analysis_inputs$condition$cond2)) := list(pvals_cond1, pvals_cond2)]
       sub_cci_template[, P_VALUE_DE := pvals_diff]
       cols_new <- c(paste0("P_VALUE_", analysis_inputs$condition$cond1), paste0("P_VALUE_", analysis_inputs$condition$cond2), "P_VALUE_DE")
       cols_keep2 <- c(cols_keep, cols_new)
       sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
     }
-    #####
   } else {
-    progressr::with_progress({
-      prog <- progressr::progressor(steps = iterations)
-      cci_perm <- future.apply::future_sapply(
-        X = integer(iterations),
-        FUN = function(iter) {
-          if (iter %% 10 == 0) prog(sprintf("iter=%g", iter))
-          run_stat_iteration(
-            analysis_inputs = analysis_inputs,
-            cci_template = sub_cci_template[, cols_keep, with = FALSE],
-            score_type = score_type
-          )
-        },
-        simplify = "array",
-        future.seed = TRUE,
-        future.label = "future_replicate-%d"
-      )
-    })
+    sub_cci_template_iter <- sub_cci_template[, cols_keep, with = FALSE]
+
+    # progressr::with_progress({
+    #   prog <- progressr::progressor(steps = iterations)
+    #   cci_perm <- future.apply::future_sapply(
+    #     X = integer(iterations),
+    #     FUN = function(iter) {
+    #       if (iter %% 20 == 0) prog(sprintf("iter=%g", iter))
+    #       run_stat_iteration(
+    #         analysis_inputs = analysis_inputs,
+    #         cci_template = sub_cci_template_iter,
+    #         score_type = score_type
+    #       )
+    #     },
+    #     simplify = "array",
+    #     future.seed = TRUE,
+    #     future.label = "future_replicate-%d"
+    #   )
+    # },
+    # enable = verbose
+    # )
+
+    cci_perm <- future.apply::future_replicate(
+      n = n_temp_iter,
+      expr = run_stat_iteration(
+        analysis_inputs = analysis_inputs,
+        cci_template = sub_cci_template_iter,
+        score_type = score_type
+      ),
+      simplify = "array",
+      future.seed = TRUE
+    )
+
+
+
     if (!analysis_inputs$condition$is_cond) {
       distr <- cbind(cci_perm, cci_score_actual)
       pvals <- rowSums(distr[, 1:iterations] >= distr[, (iterations + 1)]) / iterations
@@ -143,9 +181,6 @@ run_stat_analysis <- function(
       distr_diff <- cbind(cci_perm[, 1, ], cci_score_diff_actual)
       distr_cond1 <- cbind(cci_perm[, 2, ], cci_score_cond1_actual)
       distr_cond2 <- cbind(cci_perm[, 3, ], cci_score_cond2_actual)
-      #pvals_diff_U <- rowSums(distr_diff[, 1:iterations] >= distr_diff[, (iterations + 1)] ) / iterations
-      #pvals_diff_L <- rowSums(distr_diff[, 1:iterations] <= distr_diff[, (iterations + 1)] ) / iterations
-      #pvals_diff <- 2*pmin(pvals_diff_U, pvals_diff_L)
       pvals_diff <- rowSums(abs(distr_diff[, 1:iterations]) >= abs(distr_diff[, (iterations + 1)])) / iterations
       pvals_cond1 <- rowSums(distr_cond1[, 1:iterations] >= distr_cond1[, (iterations + 1)]) / iterations
       pvals_cond2 <- rowSums(distr_cond2[, 1:iterations] >= distr_cond2[, (iterations + 1)]) / iterations
@@ -162,9 +197,6 @@ run_stat_analysis <- function(
       )
     }
   }
-
-  ###
-
   cci_dt <- data.table::merge.data.table(
     x = cci_dt_simple,
     y = sub_cci_template,
@@ -211,6 +243,7 @@ run_stat_iteration <- function(
   cci_template,
   score_type
 ) {
+  sample_temp <- sample_id <- condition <- NULL
   if (!analysis_inputs$condition$is_cond) {
     meta_ct <- copy(analysis_inputs$metadata)
     meta_ct$cell_type <- sample(meta_ct$cell_type)
@@ -238,9 +271,6 @@ run_stat_iteration <- function(
         }))
       }, by = c("cell_type")]
       analysis_inputs$data_tr <- analysis_inputs$data_tr[meta_cond$cell_id, ]
-      #for (x in unique(meta_cond$cell_type)) {
-      #  meta_cond$condition[meta_cond$cell_type == x] <- sample(meta_cond$condition[meta_cond$cell_type == x])
-      #}
       analysis_inputs$metadata <- meta_cond
     } else {
       meta_cond <- copy(analysis_inputs$metadata)
@@ -273,12 +303,7 @@ run_stat_iteration <- function(
       threshold_pct = NULL,
       compute_fast = TRUE
     )
-    if (score_type == "geometric_mean") {
-      permcond_dt_diff <- permcond_dt$cond2 - permcond_dt$cond1
-    }
-    if (score_type == "arithmetic_mean") {
-      permcond_dt_diff <- permcond_dt$cond2 - permcond_dt$cond1
-    }
+    permcond_dt_diff <- permcond_dt$cond2 - permcond_dt$cond1
     return(cbind(permcond_dt_diff, permct_dt$cond1, permct_dt$cond2))
   }
 }

@@ -22,13 +22,22 @@ run_filtering_and_ora <- function(
   if (!is.null(new_threshold_logfc)) {
     temp_param$threshold_logfc <- new_threshold_logfc
   }
+  check_parameters <- validate_parameters(
+    params = temp_param,
+    from_inputs = FALSE
+  )
+  if (!is.null(check_parameters$check)) {
+    stop(paste0("Invalid parameters: ", paste0(check_parameters$check, collapse = " and ")))
+  } else {
+    temp_param <- check_parameters$params
+  }
+  object@parameters <- temp_param
+  methods::validObject(object)
   condition_inputs <- list(
     is_cond = temp_param$conditional_analysis,
-    cond1 = temp_param$cond1_name,
-    cond2 = temp_param$cond2_name
+    cond1 = temp_param$seurat_condition_id$cond1_name,
+    cond2 = temp_param$seurat_condition_id$cond2_name
   )
-  object@parameters <- temp_param
-  #validate object?
   cci_dt <- copy(x = object@cci_raw)
   if (verbose) message("Filtering and cleaning `raw` CCIs.")
   cci_dt <- process_cci_raw(
@@ -73,7 +82,7 @@ run_filtering_and_ora <- function(
     object@ora_default <- list()
   } else {
     object@cci_detected <- cci_dt
-    #validate object?
+    methods::validObject(object)
     if (skip_ora) {
       object@ora_default <- list()
     } else {
@@ -122,7 +131,9 @@ process_cci_raw <- function(
 ) {
   BH_P_VALUE_DE <- P_VALUE_DE <- BH_P_VALUE <- P_VALUE <-
     IS_CCI_EXPRESSED <- ER_CELLTYPES <- EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <-
-    LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <- RECEPTOR_3 <- NULL
+    LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <- RECEPTOR_3 <- LOGFC <-
+    LOGFC_ABS <- REGULATION <- IS_DE_LOGFC <- IS_DE_SIGNIFICANT <- DE_DIRECTION <-
+    CCI_SCORE <- CCI <- LR_GENES <- NULL
   if (class_signature == "scDiffCom") {
     temp_by <- NULL
   }
@@ -189,7 +200,8 @@ process_cci_raw <- function(
       ]
       cci_dt[, REGULATION :=
                ifelse(
-                 !get(paste0("IS_CCI_DETECTED_", condition_inputs$cond1)) & !get(paste0("IS_CCI_DETECTED_", condition_inputs$cond2)),
+                 !get(paste0("IS_CCI_DETECTED_", condition_inputs$cond1)) &
+                   !get(paste0("IS_CCI_DETECTED_", condition_inputs$cond2)),
                  "NOT_DETECTED",
                  ifelse(
                    IS_DE_LOGFC & IS_DE_SIGNIFICANT & DE_DIRECTION == "UP",

@@ -12,8 +12,8 @@ run_ora <- function(
   temp_param <- parameters(object)
   condition_inputs <- list(
     is_cond = temp_param$conditional_analysis,
-    cond1 = temp_param$cond1_name,
-    cond2 = temp_param$cond2_name
+    cond1 = temp_param$seurat_condition_id$cond1_name,
+    cond2 = temp_param$seurat_condition_id$cond2_name
   )
   if (class_signature == "scDiffCom") {
     temp_by <- NULL

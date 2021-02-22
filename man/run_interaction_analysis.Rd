@@ -2,24 +2,21 @@
 % Please edit documentation in R/interaction_analysis.R
 \name{run_interaction_analysis}
 \alias{run_interaction_analysis}
-\title{Run intercellular communication analysis}
+\title{Run (differential) intercellular communication analysis}
 \usage{
 run_interaction_analysis(
   seurat_object,
   LRdb_species,
   seurat_celltype_id,
-  seurat_condition_id = NULL,
-  cond1_name = NULL,
-  cond2_name = NULL,
+  seurat_condition_id,
+  iterations = 1000,
+  scdiffcom_object_name = "scDiffCom_object",
   seurat_assay = "RNA",
   seurat_slot = "data",
   log_scale = FALSE,
   score_type = "geometric_mean",
   threshold_min_cells = 5,
   threshold_pct = 0.1,
-  object_name = "scDiffCom_object",
-  permutation_analysis = TRUE,
-  iterations = 1000,
   threshold_quantile_score = 0.2,
   threshold_p_value_specificity = 0.05,
   threshold_p_value_de = 0.05,
@@ -30,67 +27,64 @@ run_interaction_analysis(
 )
 }
 \arguments{
-\item{seurat_object}{A Seurat object that contains pre-normalized data as well as cell-type annotations.}
+\item{seurat_object}{Object of class \emph{Seurat} that contains normalized data and
+relevant \code{meta.data} annotations. Gene names must be MGI (mouse) or HGNC (human).}
 
-\item{LRdb_species}{Either "mouse" or "human". It specifies which internal ligand-receptor database to use.}
+\item{LRdb_species}{Either "mouse" or "human". Specifies which internal ligand-receptor database to use.}
 
-\item{seurat_celltype_id}{The \code{meta.data} name of \code{seurat_object} that indicates the cell-type of each cell (e.g.: "CELL-TYPE")}
+\item{seurat_celltype_id}{Column name of \emph{Seurat} \code{meta.data} that indicates the cell-type
+of each cell (e.g.: \code{"CELL_TYPE"}).}
 
-\item{seurat_condition_id}{The \code{meta.data} name of \code{seurat_object} that indicates the two groups of cells
-on which to perform the differential analysis (e.g: "AGE"). Set to \code{NULL} (default) to perform a detection analysis without
-testing for differential expression.}
+\item{seurat_condition_id}{Length-3 named list that indicates 1) \code{"column_name"} of
+\emph{Seurat} \code{meta.data} that indicates to which of two groups each cell belongs, 2) \code{cond1_name}
+and 3) \code{cond2_name} (e.g.: \code{list(column_name = "AGE", cond1_name = "YOUNG", cond2_name = "OLD")}).
+By convention, LOGFC are positive for \code{score(cond2) > score(cond1)}. Set to \code{NULL} to only
+perform a detection analysis withoug looking for differences between conditions.}
 
-\item{cond1_name}{The name of one of the two conditions contained in \code{seurat_condition_id} (e.g: "YOUNG"). Set to \code{NULL}
-(default) for no differential analysis. By convention, the returned LOGFC are positive when \code{score(cond2) > score(cond1)}.}
+\item{iterations}{Number of permutations to perform during the statistical analysis. Default is \code{1000}.
+Can be set to \code{0} to quickly return partial results without performing the statistical analysis.}
 
-\item{cond2_name}{The name of the other condition contained in \code{seurat_condition_id} (e.g: "OLD"). Similar as \code{cond1_name}.}
+\item{scdiffcom_object_name}{Name of the returned \emph{scDiffCom} object. Default is "scDiffCom_object". Having
+different names for different objects is useful to combine them in an \emph{scDiffComCombined} object.}
 
-\item{seurat_assay}{The assay of \code{seurat_object} from which the data are extracted. Set to "RNA" by default.}
+\item{seurat_assay}{\emph{Seurat} assay from which to extract the data. Default is "RNA".}
 
-\item{seurat_slot}{The slot of \code{seurat_object} from which the data are extracted. Set to "data" by default.}
+\item{seurat_slot}{\emph{Seurat} slot from which to extract the data. Default is "data".}
 
-\item{log_scale}{Should the data be log-transformed before the analysis? Set to "FALSE" by default (recommended).}
+\item{log_scale}{Whether to use log-normalized data or non-log-normalized data. Default is \code{FALSE}.}
 
-\item{score_type}{The method to compute the CCI score. Either "geometric_mean" or "arithmetic_mean".}
+\item{score_type}{Either "geometric_mean" (default) or "arithmetic_mean". THe metric to compute the CCI score.}
 
-\item{threshold_min_cells}{The minimal number of cells that a cell-type need to contain to be considered in the analysis.
-Set to \code{5} by default.}
+\item{threshold_min_cells}{Used to filter out the CCIs for which either the ligand(s) or receptor(s)
+are expressed in less cells than this threshold. Cell-types that have less cells that the threshold are removed
+initially. Default is \code{5}.}
 
-\item{threshold_pct}{The minimal percentage of cells that need to express a gene, for the gene to be considered in the analysis.
-Set to \code{0.1} by default.}
+\item{threshold_pct}{Used to filter out the CCIs for which either the ligand(s) or receptor(s)
+are expressed in less than this threshold fraction of the cells. Default is \code{0.1}.}
 
-\item{object_name}{The name of the scDiffCom object that will be returned. Set to "scDiffCom_object" by default.}
+\item{threshold_quantile_score}{Quantile value used to filter interactions with low scores. Default is
+\code{0.2}. Can be modified at will after statistical analysis.}
 
-\item{permutation_analysis}{Should the permutation analysis be performed? Set to "TRUE" by default. When "FALSE", only
-raw results will be returned (such as scores).}
+\item{threshold_p_value_specificity}{Maximal BH p-value to consider an interaction to be specific. Default
+is \code{0.05}. Can be modified at will after statistical analysis.}
 
-\item{iterations}{The number of iterations to perform when \code{permutation_analysis == TRUE}. Set to \code{1000} by default.}
+\item{threshold_p_value_de}{Maximal BH p-value to consider an interaction to be differentially expressed.
+Default is \code{0.05}. Can be modified at will after statistical analysis.}
 
-\item{threshold_quantile_score}{The quantile value used to define a detection threshold to filter lowly expressed interactions.
-Set to \code{0.25} by default (namely the 25% lower interactions are filtered out). Can be modified a posteriori
-(namely without the need to perform the permutation analysis again).}
+\item{threshold_logfc}{Minimal LOGFC (natural log scale) to consider an interaction to be differentially
+expressed. Default is \code{log(1.5)}. Can be modified at will after statistical analysis.}
 
-\item{threshold_p_value_specificity}{The maximal BH p-value to consider an interaction as detected. Set to \code{0.05} by default.
-Can be modified a posteriori.}
+\item{return_distributions}{Wheter to return the null distributions from the permutation test. Only available
+when computing less than or 1000 \code{iterations}. Default is \code{FALSE}.}
 
-\item{threshold_p_value_de}{The maximal BH p-value to consider an interaction as differentially expressed. Set to \code{0.05} by default.
-Can be modified a posteriori.}
+\item{seed}{Set a random seed. Default is \code{42}.}
 
-\item{threshold_logfc}{The minimal LOGFC (natural log scale) to consider an interaction as differentially expressed.
-Set to \code{log(1.2)} by default. Can be modified a posteriori.}
-
-\item{return_distributions}{Should the distributions from the permutation analysis be returned? Set to \code{FALSE} by default.}
-
-\item{seed}{A seed for replicability. Set to \code{42} by default.}
-
-\item{verbose}{Should messages be printed? Set to \code{TRUE} by default.}
+\item{verbose}{Whether to print messages. Default is \code{TRUE}.}
 }
 \value{
 An S4 object of class \code{scDiffCom}.
 }
 \description{
-Main function of the scDiffCom package. From a Seurat object and a database of ligand-receptor interactions,
- it returns an S4 object of class scDiffCom that contains all possible cell-cell interactions (CCIs) with
- their expression scores. In default mode, it also performs a series of permutation tests to determine statistically
- significant CCIs, as well as differentially expressed CCIs in case the dataset contains two conditions of interest.
+Perform (differential) cell-cell interaction analysis based on scRNA-seq data (Seurat object)
+ and an internal database of ligand-receptor interactions.
 }
