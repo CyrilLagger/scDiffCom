@@ -229,6 +229,14 @@ extract_LRdb_inputs <- function(
   if (n_ID == 0) {
     stop("There are no genes from `LRdb_table` in `seurat_object`")
   }
+  if (n_ID <= 10) {
+    warning(
+      paste0(
+        "Only ", n_ID, " ligand-receptor interactions found in the dataset.",
+        " We recommend to check that gene names in your data are in the correct format."
+      )
+    )
+  }
   if (all(is.na(LRdb_keep$RECEPTOR_1)) | all(is.na(LRdb_keep$LIGAND_1))) {
     stop("`LRdb_table` must not contain only NA in columns `LIGAND_1`` or `RECEPTOR_1`.")
   } else {
