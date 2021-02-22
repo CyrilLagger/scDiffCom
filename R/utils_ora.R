@@ -392,7 +392,11 @@ perform_ora_from_counts <- function(
   counts_dt <- clip_infinite_OR(
     ORA_dt = counts_dt
   )
-  counts_dt[, ORA_SCORE := -log10(BH_P_VALUE) * log2(OR)]
+  counts_dt[, ORA_SCORE := ifelse(
+    OR <= 1,
+    0,
+    -log10(BH_P_VALUE) * log2(OR)
+  )]
   return(counts_dt)
 }
 
