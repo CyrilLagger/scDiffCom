@@ -1151,26 +1151,115 @@ classify_edges <- function(
 }
 
 
-# extract_from_object <- function(object, class_signature, subobject_name) {
-#   tryCatch(
-#     error = function(cnd) {
-#       if (class_signature == "scDiffCom") {
-#         return(list(
-#           tissue = object@parameters$object_name,
-#           ora = object@ora_default,
-#           dt_filtered = object@cci_detected
-#         )
-#       }
-#       if (class_signature == "scDiffComCombined") {
-#         ora <- object@ora_default
-#         ora$ER_CELLTYPES <- ora$ER_CELLTYPES[ID == subobject_name][, ID := NULL]
-#         return(list(
-#           tissue = subobject_name,
-#           ora = ora,
-#           dt_filtered = object@cci_detected[ID == subobject_name][, ID := NULL]
-#         ))
-#       }
-#     },
-#     stop("Can't extract necessary data from object. Maybe check scDiffCom object.")
-#   )
-# }
+build_interactive_LRI_network <- function(cci_detected, LRIs) {
+  g = get_cci_change_subgraph(cci_detected, LRIs)
+  if(length(igraph::E(g)) == 0) {
+    celltypes = union(cci_det[, EMITTER_CELLTYPE], cci_det[, RECEIVER_CELLTYPE])
+    nodes = purrr::map(
+      celltypes,
+      function(ct) {return(list(label=ct))}
+    )
+    return(visNetwork::visNetwork(nodes=nodes))
+  } else {
+    vis = visNetwork::visIgraph(g) %>%
+      visNetwork::visEdges(font='8px arial green',
+               smooth=list(roundness=1),
+               scaling=list(
+                 min=10, max=16,
+                 label=list(min=14, max=20))) %>%
+      ( scDiffCom:::get_visnetwork_options() ) %>%
+      ( scDiffCom:::get_visnetwork_interactive() )
+    return(vis)
+  }
+}
+
+get_cci_change_graph <- function(cci_detected) {
+  dt_edge = cci_detected[REGULATION %in% c('UP', 'DOWN'), 
+                         list(
+                           EMITTER_CELLTYPE, RECEIVER_CELLTYPE, 
+                           LR_GENES, LOGFC,
+                           REGULATION
+                         )
+  ][,
+    value := abs(LOGFC)][
+      ,
+      label := format(round(LOGFC, 2), nsmall=2)][
+        ,
+        color := ifelse(REGULATION == 'UP', 'red', 'blue')
+      ]
+  cci_change_graph = igraph::graph_from_data_frame(dt_edge, directed = TRUE, vertices = NULL)
+  return(cci_change_graph)
+}
+
+get_cci_change_subgraph <- function(cci_detected, LRIs) {
+  SUBG_LIMIT = 5
+  if(length(LRIs) > SUBG_LIMIT) {
+    stop('The number of subgraphs limit for visualization is SUBG_LIMIT')
+  }
+  dt_edge = cci_detected[
+    (REGULATION %in% c('UP', 'DOWN'))
+    & (LR_GENES %in% LRIs),
+    list(
+      EMITTER_CELLTYPE, RECEIVER_CELLTYPE, 
+      LR_GENES, LOGFC,
+      REGULATION
+    )
+  ][,
+    value := abs(LOGFC)][
+      ,
+      # label := format(round(LOGFC, 2), nsmall=2)][
+      label := LR_GENES][
+        ,
+        color := ifelse(REGULATION == 'UP', 'red', 'blue')
+      ]
+  if(nrow(dt_edge) == 0) {
+    return(igraph::make_empty_graph())
+  } else {
+    g = igraph::graph_from_data_frame(dt_edge, directed = TRUE, vertices = NULL)
+    g$LRI = LRIs
+    return(g)
+  }
+}
+
+get_cci_change_subgraph_list <- function(cci_detected, LRIs = NULL) {
+  if(is.null(LRIs)) {
+    lris = unique(cci_detected[, LR_GENES])
+  } else {
+    lris = LRIs
+  }
+  subgraphs = purrr::map(
+    lris,
+    ~ get_cci_change_subgraph(cci_detected, .x)
+  )
+  if(length(lris)==1) {
+    return(subgraphs[[1]])
+  } else {
+    return(subgraphs)
+  }
+}
+
+LRI_subgraph_metrics <- function(cci_detected, LRIs=NULL) {
+  subgraphs = get_cci_change_subgraph_list(cci_detected, LRIs)
+  
+  subg_metrics_l = purrr::map(
+    subgraphs,
+    function(subg) {
+      
+      metrics = list(
+        LRI = subg$LRI,
+        num_edges = length(igraph::E(subg)),
+        num_loops = sum(igraph::which_loop(subg)),
+        num_reciprocal = sum(igraph::which_mutual(subg)) - sum(igraph::which_loop(subg)),
+        motifs_3_total = igraph::count_motifs(subg, size=3)
+      )
+      motifs_3 = as.list(igraph::motifs(subg, size = 3))
+      names(motifs_3) = paste0('Motifs_3_id_', 0:15)
+      
+      return(c(metrics, motifs_3))
+      
+    }
+  )
+  
+  subg_metrics_dt = data.table::rbindlist(subg_metrics_l)
+  return(subg_metrics_dt)
+}
