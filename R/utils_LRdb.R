@@ -111,7 +111,8 @@ get_KEGG_PW_interactions <- function(
 
 get_GO_interactions <- function(
   species,
-  LR_db
+  LR_db,
+  only_genes_annotations=FALSE
 ) {
   GO_NAME <- i.GO_name <- NULL
   if (!requireNamespace("biomaRt", quietly = TRUE)) {
@@ -154,6 +155,9 @@ get_GO_interactions <- function(
     values = ALL_LR_genes
   )
   setDT(ALL_LR_genes_info)
+  if (only_genes_annotations) {
+    return(ALL_LR_genes_info)
+  }
   onto_go_terms <- ontoProc::getGeneOnto()
   go_names <- onto_go_terms$name
   ALL_LR_genes_go <- sapply(
@@ -202,6 +206,31 @@ get_GO_interactions <- function(
     GO_NAME := i.GO_name
     ]
   return(LR_interactions_go_intersection)
+}
+
+get_ECM_genes <- function(
+  species
+) {
+  LRdb_curated = scDiffCom::LRdb_mouse$LRdb_curated
+  GO_interactions = scDiffCom:::get_GO_interactions(species,
+                                                    LRdb_curated,
+                                                    only_genes_annotations = TRUE)
+  GO_interactions = GO_interactions[go_id != ""]
+  
+  get_ECM_GOs <- function() {
+    return(
+      c(
+        "GO:0031012", #
+        "GO:0005578",
+        "GO:0005201", #
+        "GO:1990430",
+        "GO:0035426" # Found in LRdb_mouse$go curated, but not in get_GO_interactions
+      )
+    )
+  }
+  ECM_GOs = get_ECM_GOs()
+  ecm_genes = GO_interactions[go_id %in% ECM_GOs, mgi_symbol]
+  return(ecm_genes)
 }
 
 combine_LR_db <- function(
