@@ -66,6 +66,8 @@ validate_parameters <- function(
       res <- c(
         res,
       "`seurat_condition_id` must be NULL or a length-3 list with names 'column_name', 'cond1_name', 'cond2_name'")
+    } else if(grepl("_", params$seurat_condition_id$cond1_name) | grepl("_", params$seurat_condition_id$cond2_name)) {
+      res <- c(res, "Underscores are not allowed in `cond1_name` and `cond2_name`")
     }
   }
   if (!is.character(params$seurat_assay) | length(params$seurat_assay) != 1) {
@@ -118,10 +120,16 @@ validate_parameters <- function(
   if(!is.logical(params$return_distributions) | length(params$return_distributions) != 1) {
     res <- c(res, "`return_distributions` must be a logical vector of length 1")
   }
-  if (!is.numeric(params$seed) | length(params$seed) > 1) {
-    res <- c(res, "`seed` must be a numeric vector of length 1")
-  } else if (params$seed < 0 | params$seed %% 1 != 0) {
-    res <- c(res, "`seed` must be a non-negative integer")
+  if(from_inputs) {
+    if (!is.numeric(params$seed) | length(params$seed) > 1) {
+      res <- c(res, "`seed` must be a numeric vector of length 1")
+    } else if (params$seed < 0 | params$seed %% 1 != 0) {
+      res <- c(res, "`seed` must be a non-negative integer")
+    }
+  } else {
+    if (!is.numeric(params$seed)) {
+      res <- c(res, "`seed` must be a numeric vector")
+    }
   }
   if(!is.logical(params$verbose) | length(params$verbose) != 1) {
     res <- c(res, "`verbose` must be a logical vector of length 1")
@@ -142,7 +150,7 @@ validate_parameters <- function(
   }
   list(
     params = params,
-    check =res
+    check = res
   )
 }
 
@@ -159,7 +167,10 @@ validate_slot_parameters <- function(parameters) {
   if(is.null(res)){
     NULL
   } else {
-    "@parameters is not formatted the correct way"
+    paste0(
+      "@parameters is not formatted the correct way: ",
+      res
+    )
   }
 }
 
