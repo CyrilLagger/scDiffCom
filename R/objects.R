@@ -443,7 +443,7 @@ Combine_scDiffCom <- function(
   }
   new_object <- run_ora(
     object = new_object,
-    categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "ID"),
+    categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS", "ID"),
     overwrite = TRUE,
     stringent_or_default = "default",
     stringent_logfc_threshold = NULL,

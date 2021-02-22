@@ -35,13 +35,19 @@ run_stat_analysis <- function(
                                            unique(unlist(sub_cci_template[, LR_COLNAMES, with = FALSE]))]
   analysis_inputs$data_tr <- sub_data_tr
   cols_keep <- c("LR_GENES", "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", LR_COLNAMES)
-  if (!return_distributions) {
-    internal_iter <- 1000
-    if (iterations <= internal_iter) {
-      n_broad_iter <- 1
+  internal_iter <- 1000
+  if (iterations <= internal_iter) {
+    n_broad_iter <- 1
+  } else {
+    if(return_distributions) {
+      warning("Only a maximum of 1000 iterations is allowed when `return_distributions` is TRUE")
+      iterations <- 1000
     } else {
       n_broad_iter <- floor(iterations/internal_iter)
     }
+  }
+  sub_cci_template_iter <- sub_cci_template[, cols_keep, with = FALSE]
+  if(!return_distributions) {
     array_counts <- sapply(
       X = 1:n_broad_iter,
       FUN = function(i) {
@@ -55,8 +61,16 @@ run_stat_analysis <- function(
             n_temp_iter <- internal_iter
           }
         }
-        sub_cci_template_iter <- sub_cci_template[, cols_keep, with = FALSE]
-
+        cci_perm <- future.apply::future_replicate(
+          n = n_temp_iter,
+          expr = run_stat_iteration(
+            analysis_inputs = analysis_inputs,
+            cci_template = sub_cci_template_iter,
+            score_type = score_type
+          ),
+          simplify = "array",
+          future.seed = TRUE
+        )
         # progressr::with_progress({
         #   prog <- progressr::progressor(steps = n_temp_iter)
         #   cci_perm <- future.apply::future_sapply(
@@ -76,16 +90,6 @@ run_stat_analysis <- function(
         # },
         # enable = verbose
         # )
-        cci_perm <- future.apply::future_replicate(
-          n = n_temp_iter,
-          expr = run_stat_iteration(
-            analysis_inputs = analysis_inputs,
-            cci_template = sub_cci_template_iter,
-            score_type = score_type
-          ),
-          simplify = "array",
-          future.seed = TRUE
-        )
         if (!analysis_inputs$condition$is_cond) {
           temp_distr <- cbind(cci_perm, cci_score_actual)
           temp_counts <- rowSums(temp_distr[, 1:n_temp_iter] >= temp_distr[, (n_temp_iter + 1)])
@@ -129,30 +133,8 @@ run_stat_analysis <- function(
       sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
     }
   } else {
-    sub_cci_template_iter <- sub_cci_template[, cols_keep, with = FALSE]
-
-    # progressr::with_progress({
-    #   prog <- progressr::progressor(steps = iterations)
-    #   cci_perm <- future.apply::future_sapply(
-    #     X = integer(iterations),
-    #     FUN = function(iter) {
-    #       if (iter %% 20 == 0) prog(sprintf("iter=%g", iter))
-    #       run_stat_iteration(
-    #         analysis_inputs = analysis_inputs,
-    #         cci_template = sub_cci_template_iter,
-    #         score_type = score_type
-    #       )
-    #     },
-    #     simplify = "array",
-    #     future.seed = TRUE,
-    #     future.label = "future_replicate-%d"
-    #   )
-    # },
-    # enable = verbose
-    # )
-
     cci_perm <- future.apply::future_replicate(
-      n = n_temp_iter,
+      n = iterations,
       expr = run_stat_iteration(
         analysis_inputs = analysis_inputs,
         cci_template = sub_cci_template_iter,
@@ -161,9 +143,6 @@ run_stat_analysis <- function(
       simplify = "array",
       future.seed = TRUE
     )
-
-
-
     if (!analysis_inputs$condition$is_cond) {
       distr <- cbind(cci_perm, cci_score_actual)
       pvals <- rowSums(distr[, 1:iterations] >= distr[, (iterations + 1)]) / iterations
