@@ -33,11 +33,10 @@ Suggests:
     arules,
     RColorBrewer,
     kableExtra,
-    ggplot2,
     igraph,
     purrr,
     scales,
-    visNetwork,
+    visNetwork
 Imports: 
     data.table,
     DelayedArray,
@@ -47,7 +46,8 @@ Imports:
     progressr,
     Seurat,
     stats,
-    utils
+    utils,
+    ggplot2
 VignetteBuilder: knitr
 Collate: 
     'cellphonedb_wrapper.R'

@@ -62,10 +62,12 @@ validate_parameters <- function(
   # }
   if (!is.null(params$seurat_condition_id)) {
     if (!is.list(params$seurat_condition_id) || length(params$seurat_condition_id) != 3 ||
-        !identical(names(params$seurat_condition_id), c("column_name", "cond1_name", "cond2_name"))) {
+        !identical(names(params$seurat_condition_id), c("column_name", "cond1_name", "cond2_name")) ||
+        length(unlist(params$seurat_condition_id)) != 3) {
       res <- c(
         res,
-      "`seurat_condition_id` must be NULL or a length-3 list with names 'column_name', 'cond1_name', 'cond2_name'")
+        "`seurat_condition_id` must be NULL or a length-3 list with names 'column_name', 'cond1_name', 'cond2_name'")
+    } else if (a) {
     } else if(grepl("_", params$seurat_condition_id$cond1_name) | grepl("_", params$seurat_condition_id$cond2_name)) {
       res <- c(res, "Underscores are not allowed in `cond1_name` and `cond2_name`")
     }

@@ -281,7 +281,7 @@ build_cci_or_drate <- function(
   cci_or_drate,
   score_type
 ) {
-  CONDITION_CELLTYPE <- NULL
+  CONDITION_CELLTYPE  <- CELLTYPE <- patterns <- NULL
   full_dt <- copy(cci_template)
   if (cci_or_drate == "cci") {
     name_tag <- "EXPRESSION"
