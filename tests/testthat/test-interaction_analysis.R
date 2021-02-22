@@ -85,7 +85,7 @@ test_that("parameters are correclty validated", {
 ## small Seurat object for testing ####
 seurat_test <- scDiffCom::seurat_sample_tms_liver
 
-## check data extraction and preprocessing ####
+## check data extraction and pre-processing ####
 
 inputs_test <- lapply(
   parameters_mode[2:5],
@@ -157,51 +157,92 @@ cci_dt_simple_test <- lapply(
   }
 )
 
-example_cci_test <- copy(cci_dt_simple_test$cond_stat)[
-  EMITTER_CELLTYPE == "hepatocyte" &
-  RECEIVER_CELLTYPE == "endothelial cell of hepatic sinusoid" &
-    LR_GENES == "Adam15:Itga5"]
+example_cci_test <- lapply(
+  cci_dt_simple_test,
+  function(i) {
+    copy(i)[
+      EMITTER_CELLTYPE == "hepatocyte" &
+        RECEIVER_CELLTYPE == "endothelial cell of hepatic sinusoid" &
+        LR_GENES == "Adam15:Itga5"]
+  }
+)
 
-example_data_EY <- as.vector(expm1(
-  subset(
-    seurat_test[c("Adam15"), ],
-    subset = age_group == "YOUNG" & cell_type == "hepatocyte")$RNA@data
-))
-example_data_RY <- as.vector(expm1(
-  subset(
-    seurat_test[c("Itga5"), ],
-    subset = age_group == "YOUNG" & cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
-))
-example_data_EO <- as.vector(expm1(
-  subset(
-    seurat_test[c("Adam15"), ],
-    subset = age_group == "OLD" & cell_type == "hepatocyte")$RNA@data
-))
-example_data_RO <- as.vector(expm1(
-  subset(
-    seurat_test[c("Itga5"), ],
-    subset = age_group == "OLD" & cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
-))
+example_data <- list(
+  EnoCond = as.vector(expm1(
+    subset(
+      seurat_test[c("Adam15"), ],
+      subset = cell_type == "hepatocyte")$RNA@data
+  )),
+  RnoCond = as.vector(expm1(
+    subset(
+      seurat_test[c("Itga5"), ],
+      subset = cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
+  )),
+  EY = as.vector(expm1(
+    subset(
+      seurat_test[c("Adam15"), ],
+      subset = age_group == "YOUNG" & cell_type == "hepatocyte")$RNA@data
+  )),
+  RY = as.vector(expm1(
+    subset(
+      seurat_test[c("Itga5"), ],
+      subset = age_group == "YOUNG" & cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
+  )),
+  EO = as.vector(expm1(
+    subset(
+      seurat_test[c("Adam15"), ],
+      subset = age_group == "OLD" & cell_type == "hepatocyte")$RNA@data
+  )),
+  RO = as.vector(expm1(
+    subset(
+      seurat_test[c("Itga5"), ],
+      subset = age_group == "OLD" & cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
+  ))
+)
 
 test_that("`simple` data.table is returned correctly", {
-  expect_equivalent(mean(example_data_EY > 0), example_cci_test$L1_DETECTION_RATE_YOUNG)
-  expect_equivalent(mean(example_data_RY > 0), example_cci_test$R1_DETECTION_RATE_YOUNG)
-  expect_equivalent(mean(example_data_EO > 0), example_cci_test$L1_DETECTION_RATE_OLD)
-  expect_equivalent(mean(example_data_RO > 0), example_cci_test$R1_DETECTION_RATE_OLD)
-  expect_equivalent(mean(example_data_EY), example_cci_test$L1_EXPRESSION_YOUNG)
-  expect_equivalent(mean(example_data_RY), example_cci_test$R1_EXPRESSION_YOUNG)
-  expect_equivalent(mean(example_data_EO), example_cci_test$L1_EXPRESSION_OLD)
-  expect_equivalent(mean(example_data_RO), example_cci_test$R1_EXPRESSION_OLD)
-  expect_equivalent(sqrt(mean(example_data_EY)*mean(example_data_RY)), example_cci_test$CCI_SCORE_YOUNG)
-  expect_equivalent(sqrt(mean(example_data_EO)*mean(example_data_RO)), example_cci_test$CCI_SCORE_OLD)
+  expect_equivalent(mean(example_data$EnoCond > 0), example_cci_test$nocond_stat$L1_DETECTION_RATE)
+  expect_equivalent(mean(example_data$RnoCond > 0), example_cci_test$nocond_stat$R1_DETECTION_RATE)
+  expect_equivalent(mean(example_data$EY > 0), example_cci_test$cond_stat$L1_DETECTION_RATE_YOUNG)
+  expect_equivalent(mean(example_data$RY > 0), example_cci_test$cond_stat$R1_DETECTION_RATE_YOUNG)
+  expect_equivalent(mean(example_data$EO > 0), example_cci_test$cond_stat$L1_DETECTION_RATE_OLD)
+  expect_equivalent(mean(example_data$RO > 0), example_cci_test$cond_stat$R1_DETECTION_RATE_OLD)
+  expect_equivalent(mean(example_data$EnoCond), example_cci_test$nocond_stat$L1_EXPRESSION)
+  expect_equivalent(mean(example_data$RnoCond), example_cci_test$nocond_stat$R1_EXPRESSION)
+  expect_equivalent(mean(example_data$EY), example_cci_test$cond_stat$L1_EXPRESSION_YOUNG)
+  expect_equivalent(mean(example_data$RY), example_cci_test$cond_stat$R1_EXPRESSION_YOUNG)
+  expect_equivalent(mean(example_data$EO), example_cci_test$cond_stat$L1_EXPRESSION_OLD)
+  expect_equivalent(mean(example_data$RO), example_cci_test$cond_stat$R1_EXPRESSION_OLD)
+  expect_equivalent(sqrt(mean(example_data$EnoCond)*mean(example_data$RnoCond)), example_cci_test$nocond_stat$CCI_SCORE)
+  expect_equivalent(sqrt(mean(example_data$EnoCond)*mean(example_data$RnoCond)), example_cci_test$nocond_nostat$CCI_SCORE)
+  expect_equivalent(sqrt(mean(example_data$EY)*mean(example_data$RY)), example_cci_test$cond_stat$CCI_SCORE_YOUNG)
+  expect_equivalent(sqrt(mean(example_data$EO)*mean(example_data$RO)), example_cci_test$cond_stat$CCI_SCORE_OLD)
   expect_identical(cci_dt_simple_test$cond_stat, cci_dt_simple_test$cond_nostat)
   expect_identical(cci_dt_simple_test$nocond_stat, cci_dt_simple_test$nocond_nostat)
 })
 
-## check the permutation analysis ####
+## check overall permutation analysis ####
+
+
 cci_permutation_test <- lapply(
   c(cond = 1, nocond = 3),
   function(i) {
+    set.seed(42)
+    run_stat_analysis(
+      analysis_inputs = inputs_test[[i]],
+      cci_dt_simple = cci_dt_simple_test[[i]],
+      iterations = 10,
+      return_distributions = FALSE,
+      score_type = "geometric_mean",
+      verbose = FALSE
+    )
+  }
+)
+
+cci_permutation_test_with_distr <- lapply(
+  c(cond = 1, nocond = 3),
+  function(i) {
+    set.seed(42)
     run_stat_analysis(
       analysis_inputs = inputs_test[[i]],
       cci_dt_simple = cci_dt_simple_test[[i]],
@@ -213,13 +254,31 @@ cci_permutation_test <- lapply(
   }
 )
 
-test_that("permutation test is performed correclty", {
+test_that("data.table returned by permutation test is correctly formatted", {
   expect_identical(cci_dt_simple_test$cond_stat$LR_GENES, cci_permutation_test$cond$cci_raw$LR_GENES)
   expect_identical(cci_dt_simple_test$cond_stat[, 4:38], cci_permutation_test$cond$cci_raw[, 4:38])
   expect_identical(cci_dt_simple_test$nocond_stat[, 4:22], cci_permutation_test$nocond$cci_raw[, 4:22])
+  expect_identical(cci_dt_simple_test$cond_stat$LR_GENES, cci_permutation_test_with_distr$cond$cci_raw$LR_GENES)
+  expect_identical(cci_dt_simple_test$cond_stat[, 4:38], cci_permutation_test_with_distr$cond$cci_raw[, 4:38])
+  expect_identical(cci_dt_simple_test$nocond_stat[, 4:22], cci_permutation_test_with_distr$nocond$cci_raw[, 4:22])
 })
 
-## check object is returned correclty ####
+test_that("permutation results are identical (using same seed) with or without returning the disributions", {
+  expect_identical(cci_permutation_test_with_distr$cond$cci_raw$P_VALUE_DE,
+                   cci_permutation_test$cond$cci_raw$P_VALUE_DE )
+  expect_identical(cci_permutation_test_with_distr$cond$cci_raw$P_VALUE_OLD,
+                   cci_permutation_test$cond$cci_raw$P_VALUE_OLD)
+  expect_identical(cci_permutation_test_with_distr$cond$cci_raw$P_VALUE_YOUNG,
+                   cci_permutation_test$cond$cci_raw$P_VALUE_YOUNG)
+})
+
+
+## benchmarking of permutation test and internal functions ####
+#library(profvis)
+#library(microbenchmark)
+#toDO
+
+## check object is returned correctly ####
 
 scdiffcom_objects <- lapply(
   parameters_mode_validated[2:5],
@@ -269,6 +328,7 @@ scdiffcom_objects <- lapply(
     run_ora(
       object  = object,
       categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS"),
+      overwrite = TRUE,
       stringent_or_default = "default",
       stringent_logfc_threshold = NULL,
       verbose = TRUE,
@@ -278,9 +338,135 @@ scdiffcom_objects <- lapply(
   }
 )
 
-scdiffcom_objects$cond_stat@ora_default$LR_GENES
+# ORA on LR_GENES
+
+contingency_table_test_LR_up <- matrix(
+  c(
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Apoe:Ldlr" & REGULATION == "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Apoe:Ldlr" & REGULATION != "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Apoe:Ldlr" & REGULATION == "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Apoe:Ldlr" & REGULATION != "UP", .N]
+  ),
+  2,2
+)
+
+contingency_table_test_LR_down <- matrix(
+  c(
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Csf2:Itgb1" & REGULATION == "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Csf2:Itgb1" & REGULATION != "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Csf2:Itgb1" & REGULATION == "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Csf2:Itgb1" & REGULATION != "DOWN", .N]
+  ),
+  2,2
+)
+
+contingency_table_test_LR_flat <- matrix(
+  c(
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Adam10:Axl" & REGULATION == "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Adam10:Axl" & REGULATION != "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Adam10:Axl" & REGULATION == "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Adam10:Axl" & REGULATION != "FLAT", .N]
+  ),
+  2,2
+)
+
+fisher_LR_up <- fisher.test(contingency_table_test_LR_up)
+fisher_LR_down <- fisher.test(contingency_table_test_LR_down)
+fisher_LR_flat <- fisher.test(contingency_table_test_LR_flat)
 
 
+test_that("fisher test is done correctly on LRIs", {
+  expect_equivalent(
+    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Apoe:Ldlr"]$OR_UP,
+    fisher_LR_up$estimate
+  )
+  expect_equivalent(
+    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Apoe:Ldlr"]$P_VALUE_UP,
+    fisher_LR_up$p.value
+  )
+  expect_equivalent(
+    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Csf2:Itgb1"]$OR_DOWN,
+    fisher_LR_down$estimate
+  )
+  expect_equivalent(
+    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Csf2:Itgb1"]$P_VALUE_DOWN,
+    fisher_LR_down$p.value
+  )
+  expect_equivalent(
+    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Adam10:Axl"]$OR_FLAT,
+    fisher_LR_flat$estimate
+  )
+  expect_equivalent(
+    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Adam10:Axl"]$P_VALUE_FLAT,
+    fisher_LR_flat$p.value
+  )
+})
 
+#ORA on GO terms
+
+genes_GO_UP <- LRdb_mouse$LRdb_curated_GO[GO_ID == "GO:0002376"]$LR_GENES
+contingency_table_test_GO_up <- matrix(
+  c(
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_UP & REGULATION == "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_UP & REGULATION != "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_UP) & REGULATION == "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_UP) & REGULATION != "UP", .N]
+  ),
+  2,2
+)
+fisher_GO_up <- fisher.test(contingency_table_test_GO_up)
+
+genes_GO_DOWN <- LRdb_mouse$LRdb_curated_GO[GO_ID == "GO:0031625"]$LR_GENES
+contingency_table_test_GO_down <- matrix(
+  c(
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_DOWN & REGULATION == "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_DOWN & REGULATION != "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_DOWN) & REGULATION == "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_DOWN) & REGULATION != "DOWN", .N]
+  ),
+  2,2
+)
+fisher_GO_down <- fisher.test(contingency_table_test_GO_down)
+
+genes_GO_FLAT <- LRdb_mouse$LRdb_curated_GO[GO_ID == "GO:0022406"]$LR_GENES
+contingency_table_test_GO_flat <- matrix(
+  c(
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_FLAT & REGULATION == "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_FLAT & REGULATION != "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_FLAT) & REGULATION == "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_FLAT) & REGULATION != "FLAT", .N]
+  ),
+  2,2
+)
+fisher_GO_flat <- fisher.test(contingency_table_test_GO_flat)
+fisher_GO_flat_cor <- fisher.test(contingency_table_test_GO_flat+1)
+
+test_that("fisher test is done correctly on GO terms", {
+  expect_equivalent(
+    scdiffcom_objects$cond_stat@ora_default$GO_TERMS[VALUE_BIS == "GO:0002376"]$OR_UP,
+    fisher_GO_up$estimate
+  )
+  expect_equivalent(
+    scdiffcom_objects$cond_stat@ora_default$GO_TERMS[VALUE_BIS == "GO:0002376"]$P_VALUE_UP,
+    fisher_GO_up$p.value
+  )
+  expect_equivalent(
+    scdiffcom_objects$cond_stat@ora_default$GO_TERMS[VALUE_BIS == "GO:0031625"]$OR_DOWN,
+    fisher_GO_down$estimate
+  )
+  expect_equivalent(
+    scdiffcom_objects$cond_stat@ora_default$GO_TERMS[VALUE_BIS == "GO:0031625"]$P_VALUE_DOWN,
+    fisher_GO_down$p.value
+  )
+  expect_equal(
+    scdiffcom_objects$cond_stat@ora_default$GO_TERMS[VALUE_BIS == "GO:0022406"]$OR_FLAT[[1]],
+    fisher_GO_flat_cor$estimate[[1]],
+    tolerance = 0.01
+  )
+  expect_equivalent(
+    scdiffcom_objects$cond_stat@ora_default$GO_TERMS[VALUE_BIS == "GO:0022406"]$P_VALUE_FLAT,
+    fisher_GO_flat$p.value
+  )
+})
 
 
