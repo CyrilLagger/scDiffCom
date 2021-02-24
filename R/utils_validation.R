@@ -67,7 +67,6 @@ validate_parameters <- function(
       res <- c(
         res,
         "`seurat_condition_id` must be NULL or a length-3 list with names 'column_name', 'cond1_name', 'cond2_name'")
-    } else if (a) {
     } else if(grepl("_", params$seurat_condition_id$cond1_name) | grepl("_", params$seurat_condition_id$cond2_name)) {
       res <- c(res, "Underscores are not allowed in `cond1_name` and `cond2_name`")
     }
