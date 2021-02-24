@@ -3,22 +3,23 @@
 \docType{data}
 \name{seurat_sample_tms_liver}
 \alias{seurat_sample_tms_liver}
-\title{A (sampled) Seurat object from the Tabula Muris Senis liver.}
+\title{A down-sampled Seurat object used for testing and benchmarking}
 \format{
-A Seurat object.
+An S4 object of class Seurat.
 }
 \usage{
 data(seurat_sample_tms_liver)
 }
 \description{
-This is only a sample from the original object. It only contains
-two cell-types and roughly 2000 genes. The slot "data" contains
-log-normalized values with normalization performed before the down-sampling.
-It is only intended to be used as a toy model to show the functionalities of the package.
-It does not convey meaningful biological information.
+This object of class Seurat has been down-sampled from the original
+Tabula Muris Senis Liver object. Pre-processing and normalization has
+been performed before down-sampling. It contains 726 features (genes) and
+468 samples (cells). It is only intended to be used for testing and
+benchmarking and does not contain meaningful biological information.
 }
 \references{
-to add
-(\href{to_add}{PubMed})
+\emph{A single-cell transcriptomic atlas characterizes
+ ageing tissues in the mouse}, Tabula Muris Consortium (2020)
+(\href{https://pubmed.ncbi.nlm.nih.gov/32669714/}{PMID: 32669714})
 }
 \keyword{datasets}

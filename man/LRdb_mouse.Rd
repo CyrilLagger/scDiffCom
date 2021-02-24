@@ -5,19 +5,28 @@
 \alias{LRdb_mouse}
 \title{A database of mouse ligand-receptor interactions.}
 \format{
-A list of 3 data.tables: a non-curated table, a curated table and a table of corresponding GO terms
+A list of data.tables
 }
 \usage{
 data(LRdb_mouse)
 }
 \description{
-The DB has been compiled from eight external studies.
+This selection of ligand-receptor interactions (LRIs) is a compilation of
+eight previous databases (see References). We have distinguished curated
+LRIs from bioinformatically inferred LRIs (only curated ones are effectively
+used). We also provide GO terms and KEGG pathways attached to each LRI.
 }
 \details{
-Can be obtained by running scDiffCom:::build_LRdb(species = "mouse")
+The code to build the database is  scDiffCom:::build_LRdb(species = "mouse")
 }
 \references{
-to add
-(\href{to_add}{PubMed})
+CellChat (\href{https://www.biorxiv.org/content/10.1101/2020.07.21.214387v1}{bioRxiv}),
+ CellPhoneDB (\href{https://pubmed.ncbi.nlm.nih.gov/32103204/}{PMID: 32103204}),
+ CellTalkDB (\href{https://pubmed.ncbi.nlm.nih.gov/33147626/}{PMID: 33147626}),
+ connectomeDB2020 (\href{https://pubmed.ncbi.nlm.nih.gov/33024107/}{PMID: 33024107}),
+ ICELLNET (\href{https://pubmed.ncbi.nlm.nih.gov/33597528/}{PMID: 33597528}),
+ NicheNet (\href{https://pubmed.ncbi.nlm.nih.gov/31819264/}{PMID: 31819264}),
+ SingleCellSignalR (\href{https://pubmed.ncbi.nlm.nih.gov/32196115/}{PMID: 32196115}),
+ scTensor (\href{https://www.biorxiv.org/content/10.1101/566182v1}{bioRxiv})
 }
 \keyword{datasets}
