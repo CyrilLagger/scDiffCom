@@ -225,11 +225,11 @@ construct_graph <- function(
   dt_edge[, num_interacts_diff := num_interacts_old - num_interacts_young]
   # TODO: Enrich with other info: cell families, GOs, ORA on cell types.
   dt_vertex <- funion(
-    dt_edge[, .(
+    dt_edge[, list(
       name = Ligand_cell,
       counts = Ligand_cell_counts
     )],
-    dt_edge[, .(
+    dt_edge[, list(
       name = Receptor_cell,
       counts = Receptor_cell_counts
     )]
@@ -249,6 +249,7 @@ construct_graph <- function(
 }
 
 process_celltype_pairs_enrichment <- function(ora_ER_cells) {
+  VALUE <- NULL
   COUNTS_VALUE_REGULATED_UP <- COUNTS_VALUE_REGULATED_DOWN <-
     COUNTS_VALUE_REGULATED_DIFF <- COUNTS_VALUE_REGULATED_FLAT <- NULL
   COL_LIGAND_RECEPTOR_CELLTYPES <- "ER_CELLTYPES"
@@ -619,7 +620,7 @@ get_network_components <- function(
 }
 
 get_visnetwork_options <- function(selectionByName = FALSE, highlightNearestDegree = 0) {
-  
+
   if(selectionByName) {
     selectionOptions = list(
       variable = "name", multiple = TRUE,
@@ -632,7 +633,7 @@ get_visnetwork_options <- function(selectionByName = FALSE, highlightNearestDegr
   } else {
     selectionOptions = NULL
   }
-  
+
   return(
     . %>% visNetwork::visOptions(
       height = NULL, #"1000px",
@@ -853,6 +854,7 @@ build_network_skeleton <- function(
 
   if (network_representation_type != 'ORA') {
     edge_value <- function(edges, network_representation_type) {
+      num_interacts_diff <- num_interacts_old <- num_interacts_young <- NULL
       if (network_representation_type == "ORA") {
         return(NULL)
       } else if (network_representation_type == "COUNTS_YOUNG") {
@@ -886,7 +888,7 @@ build_network_skeleton <- function(
       }
     edges_[
       ,
-      value := abs_or_null(edge_value(edges_, network_representation_type))  # 
+      value := abs_or_null(edge_value(edges_, network_representation_type))  #
     ][
       ,
       label := as.character(edge_value(edges_, network_representation_type))
@@ -1152,9 +1154,10 @@ classify_edges <- function(
 
 
 build_interactive_LRI_network <- function(cci_detected, LRIs) {
+  EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <- NULL
   g = get_cci_change_subgraph(cci_detected, LRIs)
   if(length(igraph::E(g)) == 0) {
-    celltypes = union(cci_det[, EMITTER_CELLTYPE], cci_det[, RECEIVER_CELLTYPE])
+    celltypes = union(cci_detected[, EMITTER_CELLTYPE], cci_detected[, RECEIVER_CELLTYPE])
     nodes = purrr::map(
       celltypes,
       function(ct) {return(list(label=ct))}
@@ -1167,16 +1170,20 @@ build_interactive_LRI_network <- function(cci_detected, LRIs) {
                scaling=list(
                  min=10, max=16,
                  label=list(min=14, max=20))) %>%
-      ( scDiffCom:::get_visnetwork_options() ) %>%
-      ( scDiffCom:::get_visnetwork_interactive() )
+      (get_visnetwork_options() ) %>%
+      (get_visnetwork_interactive() )
+      #( scDiffCom:::get_visnetwork_options() ) %>%
+      #( scDiffCom:::get_visnetwork_interactive() )
     return(vis)
   }
 }
 
 get_cci_change_graph <- function(cci_detected) {
-  dt_edge = cci_detected[REGULATION %in% c('UP', 'DOWN'), 
+  LOGFC <- value <- label <- color <- REGULATION <-
+     EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <- LR_GENES <- NULL
+  dt_edge = cci_detected[REGULATION %in% c('UP', 'DOWN'),
                          list(
-                           EMITTER_CELLTYPE, RECEIVER_CELLTYPE, 
+                           EMITTER_CELLTYPE, RECEIVER_CELLTYPE,
                            LR_GENES, LOGFC,
                            REGULATION
                          )
@@ -1192,6 +1199,8 @@ get_cci_change_graph <- function(cci_detected) {
 }
 
 get_cci_change_subgraph <- function(cci_detected, LRIs) {
+  REGULATION <- LR_GENES <- EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <-
+    LOGFC <- value <- label <- color <- LR_GENES <-NULL
   SUBG_LIMIT = 5
   if(length(LRIs) > SUBG_LIMIT) {
     stop('The number of subgraphs limit for visualization is SUBG_LIMIT')
@@ -1200,7 +1209,7 @@ get_cci_change_subgraph <- function(cci_detected, LRIs) {
     (REGULATION %in% c('UP', 'DOWN'))
     & (LR_GENES %in% LRIs),
     list(
-      EMITTER_CELLTYPE, RECEIVER_CELLTYPE, 
+      EMITTER_CELLTYPE, RECEIVER_CELLTYPE,
       LR_GENES, LOGFC,
       REGULATION
     )
@@ -1222,6 +1231,7 @@ get_cci_change_subgraph <- function(cci_detected, LRIs) {
 }
 
 get_cci_change_subgraph_list <- function(cci_detected, LRIs = NULL) {
+  LR_GENES <- NULL
   if(is.null(LRIs)) {
     lris = unique(cci_detected[, LR_GENES])
   } else {
@@ -1240,11 +1250,11 @@ get_cci_change_subgraph_list <- function(cci_detected, LRIs = NULL) {
 
 LRI_subgraph_metrics <- function(cci_detected, LRIs=NULL) {
   subgraphs = get_cci_change_subgraph_list(cci_detected, LRIs)
-  
+
   subg_metrics_l = purrr::map(
     subgraphs,
     function(subg) {
-      
+
       metrics = list(
         LRI = subg$LRI,
         num_edges = length(igraph::E(subg)),
@@ -1254,12 +1264,12 @@ LRI_subgraph_metrics <- function(cci_detected, LRIs=NULL) {
       )
       motifs_3 = as.list(igraph::motifs(subg, size = 3))
       names(motifs_3) = paste0('Motifs_3_id_', 0:15)
-      
+
       return(c(metrics, motifs_3))
-      
+
     }
   )
-  
+
   subg_metrics_dt = data.table::rbindlist(subg_metrics_l)
   return(subg_metrics_dt)
 }

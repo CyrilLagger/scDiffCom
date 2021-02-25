@@ -211,12 +211,13 @@ get_GO_interactions <- function(
 get_ECM_genes <- function(
   species
 ) {
+  go_id <- mgi_symbol <- NULL
   LRdb_curated = scDiffCom::LRdb_mouse$LRdb_curated
-  GO_interactions = scDiffCom:::get_GO_interactions(species,
-                                                    LRdb_curated,
-                                                    only_genes_annotations = TRUE)
+  GO_interactions = get_GO_interactions(species,
+                                        LRdb_curated,
+                                        only_genes_annotations = TRUE)
   GO_interactions = GO_interactions[go_id != ""]
-  
+
   get_ECM_GOs <- function() {
     return(
       c(

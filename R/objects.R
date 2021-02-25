@@ -3,6 +3,7 @@
 #' @import ggplot2
 #' @importFrom methods new setClass setClassUnion setValidity setGeneric validObject
 #' @importFrom DelayedArray rowsum
+#' @importFrom magrittr "%>%"
 #'
 NULL
 
