@@ -47,7 +47,8 @@ Imports:
     Seurat,
     stats,
     utils,
-    ggplot2
+    ggplot2,
+    magrittr
 VignetteBuilder: knitr
 Collate: 
     'cellphonedb_wrapper.R'
