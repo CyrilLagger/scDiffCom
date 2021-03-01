@@ -1,40 +1,53 @@
 build_interactive_network <- function(
   object,
-  network_representation_type,
-  network_layout_type,
+  network_representation_type, # "LRI", "COUNTS_COND1"
+  network_layout_type=NULL,
   class_signature,  # "scDiffCom" | "scDiffComCombined"
-  subobject_name  # NULL | ID
+  subobject_name,  # NULL | ID
+  LRIs=NULL
 ) {
   ID <- NULL
+  if (network_representation_type == 'LRI') {
+    if (is.null(LRIs)) {
+      stop('LRIs (=NULL) haven\'t been specified.')
+    }
+    if (!is.null(network_layout_type)) {
+      stop('network_layout_type should be NULL for LRI networks.')
+    }
+  }
   if (network_representation_type == "COUNTS_COND1") {
     network_representation_type <- "COUNTS_YOUNG"
   } else if (network_representation_type == "COUNTS_COND2") {
     network_representation_type <- "COUNTS_OLD"
   }
   cci_detected <- copy(object@cci_detected)
-  ora_default_ER <- copy(object@ora_default$ER_CELLTYPES)
-  ora_default_LR <- copy(object@ora_default$LR_GENES)
-  if (class_signature == "scDiffComCombined") {
-    cci_detected <- cci_detected[ID == subobject_name][, ID := NULL]
-    ora_default_ER <- ora_default_ER[ID == subobject_name][, ID := NULL]
-    ora_default_LR <- ora_default_LR[ID == subobject_name][, ID := NULL]
-  }
-  G <- build_igraph(
-    cci_detected = cci_detected,
-    ora_default_ER = ora_default_ER,
-    network_layout_type = network_layout_type,
-    class_signature = class_signature,
-    subobject_name = subobject_name
-  )
-  interactive_net <- interactive_from_igraph(
-    cci_detected = cci_detected,
-    ora_default_LR = ora_default_LR,
-    object_name = object@parameters$object_name,
-    G = G,
-    network_representation_type = network_representation_type,
-    network_layout_type = network_layout_type,
-    exclude_nonsign = TRUE
+  if (network_representation_type == 'LRI') {
+    interactive_net = build_interactive_LRI_network(cci_detected, LRIs)
+  } else {
+    ora_default_ER <- copy(object@ora_default$ER_CELLTYPES)
+    ora_default_LR <- copy(object@ora_default$LR_GENES)
+    if (class_signature == "scDiffComCombined") {
+      cci_detected <- cci_detected[ID == subobject_name][, ID := NULL]
+      ora_default_ER <- ora_default_ER[ID == subobject_name][, ID := NULL]
+      ora_default_LR <- ora_default_LR[ID == subobject_name][, ID := NULL]
+    }
+    G <- build_igraph(
+      cci_detected = cci_detected,
+      ora_default_ER = ora_default_ER,
+      network_layout_type = network_layout_type,
+      class_signature = class_signature,
+      subobject_name = subobject_name
     )
+    interactive_net <- interactive_from_igraph(
+      cci_detected = cci_detected,
+      ora_default_LR = ora_default_LR,
+      object_name = object@parameters$object_name,
+      G = G,
+      network_representation_type = network_representation_type,
+      network_layout_type = network_layout_type,
+      exclude_nonsign = TRUE
+    )
+  }
   return(interactive_net)
 }
 
