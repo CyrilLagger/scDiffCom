@@ -1170,6 +1170,9 @@ classify_edges <- function(
 
 build_interactive_LRI_network <- function(cci_detected, LRIs) {
   EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <- NULL
+  if ( sum( !(LRIs %in% cci_detected$LR_GENES) ) > 0 ){
+    warning('Some LRIs were not found in detected')
+  }
   g = get_cci_change_subgraph(cci_detected, LRIs)
   if(length(igraph::E(g)) == 0) {
     celltypes = union(cci_detected[, EMITTER_CELLTYPE], cci_detected[, RECEIVER_CELLTYPE])
