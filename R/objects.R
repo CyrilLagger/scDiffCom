@@ -753,8 +753,9 @@ PlotORA.scDiffComCombined <- function(
 #' @method BuildNetwork scDiffCom
 BuildNetwork.scDiffCom = function(
   object,
-  network_type = c("ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
+  network_type = c("LRI", "ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
   network_layout = c("bipartite", "celltypes"),
+  LRIs = NULL,
   ...
 ) {
   network_type <- match.arg(network_type)
@@ -765,7 +766,8 @@ BuildNetwork.scDiffCom = function(
       network_representation_type = network_type,
       network_layout_type = network_layout,
       class_signature = "scDiffCom",
-      subobject_name = NULL
+      subobject_name = NULL,
+      LRIs = LRIs
     )
   )
 }
@@ -780,9 +782,10 @@ BuildNetwork.scDiffCom = function(
 #' @method BuildNetwork scDiffComCombined
 BuildNetwork.scDiffComCombined = function(
   object,
-  network_type = c("ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
+  network_type = c("LRI", "ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
   network_layout = c("bipartite", "celltypes"),
   ID,
+  LRIs = NULL,
   ...
 ) {
   network_type <- match.arg(network_type)
@@ -796,7 +799,8 @@ BuildNetwork.scDiffComCombined = function(
       network_representation_type = network_type,
       network_layout_type = network_layout,
       class_signature = "scDiffComCombined",
-      subobject_name = ID
+      subobject_name = ID,
+      LRIs = LRIs
     )
   )
 }

@@ -1,6 +1,6 @@
 build_interactive_network <- function(
   object,
-  network_representation_type, # "LRI", "COUNTS_COND1"
+  network_representation_type,
   network_layout_type=NULL,
   class_signature,  # "scDiffCom" | "scDiffComCombined"
   subobject_name,  # NULL | ID
@@ -21,13 +21,15 @@ build_interactive_network <- function(
     network_representation_type <- "COUNTS_OLD"
   }
   cci_detected <- copy(object@cci_detected)
+  if (class_signature == "scDiffComCombined") {
+    cci_detected <- cci_detected[ID == subobject_name][, ID := NULL]
+  }
   if (network_representation_type == 'LRI') {
     interactive_net = build_interactive_LRI_network(cci_detected, LRIs)
   } else {
     ora_default_ER <- copy(object@ora_default$ER_CELLTYPES)
     ora_default_LR <- copy(object@ora_default$LR_GENES)
     if (class_signature == "scDiffComCombined") {
-      cci_detected <- cci_detected[ID == subobject_name][, ID := NULL]
       ora_default_ER <- ora_default_ER[ID == subobject_name][, ID := NULL]
       ora_default_LR <- ora_default_LR[ID == subobject_name][, ID := NULL]
     }
