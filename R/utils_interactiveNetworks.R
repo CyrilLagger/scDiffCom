@@ -1,18 +1,18 @@
 build_interactive_network <- function(
   object,
   network_representation_type,
-  network_layout_type=NULL,
+  network_layout_type = "celltypes",
   class_signature,  # "scDiffCom" | "scDiffComCombined"
   subobject_name,  # NULL | ID
-  LRIs=NULL
+  LRIs = NULL
 ) {
   ID <- NULL
   if (network_representation_type == 'LRI') {
     if (is.null(LRIs)) {
       stop('LRIs (=NULL) haven\'t been specified.')
     }
-    if (!is.null(network_layout_type)) {
-      stop('network_layout_type should be NULL for LRI networks.')
+    if (network_layout_type != 'celltypes') {
+      stop('network_layout_type should be `celltypes` for LRI networks.')
     }
   }
   if (network_representation_type == "COUNTS_COND1") {
