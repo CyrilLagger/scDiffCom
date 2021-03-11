@@ -37,8 +37,8 @@ LRI database to use.}
 \item{seurat_celltype_id}{Column name of the \emph{Seurat} \code{meta.data}
 that indicates the cell-type of each cell (e.g.: \code{"CELL_TYPE"}).}
 
-\item{seurat_condition_id}{For differential analysis, list with three named
-items:
+\item{seurat_condition_id}{For differential analysis, a list with three
+named items:
 \enumerate{
   \item column_name: Column name of the \emph{Seurat} \code{meta.data}
    that indicates to which of two groups each cell belongs (e.g. "AGE")
@@ -49,41 +49,56 @@ By convention, LOGFC are positive when \code{score(cond2) > score(cond1)}.
 Setting this parameter to \code{NULL} allows the user to not perform the
 differential analysis and only return detected cell-cell interactions.}
 
-\item{iterations}{Number of permutations to perform during the statistical analysis. Default is \code{1000}.
-Can be set to \code{0} to quickly return partial results without performing the statistical analysis.}
+\item{iterations}{Number of permutations for the statistical analysis.
+Default is \code{1000}. Can be set to \code{0} to quickly return partial
+results without performing the statistical analysis.}
 
-\item{scdiffcom_object_name}{Name of the returned \emph{scDiffCom} object. Default is "scDiffCom_object". Having
-different names for different objects is useful to combine them in an \emph{scDiffComCombined} object.}
+\item{scdiffcom_object_name}{Name of the \emph{scDiffCom} object that will
+be returned. Default is "scDiffCom_object". Having different names for
+different objects is useful to combine them later on in an
+\emph{scDiffComCombined} object.}
 
-\item{seurat_assay}{\emph{Seurat} assay from which to extract the data. Default is "RNA".}
+\item{seurat_assay}{\emph{Seurat} assay from which to extract the data.
+Default is "RNA".}
 
-\item{seurat_slot}{\emph{Seurat} slot from which to extract the data. Default is "data".}
+\item{seurat_slot}{\emph{Seurat} slot from which to extract the data.
+Default is "data".}
 
-\item{log_scale}{Whether to use log-normalized data or non-log-normalized data. Default is \code{FALSE}.}
+\item{log_scale}{Whether to use log-normalized data or non-log-normalized
+data. Default is \code{FALSE}.}
 
-\item{score_type}{Either "geometric_mean" (default) or "arithmetic_mean". THe metric to compute the CCI score.}
+\item{score_type}{Either "geometric_mean" (default) or "arithmetic_mean".
+THe metric to compute the CCI score.}
 
-\item{threshold_min_cells}{Used to filter out the CCIs for which either the ligand(s) or receptor(s)
-are expressed in less cells than this threshold. Cell-types that have less cells that the threshold are removed
-initially. Default is \code{5}.}
+\item{threshold_min_cells}{Used to filter out CCIs for which either the
+ligand(s) or receptor(s) are expressed in less cells than this threshold.
+Cell-types that have less cells that the threshold are removed initially.
+Default is \code{5}.}
 
-\item{threshold_pct}{Used to filter out the CCIs for which either the ligand(s) or receptor(s)
-are expressed in less than this threshold fraction of the cells. Default is \code{0.1}.}
+\item{threshold_pct}{Used to filter out the CCIs for which either the
+ligand(s) or receptor(s) are expressed in less than this fraction of the
+cells. Default is \code{0.1}.}
 
-\item{threshold_quantile_score}{Quantile value used to filter interactions with low scores. Default is
-\code{0.2}. Can be modified at will after statistical analysis.}
+\item{threshold_quantile_score}{Quantile value used to filter interactions
+with low scores. Default is \code{0.2}. Can be modified at will after
+statistical analysis.}
 
-\item{threshold_p_value_specificity}{Maximal BH p-value to consider an interaction to be specific. Default
-is \code{0.05}. Can be modified at will after statistical analysis.}
+\item{threshold_p_value_specificity}{Maximal BH p-value to consider
+an interaction to be specific. Default is \code{0.05}. Can be modified at
+will after statistical analysis.}
 
-\item{threshold_p_value_de}{Maximal BH p-value to consider an interaction to be differentially expressed.
-Default is \code{0.05}. Can be modified at will after statistical analysis.}
+\item{threshold_p_value_de}{Maximal BH p-value to consider an interaction
+to be differentially expressed. Default is \code{0.05}. Can be modified at
+will after statistical analysis.}
 
-\item{threshold_logfc}{Minimal LOGFC (natural log scale) to consider an interaction to be differentially
-expressed. Default is \code{log(1.5)}. Can be modified at will after statistical analysis.}
+\item{threshold_logfc}{Minimal LOGFC (natural log scale) to consider an
+interaction to be differentially expressed. Default is \code{log(1.5)}.
+Can be modified at will after statistical analysis.}
 
-\item{return_distributions}{Wheter to return the null distributions from the permutation test. Only available
-when computing less than or 1000 \code{iterations}. Default is \code{FALSE}.}
+\item{return_distributions}{Whether to return the null distributions
+computed by the permutation test. For benchmarking and testing purpose.
+Only available when computing less than or 1000 \code{iterations} for
+memory concerns. Default is \code{FALSE}.}
 
 \item{seed}{Set a random seed. Default is \code{42}.}
 
@@ -98,5 +113,5 @@ Perform (differential) cell-cell interaction analysis based on
  ligand-receptor interactions (LRIs).
 }
 \details{
-test tset
+TODO
 }

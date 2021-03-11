@@ -415,8 +415,6 @@ extract_edge_metadata <- function(
       on = c("from==EMITTER_CELLTYPE", "to==RECEIVER_CELLTYPE"),
       "ORA_TYPE" := i.ORA_TYPE
     ]
-
-
   }
   # TODO: Enrich with other info: cell families, GOs, ORA on cell types.
   return(edge_table)

@@ -223,7 +223,6 @@ test_that("`simple` data.table is returned correctly", {
 
 ## check overall permutation analysis ####
 
-
 cci_permutation_test <- lapply(
   c(cond = 1, nocond = 3),
   function(i) {
@@ -469,7 +468,50 @@ test_that("fisher test is done correctly on GO terms", {
   )
 })
 
+## Check BuildNetwork overall ####
+
+types_of_network = c(
+  "condition1_network",
+  "condition2_network",
+  "difference_network",
+  "up_regulated_network",
+  "down_regulated_network",
+  "ORA_network"
+)
+
+types_of_layout = c(
+  "conventional",
+  "bipartite"
+)
+
+all_networks <- lapply(
+  types_of_network,
+  function(net) {
+    lapply(
+      types_of_layout,
+      function(lay) {
+        build_interactive_network(
+          object = scdiffcom_objects$cond_stat,
+          network_type = net,
+          layout_type = lay,
+          class_signature = "scDiffCom" ,
+          subobject_name = NULL,
+          abbreviation_table = NULL
+        )
+      }
+    )
+  }
+)
+
+test_that("dummy test to replace", {
+  expect_equal(length(all_networks), 6)
+})
+
+
+
 ## Check BuildNetwork step by step ####
+
+#TODO
 
 ## Check construct_graph ####
 
