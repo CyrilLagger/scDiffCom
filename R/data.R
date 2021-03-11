@@ -1,17 +1,27 @@
 #' A database of human ligand-receptor interactions.
 #'
-#' This selection of ligand-receptor interactions (LRIs) is a compilation of
-#' eight previous databases (see References). We have distinguished curated
-#' LRIs from bioinformatically inferred LRIs (only curated ones are effectively
-#' used). We also provide GO terms and KEGG pathways attached to each LRI.
+#' A list that contains human ligand-receptor interactions (LRIs)
+#'  with GO-term and KEGG-pathway annotations. The LRIs have been retrieved
+#'  from eight databases (see References). Curated and non-curated LRIs
+#'  are distinguished (note that only curated LRIs are used in scDiffCom
+#'  interaction analysis, non-curated LRIs are given for reference).
 #'
-#' The code to build the database is  scDiffCom:::build_LRdb(species = "mouse")
+#' The dataset is built internally in scDiffCom according to
+#'  scDiffCom:::build_LRI(species = "human").
 #'
 #' @docType data
 #'
-#' @usage data(LRdb_human)
+#' @usage data(LRI_human)
 #'
-#' @format A list of data.tables
+#' @format A list with four items:
+#' \enumerate{
+#'   \item LRI_not_curated: a data.table of curated and non-curated LRIs
+#'   \item LRI_curated: a data.table of curated LRIs
+#'   \item LRI_curated_GO: a data.table with GO terms attached to
+#'    curated LRI
+#'   \item LRI_curated_KEGG: a data.table with KEGG pathways attached to
+#'    curated LRIs
+#' }
 #'
 #' @keywords datasets
 #'
@@ -25,22 +35,31 @@
 #'  scTensor (\href{https://www.biorxiv.org/content/10.1101/566182v1}{bioRxiv})
 #'
 #'
-"LRdb_human"
+"LRI_human"
 
 #' A database of mouse ligand-receptor interactions.
 #'
-#' This selection of ligand-receptor interactions (LRIs) is a compilation of
-#' eight previous databases (see References). We have distinguished curated
-#' LRIs from bioinformatically inferred LRIs (only curated ones are effectively
-#' used). We also provide GO terms and KEGG pathways attached to each LRI.
+#' A list that contains mouse ligand-receptor interactions (LRIs)
+#'  with GO-term and KEGG-pathway annotations. The LRIs have been retrieved
+#'  from eight databases (see References). Curated and non-curated LRIs
+#'  are distinguished (note that only curated LRIs are used in scDiffCom
+#'  interaction analysis, non-curated LRIs are given for reference).
 #'
-#' The code to build the database is  scDiffCom:::build_LRdb(species = "mouse")
+#' The code to build the database is  scDiffCom:::build_LRI(species = "mouse")
 #'
 #' @docType data
 #'
-#' @usage data(LRdb_mouse)
+#' @usage data(LRI_mouse)
 #'
-#' @format A list of data.tables
+#' @format A list with four items:
+#' \enumerate{
+#'   \item LRI_not_curated: a data.table of curated and non-curated LRIs
+#'   \item LRI_curated: a data.table of curated LRIs
+#'   \item LRI_curated_GO: a data.table with GO terms attached to
+#'    curated LRI
+#'   \item LRI_curated_KEGG: a data.table with KEGG pathways attached to
+#'    curated LRIs
+#' }
 #'
 #' @keywords datasets
 #'
@@ -54,11 +73,11 @@
 #'  scTensor (\href{https://www.biorxiv.org/content/10.1101/566182v1}{bioRxiv})
 #'
 #'
-"LRdb_mouse"
+"LRI_mouse"
 
 #' A down-sampled Seurat object used for testing and benchmarking
 #'
-#' This object of class Seurat has been down-sampled from the original
+#' This Seurat object has been down-sampled from the original
 #' Tabula Muris Senis Liver object. Pre-processing and normalization has
 #' been performed before down-sampling. It contains 726 features (genes) and
 #' 468 samples (cells). It is only intended to be used for testing and

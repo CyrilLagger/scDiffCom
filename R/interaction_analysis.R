@@ -1,41 +1,67 @@
 #' Run (differential) intercellular communication analysis
 #'
-#' Perform (differential) cell-cell interaction analysis based on scRNA-seq data (Seurat object)
-#'  and an internal database of ligand-receptor interactions.
+#' Perform (differential) cell-cell interaction analysis based on
+#'  scRNA-seq data (as a Seurat object) and an internal database of
+#'  ligand-receptor interactions (LRIs).
 #'
-#' @param seurat_object Object of class \emph{Seurat} that contains normalized data and
-#'  relevant \code{meta.data} annotations. Gene names must be MGI (mouse) or HGNC (human).
-#' @param LRdb_species Either "mouse" or "human". Specifies which internal ligand-receptor database to use.
-#' @param seurat_celltype_id Column name of \emph{Seurat} \code{meta.data} that indicates the cell-type
-#'  of each cell (e.g.: \code{"CELL_TYPE"}).
-#' @param seurat_condition_id Length-3 named list that indicates 1) \code{"column_name"} of
-#'  \emph{Seurat} \code{meta.data} that indicates to which of two groups each cell belongs, 2) \code{cond1_name}
-#'  and 3) \code{cond2_name} (e.g.: \code{list(column_name = "AGE", cond1_name = "YOUNG", cond2_name = "OLD")}).
-#'  By convention, LOGFC are positive for \code{score(cond2) > score(cond1)}. Set to \code{NULL} to only
-#'  perform a detection analysis withoug looking for differences between conditions.
-#' @param iterations Number of permutations to perform during the statistical analysis. Default is \code{1000}.
-#'  Can be set to \code{0} to quickly return partial results without performing the statistical analysis.
-#' @param scdiffcom_object_name Name of the returned \emph{scDiffCom} object. Default is "scDiffCom_object". Having
-#'  different names for different objects is useful to combine them in an \emph{scDiffComCombined} object.
-#' @param seurat_assay \emph{Seurat} assay from which to extract the data. Default is "RNA".
-#' @param seurat_slot \emph{Seurat} slot from which to extract the data. Default is "data".
-#' @param log_scale Whether to use log-normalized data or non-log-normalized data. Default is \code{FALSE}.
-#' @param score_type Either "geometric_mean" (default) or "arithmetic_mean". THe metric to compute the CCI score.
-#' @param threshold_min_cells Used to filter out the CCIs for which either the ligand(s) or receptor(s)
-#'  are expressed in less cells than this threshold. Cell-types that have less cells that the threshold are removed
-#'  initially. Default is \code{5}.
-#' @param threshold_pct Used to filter out the CCIs for which either the ligand(s) or receptor(s)
-#'  are expressed in less than this threshold fraction of the cells. Default is \code{0.1}.
-#' @param threshold_quantile_score Quantile value used to filter interactions with low scores. Default is
-#' \code{0.2}. Can be modified at will after statistical analysis.
-#' @param threshold_p_value_specificity Maximal BH p-value to consider an interaction to be specific. Default
-#'  is \code{0.05}. Can be modified at will after statistical analysis.
-#' @param threshold_p_value_de Maximal BH p-value to consider an interaction to be differentially expressed.
-#'  Default is \code{0.05}. Can be modified at will after statistical analysis.
-#' @param threshold_logfc Minimal LOGFC (natural log scale) to consider an interaction to be differentially
-#'  expressed. Default is \code{log(1.5)}. Can be modified at will after statistical analysis.
-#' @param return_distributions Wheter to return the null distributions from the permutation test. Only available
-#' when computing less than or 1000 \code{iterations}. Default is \code{FALSE}.
+#' TODO
+#'
+#' @param seurat_object \emph{Seurat} object that contains normalized data
+#' and relevant \code{meta.data} annotations. Gene names must be MGI (mouse)
+#' or HGNC (human).
+#' @param LRI_species Either "mouse" or "human". It specifies which internal
+#' LRI database to use.
+#' @param seurat_celltype_id Column name of the \emph{Seurat} \code{meta.data}
+#'  that indicates the cell-type of each cell (e.g.: \code{"CELL_TYPE"}).
+#' @param seurat_condition_id For differential analysis, a list with three
+#'  named items:
+#'  \enumerate{
+#'    \item column_name: Column name of the \emph{Seurat} \code{meta.data}
+#'     that indicates to which of two groups each cell belongs (e.g. "AGE")
+#'    \item cond1_name: name of the first condition (e.g. "YOUNG")
+#'    \item cond2_name: name of the second condition (e.g. "OLD")
+#'  }
+#'  By convention, LOGFC are positive when \code{score(cond2) > score(cond1)}.
+#'  Setting this parameter to \code{NULL} allows the user to not perform the
+#'  differential analysis and only return detected cell-cell interactions.
+#' @param iterations Number of permutations for the statistical analysis.
+#'  Default is \code{1000}. Can be set to \code{0} to quickly return partial
+#'  results without performing the statistical analysis.
+#' @param scdiffcom_object_name Name of the \emph{scDiffCom} object that will
+#'  be returned. Default is "scDiffCom_object". Having different names for
+#'  different objects is useful to combine them later on in an
+#'  \emph{scDiffComCombined} object.
+#' @param seurat_assay \emph{Seurat} assay from which to extract the data.
+#'  Default is "RNA".
+#' @param seurat_slot \emph{Seurat} slot from which to extract the data.
+#'  Default is "data".
+#' @param log_scale Whether to use log-normalized data or non-log-normalized
+#'  data. Default is \code{FALSE}.
+#' @param score_type Either "geometric_mean" (default) or "arithmetic_mean".
+#'  THe metric to compute the CCI score.
+#' @param threshold_min_cells Used to filter out CCIs for which either the
+#'  ligand(s) or receptor(s) are expressed in less cells than this threshold.
+#'  Cell-types that have less cells that the threshold are removed initially.
+#'  Default is \code{5}.
+#' @param threshold_pct Used to filter out the CCIs for which either the
+#'  ligand(s) or receptor(s) are expressed in less than this fraction of the
+#'  cells. Default is \code{0.1}.
+#' @param threshold_quantile_score Quantile value used to filter interactions
+#' with low scores. Default is \code{0.2}. Can be modified at will after
+#' statistical analysis.
+#' @param threshold_p_value_specificity Maximal BH p-value to consider
+#'  an interaction to be specific. Default is \code{0.05}. Can be modified at
+#'  will after statistical analysis.
+#' @param threshold_p_value_de Maximal BH p-value to consider an interaction
+#'  to be differentially expressed. Default is \code{0.05}. Can be modified at
+#'  will after statistical analysis.
+#' @param threshold_logfc Minimal LOGFC (natural log scale) to consider an
+#'  interaction to be differentially expressed. Default is \code{log(1.5)}.
+#'  Can be modified at will after statistical analysis.
+#' @param return_distributions Whether to return the null distributions
+#' computed by the permutation test. For benchmarking and testing purpose.
+#' Only available when computing less than or 1000 \code{iterations} for
+#' memory concerns. Default is \code{FALSE}.
 #' @param seed Set a random seed. Default is \code{42}.
 #' @param verbose Whether to print messages. Default is \code{TRUE}.
 #'
@@ -43,7 +69,7 @@
 #' @export
 run_interaction_analysis <- function(
   seurat_object,
-  LRdb_species,
+  LRI_species,
   seurat_celltype_id,
   seurat_condition_id,
   iterations = 1000,
@@ -66,7 +92,7 @@ run_interaction_analysis <- function(
     stop("`seurat_object` must be an object of class Seurat")
   }
   analysis_parameters <- list(
-    LRdb_species = LRdb_species,
+    LRI_species = LRI_species,
     seurat_celltype_id = seurat_celltype_id,
     seurat_condition_id = seurat_condition_id,
     object_name = scdiffcom_object_name,
@@ -90,20 +116,23 @@ run_interaction_analysis <- function(
     from_inputs = TRUE
   )
   if (!is.null(check_parameters$check)) {
-    stop(paste0("Invalid parameters: ", paste0(check_parameters$check, collapse = " and ")))
+    stop(paste0(
+      "Invalid parameters: ",
+      paste0(check_parameters$check, collapse = " and ")
+      ))
   } else {
     analysis_parameters <- check_parameters$params
   }
-  if (LRdb_species == "human") {
-    LRdb_table <- scDiffCom::LRdb_human$LRdb_curated
+  if (LRI_species == "human") {
+    LRI_table <- scDiffCom::LRI_human$LRI_curated
   }
-  if (LRdb_species == "mouse") {
-    LRdb_table <- scDiffCom::LRdb_mouse$LRdb_curated
+  if (LRI_species == "mouse") {
+    LRI_table <- scDiffCom::LRI_mouse$LRI_curated
   }
   set.seed(seed)
   object <- run_internal_raw_analysis(
     seurat_object = seurat_object,
-    LRdb_table = LRdb_table,
+    LRI_table = LRI_table,
     params = analysis_parameters
   )
   object <- FilterCCI(
@@ -114,10 +143,9 @@ run_interaction_analysis <- function(
   return(object)
 }
 
-
 run_internal_raw_analysis <- function(
   seurat_object,
-  LRdb_table,
+  LRI_table,
   params
 ) {
   verbose <- params$verbose
@@ -132,7 +160,7 @@ run_internal_raw_analysis <- function(
     slot = params$seurat_slot,
     log_scale = params$log_scale,
     threshold_min_cells = as.integer(params$threshold_min_cells),
-    LRdb_table = LRdb_table,
+    LRI_table = LRI_table,
     verbose = params$verbose
   )
   cci_template <- create_cci_template(
