@@ -22,7 +22,7 @@ Description: A statistical method to perform differential analyis of
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 4.0.3)
+Depends: R (>= 4.0.0)
 RoxygenNote: 7.1.1
 Suggests: 
     AnnotationDbi,
