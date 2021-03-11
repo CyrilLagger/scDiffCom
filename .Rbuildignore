@@ -1,3 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^personal_testing\.R$
+^cellphonedb_wrapper\.R$
+^utils_cpdb_wrapper\.R$
