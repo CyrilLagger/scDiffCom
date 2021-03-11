@@ -7,6 +7,8 @@
 #'
 NULL
 
+utils::globalVariables(".")
+
 ################  Class definitions ################
 
 setClassUnion(
@@ -746,35 +748,48 @@ PlotORA.scDiffComCombined <- function(
 
 #' @param object xxx
 #' @param network_type xxx
-#' @param network_layout xxx
+#' @param layout_type xxx
+#' @param abbreviation_table xxx
 #'
 #' @rdname BuildNetwork
 #' @export
 #' @method BuildNetwork scDiffCom
 BuildNetwork.scDiffCom = function(
   object,
-  network_type = c("LRI", "ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
-  network_layout = c("bipartite", "celltypes"),
-  LRIs = NULL,
+  network_type = c(
+    "condition1_network",
+    "condition2_network",
+    "difference_network",
+    "up_regulated_network",
+    "down_regulated_network",
+    "ORA_network"
+  ),
+  layout_type = c(
+    "conventional",
+    "bipartite"
+  ),
+  abbreviation_table = NULL,
+  #LRIs = NULL,
   ...
 ) {
   network_type <- match.arg(network_type)
-  network_layout <- match.arg(network_layout)
+  layout_type <- match.arg(layout_type)
   return(
     build_interactive_network(
       object = object,
-      network_representation_type = network_type,
-      network_layout_type = network_layout,
+      network_type = network_type,
+      layout_type = layout_type,
       class_signature = "scDiffCom",
       subobject_name = NULL,
-      LRIs = LRIs
+      abbreviation_table = abbreviation_table#,
+      #LRIs = LRIs
     )
   )
 }
 
 #' @param object xxx
 #' @param network_type xxx
-#' @param network_layout xxx
+#' @param layout_type xxx
 #' @param ID xxx
 #'
 #' @rdname BuildNetwork
@@ -782,25 +797,37 @@ BuildNetwork.scDiffCom = function(
 #' @method BuildNetwork scDiffComCombined
 BuildNetwork.scDiffComCombined = function(
   object,
-  network_type = c("LRI", "ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
-  network_layout = c("bipartite", "celltypes"),
+  network_type = c(
+    "condition1_network",
+    "condition2_network",
+    "difference_network",
+    "up_regulated_network",
+    "down_regulated_network",
+    "ORA_network"
+  ),
+  layout_type = c(
+    "conventional",
+    "bipartite"
+  ),
   ID,
-  LRIs = NULL,
+  abbreviation_table,
+  #LRIs = NULL,
   ...
 ) {
   network_type <- match.arg(network_type)
-  network_layout <- match.arg(network_layout)
+  layout_type <- match.arg(layout_type)
   if (!(ID %in% unique(object@cci_detected$ID))) {
     stop("`ID` must be present in the scDiffComCombined object")
   }
   return(
     build_interactive_network(
       object = object,
-      network_representation_type = network_type,
-      network_layout_type = network_layout,
+      network_type = network_type,
+      layout_type = layout_type,
       class_signature = "scDiffComCombined",
       subobject_name = ID,
-      LRIs = LRIs
+      abbreviation_table = abbreviation_table#,
+      #LRIs = LRIs
     )
   )
 }

@@ -10,16 +10,20 @@ BuildNetwork(object, ...)
 
 \method{BuildNetwork}{scDiffCom}(
   object,
-  network_type = c("ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
-  network_layout = c("bipartite", "celltypes"),
+  network_type = c("condition1_network", "condition2_network", "difference_network",
+    "up_regulated_network", "down_regulated_network", "ORA_network"),
+  layout_type = c("conventional", "bipartite"),
+  abbreviation_table = NULL,
   ...
 )
 
 \method{BuildNetwork}{scDiffComCombined}(
   object,
-  network_type = c("ORA", "COUNTS_DIFF", "COUNTS_COND1", "COUNTS_COND2"),
-  network_layout = c("bipartite", "celltypes"),
+  network_type = c("condition1_network", "condition2_network", "difference_network",
+    "up_regulated_network", "down_regulated_network", "ORA_network"),
+  layout_type = c("conventional", "bipartite"),
   ID,
+  abbreviation_table,
   ...
 )
 }
@@ -30,7 +34,9 @@ BuildNetwork(object, ...)
 
 \item{network_type}{xxx}
 
-\item{network_layout}{xxx}
+\item{layout_type}{xxx}
+
+\item{abbreviation_table}{xxx}
 
 \item{ID}{xxx}
 }
