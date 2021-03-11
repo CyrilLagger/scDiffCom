@@ -6,7 +6,7 @@
 \usage{
 run_interaction_analysis(
   seurat_object,
-  LRdb_species,
+  LRI_species,
   seurat_celltype_id,
   seurat_condition_id,
   iterations = 1000,
@@ -27,19 +27,27 @@ run_interaction_analysis(
 )
 }
 \arguments{
-\item{seurat_object}{Object of class \emph{Seurat} that contains normalized data and
-relevant \code{meta.data} annotations. Gene names must be MGI (mouse) or HGNC (human).}
+\item{seurat_object}{\emph{Seurat} object that contains normalized data
+and relevant \code{meta.data} annotations. Gene names must be MGI (mouse)
+or HGNC (human).}
 
-\item{LRdb_species}{Either "mouse" or "human". Specifies which internal ligand-receptor database to use.}
+\item{LRI_species}{Either "mouse" or "human". It specifies which internal
+LRI database to use.}
 
-\item{seurat_celltype_id}{Column name of \emph{Seurat} \code{meta.data} that indicates the cell-type
-of each cell (e.g.: \code{"CELL_TYPE"}).}
+\item{seurat_celltype_id}{Column name of the \emph{Seurat} \code{meta.data}
+that indicates the cell-type of each cell (e.g.: \code{"CELL_TYPE"}).}
 
-\item{seurat_condition_id}{Length-3 named list that indicates 1) \code{"column_name"} of
-\emph{Seurat} \code{meta.data} that indicates to which of two groups each cell belongs, 2) \code{cond1_name}
-and 3) \code{cond2_name} (e.g.: \code{list(column_name = "AGE", cond1_name = "YOUNG", cond2_name = "OLD")}).
-By convention, LOGFC are positive for \code{score(cond2) > score(cond1)}. Set to \code{NULL} to only
-perform a detection analysis withoug looking for differences between conditions.}
+\item{seurat_condition_id}{For differential analysis, list with three named
+items:
+\enumerate{
+  \item column_name: Column name of the \emph{Seurat} \code{meta.data}
+   that indicates to which of two groups each cell belongs (e.g. "AGE")
+  \item cond1_name: name of the first condition (e.g. "YOUNG")
+  \item cond2_name: name of the second condition (e.g. "OLD")
+}
+By convention, LOGFC are positive when \code{score(cond2) > score(cond1)}.
+Setting this parameter to \code{NULL} allows the user to not perform the
+differential analysis and only return detected cell-cell interactions.}
 
 \item{iterations}{Number of permutations to perform during the statistical analysis. Default is \code{1000}.
 Can be set to \code{0} to quickly return partial results without performing the statistical analysis.}
@@ -85,6 +93,10 @@ when computing less than or 1000 \code{iterations}. Default is \code{FALSE}.}
 An S4 object of class \code{scDiffCom}.
 }
 \description{
-Perform (differential) cell-cell interaction analysis based on scRNA-seq data (Seurat object)
- and an internal database of ligand-receptor interactions.
+Perform (differential) cell-cell interaction analysis based on
+ scRNA-seq data (as a Seurat object) and an internal database of
+ ligand-receptor interactions (LRIs).
+}
+\details{
+test tset
 }

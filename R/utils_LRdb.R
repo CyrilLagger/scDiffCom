@@ -1,30 +1,30 @@
-build_LRdb <- function(
+build_LRI <- function(
   species = c("mouse", "human")
 ) {
   species <- match.arg(species)
-  LRdb_not_curated <- combine_LR_db(
+  LRI_not_curated <- combine_LR_db(
     species = species,
     one2one = FALSE,
     curated = FALSE
   )
-  LRdb_curated <- combine_LR_db(
+  LRI_curated <- combine_LR_db(
     species = species,
     one2one = FALSE,
     curated = TRUE
   )
-  LRdb_GO <- get_GO_interactions(
+  LRI_GO <- get_GO_interactions(
     species = species,
-    LR_db = LRdb_curated
+    LR_db = LRI_curated
   )
-  LRdb_KEGG <- get_KEGG_PW_interactions(
+  LRI_KEGG <- get_KEGG_PW_interactions(
     species = species,
-    LR_db = LRdb_curated
+    LR_db = LRI_curated
   )
   return(list(
-    LRdb_not_curated = LRdb_not_curated,
-    LRdb_curated = LRdb_curated,
-    LRdb_curated_GO = LRdb_GO,
-    LRdb_curated_KEGG = LRdb_KEGG
+    LRI_not_curated = LRI_not_curated,
+    LRI_curated = LRI_curated,
+    LRI_curated_GO = LRI_GO,
+    LRI_curated_KEGG = LRI_KEGG
   ))
 }
 
@@ -34,8 +34,9 @@ get_KEGG_PW_interactions <- function(
 ) {
   KEGG_NAME <- GENE <- i.KEGG_NAME <- NULL
   if (!requireNamespace("KEGGREST", quietly = TRUE)) {
-    stop("Package \"KEGGREST\" needed for this function to work. Please install it.",
-         call. = FALSE
+    stop(
+      "Package \"KEGGREST\" needed for this function to work. Please install it.",
+      call. = FALSE
     )
   }
   if (species == "mouse") {
@@ -86,7 +87,11 @@ get_KEGG_PW_interactions <- function(
           GENE %in% c(row[["LIGAND_1"]], row[["LIGAND_2"]])
           ]$KEGG_ID)
         RECEPTOR_PW <- unique(KEGG_PW_to_genes[
-          GENE %in% c(row[["RECEPTOR_1"]], row[["RECEPTOR_2"]], row[["RECEPTOR_3"]])
+          GENE %in% c(
+            row[["RECEPTOR_1"]],
+            row[["RECEPTOR_2"]],
+            row[["RECEPTOR_3"]]
+            )
           ]$KEGG_ID)
         res_inter <- intersect(LIGAND_PW, RECEPTOR_PW)
         if (length(res_inter) > 0) {
@@ -116,21 +121,29 @@ get_GO_interactions <- function(
 ) {
   GO_NAME <- i.GO_name <- NULL
   if (!requireNamespace("biomaRt", quietly = TRUE)) {
-    stop("Package \"biomaRt\" needed for this function to work. Please install it.",
+    stop(
+      "Package \"biomaRt\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }
   if (!requireNamespace("ontoProc", quietly = TRUE)) {
-    stop("Package \"ontoProc\" needed for this function to work. Please install it.",
+    stop(
+      "Package \"ontoProc\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }
   if (!requireNamespace("ontologyIndex", quietly = TRUE)) {
-    stop("Package \"ontologyIndex\" needed for this function to work. Please install it.",
+    stop(
+      "Package \"ontologyIndex\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }
-  ALL_LR_genes <- unique(unlist(LR_db[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")]))
+  ALL_LR_genes <- unique(
+    unlist(
+      LR_db[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1",
+                "RECEPTOR_2", "RECEPTOR_3")]
+      )
+    )
   ALL_LR_genes <- ALL_LR_genes[!is.na(ALL_LR_genes)]
   if (species == "mouse") {
     dataset <- "mmusculus_gene_ensembl"
@@ -164,7 +177,10 @@ get_GO_interactions <- function(
     ALL_LR_genes,
     function(gene) {
       temp_go <- unique(ALL_LR_genes_info[get(id_gene) == gene]$name_1006)
-      ontologyIndex::get_ancestors(onto_go_terms, names(go_names[go_names %in% temp_go]))
+      ontologyIndex::get_ancestors(
+        onto_go_terms,
+        names(go_names[go_names %in% temp_go])
+        )
     },
     USE.NAMES = TRUE,
     simplify = FALSE
@@ -212,9 +228,9 @@ get_ECM_genes <- function(
   species
 ) {
   go_id <- mgi_symbol <- NULL
-  LRdb_curated = scDiffCom::LRdb_mouse$LRdb_curated
+  LRI_curated = scDiffCom::LRI_mouse$LRI_curated
   GO_interactions = get_GO_interactions(species,
-                                        LRdb_curated,
+                                        LRI_curated,
                                         only_genes_annotations = TRUE)
   GO_interactions = GO_interactions[go_id != ""]
 
@@ -225,7 +241,7 @@ get_ECM_genes <- function(
         "GO:0005578",
         "GO:0005201", #
         "GO:1990430",
-        "GO:0035426" # Found in LRdb_mouse$go curated, but not in get_GO_interactions
+        "GO:0035426" # Found in LRI_mouse$go curated, but not in get_GO_interactions
       )
     )
   }
@@ -240,18 +256,31 @@ combine_LR_db <- function(
   curated = TRUE
 ) {
   DATABASE <- SOURCE <- ANNOTATION <- FAMILY <- SUBFAMILY <- keep_subLR <-
-    SOURCE_CLEAN <- SOURCE_no_digit <- is_complex_temp <- LIGAND_2 <- RECEPTOR_2 <- LR_vectorized_temp <-
-    N_IS_SUBPART <- i.N_IS_SUBPART <- LR_GENES <- LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_3 <- NULL
+    SOURCE_CLEAN <- SOURCE_no_digit <- is_complex_temp <- LIGAND_2 <-
+    RECEPTOR_2 <- LR_vectorized_temp <- N_IS_SUBPART <- i.N_IS_SUBPART <-
+    LR_GENES <- LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_3 <- NULL
   #already curated
-  LR_connectomeDB2020 <- prepare_LR_connectomeDB2020(species = species, one2one = one2one) #PMID
+  LR_connectomeDB2020 <- prepare_LR_connectomeDB2020(
+    species = species,
+    one2one = one2one
+    ) #PMID
   LR_CellTalkDB <- prepare_LR_CellTalkDB(species = species) #PMID
   LR_ICELLNET <- prepare_LR_ICELLNET(species = species, one2one = one2one) #PMID
-  LR_CellPhoneDB <- prepare_LR_CellPhoneDB(species = species, one2one = one2one, deconvoluted = FALSE) #CellPhoneDB
+  LR_CellPhoneDB <- prepare_LR_CellPhoneDB(
+    species = species,
+    one2one = one2one,
+    deconvoluted = FALSE) #CellPhoneDB
   LR_CellChat <- prepare_LR_CellChat(species = species) #PMID KEGG PMC PMC
   #not fully curated
-  LR_SingleCellSignalR <- prepare_LR_SingleCellSignalR(species = species, one2one = one2one) #"PMID" "FANTOM5" "HPMR" "HPRD" and
+  LR_SingleCellSignalR <- prepare_LR_SingleCellSignalR(
+    species = species,
+    one2one = one2one
+    ) #"PMID" "FANTOM5" "HPMR" "HPRD" and
   #"reactome" "IUPHAR" "PPI" "cellsignal.com"
-  LR_NicheNet <- prepare_LR_NicheNet(species = species, one2one = one2one) #"KEGG:NicheNet"  "IUPHAR" "FANTOM5" "PPI"
+  LR_NicheNet <- prepare_LR_NicheNet(
+    species = species,
+    one2one = one2one
+    ) #"KEGG:NicheNet"  "IUPHAR" "FANTOM5" "PPI"
   LR_scTensor <- prepare_LR_scTensor(species = species) #"SCT:DLRP" "IUPHAR" "HPMR" "SCT:CellPhoneDB" "SCT:SingleCellSignalR"   "PPI"
   #"HPRD" SCT:FANTOM5"
   if (curated) {
@@ -276,7 +305,10 @@ combine_LR_db <- function(
   )
   col_md <- colnames(LR_full)
   col_md <- col_md[col_md != "LR_SORTED"]
-  db_names <- c("connectomeDB2020", "CellTalkDB", "CellChat", "CellPhoneDB", "SingleCellSignalR", "scTensor", "ICELLNET", "NicheNet")
+  db_names <- c(
+    "connectomeDB2020", "CellTalkDB", "CellChat",
+                "CellPhoneDB", "SingleCellSignalR",
+    "scTensor", "ICELLNET", "NicheNet")
   LR_full <- dcast.data.table(
     LR_full,
     formula = LR_SORTED ~ DATABASE,
@@ -351,37 +383,65 @@ combine_LR_db <- function(
     }
   )]
   col_database <- paste0("DATABASE.1_", db_names)
-  LR_full[, c("DATABASE") := do.call(paste, c(.SD, sep = ";")), .SDcols = col_database]
+  LR_full[
+    ,
+    c("DATABASE") := do.call(paste, c(.SD, sep = ";")),
+    .SDcols = col_database]
   LR_full[, c("DATABASE") := gsub("NA|NA;|;NA", "", DATABASE)]
   LR_full[, c("N_DB") := rowSums(!is.na(.SD)), .SDcols = col_database]
   col_source <- paste0("SOURCE_", db_names)
-  LR_full[, c("SOURCE") := do.call(paste, c(.SD, sep = ";")), .SDcols = col_source]
+  LR_full[
+    , c("SOURCE") := do.call(paste, c(.SD, sep = ";")),
+    .SDcols = col_source]
   LR_full[, c("SOURCE") := gsub("NA|NA;|;NA", "", SOURCE)]
   col_anno <- paste0("ANNOTATION_", db_names)
-  LR_full[, c("ANNOTATION") := do.call(paste, c(.SD, sep = ";")), .SDcols = col_anno]
+  LR_full[
+    , c("ANNOTATION") := do.call(paste, c(.SD, sep = ";")),
+    .SDcols = col_anno]
   LR_full[, c("ANNOTATION") := gsub("NA|NA;|;NA", "", ANNOTATION)]
   col_fam <- paste0("FAMILY_", db_names)
   LR_full[, c("FAMILY") := do.call(paste, c(.SD, sep = ";")), .SDcols = col_fam]
   LR_full[, c("FAMILY") := gsub("NA|NA;|;NA", "", FAMILY)]
   col_subfam <- paste0("SUBFAMILY_", db_names)
-  LR_full[, c("SUBFAMILY") := do.call(paste, c(.SD, sep = ";")), .SDcols = col_subfam]
+  LR_full[
+    , c("SUBFAMILY") := do.call(paste, c(.SD, sep = ";")),
+    .SDcols = col_subfam]
   LR_full[, c("SUBFAMILY") := gsub("NA|NA;|;NA", "", SUBFAMILY)]
   if(species == "mouse") {
     for (id_loop in c(paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3))) {
       cols_conf <- paste0(id_loop, "_CONF_", db_names)
-      LR_full[, paste0(id_loop, "_CONF") := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = cols_conf]
-      LR_full[, paste0(id_loop, "_CONF") := ifelse(is.na(get(paste0(id_loop, "_CONF"))) & !is.na(get(id_loop)),
-                                                   1, get(paste0(id_loop, "_CONF"))
-      )]
+      LR_full[
+        ,
+        paste0(id_loop, "_CONF") := do.call(pmax, c(.SD, na.rm = TRUE)),
+        .SDcols = cols_conf]
+      LR_full[
+        , paste0(id_loop, "_CONF") := ifelse(
+          is.na(get(paste0(id_loop, "_CONF"))) & !is.na(get(id_loop)),
+          1,
+          get(paste0(id_loop, "_CONF"))
+        )]
       cols_type <- paste0(id_loop, "_TYPE_", db_names)
-      LR_full[, paste0(id_loop, "_TYPE") := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = cols_type]
-      LR_full[, paste0(id_loop, "_TYPE") := ifelse(is.na(get(paste0(id_loop, "_TYPE"))) & !is.na(get(id_loop)),
-                                                   "provided", get(paste0(id_loop, "_TYPE"))
-      )]
+      LR_full[, paste0(id_loop, "_TYPE") := do.call(
+        pmax,
+        c(.SD, na.rm = TRUE)
+      ),
+      .SDcols = cols_type]
+      LR_full[
+        ,
+        paste0(id_loop, "_TYPE") := ifelse(
+          is.na(get(paste0(id_loop, "_TYPE"))) & !is.na(get(id_loop)),
+          "provided",
+          get(paste0(id_loop, "_TYPE")
+          )
+        )]
     }
   }
   if (curated) {
-    LR_full[, is_complex_temp := fifelse(!is.na(LIGAND_2) | !is.na(RECEPTOR_2), TRUE, FALSE)]
+    LR_full[, is_complex_temp := fifelse(
+      !is.na(LIGAND_2) | !is.na(RECEPTOR_2),
+      TRUE,
+      FALSE
+      )]
     LR_full[, LR_vectorized_temp := list(sapply(1:nrow(.SD), function(i) {
       temp <- c(
         sapply(1:2, function(j) {
@@ -589,22 +649,26 @@ prepare_LR_scTensor <- function(
 ) {
   SOURCE <- NULL
   if (!requireNamespace("AnnotationDbi", quietly = TRUE)) {
-    stop("Package \"AnnotationDbi\" needed for this function to work. Please install it.",
+    stop(
+      "Package \"AnnotationDbi\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }
   if (!requireNamespace("LRBase.Mmu.eg.db", quietly = TRUE)) {
-    stop("Package \"LRBase.Mmu.eg.db\" needed for this function to work. Please install it.",
+    stop(
+      "Package \"LRBase.Mmu.eg.db\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }
   if (!requireNamespace("LRBase.Hsa.eg.db", quietly = TRUE)) {
-    stop("Package \"LRBase.Hsa.eg.db\" needed for this function to work. Please install it.",
+    stop(
+      "Package \"LRBase.Hsa.eg.db\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }
   if (!requireNamespace("AnnotationHub", quietly = TRUE)) {
-    stop("Package \"AnnotationHub\" needed for this function to work. Please install it.",
+    stop(
+      "Package \"AnnotationHub\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }
@@ -691,13 +755,24 @@ prepare_LR_scTensor <- function(
     LR[, SOURCE := gsub("ENSEMBL_DLRP|NCBI_DLRP", "SCT:DLRP", SOURCE)]
     LR[, SOURCE := gsub("ENSEMBL_IUPHAR|NCBI_IUPHAR", "IUPHAR", SOURCE)]
     LR[, SOURCE := gsub("ENSEMBL_HPMR|NCBI_HPMR", "HPMR", SOURCE)]
-    LR[, SOURCE := gsub("ENSEMBL_CELLPHONEDB|NCBI_CELLPHONEDB", "SCT:CellPhoneDB", SOURCE)]
-    LR[, SOURCE := gsub("ENSEMBL_SINGLECELLSIGNALR|NCBI_SINGLECELLSIGNALR", "SCT:SingleCellSignalR", SOURCE)]
+    LR[, SOURCE := gsub(
+      "ENSEMBL_CELLPHONEDB|NCBI_CELLPHONEDB",
+      "SCT:CellPhoneDB",
+      SOURCE
+      )]
+    LR[, SOURCE := gsub(
+      "ENSEMBL_SINGLECELLSIGNALR|NCBI_SINGLECELLSIGNALR",
+      "SCT:SingleCellSignalR",
+      SOURCE
+      )]
     LR[, SOURCE := gsub("SWISSPROT_STRING", "PPI", SOURCE)]
     LR[, SOURCE := gsub("TREMBL_STRING", "PPI", SOURCE)]
   }
   if (species == "human") {
-    LR[, SOURCE := gsub("SWISSPROT_STRING|TREMBL_STRING|BADERLAB", "PPI", SOURCE)]
+    LR[, SOURCE := gsub(
+      "SWISSPROT_STRING|TREMBL_STRING|BADERLAB",
+      "PPI",
+      SOURCE)]
     LR[, SOURCE := gsub("SWISSPROT_HPRD|TREMBL_HPRD", "HPRD", SOURCE)]
     LR[, SOURCE := gsub("IUPHAR", "IUPHAR", SOURCE)]
     LR[, SOURCE := gsub("DLRP", "SCT:DLRP", SOURCE)]
@@ -715,7 +790,8 @@ prepare_LR_SingleCellSignalR <- function(
 ) {
   LR_SORTED <- SOURCE <- PMIDs <- NULL
   if (!requireNamespace("SingleCellSignalR", quietly = TRUE)) {
-    stop("Package \"SingleCellSignalR\" needed for this function to work. Please install it.",
+    stop(
+      "Package \"SingleCellSignalR\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }
@@ -803,7 +879,8 @@ prepare_LR_NicheNet <- function(
 ) {
   LR_SORTED <- SOURCE <- R3 <- NULL
   if (!requireNamespace("nichenetr", quietly = TRUE)) {
-    stop("Package \"nichenetr\" needed for this function to work. Please install it.",
+    stop(
+      "Package \"nichenetr\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }
@@ -869,8 +946,14 @@ prepare_LR_NicheNet <- function(
     )
   }
   source_temp <- unique(LR$SOURCE)
-  source_temp_kegg <- paste0(source_temp[grepl("kegg", source_temp)], collapse = "|")
-  source_temp_ppi <- paste0(source_temp[grepl("ppi", source_temp)], collapse = "|")
+  source_temp_kegg <- paste0(
+    source_temp[grepl("kegg", source_temp)],
+    collapse = "|"
+    )
+  source_temp_ppi <- paste0(
+    source_temp[grepl("ppi", source_temp)],
+    collapse = "|"
+    )
   LR[, SOURCE := gsub(source_temp_ppi, "PPI", SOURCE)]
   LR[, SOURCE := gsub(source_temp_kegg, "KEGG:NicheNet", SOURCE)]
   LR[, SOURCE := gsub("pharmacology", "IUPHAR", SOURCE)]
@@ -881,8 +964,9 @@ prepare_LR_NicheNet <- function(
 create_LR_CellPhoneDB <- function(
   deconvoluted = FALSE
 ) {
-  id_protein_multi_1_1 <- id_protein_multi_1_2 <- id_protein_1 <- id_protein_2 <- temp_id <-
-    receptor_1 <- receptor_2 <- secreted_1 <- secreted_2 <- L_3 <- LR_ID <- NULL
+  id_protein_multi_1_1 <- id_protein_multi_1_2 <- id_protein_1 <-
+    id_protein_2 <- temp_id <- receptor_1 <- receptor_2 <- secreted_1 <-
+    secreted_2 <- L_3 <- LR_ID <- NULL
   data <- LRcp_raw
   dt_interac <- setDT(data$interaction_table)
   dt_multi <- setDT(data$multidata_table)
@@ -923,7 +1007,10 @@ create_LR_CellPhoneDB <- function(
     sort = FALSE,
     suffixes = c("_1", "_2")
   )
-  dt_comp$id_comp <- paste0("id_protein_multi_", rowid(dt_comp$complex_multidata_id))
+  dt_comp$id_comp <- paste0(
+    "id_protein_multi_",
+    rowid(dt_comp$complex_multidata_id)
+    )
   dt_comp_dc <- dcast.data.table(
     dt_comp,
     formula = complex_multidata_id ~ id_comp,
@@ -946,18 +1033,30 @@ create_LR_CellPhoneDB <- function(
     sort = FALSE,
     suffixes = c("_1", "_2")
   )
-  dt_full[, id_protein_multi_1_1 := ifelse(is.na(id_protein_1), id_protein_multi_1_1, id_protein_1)]
-  dt_full[, id_protein_multi_1_2 := ifelse(is.na(id_protein_2), id_protein_multi_1_2, id_protein_2)]
+  dt_full[, id_protein_multi_1_1 := ifelse(
+    is.na(id_protein_1), id_protein_multi_1_1, id_protein_1)]
+  dt_full[, id_protein_multi_1_2 := ifelse(
+    is.na(id_protein_2), id_protein_multi_1_2, id_protein_2)]
   dt_gene <- stats::na.omit(unique(dt_gene[, c("protein_id", "hgnc_symbol")]))
   dt_gene$temp_id <- rowid(dt_gene$protein_id)
   dt_gene <- dt_gene[temp_id == 1, ]
   dt_gene[, temp_id := NULL]
-  dt_full[, c(paste0("id_gene_multi_", 1:3, "_1"), paste0("id_gene_multi_", 1:3, "_2")) := c(
+  dt_full[
+    ,
+    c(
+      paste0("id_gene_multi_", 1:3, "_1"),
+      paste0("id_gene_multi_", 1:3, "_2")) := c(
     lapply(1:3, function(i) {
-      dt_gene[.SD, on = paste0("protein_id==id_protein_multi_", i, "_1"), get("x.hgnc_symbol")]
+      dt_gene[
+        .SD,
+        on = paste0("protein_id==id_protein_multi_", i, "_1"),
+        get("x.hgnc_symbol")]
     }),
     lapply(1:3, function(i) {
-      dt_gene[.SD, on = paste0("protein_id==id_protein_multi_", i, "_2"), get("x.hgnc_symbol")]
+      dt_gene[
+        .SD,
+        on = paste0("protein_id==id_protein_multi_", i, "_2"),
+        get("x.hgnc_symbol")]
     })
   )]
   dt_full[, paste0("L_", 1:3) := lapply(1:3, function(i) {
@@ -1022,7 +1121,9 @@ create_LR_CellPhoneDB <- function(
       )
     )
   })]
-  dt_full <- dt_full[, c("id_cp_interaction", paste0("L_", 1:3), paste0("R_", 1:3))]
+  dt_full <- dt_full[
+    ,
+    c("id_cp_interaction", paste0("L_", 1:3), paste0("R_", 1:3))]
   dt_full[, L_3 := NULL]
   if (deconvoluted) {
     dt_full <- do.call("rbind", lapply(1:2, function(i) {
@@ -1079,8 +1180,10 @@ prepare_LR_CellPhoneDB <- function(
       cols_to_keep <- c(
         "LR_SORTED", "SOURCE",
         "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3",
-        "LIGAND_1_CONF", "LIGAND_2_CONF", "RECEPTOR_1_CONF", "RECEPTOR_2_CONF", "RECEPTOR_3_CONF",
-        "LIGAND_1_TYPE", "LIGAND_2_TYPE", "RECEPTOR_1_TYPE", "RECEPTOR_2_TYPE", "RECEPTOR_3_TYPE"
+        "LIGAND_1_CONF", "LIGAND_2_CONF", "RECEPTOR_1_CONF",
+        "RECEPTOR_2_CONF", "RECEPTOR_3_CONF",
+        "LIGAND_1_TYPE", "LIGAND_2_TYPE", "RECEPTOR_1_TYPE",
+        "RECEPTOR_2_TYPE", "RECEPTOR_3_TYPE"
       )
       if (keep_id) {
         cols_to_keep <- c("id_cp_interaction", cols_to_keep)
@@ -1136,7 +1239,8 @@ prepare_LR_CellChat <- function(
 ) {
   SOURCE <- NULL
   if (!requireNamespace("CellChat", quietly = TRUE)) {
-    stop("Package \"CellChat\" needed for this function to work. Please install it.",
+    stop(
+      "Package \"CellChat\" needed for this function to work. Please install it.",
          call. = FALSE
     )
   }

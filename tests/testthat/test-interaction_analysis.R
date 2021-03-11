@@ -8,7 +8,7 @@
 
 parameters_mode <- list(
   wrong = list(
-    LRdb_species = "rat",  seurat_celltype_id = c("cell_type", "cell_types"),
+    LRI_species = "rat",  seurat_celltype_id = c("cell_type", "cell_types"),
     seurat_condition_id = list(column_name = "age_group", cond2_name = "OLD"),
     iterations = 100.2,
     object_name = 4, seurat_assay = list("RNA"), seurat_slot = "count", log_scale = "TRUE",
@@ -17,7 +17,7 @@ parameters_mode <- list(
     threshold_logfc = 0, return_distributions = "FALSE", seed = 5.5, verbose = "TRUE"
   ),
   cond_stat = list(
-    LRdb_species = "mouse", seurat_celltype_id = "cell_type",
+    LRI_species = "mouse", seurat_celltype_id = "cell_type",
     seurat_condition_id = list(column_name = "age_group", cond1_name = "YOUNG", cond2_name = "OLD"),
     iterations = 10,
     object_name = "scdiffcom_cond_stat",
@@ -28,7 +28,7 @@ parameters_mode <- list(
     return_distributions = FALSE, seed = 42, verbose = FALSE
   ),
   cond_nostat = list(
-    LRdb_species = "mouse", seurat_celltype_id = "cell_type",
+    LRI_species = "mouse", seurat_celltype_id = "cell_type",
     seurat_condition_id = list(column_name = "age_group", cond1_name = "YOUNG", cond2_name = "OLD"),
     iterations = 0,
     object_name = "scdiffcom_cond_nostat",
@@ -39,7 +39,7 @@ parameters_mode <- list(
     return_distributions = FALSE, seed = 42, verbose = FALSE
   ),
   nocond_stat = list(
-    LRdb_species = "mouse", seurat_celltype_id = "cell_type",
+    LRI_species = "mouse", seurat_celltype_id = "cell_type",
     seurat_condition_id = NULL,
     iterations = 10,
     object_name = "scdiffcom_nocond_stat",
@@ -50,7 +50,7 @@ parameters_mode <- list(
     return_distributions = FALSE, seed = 42, verbose = FALSE
   ),
   nocond_nostat = list(
-    LRdb_species = "mouse", seurat_celltype_id = "cell_type",
+    LRI_species = "mouse", seurat_celltype_id = "cell_type",
     seurat_condition_id = NULL,
     iterations = 0,
     object_name = "scdiffcom_nocond_nostat",
@@ -101,7 +101,7 @@ inputs_test <- lapply(
       slot = param$seurat_slot,
       log_scale = param$log_scale,
       threshold_min_cells = param$threshold_min_cells,
-      LRdb_table = LRdb_mouse$LRdb_curated,
+      LRI_table = LRI_mouse$LRI_curated,
       verbose = param$verbose
     )
   }
@@ -285,7 +285,7 @@ scdiffcom_objects <- lapply(
   function(params) {
     run_internal_raw_analysis(
       seurat_object = seurat_test,
-      LRdb_table = LRdb_mouse$LRdb_curated,
+      LRI_table = LRI_mouse$LRI_curated,
       params = params
     )
   }
@@ -404,7 +404,7 @@ test_that("fisher test is done correctly on LRIs", {
 
 #ORA on GO terms
 
-genes_GO_UP <- LRdb_mouse$LRdb_curated_GO[GO_ID == "GO:0002376"]$LR_GENES
+genes_GO_UP <- LRI_mouse$LRI_curated_GO[GO_ID == "GO:0002376"]$LR_GENES
 contingency_table_test_GO_up <- matrix(
   c(
     scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_UP & REGULATION == "UP", .N],
@@ -416,7 +416,7 @@ contingency_table_test_GO_up <- matrix(
 )
 fisher_GO_up <- fisher.test(contingency_table_test_GO_up)
 
-genes_GO_DOWN <- LRdb_mouse$LRdb_curated_GO[GO_ID == "GO:0031625"]$LR_GENES
+genes_GO_DOWN <- LRI_mouse$LRI_curated_GO[GO_ID == "GO:0031625"]$LR_GENES
 contingency_table_test_GO_down <- matrix(
   c(
     scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_DOWN & REGULATION == "DOWN", .N],
@@ -428,7 +428,7 @@ contingency_table_test_GO_down <- matrix(
 )
 fisher_GO_down <- fisher.test(contingency_table_test_GO_down)
 
-genes_GO_FLAT <- LRdb_mouse$LRdb_curated_GO[GO_ID == "GO:0022406"]$LR_GENES
+genes_GO_FLAT <- LRI_mouse$LRI_curated_GO[GO_ID == "GO:0022406"]$LR_GENES
 contingency_table_test_GO_flat <- matrix(
   c(
     scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_FLAT & REGULATION == "FLAT", .N],
@@ -469,4 +469,265 @@ test_that("fisher test is done correctly on GO terms", {
   )
 })
 
+## Check BuildNetwork step by step ####
 
+## Check construct_graph ####
+
+# ig_cond_stat <- construct_graph(
+#   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
+#   conds = c("YOUNG", "OLD"),
+#   ora_default_ER = scdiffcom_objects$cond_stat@ora_default$ER_CELLTYPES
+# )
+# plot(ig_cond_stat)
+# igraph::V(ig_cond_stat)
+# igraph::E(ig_cond_stat)
+# igraph::edge.attributes(ig_cond_stat)
+# igraph::vertex.attributes(ig_cond_stat)
+#
+# ig_nocond_stat <- construct_graph(
+#   cci_detected = scdiffcom_objects$nocond_stat@cci_detected,
+#   conds = NULL,
+#   ora_default_ER = NULL
+# )
+# plot(ig_nocond_stat)
+# igraph::V(ig_nocond_stat)
+# igraph::E(ig_nocond_stat)
+# igraph::edge.attributes(ig_nocond_stat)
+# igraph::vertex.attributes(ig_nocond_stat)
+#
+# ## Check setup_graph #####
+#
+# setup_test <- setup_graph(
+#   G = ig_cond_stat,
+#   conds = c("YOUNG", "OLD"),
+#   config = setup_graph_config() ,
+#   disperse = TRUE
+# )
+#
+#
+# ## Check build_igraph ####
+#
+# igb_cond_stat <- build_igraph(
+#   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
+#   conds = c("YOUNG", "OLD"),
+#   ora_default_ER = scdiffcom_objects$cond_stat@ora_default$ER_CELLTYPES,
+#   network_layout_type = "bipartite"
+# )
+# plot(igb_cond_stat)
+#
+# ## Check network_skeleton ####
+#
+# interactive_from_igraph <- function(
+#   cci_detected,
+#   ora_default_LR,
+#   object_name,
+#   G,
+#   network_representation_type,
+#   network_layout_type
+# )
+#
+# test_nodes <- setDT(igraph::as_data_frame(igb_cond_stat, what = "vertices"))
+# test_edges <- setDT(igraph::as_data_frame(igb_cond_stat, what = "edges"))
+# test_edges <- test_edges[ORA_TYPE != "NONE"]
+#
+# test <- build_network_skeleton(
+#   test_nodes,
+#   test_edges,
+#   "ORA",
+#   "bipartite",
+#   setup_graph_config(),
+#   "test"
+# )
+# test
+#
+#
+# types_of_network <- c(
+#     "condition1_network",
+#     "condition2_network",
+#     "difference_network",
+#     "up_regulated_network",
+#     "down_regulated_network",
+#     "ORA_network"
+# )
+#
+# layouts_of_network = c(
+#   "conventional",
+#   "bipartite"
+# )
+#
+# build_interactive_network(
+#   object = scdiffcom_objects$cond_stat,
+#   network_type = "ORA_network",
+#   layout_type = "bipartite",
+#   class_signature = "scdiffCom",
+#   subobject_name = NULL
+# )
+#
+# build_interactive_network(
+#   object = scdiffcom_objects$cond_stat,
+#   network_type = "ORA_network",
+#   layout_type = "conventional",
+#   class_signature = "scdiffCom",
+#   subobject_name = NULL
+# )
+#
+# build_interactive_network(
+#   object = scdiffcom_objects$cond_stat,
+#   network_type = "difference_network",
+#   layout_type = "bipartite",
+#   class_signature = "scdiffCom",
+#   subobject_name = NULL
+# )
+#
+# build_interactive_network(
+#   object = scdiffcom_objects$cond_stat,
+#   network_type = "difference_network",
+#   layout_type = "conventional",
+#   class_signature = "scdiffCom",
+#   subobject_name = NULL
+# )
+#
+# build_interactive_network(
+#   object = scdiffcom_objects$cond_stat,
+#   network_type = "down_regulated_network",
+#   layout_type = "bipartite",
+#   class_signature = "scdiffCom",
+#   subobject_name = NULL
+# )
+#
+# build_interactive_network(
+#   object = scdiffcom_objects$cond_stat,
+#   network_type = "condition2_network",
+#   layout_type = "bipartite",
+#   class_signature = "scdiffCom",
+#   subobject_name = NULL
+# )
+#
+# build_interactive_network(
+#   object = scdiffcom_objects$cond_stat,
+#   network_type = "condition2_network",
+#   layout_type = "conventional",
+#   class_signature = "scdiffCom",
+#   subobject_name = NULL
+# )
+#
+# build_interactive_network(
+#   object = scdiffcom_objects$nocond_stat,
+#   network_type = "condition1_network",
+#   layout_type = "bipartite",
+#   class_signature = "scdiffCom",
+#   subobject_name = NULL
+# )
+#
+# build_interactive_network(
+#   object = scdiffcom_objects$nocond_stat,
+#   network_type = "condition1_network",
+#   layout_type = "conventional",
+#   class_signature = "scdiffCom",
+#   subobject_name = NULL
+# )
+#
+# build_interactive_network(
+#   object = scdiffcom_objects$cond_stat,
+#   network_type = "up_regulated_network",
+#   layout_type = "conventional",
+#   class_signature = "scdiffCom",
+#   subobject_name = NULL
+# )
+#
+# edge_test <- build_edge_table(
+#   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
+#   conds = c("YOUNG", "OLD"),
+#   ora_default_ER = scdiffcom_objects$cond_stat@ora_default$ER_CELLTYPES,
+#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LR_GENES,
+#   network_representation_type = "ORA",
+#   network_layout_type = "bipartite",
+#   config = setup_graph_config()
+# )
+#
+# vertex_test <- build_vertex_table(
+#   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
+#   conds = c("YOUNG", "OLD"),
+#   layout_type = "bipartite",
+#   config = setup_graph_config()
+# )
+# vertex_test
+#
+#
+#
+# test <- extract_vertex_metadata(
+#   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
+#   conds = c("YOUNG", "OLD"),
+#   layout_type = "bipartite"
+# )
+#
+# test
+#
+# #
+# test <- build_igraph(
+#   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
+#   conds = c("YOUNG", "OLD"),
+#   ora_default_ER = scdiffcom_objects$cond_stat@ora_default$ER_CELLTYPES,
+#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LR_GENES,
+#   network_type = "ORA_network",
+#   layout_type = "bipartite",
+#   config = setup_graph_config()
+# )
+# plot(test)
+#
+# n_emit <- igraph::V(test)$name[igraph::V(test)$vertex_types]
+# edg <- setDT(igraph::edge.attributes(test))
+# edg
+
+# test
+# plot(test, edge.loop.angle = igraph::E(test)$edge.loop.angle )
+#
+#
+# test <- interactive_from_igraph(
+#   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
+#   conds = c("YOUNG", "OLD"),
+#   ora_default_ER = scdiffcom_objects$cond_stat@ora_default$ER_CELLTYPES,
+#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LR_GENES,
+#   network_representation_type = "ORA",
+#   network_layout_type = "bipartite",
+#   object_name = "test"
+# )
+#
+# edge_test <- build_edge_table(
+#   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
+#   conds = c("YOUNG", "OLD"),
+#   ora_default_ER = scdiffcom_objects$cond_stat@ora_default$ER_CELLTYPES,
+#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LR_GENES,
+#   network_type = "ORA_network",
+#   layout_type = "bipartite",
+#   config = setup_graph_config()
+# )
+#
+# sort_bipartite_vertices(
+#   test,
+#   edge_test,
+#   "ORA_network"
+# )
+
+#
+# test <- extract_edge_metadata(
+#   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
+#   conds = c("YOUNG", "OLD")
+# )
+# test <- process_celltype_pairs_enrichment(
+#   ora_ER_cells =
+# )
+
+# scdiffcom_objects$cond_stat@parameters$object_name <- "abc"
+#
+# scdiffcom_test_comb <- Combine_scDiffCom(
+#   l = list(scdiffcom_objects$cond_stat, scdiffcom_objects2$cond_stat),
+#   object_name = "test",
+#   verbose = TRUE
+# )
+#
+# BuildNetwork(
+#   scdiffcom_test_comb,
+#   ID = "abc",
+#   abbreviation_table = NULL
+# )

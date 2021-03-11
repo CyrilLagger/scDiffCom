@@ -11,7 +11,7 @@ An S4 object of class Seurat.
 data(seurat_sample_tms_liver)
 }
 \description{
-This object of class Seurat has been down-sampled from the original
+This Seurat object has been down-sampled from the original
 Tabula Muris Senis Liver object. Pre-processing and normalization has
 been performed before down-sampling. It contains 726 features (genes) and
 468 samples (cells). It is only intended to be used for testing and

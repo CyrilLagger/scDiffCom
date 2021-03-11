@@ -9,7 +9,7 @@ validate_parameters <- function(
 ) {
   params_names_base <- c(
     "object_name",
-    "LRdb_species",
+    "LRI_species",
     "seurat_celltype_id",
     "seurat_condition_id",
     "seurat_assay",
@@ -49,8 +49,8 @@ validate_parameters <- function(
   if (!is.character(params$object_name) | length(params$object_name) != 1) {
     res <- c(res, "`object_name` must be a character vector of length 1")
   }
-  if (!(params$LRdb_species %in% c("mouse", "human"))) {
-    res <- c(res, "`LRdb_species` must be either 'mouse' or 'human'")
+  if (!(params$LRI_species %in% c("mouse", "human"))) {
+    res <- c(res, "`LRI_species` must be either 'mouse' or 'human'")
   }
   if (!is.character(params$seurat_celltype_id) | length(params$seurat_celltype_id) != 1) {
     res <- c(res, "`seurat_celltype_id` must be a character vector of length 1")

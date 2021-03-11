@@ -4,11 +4,11 @@ create_cci_template <- function(
   template <- CJ(
     EMITTER_CELLTYPE = analysis_inputs$cell_types,
     RECEIVER_CELLTYPE = analysis_inputs$cell_types,
-    LR_GENES = analysis_inputs$LRdb$LR_GENES
+    LR_GENES = analysis_inputs$LRI$LR_GENES
   )
   template <- merge.data.table(
     x = template,
-    y = analysis_inputs$LRdb,
+    y = analysis_inputs$LRI,
     by.x = "LR_GENES",
     by.y = "LR_GENES",
     all.x = TRUE,
@@ -34,45 +34,47 @@ add_sample_number <- function(
   condition_inputs,
   metadata
 ) {
-  dt_NSAMPLES <- unique(metadata[, c("cell_type", "sample_id", "condition")])[, .N, by = c("cell_type", "condition")]
+  dt_NSAMPLES <- unique(
+    metadata[, c("cell_type", "sample_id", "condition")]
+  )[, .N, by = c("cell_type", "condition")]
   dt_NSAMPLES <- dcast.data.table(
-      data = dt_NSAMPLES,
-      formula = cell_type ~ condition,
-      value.var = "N"
-    )
-    template_table <- merge.data.table(
-      x = template_table,
-      y = dt_NSAMPLES,
-      by.x = "EMITTER_CELLTYPE",
-      by.y = "cell_type",
-      all.x = TRUE,
-      sort = FALSE
-    )
-    template_table <- merge.data.table(
-      x = template_table,
-      y = dt_NSAMPLES,
-      by.x = "RECEIVER_CELLTYPE",
-      by.y = "cell_type",
-      all.x = TRUE,
-      sort = FALSE,
-      suffixes = c("_L", "_R")
-    )
-    new_cols <- c(
-      paste0("EMITTER_NSAMPLES_", condition_inputs$cond1),
-      paste0("EMITTER_NSAMPLES_", condition_inputs$cond2),
-      paste0("RECEIVER_NSAMPLES_", condition_inputs$cond1),
-      paste0("RECEIVER_NSAMPLES_", condition_inputs$cond2)
-    )
-    setnames(
-      x = template_table,
-      old = c(
-        paste0(condition_inputs$cond1, "_L"),
-        paste0(condition_inputs$cond2, "_L"),
-        paste0(condition_inputs$cond1, "_R"),
-        paste0(condition_inputs$cond2, "_R")
-      ),
-      new = new_cols
-    )
+    data = dt_NSAMPLES,
+    formula = cell_type ~ condition,
+    value.var = "N"
+  )
+  template_table <- merge.data.table(
+    x = template_table,
+    y = dt_NSAMPLES,
+    by.x = "EMITTER_CELLTYPE",
+    by.y = "cell_type",
+    all.x = TRUE,
+    sort = FALSE
+  )
+  template_table <- merge.data.table(
+    x = template_table,
+    y = dt_NSAMPLES,
+    by.x = "RECEIVER_CELLTYPE",
+    by.y = "cell_type",
+    all.x = TRUE,
+    sort = FALSE,
+    suffixes = c("_L", "_R")
+  )
+  new_cols <- c(
+    paste0("EMITTER_NSAMPLES_", condition_inputs$cond1),
+    paste0("EMITTER_NSAMPLES_", condition_inputs$cond2),
+    paste0("RECEIVER_NSAMPLES_", condition_inputs$cond1),
+    paste0("RECEIVER_NSAMPLES_", condition_inputs$cond2)
+  )
+  setnames(
+    x = template_table,
+    old = c(
+      paste0(condition_inputs$cond1, "_L"),
+      paste0(condition_inputs$cond2, "_L"),
+      paste0(condition_inputs$cond1, "_R"),
+      paste0(condition_inputs$cond2, "_R")
+    ),
+    new = new_cols
+  )
   for (j in new_cols) {
     set(template_table, i = which(is.na(template_table[[j]])), j = j, value = 0)
   }
@@ -219,32 +221,19 @@ run_simple_cci_analysis <- function(
       dt[,
          LOGFC := get(paste0("CCI_SCORE_", analysis_inputs$condition$cond2)) -
            get(paste0("CCI_SCORE_", analysis_inputs$condition$cond1))
-         ]
+      ]
     } else {
       dt[,
-         LOGFC := log(get(paste0("CCI_SCORE_", analysis_inputs$condition$cond2)) /
-                        get(paste0("CCI_SCORE_", analysis_inputs$condition$cond1)))
-         ]
+         LOGFC := log(
+           get(paste0("CCI_SCORE_", analysis_inputs$condition$cond2)) /
+             get(paste0("CCI_SCORE_", analysis_inputs$condition$cond1))
+         )
+      ]
       dt[, LOGFC := ifelse(
         is.nan(LOGFC),
         0,
         LOGFC
       )]
-      #max_logfc <- max(dt[is.finite(LOGFC)][["LOGFC"]])
-      #min_logfc <- min(dt[is.finite(LOGFC)][["LOGFC"]])
-      # dt[, LOGFC := ifelse(
-      #   is.finite(LOGFC),
-      #   LOGFC,
-      #   ifelse(
-      #     is.nan(LOGFC),
-      #     0,
-      #     ifelse(
-      #       LOGFC > 0,
-      #       max_logfc,
-      #       min_logfc
-      #     )
-      #   )
-      # )]
     }
     dt[, LOGFC_ABS := abs(LOGFC)]
   }
@@ -304,8 +293,14 @@ build_cci_or_drate <- function(
     cond1_id <- paste0("_", condition_inputs$cond1)
     cond2_id <- paste0("_", condition_inputs$cond2)
     merge_id <- c(condition_inputs$cond1, condition_inputs$cond2)
-    score_id <- paste0("CCI_SCORE_", c(condition_inputs$cond1, condition_inputs$cond2))
-    dr_id <- paste0("IS_CCI_EXPRESSED_", c(condition_inputs$cond1, condition_inputs$cond2))
+    score_id <- paste0(
+      "CCI_SCORE_",
+      c(condition_inputs$cond1, condition_inputs$cond2)
+    )
+    dr_id <- paste0(
+      "IS_CCI_EXPRESSED_",
+      c(condition_inputs$cond1, condition_inputs$cond2)
+    )
     n_id <- 2
     pmin_id <- c(cond1_id, cond2_id)
   }
@@ -319,9 +314,15 @@ build_cci_or_drate <- function(
     ct_temp <- strsplit(colnames(dt)[-1], "_")
     lct_temp <- length(ct_temp)
     if(lct_temp %% 2 !=0 ) stop("Internal error in `build_cci_or_drate`")
-    ct_temp_keep <- unlist(lapply(ct_temp, function(i) i[[2]]))[1:(lct_temp/2)]
-    ct_temp_check <- unlist(lapply(ct_temp, function(i) i[[2]]))[(lct_temp/2+1):lct_temp]
-    if(!identical(ct_temp_check, ct_temp_keep)) stop("Internal error in `build_cci_or_drate`")
+    ct_temp_keep <- unlist(
+      lapply(ct_temp, function(i) i[[2]])
+    )[1:(lct_temp/2)]
+    ct_temp_check <- unlist(
+      lapply(ct_temp, function(i) i[[2]])
+    )[(lct_temp/2+1):lct_temp]
+    if(!identical(ct_temp_check, ct_temp_keep)) {
+      stop("Internal error in `build_cci_or_drate`")
+    }
     dt <- melt.data.table(
       data = dt,
       id.vars = "GENE",
@@ -344,33 +345,6 @@ build_cci_or_drate <- function(
       variable.name = "CELLTYPE"
     )
   }
-  ##old slower version
-  # dt <- as.data.table(
-  #   x = averaged_expr,
-  #   keep.rownames = row_id,
-  #   sorted = FALSE
-  # )
-  # if (condition_inputs$is_cond) {
-  #   dt[, c("CONDITION", "CELLTYPE") := split_cond_string(
-  #     CONDITION_CELLTYPE,
-  #     condition_inputs$cond1,
-  #     condition_inputs$cond2)]
-  #   dt[, CONDITION_CELLTYPE := NULL]
-  # }
-  # dt <- melt.data.table(
-  #   data = dt,
-  #   id.vars = vars_id,
-  #   variable.name = "GENE",
-  #   value.name = name_tag
-  # )
-  # if (condition_inputs$is_cond) {
-  #   dt <- dcast.data.table(
-  #     data = dt,
-  #     formula = CELLTYPE + GENE ~ CONDITION,
-  #     value.var = name_tag
-  #   )
-  # }
-  ##back to previous version
   dt[is.na(dt)] <- 0
   out_names <- c(
     sapply(
@@ -386,13 +360,6 @@ build_cci_or_drate <- function(
       }
     )
   )
-  # full_dt[dt, on =  c("LIGAND_1==GENE", "EMITTER_CELLTYPE==CELLTYPE"), c("test1", "test2") := mget(paste0("i.", merge_id)) ]
-  # full_dt[dt, on =  c("LIGAND_2==GENE", "EMITTER_CELLTYPE==CELLTYPE"), c("testa1", "testa2") := mget(paste0("i.", merge_id)) ]
-  # full_dt[dt, on =  c("RECEPTOR_1==GENE", "EMITTER_CELLTYPE==CELLTYPE"), c("testb1", "testb2") := mget(paste0("i.", merge_id)) ]
-  # full_dt[dt, on =  c("RECEPTOR_2==GENE", "EMITTER_CELLTYPE==CELLTYPE"), c("testc1", "testc2") := mget(paste0("i.", merge_id)) ]
-  # full_dt[dt, on =  c("RECEPTOR_3==GENE", "EMITTER_CELLTYPE==CELLTYPE"), c("testd1", "testd2") := mget(paste0("i.", merge_id)) ]
-  # #full_dt[dt, on =  c("LIGAND_1==GENE", "EMITTER_CELLTYPE==CELLTYPE"), test2 := i.OLD ]
-  # return(full_dt)
   full_dt[
     ,
     c(out_names) :=
@@ -402,9 +369,12 @@ build_cci_or_drate <- function(
           function(i) {
             as.list(
               dt[.SD,
-                 on = c(paste0("GENE==LIGAND_", i), "CELLTYPE==EMITTER_CELLTYPE"),
+                 on = c(paste0(
+                   "GENE==LIGAND_", i),
+                   "CELLTYPE==EMITTER_CELLTYPE"
+                 ),
                  mget(paste0("x.", merge_id))
-                 ]
+              ]
             )
           }
         ),
@@ -413,14 +383,17 @@ build_cci_or_drate <- function(
           function(i) {
             as.list(
               dt[.SD,
-                 on = c(paste0("GENE==RECEPTOR_", i), "CELLTYPE==RECEIVER_CELLTYPE"),
+                 on = c(
+                   paste0("GENE==RECEPTOR_", i),
+                   "CELLTYPE==RECEIVER_CELLTYPE"
+                 ),
                  mget(paste0("x.", merge_id))
-                 ]
+              ]
             )
           }
         )
       )
-    ]
+  ]
   if (cci_or_drate == "cci") {
     if (score_type == "geometric_mean") {
       full_dt[, (score_id) :=
@@ -490,7 +463,7 @@ is_detected_full <- Vectorize(
     y_ncells,
     dr_thr,
     threshold_min_cells
-) {
+  ) {
     if (x_dr >= dr_thr &
         x_dr * x_ncells >= threshold_min_cells &
         y_dr >= dr_thr &
@@ -503,36 +476,3 @@ is_detected_full <- Vectorize(
   }
 )
 
-split_cond_string <- function(
-  expr_string,
-  cond1,
-  cond2
-) {
-  cond <- ifelse(
-    substr(
-      x = expr_string,
-      start = 1,
-      stop = nchar(cond1)
-    ) == cond1,
-    cond1,
-    cond2
-  )
-  cell_type <- ifelse(
-    substr(
-      x = expr_string,
-      start = 1,
-      stop = nchar(cond1)
-    ) == cond1,
-    substr(
-      x = expr_string,
-      start = nchar(cond1) + 2,
-      stop = nchar(expr_string)
-    ),
-    substr(
-      x = expr_string,
-      start = nchar(cond2) + 2,
-      stop = nchar(expr_string)
-    )
-  )
-  return(list(cond = cond, cell_type = cell_type))
-}

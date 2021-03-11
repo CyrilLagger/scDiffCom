@@ -9,7 +9,7 @@ extract_analysis_inputs <- function(
   slot,
   log_scale,
   threshold_min_cells,
-  LRdb_table,
+  LRI_table,
   verbose
 ) {
   seurat_inputs <- extract_seurat_inputs(
@@ -23,9 +23,9 @@ extract_analysis_inputs <- function(
     threshold_min_cells = threshold_min_cells,
     verbose = verbose
   )
-  LRdb_inputs <- extract_LRdb_inputs(
+  LRI_inputs <- extract_LRI_inputs(
     data = seurat_inputs$data,
-    LRdb_table = LRdb_table,
+    LRI_table = LRI_table,
     verbose = verbose
   )
   condition_inputs <- extract_condition_inputs(
@@ -37,12 +37,12 @@ extract_analysis_inputs <- function(
     verbose = verbose
   )
   list(
-    data_tr = DelayedArray::t(LRdb_inputs$data),
+    data_tr = DelayedArray::t(LRI_inputs$data),
     metadata = seurat_inputs$metadata,
     cell_types = seurat_inputs$cell_types,
-    LRdb = LRdb_inputs$LRdb,
-    max_nL = LRdb_inputs$max_nL,
-    max_nR = LRdb_inputs$max_nR,
+    LRI = LRI_inputs$LRI,
+    max_nL = LRI_inputs$max_nL,
+    max_nR = LRI_inputs$max_nR,
     condition = condition_inputs
   )
 }
@@ -198,36 +198,36 @@ filter_celltypes <- function(
   res
 }
 
-extract_LRdb_inputs <- function(
+extract_LRI_inputs <- function(
   data,
-  LRdb_table,
+  LRI_table,
   verbose
 ) {
   LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <- RECEPTOR_3 <- NULL
   cols_compulsory <- c("LR_GENES", "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")
-  if (!all(cols_compulsory %in% names(LRdb_table))) {
-    stop(paste0("`LRdb_table` must contain the columns ", paste0(cols_compulsory, collapse = ", ")))
+  if (!all(cols_compulsory %in% names(LRI_table))) {
+    stop(paste0("`LRI_table` must contain the columns ", paste0(cols_compulsory, collapse = ", ")))
   }
-  LRdb_keep <- LRdb_table[, cols_compulsory, with = FALSE]
-  LRdb_keep <- unique(LRdb_keep)
-  LRdb_keep <- LRdb_keep[
+  LRI_keep <- LRI_table[, cols_compulsory, with = FALSE]
+  LRI_keep <- unique(LRI_keep)
+  LRI_keep <- LRI_keep[
     LIGAND_1 %in% rownames(data) &
       RECEPTOR_1 %in% rownames(data) &
       LIGAND_2 %in% c(rownames(data), NA) &
       RECEPTOR_2 %in% c(rownames(data), NA) &
       RECEPTOR_3 %in% c(rownames(data), NA),
     ]
-  LRdb_genes <- unique(c(
-    unique(LRdb_keep$LIGAND_1),
-    unique(LRdb_keep$LIGAND_2),
-    unique(LRdb_keep$RECEPTOR_1),
-    unique(LRdb_keep$RECEPTOR_2),
-    unique(LRdb_keep$RECEPTOR_3)
+  LRI_genes <- unique(c(
+    unique(LRI_keep$LIGAND_1),
+    unique(LRI_keep$LIGAND_2),
+    unique(LRI_keep$RECEPTOR_1),
+    unique(LRI_keep$RECEPTOR_2),
+    unique(LRI_keep$RECEPTOR_3)
   ))
-  data_keep <- data[rownames(data) %in% LRdb_genes, ]
-  n_ID <- length(unique(LRdb_keep$LR_GENES))
+  data_keep <- data[rownames(data) %in% LRI_genes, ]
+  n_ID <- length(unique(LRI_keep$LR_GENES))
   if (n_ID == 0) {
-    stop("There are no genes from `LRdb_table` in `seurat_object`")
+    stop("There are no genes from `LRI_table` in `seurat_object`")
   }
   if (n_ID <= 10) {
     warning(
@@ -237,30 +237,30 @@ extract_LRdb_inputs <- function(
       )
     )
   }
-  if (all(is.na(LRdb_keep$RECEPTOR_1)) | all(is.na(LRdb_keep$LIGAND_1))) {
-    stop("`LRdb_table` must not contain only NA in columns `LIGAND_1`` or `RECEPTOR_1`.")
+  if (all(is.na(LRI_keep$RECEPTOR_1)) | all(is.na(LRI_keep$LIGAND_1))) {
+    stop("`LRI_table` must not contain only NA in columns `LIGAND_1`` or `RECEPTOR_1`.")
   } else {
-    if (all(is.na(LRdb_keep$LIGAND_2))) {
+    if (all(is.na(LRI_keep$LIGAND_2))) {
       max_nL <- 1
-      LRdb_keep <- base::subset(LRdb_keep, select = -c(LIGAND_2))
+      LRI_keep <- base::subset(LRI_keep, select = -c(LIGAND_2))
     } else {
       max_nL <- 2
     }
-    if (all(is.na(LRdb_keep$RECEPTOR_2)) & all(is.na(LRdb_keep$RECEPTOR_3))) {
+    if (all(is.na(LRI_keep$RECEPTOR_2)) & all(is.na(LRI_keep$RECEPTOR_3))) {
       max_nR <- 1
-      LRdb_keep <- base::subset(LRdb_keep, select = -c(RECEPTOR_2, RECEPTOR_3))
-    } else if (all(is.na(LRdb_keep$RECEPTOR_2))) {
-      stop("`LRdb_table` must not have only NA in column `RECEPTOR_2`` and non-NA in column `RECEPTOR_3`.")
-    } else if (all(is.na(LRdb_keep$RECEPTOR_3))) {
+      LRI_keep <- base::subset(LRI_keep, select = -c(RECEPTOR_2, RECEPTOR_3))
+    } else if (all(is.na(LRI_keep$RECEPTOR_2))) {
+      stop("`LRI_table` must not have only NA in column `RECEPTOR_2`` and non-NA in column `RECEPTOR_3`.")
+    } else if (all(is.na(LRI_keep$RECEPTOR_3))) {
       max_nR <- 2
-      LRdb_keep <- base::subset(LRdb_keep, select = -c(RECEPTOR_3))
+      LRI_keep <- base::subset(LRI_keep, select = -c(RECEPTOR_3))
     } else {
       max_nR <- 3
     }
   }
   mes <- paste0(
     "Using a ligand-receptor database of ",
-    length(unique(LRdb_table$LR_GENES)),
+    length(unique(LRI_table$LR_GENES)),
     " interactions (",
     n_ID,
     " present in the data).\n",
@@ -271,7 +271,7 @@ extract_LRdb_inputs <- function(
   if (verbose) message(mes)
   list(
     data = data_keep,
-    LRdb = LRdb_keep,
+    LRI = LRI_keep,
     max_nL = max_nL,
     max_nR = max_nR
   )
