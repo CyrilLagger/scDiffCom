@@ -1,18 +1,28 @@
 Package: scDiffCom
 Type: Package
-Title: Difference in Intercellular Communication from scRNA-seq data
+Title: Differential analysis of Intercellular Communication from scRNA-seq data
 Version: 0.1.0
-Authors@R:
-    person("Cyril", "Lagger", email = "cyril.lagger@liverpool.ac.uk", role = c("aut", "cre"))
-Description: The original purpose is to find age-related changes in intercellelular 
-    communication based on scRNA-seq transcriptomic data. The package leverages
-	several ligand-receptor databases and different computational methods in order
-	to infer significant cell-cell interaction changes in a tissue of interest.
-	The comparision is done between two conditions (e.g. young vs old). 
+Authors@R: c(
+    person("Cyril", "Lagger", email = "lagger.cyril@gmail.com",
+    role = c("aut", "cre")),
+    person("Eugen", "Ursu", email = "ursu_eugen@hotmail.com",
+    role = c("aut")),
+    person("Anais", "Equey", email = "anais.equey@gmail.com",
+    role = c("ctb"))
+    )
+Description: A statistical method to perform differential analyis of
+    intercellular communication from single-cell transcriptomics data.
+    From a pre-processed Seurat object as input, it infers cell-cell
+    interactions present in the dataset and how these interactions changes
+    between two conditions of interest (e.g. young vs old). It relies on an 
+    internal database of ligand-receptor interactions that has been gathered
+    from several published studies. The statistical method relies on a 
+    permutation test. The package also implements several tools to perform
+    downstream analysis and visualize the results.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 2.10)
+Depends: R (>= 4.0.3)
 RoxygenNote: 7.1.1
 Suggests: 
     AnnotationDbi,
@@ -43,8 +53,7 @@ Imports:
     future,
     future.apply,
     methods,
-    progressr,
-    Seurat,
+    Seurat (>= 4.0.0),
     stats,
     utils,
     ggplot2,
