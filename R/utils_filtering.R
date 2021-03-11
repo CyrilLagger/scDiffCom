@@ -11,13 +11,16 @@ run_filtering_and_ora <- function(
   REGULATION_SIMPLE <- NULL
   temp_param <- object@parameters
   if (!is.null(new_threshold_quantile_score)) {
-    temp_param$threshold_quantile_score <- new_threshold_quantile_score
+    temp_param$threshold_quantile_score <-
+      new_threshold_quantile_score
   }
   if (!is.null(new_threshold_p_value_specificity)) {
-    temp_param$threshold_p_value_specificity <- new_threshold_p_value_specificity
+    temp_param$threshold_p_value_specificity <-
+      new_threshold_p_value_specificity
   }
   if (!is.null(new_threshold_p_value_de)) {
-    temp_param$threshold_p_value_de <- new_threshold_p_value_de
+    temp_param$threshold_p_value_de <-
+      new_threshold_p_value_de
   }
   if (!is.null(new_threshold_logfc)) {
     temp_param$threshold_logfc <- new_threshold_logfc
@@ -27,7 +30,10 @@ run_filtering_and_ora <- function(
     from_inputs = FALSE
   )
   if (!is.null(check_parameters$check)) {
-    stop(paste0("Invalid parameters: ", paste0(check_parameters$check, collapse = " and ")))
+    stop(paste0(
+      "Invalid parameters: ",
+      paste0(check_parameters$check, collapse = " and ")
+      ))
   } else {
     temp_param <- check_parameters$params
   }
@@ -66,7 +72,8 @@ run_filtering_and_ora <- function(
     mes <- paste0(
       "Returning ",
       nrow(cci_dt),
-      " detected CCIs. (Note: incomplete filtering as statistical test has not been performed!)"
+      " detected CCIs. (Note: incomplete filtering as statistical",
+      " test has not been performed!)"
     )
     if (verbose) message(mes)
   }
@@ -100,7 +107,12 @@ run_filtering_and_ora <- function(
         if (verbose) message("Running global ORA.")
         object <- run_ora(
           object = object,
-          categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS", "ID"),
+          categories = c(
+            "ER_CELLTYPES",
+            "LR_GENES",
+            "GO_TERMS",
+            "KEGG_PWS",
+            "ID"),
           overwrite = TRUE,
           stringent_or_default = "default",
           stringent_logfc_threshold = NULL,
@@ -130,10 +142,10 @@ process_cci_raw <- function(
   class_signature
 ) {
   BH_P_VALUE_DE <- P_VALUE_DE <- BH_P_VALUE <- P_VALUE <-
-    IS_CCI_EXPRESSED <- ER_CELLTYPES <- EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <-
-    LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <- RECEPTOR_3 <- LOGFC <-
-    LOGFC_ABS <- REGULATION <- IS_DE_LOGFC <- IS_DE_SIGNIFICANT <- DE_DIRECTION <-
-    CCI_SCORE <- CCI <- LR_GENES <- NULL
+    IS_CCI_EXPRESSED <- ER_CELLTYPES <- EMITTER_CELLTYPE <-
+    RECEIVER_CELLTYPE <- LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <-
+    RECEPTOR_3 <- LOGFC <- LOGFC_ABS <- REGULATION <- IS_DE_LOGFC <-
+    IS_DE_SIGNIFICANT <- DE_DIRECTION <- CCI_SCORE <- CCI <- LR_GENES <- NULL
   if (class_signature == "scDiffCom") {
     temp_by <- NULL
   }
@@ -151,8 +163,14 @@ process_cci_raw <- function(
         paste0("BH_P_VALUE_", condition_inputs$cond2),
         "BH_P_VALUE_DE"
       ) := list(
-        stats::p.adjust(get(paste0("P_VALUE_", condition_inputs$cond1)), method = "BH"),
-        stats::p.adjust(get(paste0("P_VALUE_", condition_inputs$cond2)), method = "BH"),
+        stats::p.adjust(
+          get(paste0("P_VALUE_", condition_inputs$cond1)
+              ),
+          method = "BH"),
+        stats::p.adjust(
+          get(paste0("P_VALUE_", condition_inputs$cond2)
+              ),
+          method = "BH"),
         stats::p.adjust(P_VALUE_DE, method = "BH")
       ),
       by = temp_by
@@ -171,21 +189,50 @@ process_cci_raw <- function(
       ) := {
         threshold_score_temp <- stats::quantile(
           x = c(
-            .SD[get(paste0("IS_CCI_EXPRESSED_", condition_inputs$cond1)) == TRUE][[paste0("CCI_SCORE_", condition_inputs$cond1)]],
-            .SD[get(paste0("IS_CCI_EXPRESSED_", condition_inputs$cond2)) == TRUE][[paste0("CCI_SCORE_", condition_inputs$cond2)]]
+            .SD[get(paste0(
+              "IS_CCI_EXPRESSED_",
+              condition_inputs$cond1)) == TRUE][[paste0(
+                "CCI_SCORE_",
+                condition_inputs$cond1
+                )]],
+            .SD[get(paste0(
+              "IS_CCI_EXPRESSED_",
+              condition_inputs$cond2)
+              ) == TRUE][[paste0(
+                "CCI_SCORE_",
+                condition_inputs$cond2
+                )]]
           ),
           probs = threshold_quantile_score
         )
-        is_cci_score_1 <- (get(paste0("CCI_SCORE_", condition_inputs$cond1)) >= threshold_score_temp)
-        is_cci_score_2 <- (get(paste0("CCI_SCORE_", condition_inputs$cond2)) >= threshold_score_temp)
-        is_cci_specific_1 <- get(paste0("BH_P_VALUE_", condition_inputs$cond1)) <= threshold_p_value_specificity
-        is_cci_specific_2 <- get(paste0("BH_P_VALUE_", condition_inputs$cond2)) <= threshold_p_value_specificity
+        is_cci_score_1 <- (get(paste0(
+          "CCI_SCORE_",
+          condition_inputs$cond1
+          )) >= threshold_score_temp)
+        is_cci_score_2 <- (get(paste0(
+          "CCI_SCORE_",
+          condition_inputs$cond2
+          )) >= threshold_score_temp)
+        is_cci_specific_1 <- get(paste0(
+          "BH_P_VALUE_",
+          condition_inputs$cond1
+          )) <= threshold_p_value_specificity
+        is_cci_specific_2 <- get(paste0(
+          "BH_P_VALUE_",
+          condition_inputs$cond2
+          )) <= threshold_p_value_specificity
         is_de_logfc <- LOGFC_ABS >= threshold_logfc
         is_de_significant <- BH_P_VALUE_DE <= threshold_p_value_de
         de_direction <- fifelse(LOGFC > 0, "UP", "DOWN")
-        is_cci_detected_1 <- (get(paste0("IS_CCI_EXPRESSED_", condition_inputs$cond1)) == TRUE) &
+        is_cci_detected_1 <- (get(paste0(
+          "IS_CCI_EXPRESSED_",
+          condition_inputs$cond1
+          )) == TRUE) &
           is_cci_score_1 & is_cci_specific_1
-        is_cci_detected_2 <- (get(paste0("IS_CCI_EXPRESSED_", condition_inputs$cond2)) == TRUE) &
+        is_cci_detected_2 <- (get(paste0(
+          "IS_CCI_EXPRESSED_",
+          condition_inputs$cond2
+          )) == TRUE) &
           is_cci_score_2 & is_cci_specific_2
         is_cci_de <- is_de_logfc & is_de_significant
         list(
@@ -230,7 +277,10 @@ process_cci_raw <- function(
   } else {
     cci_dt <- cci_dt[IS_CCI_EXPRESSED == TRUE]
     if (permutation_analysis) {
-      cci_dt[, BH_P_VALUE := stats::p.adjust(P_VALUE, method = "BH"), by = temp_by]
+      cci_dt[
+        ,
+        BH_P_VALUE := stats::p.adjust(P_VALUE, method = "BH"),
+        by = temp_by]
       cci_dt[, c(
         "IS_CCI_SCORE",
         "IS_CCI_SPECIFIC",
@@ -253,7 +303,10 @@ process_cci_raw <- function(
       ]
     }
   }
-  cci_dt[, ER_CELLTYPES := paste(EMITTER_CELLTYPE, RECEIVER_CELLTYPE, sep = "_")]
+  cci_dt[, ER_CELLTYPES := paste(
+    EMITTER_CELLTYPE,
+    RECEIVER_CELLTYPE,
+    sep = "_")]
   cci_dt[, CCI := paste(ER_CELLTYPES, LR_GENES, sep = "_")]
   return(cci_dt)
 }
@@ -265,7 +318,12 @@ clean_colnames <- function(
   max_nR,
   permutation_analysis
 ) {
-  first_cols <- c("CCI", "ER_CELLTYPES", "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", "LR_GENES")
+  first_cols <- c(
+    "CCI",
+    "ER_CELLTYPES",
+    "EMITTER_CELLTYPE",
+    "RECEIVER_CELLTYPE",
+    "LR_GENES")
   LR_COLNAMES <- c(
     paste0("LIGAND_", 1:max_nL),
     paste0("RECEPTOR_", 1:max_nR)
@@ -290,7 +348,9 @@ clean_colnames <- function(
       ordered_cols <- c(
         first_cols,
         second_cols,
-        "CCI_SCORE", "P_VALUE", "BH_P_VALUE", "IS_CCI_EXPRESSED", "IS_CCI_SCORE", "IS_CCI_SPECIFIC", "IS_CCI_DETECTED"
+        "CCI_SCORE", "P_VALUE", "BH_P_VALUE",
+        "IS_CCI_EXPRESSED", "IS_CCI_SCORE", "IS_CCI_SPECIFIC",
+        "IS_CCI_DETECTED"
       )
     }
   } else {

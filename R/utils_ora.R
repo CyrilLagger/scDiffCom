@@ -37,7 +37,7 @@ run_ora <- function(
       categories_old <- names(temp_ora)
       if (is.null(categories_old)) {
         mes <- paste0(
-          "Performing over-representation analysis on the specified categories: ",
+          "Performing over-representation analysis on the categories: ",
           paste0(categories, collapse = ", "),
           "."
         )
@@ -46,7 +46,7 @@ run_ora <- function(
       } else {
         if (overwrite) {
           mes <- paste0(
-            "Performing over-representation analysis on the specified categories: ",
+            "Performing over-representation analysis on the categories: ",
             paste0(categories, collapse = ", "),
             ".\n",
             "Erasing all previous ORA results: ",
@@ -58,7 +58,7 @@ run_ora <- function(
         } else {
           categories_to_run <- setdiff(categories, categories_old)
           mes <- paste0(
-            "Performing over-representation analysis on the specified categories: ",
+            "Performing over-representation analysis on the categories: ",
             paste0(categories_to_run, collapse = ", "),
             ".\n",
             "Keeping previous ORA results: ",
@@ -79,7 +79,7 @@ run_ora <- function(
               logfc_threshold = logfc_threshold,
               regulation = regulation,
               category = category,
-              species = temp_param$LRdb_species,
+              species = temp_param$LRI_species,
               global = global
             ),
             by = temp_by
@@ -161,7 +161,7 @@ run_ora <- function(
                   logfc_threshold = stringent_logfc_threshold,
                   regulation = regulation,
                   category = category,
-                  species = temp_param$LRdb_species,
+                  species = temp_param$LRI_species,
                   global = global
                 ),
                 by = temp_by
@@ -232,10 +232,10 @@ build_ora_dt <- function(
         )
         if (category == "GO_TERMS") {
           if (species == "mouse") {
-            new_intersection_dt <- scDiffCom::LRdb_mouse$LRdb_curated_GO
+            new_intersection_dt <- scDiffCom::LRI_mouse$LRI_curated_GO
           }
           if (species == "human") {
-            new_intersection_dt <- scDiffCom::LRdb_human$LRdb_curated_GO
+            new_intersection_dt <- scDiffCom::LRI_human$LRI_curated_GO
           }
           new_id <- "GO_ID"
           new_name <- "GO_NAME"
@@ -243,10 +243,10 @@ build_ora_dt <- function(
         }
         if (category == "KEGG_PWS") {
           if (species == "mouse") {
-            new_intersection_dt <- scDiffCom::LRdb_mouse$LRdb_curated_KEGG
+            new_intersection_dt <- scDiffCom::LRI_mouse$LRI_curated_KEGG
           }
           if (species == "human") {
-            new_intersection_dt <- scDiffCom::LRdb_human$LRdb_curated_KEGG
+            new_intersection_dt <- scDiffCom::LRI_human$LRI_curated_KEGG
           }
           new_id <- "KEGG_ID"
           new_name <- "KEGG_NAME"
