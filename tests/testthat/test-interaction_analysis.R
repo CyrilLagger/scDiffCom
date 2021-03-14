@@ -507,7 +507,7 @@ test_that("dummy test to replace", {
   expect_equal(length(all_networks), 6)
 })
 
-
+all_networks[[6]][[2]]
 
 ## Check BuildNetwork step by step ####
 

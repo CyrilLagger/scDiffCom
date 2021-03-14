@@ -540,7 +540,7 @@ add_edge_layout <- function(
   edge_table[, "smooth" := TRUE]
   edge_table[, "arrow.size" := config$EDGE_STYLE$ARROW_SIZE]
   #TODO add title
-  edge_table[, "title" := "myTitle"]
+  edge_table[, "title" := "doDO"]
   #edges_[, title := edge_annotation_html(edges_, network_type)]
   #num_interacts <- num_interactions_object(cci_detected = cci_detected)
   if (layout_type == "bipartite") {
