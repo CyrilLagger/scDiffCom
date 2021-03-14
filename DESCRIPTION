@@ -46,6 +46,7 @@ Suggests:
     igraph,
     purrr,
     scales,
+    Seurat (>= 4.0.0),
     visNetwork
 Imports: 
     data.table,
@@ -53,7 +54,6 @@ Imports:
     future,
     future.apply,
     methods,
-    Seurat (>= 4.0.0),
     stats,
     utils,
     ggplot2,
