@@ -983,7 +983,7 @@ apply_visnetwork <- function(
 
 get_visnetwork_options <- function(
   selectionByName = FALSE,
-  highlightNearestDegree = 0
+  highlightNearestDegree = 1
 ) {
   if(selectionByName) {
     selectionOptions = list(
@@ -1003,8 +1003,10 @@ get_visnetwork_options <- function(
       width = NULL, #"100%",
       highlightNearest = list(
         enabled = TRUE,
-        degree = highlightNearestDegree,
-        hover = TRUE
+        #degree = highlightNearestDegree,
+        degree = list(from = 1, to = 1),
+        hover = TRUE,
+        algorithm = "hierarchical"
       ),
       autoResize = TRUE,
       selectedBy = selectionOptions,
