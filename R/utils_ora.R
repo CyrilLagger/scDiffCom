@@ -388,7 +388,10 @@ perform_ora_from_counts <- function(
       COUNTS_NOTVALUE_NOTREGULATED
     )
   )]
-  counts_dt[, "BH_P_VALUE" := list(stats::p.adjust(P_VALUE, method = "BH"))]
+  #counts_dt[, "BH_P_VALUE" := list(stats::p.adjust(P_VALUE, method = "BH"))]
+  temp_bh_dt <- counts_dt[COUNTS_VALUE_REGULATED > 0]
+  temp_bh_dt[, "BH_P_VALUE" := list(stats::p.adjust(P_VALUE, method = "BH"))]
+  counts_dt[temp_bh_dt, on = "VALUE", "BH_P_VALUE" := i.BH_P_VALUE]
   counts_dt <- clip_infinite_OR(
     ORA_dt = counts_dt
   )
