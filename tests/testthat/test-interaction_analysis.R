@@ -469,6 +469,37 @@ test_that("fisher test is done correctly on GO terms", {
   )
 })
 
+## Check building combined-objects
+
+scdiffcom_objects_dup <- scdiffcom_objects
+
+scdiffcom_objects_dup <- lapply(
+  scdiffcom_objects_dup,
+  function(i) {
+    i@parameters$object_name <- paste0(i@parameters$object_name, "_dup")
+    return(i)
+  }
+)
+
+scdiffcom_combined_objects <- lapply(
+  seq_along(scdiffcom_objects),
+  function(i) {
+    Combine_scDiffCom(
+      l = list(scdiffcom_objects[[i]], scdiffcom_objects_dup[[i]]),
+      object_name = paste0(scdiffcom_objects[[i]]@parameters$object_name, "_combined"),
+      verbose = FALSE
+    )
+  }
+)
+names(scdiffcom_combined_objects) <- names(scdiffcom_objects)
+
+test_that("`Combine_scDiffCom` returns object of class `scDiffComCombined`", {
+  expect_s4_class(scdiffcom_combined_objects$cond_stat, "scDiffComCombined")
+  expect_s4_class(scdiffcom_combined_objects$cond_nostat, "scDiffComCombined")
+  expect_s4_class(scdiffcom_combined_objects$nocond_stat, "scDiffComCombined")
+  expect_s4_class(scdiffcom_combined_objects$nocond_nostat, "scDiffComCombined")
+})
+
 ## Check BuildNetwork overall ####
 
 types_of_network = c(
