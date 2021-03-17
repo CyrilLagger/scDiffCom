@@ -175,41 +175,41 @@ validate_slot_parameters <- function(parameters) {
   }
 }
 
-#' Check the validity of \code{cci_raw}
+#' Check the validity of \code{cci_table_raw}
 #'
 #' @param parameters A list of parameters.
-#' @param cci_raw A data.table to check the validity of.
+#' @param cci_table_raw A data.table to check the validity of.
 #'
 #' @noRd
-validate_slot_cci_raw <- function(
+validate_slot_cci_table_raw <- function(
   parameters,
-  cci_raw
+  cci_table_raw
 ) {
   NULL
 }
 
-#' Check the validity of \code{cci_detected}
+#' Check the validity of \code{cci_table_detected}
 #'
 #' @param parameters A list of parameters.
-#' @param cci_detected A data.table to check the validity of.
+#' @param cci_table_detected A data.table to check the validity of.
 #'
 #' @noRd
-validate_slot_cci_detected <- function(
+validate_slot_cci_table_detected <- function(
   parameters,
-  cci_detected
+  cci_table_detected
 ) {
   NULL
 }
 
-#' Check the validity of \code{ora_default}
+#' Check the validity of \code{ora_table}
 #'
 #' @param parameters A list of parameters.
-#' @param ora_default A list of data.tables to check the validity of.
+#' @param ora_table A list of data.tables to check the validity of.
 #'
 #' @noRd
-validate_slot_ora_default <- function(
+validate_slot_ora_table <- function(
   parameters,
-  ora_default
+  ora_table
 ) {
   NULL
 }
@@ -217,12 +217,12 @@ validate_slot_ora_default <- function(
 #' Check the validity of \code{ora_stringent}
 #'
 #' @param parameters A list of parameters.
-#' @param ora_default A list of data.tables to check the validity of.
+#' @param ora_table A list of data.tables to check the validity of.
 #'
 #' @noRd
 validate_slot_ora_stringent <- function(
   parameters,
-  ora_default
+  ora_table
 ) {
   NULL
 }

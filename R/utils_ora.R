@@ -8,6 +8,12 @@ run_ora <- function(
   class_signature,
   global
 ) {
+  if (global == TRUE) {
+    stop("Global ORA analyis is not supported anymore. Use `global == FALSE`")
+  }
+  if (stringent_or_default == "stringent") {
+    stop("Stringent ORA analysis is not supported anymore. Use `stringent_or_default == 'default'`")
+  }
   regulation <- c("UP", "DOWN", "FLAT", "DIFF")
   temp_param <- parameters(object)
   condition_inputs <- list(
@@ -30,7 +36,7 @@ run_ora <- function(
     logfc_threshold <- temp_param$threshold_logfc
     if (stringent_or_default == "default") {
       if (!global) {
-        temp_ora <- object@ora_default
+        temp_ora <- object@ora_table
       } else {
         temp_ora <- object@ora_combined_default
       }
@@ -71,11 +77,11 @@ run_ora <- function(
       ora_default <- sapply(
         categories_to_run,
         function(category) {
-          temp_dt <- object@cci_detected
+          temp_dt <- object@cci_table_detected
           res <- temp_dt[
             ,
             build_ora_dt(
-              cci_detected = .SD,
+              cci_table_detected = .SD,
               logfc_threshold = logfc_threshold,
               regulation = regulation,
               category = category,
@@ -104,7 +110,7 @@ run_ora <- function(
           stop("No ORA global analysis allowed for object of class `scDiffComCombined`")
         }
       } else {
-        object@ora_default <- res_ora
+        object@ora_table <- res_ora
       }
     } else if (stringent_or_default == "stringent") {
       if (is.null(stringent_logfc_threshold)) {
@@ -153,11 +159,11 @@ run_ora <- function(
           ora_stringent <- sapply(
             categories_stringent_to_run,
             function(category) {
-              temp_dt <- object@cci_detected
+              temp_dt <- object@cci_table_detected
               res <- temp_dt[
                 ,
                 build_ora_dt(
-                  cci_detected = .SD,
+                  cci_table_detected = .SD,
                   logfc_threshold = stringent_logfc_threshold,
                   regulation = regulation,
                   category = category,
@@ -203,7 +209,7 @@ run_ora <- function(
 }
 
 build_ora_dt <- function(
-  cci_detected,
+  cci_table_detected,
   logfc_threshold,
   regulation,
   category,
@@ -215,7 +221,7 @@ build_ora_dt <- function(
     COUNTS_VALUE_REGULATED_temp <- COUNTS_VALUE_NOTREGULATED_temp<- CATEGORY <-
     ER_CELLTYPES <- ID <-  NULL
   cci_dt <- data.table::copy(
-    cci_detected
+    cci_table_detected
   )
   if (global & (category == "ER_CELLTYPES")) {
       cci_dt[, ER_CELLTYPES := paste(ID, ER_CELLTYPES, sep = "_")]
@@ -225,7 +231,7 @@ build_ora_dt <- function(
     FUN = function(reg) {
       if (category %in% c("GO_TERMS", "KEGG_PWS")) {
         counts_dt <- extract_category_counts(
-          cci_detected = cci_dt,
+          cci_table_detected = cci_dt,
           category = "LRI",
           reg = reg,
           logfc_threshold = logfc_threshold
@@ -286,7 +292,7 @@ build_ora_dt <- function(
         counts_dt <- counts_intersection_dt
       } else {
         counts_dt <- extract_category_counts(
-          cci_detected = cci_dt,
+          cci_table_detected = cci_dt,
           category = category,
           reg = reg,
           logfc_threshold = logfc_threshold
@@ -310,24 +316,24 @@ build_ora_dt <- function(
 }
 
 extract_category_counts <- function(
-  cci_detected,
+  cci_table_detected,
   category,
   reg,
   logfc_threshold
 ) {
   REGULATION <- COUNTS_VALUE_REGULATED <- COUNTS_VALUE_NOTREGULATED <- LOGFC <- NULL
   if (reg == "UP") {
-    dt_regulated <- cci_detected[REGULATION == "UP" & LOGFC >= logfc_threshold]
-    dt_notregulated <- cci_detected[!(REGULATION == "UP" & LOGFC >= logfc_threshold)]
+    dt_regulated <- cci_table_detected[REGULATION == "UP" & LOGFC >= logfc_threshold]
+    dt_notregulated <- cci_table_detected[!(REGULATION == "UP" & LOGFC >= logfc_threshold)]
   } else if (reg == "DOWN") {
-    dt_regulated <- cci_detected[REGULATION == "DOWN" & LOGFC <= -logfc_threshold]
-    dt_notregulated <- cci_detected[!(REGULATION == "DOWN" & LOGFC <= -logfc_threshold)]
+    dt_regulated <- cci_table_detected[REGULATION == "DOWN" & LOGFC <= -logfc_threshold]
+    dt_notregulated <- cci_table_detected[!(REGULATION == "DOWN" & LOGFC <= -logfc_threshold)]
   } else if (reg == "DIFF") {
-    dt_regulated <- cci_detected[REGULATION %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold]
-    dt_notregulated <- cci_detected[!(REGULATION %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold)]
+    dt_regulated <- cci_table_detected[REGULATION %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold]
+    dt_notregulated <- cci_table_detected[!(REGULATION %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold)]
   } else if (reg == "FLAT") {
-    dt_regulated <- cci_detected[REGULATION == "FLAT"]
-    dt_notregulated <- cci_detected[REGULATION != "FLAT"]
+    dt_regulated <- cci_table_detected[REGULATION == "FLAT"]
+    dt_notregulated <- cci_table_detected[REGULATION != "FLAT"]
   } else {
     stop("Type of ORA not supported.")
   }

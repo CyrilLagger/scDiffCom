@@ -44,7 +44,7 @@ run_filtering_and_ora <- function(
     cond1 = temp_param$seurat_condition_id$cond1_name,
     cond2 = temp_param$seurat_condition_id$cond2_name
   )
-  cci_dt <- copy(x = object@cci_raw)
+  cci_dt <- copy(x = object@cci_table_raw)
   if (verbose) message("Filtering and cleaning `raw` CCIs.")
   cci_dt <- process_cci_raw(
     cci_dt = cci_dt,
@@ -85,13 +85,13 @@ run_filtering_and_ora <- function(
     permutation_analysis = temp_param$permutation_analysis
   )
   if (nrow(cci_dt) == 0) {
-    object@cci_detected <- list()
-    object@ora_default <- list()
+    object@cci_table_detected <- list()
+    object@ora_table <- list()
   } else {
-    object@cci_detected <- cci_dt
+    object@cci_table_detected <- cci_dt
     methods::validObject(object)
     if (skip_ora) {
-      object@ora_default <- list()
+      object@ora_table <- list()
     } else {
       object <- run_ora(
         object = object,

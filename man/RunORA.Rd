@@ -12,8 +12,6 @@ RunORA(object, ...)
   object,
   categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
   overwrite = TRUE,
-  stringent_or_default = "default",
-  stringent_logfc_threshold = NULL,
   verbose = TRUE,
   ...
 )
@@ -22,8 +20,6 @@ RunORA(object, ...)
   object,
   categories = c("ER_CELLTYPES", "LRI", "GO_TERMS"),
   overwrite = TRUE,
-  stringent_or_default = "default",
-  stringent_logfc_threshold = NULL,
   global = TRUE,
   verbose = TRUE,
   ...
@@ -37,12 +33,7 @@ RunORA(object, ...)
 \item{categories}{A character vector specifying the categories on which to perform the analysis. One data.table is returned
 for each category. Set to \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")} by default.}
 
-\item{overwrite}{Should existing categories be overwriten in case they match with new categories?}
-
-\item{stringent_or_default}{Should the default or more stringent ORA be performed?}
-
-\item{stringent_logfc_threshold}{A more stringent logfc threshold compared to the one stored in \code{parameters}.
-Set to \code{NULL} by default, namely no stringent ORA is done.}
+\item{overwrite}{Should existing categories be overwritten in case they match with new categories?}
 
 \item{verbose}{Should messages be printed?}
 

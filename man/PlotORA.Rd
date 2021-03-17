@@ -15,7 +15,6 @@ PlotORA(object, ...)
   max_terms_show,
   OR_threshold = 1,
   p_value_threshold = 0.05,
-  stringent = FALSE,
   ...
 )
 
@@ -28,7 +27,6 @@ PlotORA(object, ...)
   global = FALSE,
   OR_threshold = 1,
   p_value_threshold = 0.05,
-  stringent = FALSE,
   ...
 )
 }
@@ -46,8 +44,6 @@ PlotORA(object, ...)
 \item{OR_threshold}{xxx}
 
 \item{p_value_threshold}{xxx}
-
-\item{stringent}{xxx}
 
 \item{subID}{xxx}
 

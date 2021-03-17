@@ -194,7 +194,7 @@ run_internal_raw_analysis <- function(
     TRUE
   )
   if (!permutation_analysis) {
-    cci_raw <- cci_dt_simple
+    cci_table_raw <- cci_dt_simple
     distributions <- list()
   } else {
     res_stat_analysis <- run_stat_analysis(
@@ -205,7 +205,7 @@ run_internal_raw_analysis <- function(
       score_type = params$score_type,
       verbose = params$verbose
     )
-    cci_raw <- res_stat_analysis$cci_raw
+    cci_table_raw <- res_stat_analysis$cci_raw
     distributions <- res_stat_analysis$distributions
   }
   params[["permutation_analysis"]] <- permutation_analysis
@@ -216,10 +216,9 @@ run_internal_raw_analysis <- function(
   object <- methods::new(
     "scDiffCom",
     parameters = params,
-    cci_raw = cci_raw,
-    cci_detected = list(),
-    ora_default = list(),
-    ora_stringent = list(),
+    cci_table_raw = cci_table_raw,
+    cci_table_detected = list(),
+    ora_table = list(),
     distributions = distributions
   )
 }

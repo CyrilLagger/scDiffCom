@@ -27,10 +27,10 @@ build_interactive_network <- function(
       )
     )
   }
-  cci_detected <- copy(object@cci_detected)
+  cci_table_detected <- copy(object@cci_table_detected)
   if (class_signature == "scDiffComCombined") {
     object_name <- subobject_name
-    cci_detected <- cci_detected[ID == subobject_name][, ID := NULL]
+    cci_table_detected <- cci_table_detected[ID == subobject_name][, ID := NULL]
   } else {
     object_name <- object@parameters$object_name
   }
@@ -50,8 +50,8 @@ build_interactive_network <- function(
     } else {
       setDT(abbreviation_table)
       actual_celltypes <- union(
-        cci_detected[["EMITTER_CELLTYPE"]],
-        cci_detected[["RECEIVER_CELLTYPE"]]
+        cci_table_detected[["EMITTER_CELLTYPE"]],
+        cci_table_detected[["RECEIVER_CELLTYPE"]]
       )
       if (!identical(
         sort(actual_celltypes),
@@ -71,11 +71,11 @@ build_interactive_network <- function(
             " `abbreviation table` must not contain duplicated rows"))
         abbreviation_table <- NULL
       } else {
-        cci_detected[
+        cci_table_detected[
           abbreviation_table,
           on = "EMITTER_CELLTYPE==ORIGINAL_CELLTYPE",
           "EMITTER_CELLTYPE" := i.ABBR_CELLTYPE]
-        cci_detected[
+        cci_table_detected[
           abbreviation_table,
           on = "RECEIVER_CELLTYPE==ORIGINAL_CELLTYPE",
           "RECEIVER_CELLTYPE" := i.ABBR_CELLTYPE]
@@ -84,10 +84,10 @@ build_interactive_network <- function(
   }
   if (!object@parameters$conditional_analysis) {
     network <- interactive_from_igraph(
-      cci_detected = cci_detected,
+      cci_table_detected = cci_table_detected,
       conds = NULL,
-      ora_default_ER = NULL,
-      ora_default_LR = NULL,
+      ora_table_ER = NULL,
+      ora_table_LR = NULL,
       network_type = "condition1_network",
       layout_type = layout_type,
       object_name = object_name
@@ -98,9 +98,9 @@ build_interactive_network <- function(
       object@parameters$seurat_condition_id$cond2_name
     )
     if (network_type == "ORA_network") {
-      if (identical(object@ora_default, list()) |
-          is.null(object@ora_default$ER_CELLTYPES) |
-          is.null(object@ora_default$LRI)) {
+      if (identical(object@ora_table, list()) |
+          is.null(object@ora_table$ER_CELLTYPES) |
+          is.null(object@ora_table$LRI)) {
         stop(paste0(
           "No network of type ",
           network_type,
@@ -108,35 +108,35 @@ build_interactive_network <- function(
           " the object must contain an ORA table"
         ))
       }
-      ora_default_ER <- copy(object@ora_default$ER_CELLTYPES)
-      ora_default_LR <- copy(object@ora_default$LRI)
+      ora_table_ER <- copy(object@ora_table$ER_CELLTYPES)
+      ora_table_LR <- copy(object@ora_table$LRI)
       if (class_signature == "scDiffComCombined") {
-        ora_default_ER <- ora_default_ER[ID == subobject_name][, ID := NULL]
-        ora_default_LR <- ora_default_LR[ID == subobject_name][, ID := NULL]
+        ora_table_ER <- ora_table_ER[ID == subobject_name][, ID := NULL]
+        ora_table_LR <- ora_table_LR[ID == subobject_name][, ID := NULL]
       }
-      ora_default_ER[, c("EMITTER_CELLTYPE", "RECEIVER_CELLTYPE") := list(
+      ora_table_ER[, c("EMITTER_CELLTYPE", "RECEIVER_CELLTYPE") := list(
         sub("_.*", "", VALUE),
         sub(".*_", "", VALUE)
       )]
       if (!is.null(abbreviation_table)) {
-        ora_default_ER[
+        ora_table_ER[
           abbreviation_table,
           on = "EMITTER_CELLTYPE==ORIGINAL_CELLTYPE",
           "EMITTER_CELLTYPE" := i.ABBR_CELLTYPE]
-        ora_default_ER[
+        ora_table_ER[
           abbreviation_table,
           on = "RECEIVER_CELLTYPE==ORIGINAL_CELLTYPE",
           "RECEIVER_CELLTYPE" := i.ABBR_CELLTYPE]
       }
     } else {
-      ora_default_ER <- NULL
-      ora_default_LR <- NULL
+      ora_table_ER <- NULL
+      ora_table_LR <- NULL
     }
     network <- interactive_from_igraph(
-      cci_detected = cci_detected,
+      cci_table_detected = cci_table_detected,
       conds = conds,
-      ora_default_ER = ora_default_ER,
-      ora_default_LR = ora_default_LR,
+      ora_table_ER = ora_table_ER,
+      ora_table_LR = ora_table_LR,
       network_type = network_type,
       layout_type = layout_type,
       object_name = object_name
@@ -146,20 +146,20 @@ build_interactive_network <- function(
 }
 
 interactive_from_igraph <- function(
-  cci_detected,
+  cci_table_detected,
   conds,
-  ora_default_ER,
-  ora_default_LR,
+  ora_table_ER,
+  ora_table_LR,
   network_type,
   layout_type,
   object_name
 ) {
   config <- setup_graph_config()
   G <- build_igraph(
-    cci_detected = cci_detected,
+    cci_table_detected = cci_table_detected,
     conds = conds,
-    ora_default_ER = ora_default_ER,
-    ora_default_LR = ora_default_LR,
+    ora_table_ER = ora_table_ER,
+    ora_table_LR = ora_table_LR,
     network_type = network_type,
     layout_type = layout_type,
     config
@@ -245,25 +245,25 @@ setup_graph_config <- function(
 }
 
 build_igraph <- function(
-  cci_detected,
+  cci_table_detected,
   conds,
-  ora_default_ER,
-  ora_default_LR,
+  ora_table_ER,
+  ora_table_LR,
   network_type,
   layout_type,
   config = config
 ) {
   edge_table <- build_edge_table(
-    cci_detected = cci_detected,
+    cci_table_detected = cci_table_detected,
     conds = conds,
-    ora_default_ER = ora_default_ER,
-    ora_default_LR = ora_default_LR,
+    ora_table_ER = ora_table_ER,
+    ora_table_LR = ora_table_LR,
     network_type = network_type,
     layout_type = layout_type,
     config = config
   )
   vertex_table <- build_vertex_table(
-    cci_detected = cci_detected,
+    cci_table_detected = cci_table_detected,
     edge_table = edge_table,
     conds = conds,
     network_type = network_type,
@@ -285,26 +285,26 @@ build_igraph <- function(
 }
 
 build_edge_table <- function(
-  cci_detected,
+  cci_table_detected,
   conds,
-  ora_default_ER,
-  ora_default_LR,
+  ora_table_ER,
+  ora_table_LR,
   network_type,
   layout_type,
   config
 ) {
   ORA_TYPE <- NULL
   edge_table <- extract_edge_metadata(
-    cci_detected = cci_detected,
+    cci_table_detected = cci_table_detected,
     conds = conds,
-    ora_default_ER = ora_default_ER,
+    ora_table_ER = ora_table_ER,
     network_type = network_type,
     config = config
   )
   edge_table <- add_edge_layout(
     edge_table = edge_table,
     conds = conds,
-    ora_default_LR = ora_default_LR,
+    ora_table_LR = ora_table_LR,
     network_type = network_type,
     layout_type,
     config = config
@@ -316,17 +316,17 @@ build_edge_table <- function(
 }
 
 extract_edge_metadata <- function(
-  cci_detected,
+  cci_table_detected,
   conds,
-  ora_default_ER,
+  ora_table_ER,
   network_type,
   config
 ) {
   IS_CCI_EXPRESSED <- i.N <- REGULATION <-
     NUM_LRIS_UP <- NUM_LRIS_DOWN <- i.ORA_TYPE <- NULL
   all_cell_types <- union(
-    unique(cci_detected[["EMITTER_CELLTYPE"]]),
-    unique(cci_detected[["RECEIVER_CELLTYPE"]])
+    unique(cci_table_detected[["EMITTER_CELLTYPE"]]),
+    unique(cci_table_detected[["RECEIVER_CELLTYPE"]])
   )
   edge_table <- CJ(
     "from" = all_cell_types,
@@ -334,7 +334,7 @@ extract_edge_metadata <- function(
   )
   if (is.null(conds)) {
     edge_table[
-      cci_detected[
+      cci_table_detected[
         IS_CCI_EXPRESSED == TRUE,
         .N,
         by = c("EMITTER_CELLTYPE", "RECEIVER_CELLTYPE")],
@@ -344,7 +344,7 @@ extract_edge_metadata <- function(
     edge_table[is.na(edge_table)] <- 0
   } else {
     edge_table[
-      cci_detected[
+      cci_table_detected[
         get(paste0("IS_CCI_EXPRESSED_", conds[[1]])) == TRUE |
           get(paste0("IS_CCI_EXPRESSED_", conds[[2]])) == TRUE,
         .N,
@@ -353,7 +353,7 @@ extract_edge_metadata <- function(
       "NUM_LRIS_TOTAL" := i.N
     ]
     edge_table[
-      cci_detected[
+      cci_table_detected[
         get(paste0("IS_CCI_EXPRESSED_", conds[[1]])) == TRUE,
         .N,
         by = c("EMITTER_CELLTYPE", "RECEIVER_CELLTYPE")],
@@ -361,7 +361,7 @@ extract_edge_metadata <- function(
       paste0("NUM_LRIS_", conds[[1]]) := i.N
     ]
     edge_table[
-      cci_detected[
+      cci_table_detected[
         get(paste0("IS_CCI_EXPRESSED_", conds[[2]])) == TRUE,
         .N,
         by = c("EMITTER_CELLTYPE", "RECEIVER_CELLTYPE")],
@@ -373,7 +373,7 @@ extract_edge_metadata <- function(
                  get(paste0("NUM_LRIS_", conds[[2]])) -
                  get(paste0("NUM_LRIS_", conds[[1]]))]
     edge_table[
-      cci_detected[
+      cci_table_detected[
         REGULATION == "UP",
         .N,
         by = c("EMITTER_CELLTYPE", "RECEIVER_CELLTYPE")],
@@ -381,7 +381,7 @@ extract_edge_metadata <- function(
       "NUM_LRIS_UP" := i.N
     ]
     edge_table[
-      cci_detected[
+      cci_table_detected[
         REGULATION == "DOWN",
         .N,
         by = c("EMITTER_CELLTYPE", "RECEIVER_CELLTYPE")],
@@ -389,7 +389,7 @@ extract_edge_metadata <- function(
       "NUM_LRIS_DOWN" := i.N
     ]
     edge_table[
-      cci_detected[
+      cci_table_detected[
         REGULATION == "FLAT",
         .N,
         by = c("EMITTER_CELLTYPE", "RECEIVER_CELLTYPE")],
@@ -397,7 +397,7 @@ extract_edge_metadata <- function(
       "NUM_LRIS_FLAT" := i.N
     ]
     edge_table[
-      cci_detected[
+      cci_table_detected[
         REGULATION == "NON_SIGNIFICANT_CHANGE",
         .N,
         by = c("EMITTER_CELLTYPE", "RECEIVER_CELLTYPE")],
@@ -409,7 +409,7 @@ extract_edge_metadata <- function(
   if (network_type == "ORA_network") {
     edge_table[
       process_celltype_pairs_enrichment(
-        ora_default_ER = ora_default_ER,
+        ora_table_ER = ora_table_ER,
         config = config
       ),
       on = c("from==EMITTER_CELLTYPE", "to==RECEIVER_CELLTYPE"),
@@ -421,12 +421,12 @@ extract_edge_metadata <- function(
 }
 
 process_celltype_pairs_enrichment <- function(
-  ora_default_ER,
+  ora_table_ER,
   config
 ) {
   OR_UP <- OR_DOWN <- OR_FLAT <-
     BH_P_VALUE_UP <- BH_P_VALUE_DOWN <- BH_P_VALUE_FLAT <- NULL
-  dt_ora <- copy(ora_default_ER)
+  dt_ora <- copy(ora_table_ER)
   OR_MIN <- config$ORA_PARAMETERS$CUTOFF_OR
   BH_MAX <- config$ORA_PARAMETERS$CUTOFF_BHP
   dt_ora[, "ORA_TYPE" := ifelse(
@@ -465,7 +465,7 @@ process_celltype_pairs_enrichment <- function(
 add_edge_layout <- function(
   edge_table,
   conds,
-  ora_default_LR,
+  ora_table_LR,
   network_type,
   layout_type,
   config
@@ -542,7 +542,7 @@ add_edge_layout <- function(
   #TODO add title
   edge_table[, "title" := "doDO"]
   #edges_[, title := edge_annotation_html(edges_, network_type)]
-  #num_interacts <- num_interactions_object(cci_detected = cci_detected)
+  #num_interacts <- num_interactions_object(cci_table_detected = cci_table_detected)
   if (layout_type == "bipartite") {
     edge_table[, "from" := paste0(from, " (E)")]
     edge_table[, "to" := paste0(to, " (R)")]
@@ -570,7 +570,7 @@ add_edge_color <- function(
 }
 
 build_vertex_table <- function(
-  cci_detected,
+  cci_table_detected,
   edge_table,
   conds,
   network_type,
@@ -578,7 +578,7 @@ build_vertex_table <- function(
   config
 ) {
   vertex_table <- extract_vertex_metadata(
-    cci_detected = cci_detected,
+    cci_table_detected = cci_table_detected,
     conds = conds,
     layout_type = layout_type
   )
@@ -594,14 +594,14 @@ build_vertex_table <- function(
 }
 
 extract_vertex_metadata <- function(
-  cci_detected,
+  cci_table_detected,
   conds,
   layout_type
 ) {
   i.NCELLS_EMITTER <- i.NCELLS_AVG <- name <- vertex_types <- NULL
   all_cell_types <- union(
-    unique(cci_detected[["EMITTER_CELLTYPE"]]),
-    unique(cci_detected[["RECEIVER_CELLTYPE"]])
+    unique(cci_table_detected[["EMITTER_CELLTYPE"]]),
+    unique(cci_table_detected[["RECEIVER_CELLTYPE"]])
   )
   if (layout_type == "conventional") {
     vertex_table <- data.table(name = all_cell_types)
@@ -618,7 +618,7 @@ extract_vertex_metadata <- function(
     )
   }
   if (is.null(conds)) {
-    NCELLS_TABLE <- unique(cci_detected[
+    NCELLS_TABLE <- unique(cci_table_detected[
       ,
       c("EMITTER_CELLTYPE", "NCELLS_EMITTER"),
       with = FALSE])
@@ -628,7 +628,7 @@ extract_vertex_metadata <- function(
       "num_cells" := i.NCELLS_EMITTER
     ]
   } else {
-    NCELLS_TABLE <- unique(cci_detected[
+    NCELLS_TABLE <- unique(cci_table_detected[
       ,
       c(
         "EMITTER_CELLTYPE",
@@ -1123,7 +1123,7 @@ edges_legend <- function(
 #       # TODO: Extract function. Adds the LR table
 #       NUM_TOP_LR <- 5
 #       ER_celltype <- paste0(EMITTER_CELLTYPE_CLEAN, "_", RECEIVER_CELLTYPE_CLEAN)
-#       lr_genes_significant_sorted <- cci_detected[ER_CELLTYPES == ER_celltype
+#       lr_genes_significant_sorted <- cci_table_detected[ER_CELLTYPES == ER_celltype
 #                                                   & REGULATION_SIMPLE %in% c("UP", "DOWN")][
 #                                                     order(-LOGFC_ABS),
 #                                                     list(LRI, LOGFC, REGULATION)
@@ -1134,8 +1134,8 @@ edges_legend <- function(
 #       # Activity of LR found in most cellpairs of tissue
 #       # TODO: Extract function
 #       NUM_FREQ_LR <- 5
-#       LR_freq <- ora_default_LR[order(-OR_DIFF), VALUE][1:NUM_FREQ_LR] # TODO: Counts or OR?
-#       dt <- cci_detected[
+#       LR_freq <- ora_table_LR[order(-OR_DIFF), VALUE][1:NUM_FREQ_LR] # TODO: Counts or OR?
+#       dt <- cci_table_detected[
 #         ER_CELLTYPES == ER_celltype
 #       ][
 #         match(LR_freq, LRI)
@@ -1153,7 +1153,7 @@ edges_legend <- function(
 #       NUM_TOP_GO <- 5
 #
 #       # ora_dt <- build_ora_dt(
-#       #   object@cci_detected[ER_CELLTYPES == ER_celltype],
+#       #   object@cci_table_detected[ER_CELLTYPES == ER_celltype],
 #       #   object@parameters$threshold_logfc,
 #       #   c("UP", "DOWN", "DIFF", "FLAT"),
 #       #   "GO_TERMS",
@@ -1194,10 +1194,10 @@ edges_legend <- function(
 #   return(annotations)
 # }
 
-# get_cci_change_graph <- function(cci_detected) {
+# get_cci_change_graph <- function(cci_table_detected) {
 #   LOGFC <- value <- label <- color <- REGULATION <-
 #     EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <- LRI <- NULL
-#   dt_edge = cci_detected[REGULATION %in% c('UP', 'DOWN'),
+#   dt_edge = cci_table_detected[REGULATION %in% c('UP', 'DOWN'),
 #                          list(
 #                            EMITTER_CELLTYPE, RECEIVER_CELLTYPE,
 #                            LRI, LOGFC,
@@ -1214,16 +1214,16 @@ edges_legend <- function(
 #   return(cci_change_graph)
 # }
 #
-# get_cci_change_subgraph_list <- function(cci_detected, LRIs = NULL) {
+# get_cci_change_subgraph_list <- function(cci_table_detected, LRIs = NULL) {
 #   LRI <- NULL
 #   if(is.null(LRIs)) {
-#     lris = unique(cci_detected[, LRI])
+#     lris = unique(cci_table_detected[, LRI])
 #   } else {
 #     lris = LRIs
 #   }
 #   subgraphs = purrr::map(
 #     lris,
-#     ~ get_cci_change_subgraph(cci_detected, .x)
+#     ~ get_cci_change_subgraph(cci_table_detected, .x)
 #   )
 #   if(length(lris)==1) {
 #     return(subgraphs[[1]])
@@ -1232,8 +1232,8 @@ edges_legend <- function(
 #   }
 # }
 #
-# LRI_subgraph_metrics <- function(cci_detected, LRIs=NULL) {
-#   subgraphs = get_cci_change_subgraph_list(cci_detected, LRIs)
+# LRI_subgraph_metrics <- function(cci_table_detected, LRIs=NULL) {
+#   subgraphs = get_cci_change_subgraph_list(cci_table_detected, LRIs)
 #
 #   subg_metrics_l = purrr::map(
 #     subgraphs,
@@ -1259,14 +1259,14 @@ edges_legend <- function(
 # }
 #
 # get_cci_change_subgraph <- function(
-#   cci_detected,
+#   cci_table_detected,
 #   LRIs
 # ) {
 #   SUBG_LIMIT <- 5
 #   if(length(LRIs) > SUBG_LIMIT) {
 #     stop(paste0("The number of LRIs must be less than ", SUBG_LIMIT))
 #   }
-#   dt_edge = cci_detected[
+#   dt_edge = cci_table_detected[
 #     (REGULATION %in% c('UP', 'DOWN'))
 #     & (LRI %in% LRIs),
 #     c(

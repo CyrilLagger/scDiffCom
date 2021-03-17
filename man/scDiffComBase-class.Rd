@@ -4,21 +4,18 @@
 \name{scDiffComBase-class}
 \alias{scDiffComBase-class}
 \alias{parameters,scDiffComBase-method}
-\alias{get_cci_raw,scDiffComBase-method}
-\alias{get_cci_detected,scDiffComBase-method}
-\alias{get_ora_default,scDiffComBase-method}
-\alias{get_ora_stringent,scDiffComBase-method}
+\alias{get_cci_table_raw,scDiffComBase-method}
+\alias{get_cci_table_detected,scDiffComBase-method}
+\alias{get_ora_table,scDiffComBase-method}
 \title{The scDiffComBase Class}
 \usage{
 \S4method{parameters}{scDiffComBase}(object)
 
-\S4method{get_cci_raw}{scDiffComBase}(object)
+\S4method{get_cci_table_raw}{scDiffComBase}(object)
 
-\S4method{get_cci_detected}{scDiffComBase}(object)
+\S4method{get_cci_table_detected}{scDiffComBase}(object)
 
-\S4method{get_ora_default}{scDiffComBase}(object)
-
-\S4method{get_ora_stringent}{scDiffComBase}(object)
+\S4method{get_ora_table}{scDiffComBase}(object)
 }
 \arguments{
 \item{object}{xxx}
@@ -31,13 +28,11 @@ for the \code{scDiffCom} and \code{scDiffComCombined} classes.
 \itemize{
 \item \code{parameters}: Return scDiffCom \code{parameters}.
 
-\item \code{get_cci_raw}: Return scDiffCom \code{cci_raw}.
+\item \code{get_cci_table_raw}: Return scDiffCom \code{cci_table_raw}.
 
-\item \code{get_cci_detected}: Return scDiffCom \code{cci_detected}.
+\item \code{get_cci_table_detected}: Return scDiffCom \code{cci_table_detected}.
 
-\item \code{get_ora_default}: Return scDiffCom \code{ora_default}.
-
-\item \code{get_ora_stringent}: Return scDiffCom \code{ora_stringent}.
+\item \code{get_ora_table}: Return scDiffCom \code{ora_table}.
 }}
 
 \section{Slots}{
@@ -45,14 +40,12 @@ for the \code{scDiffCom} and \code{scDiffComCombined} classes.
 \describe{
 \item{\code{parameters}}{The list of parameters passed to \code{run_interaction_analysis}.}
 
-\item{\code{cci_raw}}{A data.table with all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \times m} rows,
+\item{\code{cci_table_raw}}{A data.table with all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \times m} rows,
 where \eqn{n} is the number of cell-types and \eqn{m} the number of ligand-receptor pairs.}
 
-\item{\code{cci_detected}}{A data.table with the detected CCIs obtained from the raw data.table after filtering.}
+\item{\code{cci_table_detected}}{A data.table with the detected CCIs obtained from the raw data.table after filtering.}
 
-\item{\code{ora_default}}{A data.table storing the results of the over-representation analysis
-performed on the \code{cci_detected} table.}
-
-\item{\code{ora_stringent}}{Same as \code{ora_default} but with a more stringent logfc threshold to specifically focus on strong signals.}
+\item{\code{ora_table}}{A data.table storing the results of the over-representation analysis
+performed on the \code{cci_table_detected} table.}
 }}
 

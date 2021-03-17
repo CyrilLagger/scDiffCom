@@ -48,14 +48,14 @@ FilterCCI(object, ...)
 \item{verbose}{Should messages be printed?}
 }
 \value{
-An object with updated \code{cci_detected} and \code{ora_default}
+An object with updated \code{cci_table_detected} and \code{ora_table}
 }
 \description{
 This function is called internally by \code{run_interaction_analysis} after the permutation tests
  have been performed. Based on the threshold parameters, it returns detected and differentially expressed
- CCIs in the slot \code{cci_detected} and results of over-representation analysis in \code{cci_ora_default}.
+ CCIs in the slot \code{cci_table_detected} and results of over-representation analysis in \code{cci_ora_table}.
  The function can be run with new threshold parameters on any scDiffCom object that already contain the slot
- \code{cci_raw}. This allows the user to test various filtering parameters without the need to rerun the
+ \code{cci_table_raw}. This allows the user to test various filtering parameters without the need to rerun the
  potentially time-consuming permutation analysis. When new thresholds are defined the slot \code{parameters} is
  modified accordingly.
  Filtering and over-representation are not independent as the second depends on the first. Therefore, when
