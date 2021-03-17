@@ -22,7 +22,8 @@ Description: A statistical method to perform differential analyis of
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 4.0.0)
+Depends: 
+    R (>= 4.0.0)
 RoxygenNote: 7.1.1
 Suggests: 
     AnnotationDbi,
@@ -46,7 +47,6 @@ Suggests:
     igraph,
     purrr,
     scales,
-    Seurat (>= 4.0.0),
     visNetwork
 Imports: 
     data.table,
@@ -57,7 +57,8 @@ Imports:
     stats,
     utils,
     ggplot2,
-    magrittr
+    magrittr,
+    Seurat (>= 4.0.0)
 VignetteBuilder: knitr
 Collate: 
     'cellphonedb_wrapper.R'
@@ -65,7 +66,7 @@ Collate:
     'generics.R'
     'interaction_analysis.R'
     'objects.R'
-    'utils_LRdb.R'
+    'utils_LRI.R'
     'utils_cci.R'
     'utils_cpdb_wrapper.R'
     'utils_filtering.R'
