@@ -369,9 +369,9 @@ Combine_scDiffCom <- function(
       simplify = FALSE
     )
   }
-  list_of_ora_categories <- lapply(
-    l, function(i) names(i@ora_stringent)
-  )
+  # list_of_ora_categories <- lapply(
+  #   l, function(i) names(i@ora_stringent)
+  # )
   # if (is.null(list_of_ora_categories[[1]])) {
   #   if (verbose) {
   #     message("Empty slot `ora_stringent` in input object. Returning empty slot `ora_stringent` in combined object.")
