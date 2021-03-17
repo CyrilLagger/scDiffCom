@@ -184,7 +184,7 @@ run_internal_raw_analysis <- function(
     " * ",
     cci_dt_simple[, uniqueN(get("EMITTER_CELLTYPE"))],
     " * ",
-    cci_dt_simple[, uniqueN(get("LR_GENES"))],
+    cci_dt_simple[, uniqueN(get("LRI"))],
     ")."
   )
   if (verbose) message(mes)

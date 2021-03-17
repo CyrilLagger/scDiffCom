@@ -10,7 +10,7 @@ RunORA(object, ...)
 
 \method{RunORA}{scDiffCom}(
   object,
-  categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS"),
+  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
   overwrite = TRUE,
   stringent_or_default = "default",
   stringent_logfc_threshold = NULL,
@@ -20,7 +20,7 @@ RunORA(object, ...)
 
 \method{RunORA}{scDiffComCombined}(
   object,
-  categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS"),
+  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS"),
   overwrite = TRUE,
   stringent_or_default = "default",
   stringent_logfc_threshold = NULL,
@@ -35,7 +35,7 @@ RunORA(object, ...)
 \item{...}{Arguments passed to other methods}
 
 \item{categories}{A character vector specifying the categories on which to perform the analysis. One data.table is returned
-for each category. Set to \code{c("ER_CELLTYPES", "LR_GENES", "GO_TERMS")} by default.}
+for each category. Set to \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")} by default.}
 
 \item{overwrite}{Should existing categories be overwriten in case they match with new categories?}
 

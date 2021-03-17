@@ -96,7 +96,7 @@ get_KEGG_PW_interactions <- function(
         res_inter <- intersect(LIGAND_PW, RECEPTOR_PW)
         if (length(res_inter) > 0) {
           res_inter <- data.table(
-            LR_GENES = rep(row[["LR_GENES"]], length(res_inter)),
+            LRI = rep(row[["LRI"]], length(res_inter)),
             KEGG_ID = res_inter
           )
         } else {
@@ -202,7 +202,7 @@ get_GO_interactions <- function(
         res_inter <- intersect(LIGAND_GO, RECEPTOR_GO)
         if (length(res_inter) > 0) {
           res_inter <- data.table(
-            LR_GENES = rep(row[["LR_GENES"]], length(res_inter)),
+            LRI = rep(row[["LRI"]], length(res_inter)),
             GO_ID = res_inter
           )
         } else {
@@ -258,7 +258,7 @@ combine_LR_db <- function(
   DATABASE <- SOURCE <- ANNOTATION <- FAMILY <- SUBFAMILY <- keep_subLR <-
     SOURCE_CLEAN <- SOURCE_no_digit <- is_complex_temp <- LIGAND_2 <-
     RECEPTOR_2 <- LR_vectorized_temp <- N_IS_SUBPART <- i.N_IS_SUBPART <-
-    LR_GENES <- LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_3 <- NULL
+    LRI <- LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_3 <- NULL
   #already curated
   LR_connectomeDB2020 <- prepare_LR_connectomeDB2020(
     species = species,
@@ -480,7 +480,7 @@ combine_LR_db <- function(
   } else {
     cols_to_keep <- NULL
   }
-  LR_full[, LR_GENES := list(sapply(1:nrow(.SD), function(i) {
+  LR_full[, LRI := list(sapply(1:nrow(.SD), function(i) {
     temp1 <- c(LIGAND_1[[i]], LIGAND_2[[i]])
     temp1 <- temp1[!is.na(temp1)]
     temp1 <- paste0(temp1, collapse = "_")
@@ -492,7 +492,7 @@ combine_LR_db <- function(
   if (species == "mouse") {
     cols_to_keep <- c(
       cols_to_keep,
-      "LR_GENES",
+      "LRI",
       paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3), "LR_SORTED",
       "DATABASE", "N_DB", "SOURCE", "ANNOTATION", "FAMILY", "SUBFAMILY",
       paste0("LIGAND_", 1:2, "_CONF"), paste0("LIGAND_", 1:2, "_TYPE"),
@@ -502,7 +502,7 @@ combine_LR_db <- function(
   if (species == "human") {
     cols_to_keep <- c(
       cols_to_keep,
-      "LR_GENES",
+      "LRI",
       paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3), "LR_SORTED",
       "DATABASE", "N_DB", "SOURCE", "ANNOTATION", "FAMILY", "SUBFAMILY"
     )

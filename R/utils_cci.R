@@ -4,13 +4,13 @@ create_cci_template <- function(
   template <- CJ(
     EMITTER_CELLTYPE = analysis_inputs$cell_types,
     RECEIVER_CELLTYPE = analysis_inputs$cell_types,
-    LR_GENES = analysis_inputs$LRI$LR_GENES
+    LRI = analysis_inputs$LRI$LRI
   )
   template <- merge.data.table(
     x = template,
     y = analysis_inputs$LRI,
-    by.x = "LR_GENES",
-    by.y = "LR_GENES",
+    by.x = "LRI",
+    by.y = "LRI",
     all.x = TRUE,
     sort = FALSE
   )

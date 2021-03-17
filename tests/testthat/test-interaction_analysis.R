@@ -82,7 +82,8 @@ test_that("parameters are correclty validated", {
   expect_equal(length(parameters_mode_validated$wrong), 18)
 })
 
-## small Seurat object for testing ####
+## load a small Seurat object for testing ####
+
 seurat_test <- scDiffCom::seurat_sample_tms_liver
 
 ## check data extraction and pre-processing ####
@@ -163,7 +164,7 @@ example_cci_test <- lapply(
     copy(i)[
       EMITTER_CELLTYPE == "hepatocyte" &
         RECEIVER_CELLTYPE == "endothelial cell of hepatic sinusoid" &
-        LR_GENES == "Adam15:Itga5"]
+        LRI == "Adam15:Itga5"]
   }
 )
 
@@ -254,10 +255,10 @@ cci_permutation_test_with_distr <- lapply(
 )
 
 test_that("data.table returned by permutation test is correctly formatted", {
-  expect_identical(cci_dt_simple_test$cond_stat$LR_GENES, cci_permutation_test$cond$cci_raw$LR_GENES)
+  expect_identical(cci_dt_simple_test$cond_stat$LRI, cci_permutation_test$cond$cci_raw$LRI)
   expect_identical(cci_dt_simple_test$cond_stat[, 4:38], cci_permutation_test$cond$cci_raw[, 4:38])
   expect_identical(cci_dt_simple_test$nocond_stat[, 4:22], cci_permutation_test$nocond$cci_raw[, 4:22])
-  expect_identical(cci_dt_simple_test$cond_stat$LR_GENES, cci_permutation_test_with_distr$cond$cci_raw$LR_GENES)
+  expect_identical(cci_dt_simple_test$cond_stat$LRI, cci_permutation_test_with_distr$cond$cci_raw$LRI)
   expect_identical(cci_dt_simple_test$cond_stat[, 4:38], cci_permutation_test_with_distr$cond$cci_raw[, 4:38])
   expect_identical(cci_dt_simple_test$nocond_stat[, 4:22], cci_permutation_test_with_distr$nocond$cci_raw[, 4:22])
 })
@@ -326,7 +327,7 @@ scdiffcom_objects <- lapply(
   function(object) {
     run_ora(
       object  = object,
-      categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS"),
+      categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
       overwrite = TRUE,
       stringent_or_default = "default",
       stringent_logfc_threshold = NULL,
@@ -337,34 +338,34 @@ scdiffcom_objects <- lapply(
   }
 )
 
-# ORA on LR_GENES
+# ORA on LRI
 
 contingency_table_test_LR_up <- matrix(
   c(
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Apoe:Ldlr" & REGULATION == "UP", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Apoe:Ldlr" & REGULATION != "UP", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Apoe:Ldlr" & REGULATION == "UP", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Apoe:Ldlr" & REGULATION != "UP", .N]
+    scdiffcom_objects$cond_stat@cci_detected[LRI == "Apoe:Ldlr" & REGULATION == "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI == "Apoe:Ldlr" & REGULATION != "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI != "Apoe:Ldlr" & REGULATION == "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI != "Apoe:Ldlr" & REGULATION != "UP", .N]
   ),
   2,2
 )
 
 contingency_table_test_LR_down <- matrix(
   c(
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Csf2:Itgb1" & REGULATION == "DOWN", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Csf2:Itgb1" & REGULATION != "DOWN", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Csf2:Itgb1" & REGULATION == "DOWN", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Csf2:Itgb1" & REGULATION != "DOWN", .N]
+    scdiffcom_objects$cond_stat@cci_detected[LRI == "Csf2:Itgb1" & REGULATION == "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI == "Csf2:Itgb1" & REGULATION != "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI != "Csf2:Itgb1" & REGULATION == "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI != "Csf2:Itgb1" & REGULATION != "DOWN", .N]
   ),
   2,2
 )
 
 contingency_table_test_LR_flat <- matrix(
   c(
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Adam10:Axl" & REGULATION == "FLAT", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES == "Adam10:Axl" & REGULATION != "FLAT", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Adam10:Axl" & REGULATION == "FLAT", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES != "Adam10:Axl" & REGULATION != "FLAT", .N]
+    scdiffcom_objects$cond_stat@cci_detected[LRI == "Adam10:Axl" & REGULATION == "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI == "Adam10:Axl" & REGULATION != "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI != "Adam10:Axl" & REGULATION == "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI != "Adam10:Axl" & REGULATION != "FLAT", .N]
   ),
   2,2
 )
@@ -376,64 +377,64 @@ fisher_LR_flat <- fisher.test(contingency_table_test_LR_flat)
 
 test_that("fisher test is done correctly on LRIs", {
   expect_equivalent(
-    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Apoe:Ldlr"]$OR_UP,
+    scdiffcom_objects$cond_stat@ora_default$LRI[VALUE == "Apoe:Ldlr"]$OR_UP,
     fisher_LR_up$estimate
   )
   expect_equivalent(
-    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Apoe:Ldlr"]$P_VALUE_UP,
+    scdiffcom_objects$cond_stat@ora_default$LRI[VALUE == "Apoe:Ldlr"]$P_VALUE_UP,
     fisher_LR_up$p.value
   )
   expect_equivalent(
-    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Csf2:Itgb1"]$OR_DOWN,
+    scdiffcom_objects$cond_stat@ora_default$LRI[VALUE == "Csf2:Itgb1"]$OR_DOWN,
     fisher_LR_down$estimate
   )
   expect_equivalent(
-    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Csf2:Itgb1"]$P_VALUE_DOWN,
+    scdiffcom_objects$cond_stat@ora_default$LRI[VALUE == "Csf2:Itgb1"]$P_VALUE_DOWN,
     fisher_LR_down$p.value
   )
   expect_equivalent(
-    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Adam10:Axl"]$OR_FLAT,
+    scdiffcom_objects$cond_stat@ora_default$LRI[VALUE == "Adam10:Axl"]$OR_FLAT,
     fisher_LR_flat$estimate
   )
   expect_equivalent(
-    scdiffcom_objects$cond_stat@ora_default$LR_GENES[VALUE == "Adam10:Axl"]$P_VALUE_FLAT,
+    scdiffcom_objects$cond_stat@ora_default$LRI[VALUE == "Adam10:Axl"]$P_VALUE_FLAT,
     fisher_LR_flat$p.value
   )
 })
 
 #ORA on GO terms
 
-genes_GO_UP <- LRI_mouse$LRI_curated_GO[GO_ID == "GO:0002376"]$LR_GENES
+genes_GO_UP <- LRI_mouse$LRI_curated_GO[GO_ID == "GO:0002376"]$LRI
 contingency_table_test_GO_up <- matrix(
   c(
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_UP & REGULATION == "UP", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_UP & REGULATION != "UP", .N],
-    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_UP) & REGULATION == "UP", .N],
-    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_UP) & REGULATION != "UP", .N]
+    scdiffcom_objects$cond_stat@cci_detected[LRI %in% genes_GO_UP & REGULATION == "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI %in% genes_GO_UP & REGULATION != "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LRI %in% genes_GO_UP) & REGULATION == "UP", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LRI %in% genes_GO_UP) & REGULATION != "UP", .N]
   ),
   2,2
 )
 fisher_GO_up <- fisher.test(contingency_table_test_GO_up)
 
-genes_GO_DOWN <- LRI_mouse$LRI_curated_GO[GO_ID == "GO:0031625"]$LR_GENES
+genes_GO_DOWN <- LRI_mouse$LRI_curated_GO[GO_ID == "GO:0031625"]$LRI
 contingency_table_test_GO_down <- matrix(
   c(
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_DOWN & REGULATION == "DOWN", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_DOWN & REGULATION != "DOWN", .N],
-    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_DOWN) & REGULATION == "DOWN", .N],
-    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_DOWN) & REGULATION != "DOWN", .N]
+    scdiffcom_objects$cond_stat@cci_detected[LRI %in% genes_GO_DOWN & REGULATION == "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI %in% genes_GO_DOWN & REGULATION != "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LRI %in% genes_GO_DOWN) & REGULATION == "DOWN", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LRI %in% genes_GO_DOWN) & REGULATION != "DOWN", .N]
   ),
   2,2
 )
 fisher_GO_down <- fisher.test(contingency_table_test_GO_down)
 
-genes_GO_FLAT <- LRI_mouse$LRI_curated_GO[GO_ID == "GO:0022406"]$LR_GENES
+genes_GO_FLAT <- LRI_mouse$LRI_curated_GO[GO_ID == "GO:0022406"]$LRI
 contingency_table_test_GO_flat <- matrix(
   c(
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_FLAT & REGULATION == "FLAT", .N],
-    scdiffcom_objects$cond_stat@cci_detected[LR_GENES %in% genes_GO_FLAT & REGULATION != "FLAT", .N],
-    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_FLAT) & REGULATION == "FLAT", .N],
-    scdiffcom_objects$cond_stat@cci_detected[!(LR_GENES %in% genes_GO_FLAT) & REGULATION != "FLAT", .N]
+    scdiffcom_objects$cond_stat@cci_detected[LRI %in% genes_GO_FLAT & REGULATION == "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[LRI %in% genes_GO_FLAT & REGULATION != "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LRI %in% genes_GO_FLAT) & REGULATION == "FLAT", .N],
+    scdiffcom_objects$cond_stat@cci_detected[!(LRI %in% genes_GO_FLAT) & REGULATION != "FLAT", .N]
   ),
   2,2
 )
@@ -681,7 +682,7 @@ all_networks[[6]][[2]]
 #   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
 #   conds = c("YOUNG", "OLD"),
 #   ora_default_ER = scdiffcom_objects$cond_stat@ora_default$ER_CELLTYPES,
-#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LR_GENES,
+#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LRI,
 #   network_representation_type = "ORA",
 #   network_layout_type = "bipartite",
 #   config = setup_graph_config()
@@ -710,7 +711,7 @@ all_networks[[6]][[2]]
 #   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
 #   conds = c("YOUNG", "OLD"),
 #   ora_default_ER = scdiffcom_objects$cond_stat@ora_default$ER_CELLTYPES,
-#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LR_GENES,
+#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LRI,
 #   network_type = "ORA_network",
 #   layout_type = "bipartite",
 #   config = setup_graph_config()
@@ -729,7 +730,7 @@ all_networks[[6]][[2]]
 #   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
 #   conds = c("YOUNG", "OLD"),
 #   ora_default_ER = scdiffcom_objects$cond_stat@ora_default$ER_CELLTYPES,
-#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LR_GENES,
+#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LRI,
 #   network_representation_type = "ORA",
 #   network_layout_type = "bipartite",
 #   object_name = "test"
@@ -739,7 +740,7 @@ all_networks[[6]][[2]]
 #   cci_detected = scdiffcom_objects$cond_stat@cci_detected,
 #   conds = c("YOUNG", "OLD"),
 #   ora_default_ER = scdiffcom_objects$cond_stat@ora_default$ER_CELLTYPES,
-#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LR_GENES,
+#   ora_default_LR = scdiffcom_objects$cond_stat@ora_default$LRI,
 #   network_type = "ORA_network",
 #   layout_type = "bipartite",
 #   config = setup_graph_config()

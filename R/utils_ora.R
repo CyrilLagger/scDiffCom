@@ -226,7 +226,7 @@ build_ora_dt <- function(
       if (category %in% c("GO_TERMS", "KEGG_PWS")) {
         counts_dt <- extract_category_counts(
           cci_detected = cci_dt,
-          category = "LR_GENES",
+          category = "LRI",
           reg = reg,
           logfc_threshold = logfc_threshold
         )
@@ -255,7 +255,7 @@ build_ora_dt <- function(
         counts_intersection_dt <- data.table::merge.data.table(
           new_intersection_dt,
           counts_dt,
-          by.x = "LR_GENES",
+          by.x = "LRI",
           by.y = "VALUE"
         )
         counts_intersection_dt[, c("COUNTS_VALUE_REGULATED_temp", "COUNTS_VALUE_NOTREGULATED_temp") :=
@@ -273,7 +273,7 @@ build_ora_dt <- function(
         counts_intersection_dt[, c(
           "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
           "COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED",
-          "LR_GENES"
+          "LRI"
         ) := NULL]
         counts_intersection_dt <- unique(counts_intersection_dt)
         data.table::setnames(
@@ -365,8 +365,9 @@ extract_category_counts <- function(
 perform_ora_from_counts <- function(
   counts_dt
 ) {
-  P_VALUE <- BH_P_VALUE <- OR <-  COUNTS_VALUE_REGULATED <- COUNTS_VALUE_NOTREGULATED <-
-    COUNTS_NOTVALUE_REGULATED <- COUNTS_NOTVALUE_NOTREGULATED <- ORA_SCORE  <- NULL
+  P_VALUE <- BH_P_VALUE <- OR <-  COUNTS_VALUE_REGULATED <-
+    COUNTS_VALUE_NOTREGULATED <-COUNTS_NOTVALUE_REGULATED <-
+    COUNTS_NOTVALUE_NOTREGULATED <- ORA_SCORE <- i.BH_P_VALUE <- NULL
   counts_dt[, c("OR", "P_VALUE") :=
               vfisher_2sided(
                 COUNTS_VALUE_REGULATED,

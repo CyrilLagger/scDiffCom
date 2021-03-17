@@ -1,6 +1,7 @@
 #' @include generics.R
 #' @import data.table
 #' @import ggplot2
+#' @import Seurat
 #' @importFrom methods new setClass setClassUnion setValidity setGeneric validObject
 #' @importFrom DelayedArray rowsum
 #' @importFrom magrittr "%>%"
@@ -446,7 +447,7 @@ Combine_scDiffCom <- function(
   }
   new_object <- run_ora(
     object = new_object,
-    categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS", "ID"),
+    categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS", "ID"),
     overwrite = TRUE,
     stringent_or_default = "default",
     stringent_logfc_threshold = NULL,
@@ -530,7 +531,7 @@ FilterCCI.scDiffComCombined <- function(
 
 
 #' @param categories A character vector specifying the categories on which to perform the analysis. One data.table is returned
-#'  for each category. Set to \code{c("ER_CELLTYPES", "LR_GENES", "GO_TERMS")} by default.
+#'  for each category. Set to \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")} by default.
 #' @param overwrite Should existing categories be overwriten in case they match with new categories?
 #' @param stringent_or_default Should the default or more stringent ORA be performed?
 #' @param stringent_logfc_threshold A more stringent logfc threshold compared to the one stored in \code{parameters}.
@@ -542,7 +543,7 @@ FilterCCI.scDiffComCombined <- function(
 #' @method RunORA scDiffCom
 RunORA.scDiffCom <- function(
   object,
-  categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS"),
+  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
   overwrite = TRUE,
   stringent_or_default = "default",
   stringent_logfc_threshold = NULL,
@@ -551,7 +552,7 @@ RunORA.scDiffCom <- function(
 ) {
   run_ora(
     object = object,
-    categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS", "ID"),
+    categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS", "ID"),
     overwrite = overwrite,
     stringent_or_default = stringent_or_default,
     stringent_logfc_threshold = stringent_logfc_threshold,
@@ -562,7 +563,7 @@ RunORA.scDiffCom <- function(
 }
 
 #' @param categories A character vector specifying the categories on which to perform the analysis. One data.table is returned
-#'  for each category. Set to \code{c("ER_CELLTYPES", "LR_GENES", "GO_TERMS")} by default.
+#'  for each category. Set to \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")} by default.
 #' @param overwrite Should existing categories be overwriten in case they match with new categories?
 #' @param stringent_or_default Should the default or more stringent ORA be performed?
 #' @param stringent_logfc_threshold A more stringent logfc threshold compared to the one stored in \code{parameters}.
@@ -575,7 +576,7 @@ RunORA.scDiffCom <- function(
 #' @method RunORA scDiffComCombined
 RunORA.scDiffComCombined <- function(
   object,
-  categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS"),
+  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS"),
   overwrite = TRUE,
   stringent_or_default = "default",
   stringent_logfc_threshold = NULL,

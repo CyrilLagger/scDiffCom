@@ -95,7 +95,7 @@ run_filtering_and_ora <- function(
     } else {
       object <- run_ora(
         object = object,
-        categories = c("ER_CELLTYPES", "LR_GENES", "GO_TERMS", "KEGG_PWS"),
+        categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
         overwrite = TRUE,
         stringent_or_default = "default",
         stringent_logfc_threshold = NULL,
@@ -109,7 +109,7 @@ run_filtering_and_ora <- function(
           object = object,
           categories = c(
             "ER_CELLTYPES",
-            "LR_GENES",
+            "LRI",
             "GO_TERMS",
             "KEGG_PWS",
             "ID"),
@@ -145,7 +145,7 @@ process_cci_raw <- function(
     IS_CCI_EXPRESSED <- ER_CELLTYPES <- EMITTER_CELLTYPE <-
     RECEIVER_CELLTYPE <- LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <-
     RECEPTOR_3 <- LOGFC <- LOGFC_ABS <- REGULATION <- IS_DE_LOGFC <-
-    IS_DE_SIGNIFICANT <- DE_DIRECTION <- CCI_SCORE <- CCI <- LR_GENES <- NULL
+    IS_DE_SIGNIFICANT <- DE_DIRECTION <- CCI_SCORE <- CCI <- LRI <- NULL
   if (class_signature == "scDiffCom") {
     temp_by <- NULL
   }
@@ -307,7 +307,7 @@ process_cci_raw <- function(
     EMITTER_CELLTYPE,
     RECEIVER_CELLTYPE,
     sep = "_")]
-  cci_dt[, CCI := paste(ER_CELLTYPES, LR_GENES, sep = "_")]
+  cci_dt[, CCI := paste(ER_CELLTYPES, LRI, sep = "_")]
   return(cci_dt)
 }
 
@@ -323,7 +323,7 @@ clean_colnames <- function(
     "ER_CELLTYPES",
     "EMITTER_CELLTYPE",
     "RECEIVER_CELLTYPE",
-    "LR_GENES")
+    "LRI")
   LR_COLNAMES <- c(
     paste0("LIGAND_", 1:max_nL),
     paste0("RECEPTOR_", 1:max_nR)

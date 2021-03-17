@@ -204,7 +204,7 @@ extract_LRI_inputs <- function(
   verbose
 ) {
   LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <- RECEPTOR_3 <- NULL
-  cols_compulsory <- c("LR_GENES", "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")
+  cols_compulsory <- c("LRI", "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")
   if (!all(cols_compulsory %in% names(LRI_table))) {
     stop(paste0("`LRI_table` must contain the columns ", paste0(cols_compulsory, collapse = ", ")))
   }
@@ -225,7 +225,7 @@ extract_LRI_inputs <- function(
     unique(LRI_keep$RECEPTOR_3)
   ))
   data_keep <- data[rownames(data) %in% LRI_genes, ]
-  n_ID <- length(unique(LRI_keep$LR_GENES))
+  n_ID <- length(unique(LRI_keep$LRI))
   if (n_ID == 0) {
     stop("There are no genes from `LRI_table` in `seurat_object`")
   }
@@ -260,7 +260,7 @@ extract_LRI_inputs <- function(
   }
   mes <- paste0(
     "Using a ligand-receptor database of ",
-    length(unique(LRI_table$LR_GENES)),
+    length(unique(LRI_table$LRI)),
     " interactions (",
     n_ID,
     " present in the data).\n",

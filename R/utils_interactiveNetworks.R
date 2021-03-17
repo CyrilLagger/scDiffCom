@@ -100,7 +100,7 @@ build_interactive_network <- function(
     if (network_type == "ORA_network") {
       if (identical(object@ora_default, list()) |
           is.null(object@ora_default$ER_CELLTYPES) |
-          is.null(object@ora_default$LR_GENES)) {
+          is.null(object@ora_default$LRI)) {
         stop(paste0(
           "No network of type ",
           network_type,
@@ -109,7 +109,7 @@ build_interactive_network <- function(
         ))
       }
       ora_default_ER <- copy(object@ora_default$ER_CELLTYPES)
-      ora_default_LR <- copy(object@ora_default$LR_GENES)
+      ora_default_LR <- copy(object@ora_default$LRI)
       if (class_signature == "scDiffComCombined") {
         ora_default_ER <- ora_default_ER[ID == subobject_name][, ID := NULL]
         ora_default_LR <- ora_default_LR[ID == subobject_name][, ID := NULL]
@@ -1126,7 +1126,7 @@ edges_legend <- function(
 #       lr_genes_significant_sorted <- cci_detected[ER_CELLTYPES == ER_celltype
 #                                                   & REGULATION_SIMPLE %in% c("UP", "DOWN")][
 #                                                     order(-LOGFC_ABS),
-#                                                     list(LR_GENES, LOGFC, REGULATION)
+#                                                     list(LRI, LOGFC, REGULATION)
 #                                                   ][ # ORA_SCORE might overflow
 #                                                     1:min(NUM_TOP_LR, data.table::.N),
 #                                                   ]
@@ -1138,11 +1138,11 @@ edges_legend <- function(
 #       dt <- cci_detected[
 #         ER_CELLTYPES == ER_celltype
 #       ][
-#         match(LR_freq, LR_GENES)
+#         match(LR_freq, LRI)
 #       ][
-#         , list(LR_GENES, LOGFC, REGULATION)
+#         , list(LRI, LOGFC, REGULATION)
 #       ]
-#       dt[, LR_GENES := LR_freq]
+#       dt[, LRI := LR_freq]
 #       # TODO: -> log base 2
 #       dt[, LOGFC := as.character(LOGFC)]
 #       dt[is.na(LOGFC), LOGFC := "Not detected"]
@@ -1196,11 +1196,11 @@ edges_legend <- function(
 
 # get_cci_change_graph <- function(cci_detected) {
 #   LOGFC <- value <- label <- color <- REGULATION <-
-#     EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <- LR_GENES <- NULL
+#     EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <- LRI <- NULL
 #   dt_edge = cci_detected[REGULATION %in% c('UP', 'DOWN'),
 #                          list(
 #                            EMITTER_CELLTYPE, RECEIVER_CELLTYPE,
-#                            LR_GENES, LOGFC,
+#                            LRI, LOGFC,
 #                            REGULATION
 #                          )
 #   ][,
@@ -1215,9 +1215,9 @@ edges_legend <- function(
 # }
 #
 # get_cci_change_subgraph_list <- function(cci_detected, LRIs = NULL) {
-#   LR_GENES <- NULL
+#   LRI <- NULL
 #   if(is.null(LRIs)) {
-#     lris = unique(cci_detected[, LR_GENES])
+#     lris = unique(cci_detected[, LRI])
 #   } else {
 #     lris = LRIs
 #   }
@@ -1268,17 +1268,17 @@ edges_legend <- function(
 #   }
 #   dt_edge = cci_detected[
 #     (REGULATION %in% c('UP', 'DOWN'))
-#     & (LR_GENES %in% LRIs),
+#     & (LRI %in% LRIs),
 #     c(
 #       "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE",
-#       "LR_GENES", "LOGFC_ABS",
+#       "LRI", "LOGFC_ABS",
 #       "REGULATION"
 #     )
 #   ][,
 #     value := LOGFC_ABS][
 #       ,
 #       # label := format(round(LOGFC, 2), nsmall=2)][
-#       label := LR_GENES][
+#       label := LRI][
 #         ,
 #         color := ifelse(REGULATION == 'UP', 'red', 'blue')
 #       ]

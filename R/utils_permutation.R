@@ -34,7 +34,7 @@ run_stat_analysis <- function(
   sub_data_tr <- analysis_inputs$data_tr[, colnames(analysis_inputs$data_tr) %in%
                                            unique(unlist(sub_cci_template[, LR_COLNAMES, with = FALSE]))]
   analysis_inputs$data_tr <- sub_data_tr
-  cols_keep <- c("LR_GENES", "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", LR_COLNAMES)
+  cols_keep <- c("LRI", "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", LR_COLNAMES)
   internal_iter <- 1000
   if (iterations <= internal_iter) {
     n_broad_iter <- 1
@@ -151,7 +151,7 @@ run_stat_analysis <- function(
       cols_keep2 <- c(cols_keep, cols_new)
       sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
       rownames(distr) <- paste(
-        sub_cci_template[["LR_GENES"]],
+        sub_cci_template[["LRI"]],
         sub_cci_template[["EMITTER_CELLTYPE"]],
         sub_cci_template[["RECEIVER_CELLTYPE"]],
         sep = "_"
@@ -169,7 +169,7 @@ run_stat_analysis <- function(
       cols_keep2 <- c(cols_keep, cols_new)
       sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
       rownames(distr_diff) <- rownames(distr_cond1) <- rownames(distr_cond2) <- paste(
-        sub_cci_template[["LR_GENES"]],
+        sub_cci_template[["LRI"]],
         sub_cci_template[["EMITTER_CELLTYPE"]],
         sub_cci_template[["RECEIVER_CELLTYPE"]],
         sep = "_"
