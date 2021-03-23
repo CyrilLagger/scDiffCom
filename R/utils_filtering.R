@@ -261,7 +261,7 @@ process_cci_raw <- function(
                        "FLAT",
                        ifelse(
                          IS_DE_LOGFC & !IS_DE_SIGNIFICANT,
-                         "NON_SIGNIFICANT_CHANGE",
+                         "NSC",
                          "There is a problem here!"
                        )
                      )

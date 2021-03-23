@@ -398,7 +398,7 @@ extract_edge_metadata <- function(
     ]
     edge_table[
       cci_table_detected[
-        REGULATION == "NON_SIGNIFICANT_CHANGE",
+        REGULATION == "NSC",
         .N,
         by = c("EMITTER_CELLTYPE", "RECEIVER_CELLTYPE")],
       on = c("from==EMITTER_CELLTYPE", "to==RECEIVER_CELLTYPE"),

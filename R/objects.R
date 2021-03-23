@@ -524,7 +524,7 @@ RunORA.scDiffCom <- function(
 ) {
   run_ora(
     object = object,
-    categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS", "ID"),
+    categories = categories,
     overwrite = overwrite,
     stringent_or_default = "default",
     stringent_logfc_threshold = NULL,
@@ -537,7 +537,6 @@ RunORA.scDiffCom <- function(
 #' @param categories A character vector specifying the categories on which to perform the analysis. One data.table is returned
 #'  for each category. Set to \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")} by default.
 #' @param overwrite Should existing categories be overwritten in case they match with new categories?
-#' @param global xxx
 #' @param verbose Should messages be printed?
 #'
 #' @rdname RunORA
@@ -545,11 +544,11 @@ RunORA.scDiffCom <- function(
 #' @method RunORA scDiffComCombined
 RunORA.scDiffComCombined <- function(
   object,
-  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS"),
+  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
   overwrite = TRUE,
   #stringent_or_default = "default",
   #stringent_logfc_threshold = NULL,
-  global = TRUE,
+  #global = TRUE,
   verbose = TRUE,
   ...
 ) {
@@ -561,7 +560,7 @@ RunORA.scDiffComCombined <- function(
     stringent_logfc_threshold = NULL,
     verbose = verbose,
     class_signature = "scDiffComCombined",
-    global = global
+    global = FALSE
   )
 }
 

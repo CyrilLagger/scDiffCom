@@ -18,9 +18,8 @@ RunORA(object, ...)
 
 \method{RunORA}{scDiffComCombined}(
   object,
-  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS"),
+  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
   overwrite = TRUE,
-  global = TRUE,
   verbose = TRUE,
   ...
 )
