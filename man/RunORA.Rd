@@ -35,8 +35,6 @@ for each category. Set to \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")} by default
 \item{overwrite}{Should existing categories be overwritten in case they match with new categories?}
 
 \item{verbose}{Should messages be printed?}
-
-\item{global}{xxx}
 }
 \value{
 An S4 object of class \code{scDiffCom} with updated slots \code{ora_defaut} (and potentially \code{ora_stringent}).

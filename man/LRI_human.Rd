@@ -10,7 +10,7 @@ A list with seven items:
   \item LRI_not_curated: a data.table of curated and non-curated LRIs
   \item LRI_curated: a data.table of curated LRIs
   \item LRI_curated_GO: a data.table with GO terms attached to
-   curated LRI
+   curated LRIs
   \item LRI_curated_KEGG: a data.table with KEGG pathways attached to
    curated LRIs
   \item LRI_retrieved_dates: dates at which data have been retrieved
