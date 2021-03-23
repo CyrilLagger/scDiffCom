@@ -30,7 +30,6 @@ Suggests:
     AnnotationHub,
     biomaRt,
     CellChat,
-    curl,
     LRBase.Mmu.eg.db,
     LRBase.Hsa.eg.db,
     nichenetr,

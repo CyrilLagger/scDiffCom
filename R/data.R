@@ -13,14 +13,20 @@
 #'
 #' @usage data(LRI_human)
 #'
-#' @format A list with four items:
+#' @format A list with seven items:
 #' \enumerate{
 #'   \item LRI_not_curated: a data.table of curated and non-curated LRIs
 #'   \item LRI_curated: a data.table of curated LRIs
 #'   \item LRI_curated_GO: a data.table with GO terms attached to
-#'    curated LRI
+#'    curated LRIs
 #'   \item LRI_curated_KEGG: a data.table with KEGG pathways attached to
 #'    curated LRIs
+#'   \item LRI_retrieved_dates: dates at which data have been retrieved
+#'    from the eight external databases
+#'   \item LRI_retrieved_from: paths or packages from where data have
+#'    been retrieved
+#'   \item LRI_biomart_ensembl_version: version of ensembl used for
+#'    GO annotation
 #' }
 #'
 #' @keywords datasets
@@ -51,7 +57,7 @@
 #'
 #' @usage data(LRI_mouse)
 #'
-#' @format A list with four items:
+#' @format A list with seven items:
 #' \enumerate{
 #'   \item LRI_not_curated: a data.table of curated and non-curated LRIs
 #'   \item LRI_curated: a data.table of curated LRIs
@@ -59,6 +65,12 @@
 #'    curated LRI
 #'   \item LRI_curated_KEGG: a data.table with KEGG pathways attached to
 #'    curated LRIs
+#'    \item LRI_retrieved_dates: dates at which data have been retrieved
+#'    from the eight external databases
+#'   \item LRI_retrieved_from: paths or packages from where data have
+#'    been retrieved
+#'   \item LRI_biomart_ensembl_version: version of ensembl used for
+#'    GO annotation and orthology conversion
 #' }
 #'
 #' @keywords datasets
