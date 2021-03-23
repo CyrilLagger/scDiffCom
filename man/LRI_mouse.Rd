@@ -5,7 +5,7 @@
 \alias{LRI_mouse}
 \title{A database of mouse ligand-receptor interactions.}
 \format{
-A list with four items:
+A list with seven items:
 \enumerate{
   \item LRI_not_curated: a data.table of curated and non-curated LRIs
   \item LRI_curated: a data.table of curated LRIs
@@ -13,6 +13,12 @@ A list with four items:
    curated LRI
   \item LRI_curated_KEGG: a data.table with KEGG pathways attached to
    curated LRIs
+   \item LRI_retrieved_dates: dates at which data have been retrieved
+   from the eight external databases
+  \item LRI_retrieved_from: paths or packages from where data have
+   been retrieved
+  \item LRI_biomart_ensembl_version: version of ensembl used for
+   GO annotation and orthology conversion
 }
 }
 \usage{
