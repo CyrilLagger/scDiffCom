@@ -1540,6 +1540,12 @@ get_GO_interactions <- function(
       )
     )
   )]
+  #GO_LEVEL_table <- get_GO_LEVELS() #saved internally
+  LR_interactions_go_intersection[
+    GO_LEVEL_table,
+    on = "GO_ID==ID",
+    LEVEL := i.LEVEL
+  ]
   return(LR_interactions_go_intersection)
 }
 
@@ -1774,4 +1780,88 @@ get_orthologs <- function(
     new = c(paste0(name_in, "_symbol"), paste0(name_out, "_symbol"))
   )
   return(ensembl_all)
+}
+
+get_GO_LEVELS <- function(
+) {
+  LEVEL <- N_ANCESTORS <- ID <- NULL
+  if (!requireNamespace("ontoProc", quietly = TRUE)) {
+    stop(
+      paste0(
+        "Package \"ontoProc\" needed for this function to work.",
+        "Please install it."
+      ),
+      call. = FALSE
+    )
+  }
+  ontoGO <- ontoProc::getGeneOnto()
+  GO_summary <- data.table(
+    ID = ontoGO$id,
+    NAME = ontoGO$name,
+    N_ANCESTORS = sapply(
+      ontoGO$ancestors,
+      length
+    ),
+    N_PARENTS = sapply(
+      ontoGO$parents,
+      length
+    ),
+    N_CHILDREN = sapply(
+      ontoGO$children,
+      length
+    )
+  )
+  GO_summary[, LEVEL := ifelse(
+    N_ANCESTORS == 1,
+    1,
+    Inf
+  )]
+  GO_summary[, LEVEL := ifelse(
+    N_ANCESTORS == 2,
+    2,
+    LEVEL
+  )]
+  find_level_n <- function(
+    n,
+    go_table
+  ) {
+    LEVEL <- N_CHILDREN <- NULL
+    if (nrow(go_table[LEVEL == n - 1]) == 0) {
+      stop("Level n-1 must be performed before level n")
+    }
+    temp_n <- unique(
+      unlist(
+        ontoGO$children[
+          go_table[
+            LEVEL == n - 1 & N_CHILDREN > 0
+          ]$ID
+        ]
+      )
+    )
+    temp_n_ancestors <- ontoGO$ancestors[temp_n]
+    temp_n_logical <- sapply(
+      seq_along(temp_n_ancestors),
+      function(i) {
+        all(
+          temp_n_ancestors[[i]] %in% c(
+            go_table[LEVEL <= n - 1]$ID,
+            names(temp_n_ancestors)[[i]]
+          )
+        )
+      }
+    )
+    names(temp_n_logical) <- names(temp_n_ancestors)
+    return(names(temp_n_logical[temp_n_logical]))
+  }
+  i <- 3
+  while (Inf %in% GO_summary$LEVEL) {
+    message(paste0("Processing level ", i))
+    GO_summary[, LEVEL := ifelse(
+      ID %in% find_level_n(i, .SD),
+      i,
+      LEVEL
+    )]
+    i <- i + 1
+  }
+  return(GO_summary)
 }
