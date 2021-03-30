@@ -1411,7 +1411,8 @@ get_GO_interactions <- function(
   LR_db,
   only_genes_annotations = FALSE
 ) {
-  GO_NAME <- i.GO_name <- ASPECT <- GO_ID <- NULL
+  GO_NAME <- i.GO_name <- ASPECT <- GO_ID <-
+    LEVEL <- i.LEVEL <- NULL
   if (!requireNamespace("biomaRt", quietly = TRUE)) {
     stop(
       paste0(
