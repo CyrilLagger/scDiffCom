@@ -416,5 +416,93 @@ clean_colnames <- function(
   return(cci_dt)
 }
 
-
+get_table_cci <- function(
+  object,
+  type,
+  simplified,
+  class_signature
+) {
+  if (type == "raw") {
+    table <- object@cci_table_raw
+  }
+  if (type == "detected") {
+    table <- object@cci_table_detected
+    condition_inputs <- list(
+      is_cond = object@parameters$conditional_analysis,
+      cond1 = object@parameters$seurat_condition_id$cond1_name,
+      cond2 = object@parameters$seurat_condition_id$cond2_name
+    )
+    if (simplified) {
+      if (class_signature == "scDiffComCombined") {
+        first_cols <- c(
+          "ID",
+          "CCI",
+          "ER_CELLTYPES",
+          "LRI"
+        )
+      } else {
+        first_cols <- c(
+          "CCI",
+          "ER_CELLTYPES",
+          "LRI"
+        )
+      }
+      if (!condition_inputs$is_cond) {
+        second_cols <- c(
+          "NCELLS_EMITTER",
+          "NCELLS_RECEIVER"
+        )
+        if (!object@parameters$permutation_analysis) {
+          ordered_cols <- c(
+            first_cols,
+            second_cols,
+            "CCI_SCORE"
+          )
+        } else {
+          ordered_cols <- c(
+            first_cols,
+            second_cols,
+            "CCI_SCORE", "P_VALUE", "BH_P_VALUE",
+            "IS_CCI_DETECTED"
+          )
+        }
+      } else {
+        second_cols <- c(
+          paste0("NCELLS_EMITTER_", condition_inputs$cond1),
+          paste0("NCELLS_EMITTER_", condition_inputs$cond2),
+          paste0("NCELLS_RECEIVER_", condition_inputs$cond1),
+          paste0("NCELLS_RECEIVER_", condition_inputs$cond2)
+        )
+        if (!object@parameters$permutation_analysis) {
+          ordered_cols <- c(
+            first_cols,
+            second_cols,
+            paste0("CCI_SCORE_", condition_inputs$cond1),
+            paste0("CCI_SCORE_", condition_inputs$cond2),
+            "LOGFC"
+          )
+        } else {
+          ordered_cols <- c(
+            first_cols,
+            second_cols,
+            paste0("CCI_SCORE_", condition_inputs$cond1),
+            paste0("CCI_SCORE_", condition_inputs$cond2),
+            paste0("P_VALUE_", condition_inputs$cond1),
+            paste0("BH_P_VALUE_", condition_inputs$cond1),
+            paste0("P_VALUE_", condition_inputs$cond2),
+            paste0("BH_P_VALUE_", condition_inputs$cond2),
+            "LOGFC",
+            "P_VALUE_DE",
+            "BH_P_VALUE_DE",
+            paste0("IS_CCI_DETECTED_", condition_inputs$cond1),
+            paste0("IS_CCI_DETECTED_", condition_inputs$cond2),
+            "REGULATION"
+          )
+        }
+      }
+      table <- table[, ordered_cols, with = FALSE]
+    }
+  }
+  table
+}
 

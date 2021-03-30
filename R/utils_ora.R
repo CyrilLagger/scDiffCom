@@ -15,7 +15,7 @@ run_ora <- function(
     stop("Stringent ORA analysis is not supported anymore. Use `stringent_or_default == 'default'`")
   }
   regulation <- c("UP", "DOWN", "FLAT", "DIFF")
-  temp_param <- parameters(object)
+  temp_param <- object@parameters
   condition_inputs <- list(
     is_cond = temp_param$conditional_analysis,
     cond1 = temp_param$seurat_condition_id$cond1_name,
@@ -171,7 +171,7 @@ run_ora <- function(
                   global = global
                 ),
                 by = temp_by
-                ]
+              ]
             },
             USE.NAMES = TRUE,
             simplify = FALSE
@@ -224,7 +224,7 @@ build_ora_dt <- function(
     cci_table_detected
   )
   if (global & (category == "ER_CELLTYPES")) {
-      cci_dt[, ER_CELLTYPES := paste(ID, ER_CELLTYPES, sep = "_")]
+    cci_dt[, ER_CELLTYPES := paste(ID, ER_CELLTYPES, sep = "_")]
   }
   ora_tables <- lapply(
     X = regulation,
@@ -238,10 +238,16 @@ build_ora_dt <- function(
         )
         if (category == "GO_TERMS") {
           if (species == "mouse") {
-            new_intersection_dt <- scDiffCom::LRI_mouse$LRI_curated_GO
+            new_intersection_dt <- scDiffCom::LRI_mouse$LRI_curated_GO[
+              ,
+              c("LRI", "GO_ID", "GO_NAME")
+            ]
           }
           if (species == "human") {
-            new_intersection_dt <- scDiffCom::LRI_human$LRI_curated_GO
+            new_intersection_dt <- scDiffCom::LRI_human$LRI_curated_GO[
+              ,
+              c("LRI", "GO_ID", "GO_NAME")
+            ]
           }
           new_id <- "GO_ID"
           new_name <- "GO_NAME"
@@ -270,7 +276,7 @@ build_ora_dt <- function(
                                    sum(COUNTS_VALUE_NOTREGULATED)
                                  ),
                                by = new_id
-                               ]
+        ]
         counts_intersection_dt[, c("COUNTS_NOTVALUE_REGULATED_temp", "COUNTS_NOTVALUE_NOTREGULATED_temp") := list(
           COUNTS_NOTVALUE_REGULATED + COUNTS_VALUE_REGULATED - COUNTS_VALUE_REGULATED_temp,
           COUNTS_NOTVALUE_NOTREGULATED + COUNTS_VALUE_NOTREGULATED - COUNTS_VALUE_NOTREGULATED_temp
@@ -312,6 +318,19 @@ build_ora_dt <- function(
     }
   )
   ora_full <- Reduce(merge, ora_tables)
+  if (category == "GO_TERMS") {
+    if (species == "mouse") {
+      go_info <- scDiffCom::LRI_mouse$LRI_curated_GO
+    }
+    if (species == "human") {
+      go_info <- scDiffCom::LRI_human$LRI_curated_GO
+    }
+    ora_full[
+      unique(go_info[, c("GO_ID", "LEVEL", "ASPECT")]),
+      on = "VALUE_BIS==GO_ID",
+      c("LEVEL", "ASPECT") := mget(c("i.LEVEL", "i.ASPECT"))
+    ]
+  }
   return(ora_full)
 }
 
@@ -486,4 +505,55 @@ imbalance_ratio <- function(
                   + COUNTS_VALUE_NOTREGULATED
                   + COUNTS_NOTVALUE_REGULATED)
   return(numerator / denominator)
+}
+
+get_tables_ora <- function(
+  object,
+  categories,
+  simplified,
+  class_signature
+) {
+  if (!is.character(categories)) {
+    stop("`categories` must be a character vector")
+  }
+  tables <- object@ora_table
+  if (identical(tables, list())) {
+    warning("The object does not contain ORA tables. Returning `NULL`")
+    return(NULL)
+  }
+  categories_in <- names(tables)
+  if (identical(categories, "all")) {
+    categories <- categories_in
+  }
+  if (!all(categories %in% categories_in)) {
+    stop("All `categories` must be present in the object.")
+  }
+  tables <- tables[categories]
+  if (simplified) {
+    if (class_signature == "scDiffComCombined") {
+      first_col <- "ID"
+    } else {
+      first_col <- NULL
+    }
+    cols_to_keep <- c(
+      first_col,
+      "VALUE",
+      "VALUE_BIS",
+      "LEVEL",
+      "ASPECT",
+      as.vector(outer(
+        c("OR_", "P_VALUE_", "BH_P_VALUE_", "ORA_SCORE_"),
+        c("UP", "DOWN", "FLAT", "DIFF"),
+        FUN = "paste0"
+      ))
+    )
+    tables <- lapply(
+      tables,
+      function(table) {
+        cols_temp <- intersect(cols_to_keep, colnames(table))
+        res <- table[, cols_temp, with = FALSE]
+      }
+    )
+  }
+  tables
 }

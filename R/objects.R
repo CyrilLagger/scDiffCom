@@ -1,4 +1,3 @@
-#' @include generics.R
 #' @import data.table
 #' @import ggplot2
 #' @importFrom methods new setClass setClassUnion setValidity setGeneric validObject
@@ -105,7 +104,6 @@ setClass(
   # )
 )
 
-
 ################  Validity functions ################
 
 setValidity(
@@ -172,99 +170,157 @@ setValidity(
   }
 )
 
-################  Accessors ####
+################  Accessors ################
 
-#' Return scDiffCom \code{parameters}
+#' Return the slot \code{parameters} from an scDiffCom object
 #'
-#' @param object An scDiffCom object.
+#' Return the parameters that have been passed to
+#'  \code{\link{run_interaction_analysis}} to compute
+#'  the scDiffCom object.
+#'
+#' @param object An object of class `scDiffCom` or `scDiffComCombined`
+#'
+#' @return A list of parameters
 #'
 #' @export
 setGeneric(
-  name = "parameters",
-  def = function(object) standardGeneric("parameters")
+  name = "GetParameters",
+  def = function(object) standardGeneric("GetParameters")
 )
 
-#' @param object xxx
-#' @describeIn scDiffComBase Return scDiffCom \code{parameters}.
+#' @rdname GetParameters
 setMethod(
-  f = "parameters",
+  f = "GetParameters",
   signature = "scDiffComBase",
   definition = function(object) object@parameters
 )
 
-#' Return scDiffCom \code{cci_table_raw}
+#' Return one of the scDiffCom CCI data.tables
+#'
+#' @param object An object of class `scDiffCom` or `scDiffComCombined`
+#' @param type Specifies the table to return: either "detected" or "raw".
+#'  Default is \code{"detected"}.
+#' @param simplified Logical indicating if all columns or only the most
+#'  informative ones are returned. Default is \code{TRUE}.
+#'
+#' @return A data.table
+#'
+#' @export
+setGeneric(
+  name = "GetTableCCI",
+  def = function(object, type, simplified) standardGeneric("GetTableCCI"),
+  signature = "object"
+)
+
+#' @rdname GetTableCCI
+setMethod(
+  f = "GetTableCCI",
+  signature = "scDiffCom",
+  definition = function(
+    object,
+    type = c("detected", "raw"),
+    simplified = TRUE
+  ) {
+    type <- match.arg(type)
+    get_table_cci(
+      object = object,
+      type = type,
+      simplified = simplified,
+      class_signature = "scDiffCom"
+    )
+  }
+)
+
+#' @rdname GetTableCCI
+setMethod(
+  f = "GetTableCCI",
+  signature = "scDiffComCombined",
+  definition = function(
+    object,
+    type = c("detected", "raw"),
+    simplified = TRUE
+  ) {
+    type <- match.arg(type)
+    get_table_cci(
+      object = object,
+      type = type,
+      simplified = simplified,
+      class_signature = "scDiffComCombined"
+    )
+  }
+)
+
+#' Return some of the scDiffCom ORA data.tables
+#'
+#' @param object An object of class `scDiffCom` or `scDiffComCombined`
+#' @param categories A character vector indicating which ORA tables
+#'  to return. Default (\code{"all"}) returns all of them.
+#' @param simplified Logical indicating if all columns or only the most
+#'  informative ones are returned for each data.table. Default is \code{TRUE}.
+#'
+#' @return A list of data.tables
+#'
+#' @export
+setGeneric(
+  name = "GetTableORA",
+  def = function(object, categories, simplified) standardGeneric("GetTableORA"),
+  signature = "object"
+)
+
+#' @rdname GetTableORA
+setMethod(
+  f = "GetTableORA",
+  signature = "scDiffCom",
+  definition = function(
+    object,
+    categories = "all",
+    simplified = TRUE
+    ) {
+    get_tables_ora(
+      object = object,
+      categories = categories,
+      simplified = simplified,
+      class_signature = "scDiffCom"
+    )
+  }
+)
+
+#' @rdname GetTableORA
+setMethod(
+  f = "GetTableORA",
+  signature = "scDiffComCombined",
+  definition = function(
+    object,
+    categories = "all",
+    simplified = TRUE
+  ) {
+    get_tables_ora(
+      object = object,
+      categories = categories,
+      simplified = simplified,
+      class_signature = "scDiffComCombined"
+    )
+  }
+)
+
+#' Return the slot \code{distributions} from an scDiffCom object
 #'
 #' @param object An scDiffCom object.
 #'
 #' @export
 setGeneric(
-  name = "get_cci_table_raw",
-  def = function(object) standardGeneric("get_cci_table_raw")
+  name = "GetDistributions",
+  def = function(object) standardGeneric("GetDistributions")
 )
 
-#' @param object xxx
-#' @describeIn scDiffComBase Return scDiffCom \code{cci_table_raw}.
+#' @rdname GetDistributions
 setMethod(
-  f = "get_cci_table_raw",
-  signature = "scDiffComBase",
-  definition = function(object) object@cci_table_raw
-)
-
-#' Return scDiffCom \code{cci_table_detected}
-#'
-#' @param object An scDiffCom object.
-#'
-#' @export
-setGeneric(
-  name = "get_cci_table_detected",
-  def = function(object) standardGeneric("get_cci_table_detected")
-)
-
-#' @param object xxx
-#' @describeIn scDiffComBase Return scDiffCom \code{cci_table_detected}.
-setMethod(
-  f = "get_cci_table_detected",
-  signature = "scDiffComBase",
-  definition = function(object) object@cci_table_detected
-)
-
-#' Return scDiffCom \code{ora_table}
-#'
-#' @param object An scDiffCom object.
-#'
-#' @export
-setGeneric(
-  name = "get_ora_table",
-  def = function(object) standardGeneric("get_ora_table")
-)
-
-#' @param object xxx
-#' @describeIn scDiffComBase Return scDiffCom \code{ora_table}.
-setMethod(
-  f = "get_ora_table",
-  signature = "scDiffComBase",
-  definition = function(object) object@ora_table
-)
-
-#' Return scDiffCom \code{distributions}
-#'
-#' @param object An scDiffCom object.
-#'
-#' @export
-setGeneric(
-  name = "distributions",
-  def = function(object) standardGeneric("distributions")
-)
-
-#' @param object xxx
-#' @describeIn scDiffCom Return scDiffCom \code{distributions}.
-setMethod(
-  f = "distributions",
+  f = "GetDistributions",
   signature = "scDiffCom",
   definition = function(object) object@distributions
 )
 
-################  Functions ####
+################  Functions ################
 
 #' Combine several scDiffCom objects together.
 #'
@@ -434,8 +490,10 @@ Combine_scDiffCom <- function(
   return(new_object)
 }
 
-################  Methods for scDiffCom-defined generics ####
+################  Generics and Methods ####
 
+#' xxx
+#'
 #' @param object xxx
 #' @param new_threshold_quantile_score xxx
 #' @param new_threshold_p_value_specificity xxx
@@ -444,305 +502,367 @@ Combine_scDiffCom <- function(
 #' @param skip_ora xxx
 #' @param verbose Should messages be printed?
 #'
-#' @rdname FilterCCI
-#' @export
-#' @method FilterCCI scDiffCom
+#' @return xxx
 #'
-FilterCCI.scDiffCom <- function(
-  object,
-  new_threshold_quantile_score = NULL,
-  new_threshold_p_value_specificity = NULL,
-  new_threshold_p_value_de = NULL,
-  new_threshold_logfc = NULL,
-  skip_ora = FALSE,
-  verbose = TRUE,
-  ...
-) {
-  run_filtering_and_ora(
-    object = object,
-    new_threshold_quantile_score = new_threshold_quantile_score,
-    new_threshold_p_value_specificity = new_threshold_p_value_specificity,
-    new_threshold_p_value_de = new_threshold_p_value_de,
-    new_threshold_logfc = new_threshold_logfc,
-    skip_ora = skip_ora,
-    verbose = verbose,
-    class_signature = "scDiffCom"
-  )
-}
+#' @export
+setGeneric(
+  name = "FilterCCI",
+  def = function(
+    object,
+    new_threshold_quantile_score = NULL,
+    new_threshold_p_value_specificity = NULL,
+    new_threshold_p_value_de = NULL,
+    new_threshold_logfc = NULL,
+    skip_ora = FALSE,
+    verbose = TRUE
+    ) standardGeneric("FilterCCI"),
+  signature = "object"
+)
 
+#' @rdname FilterCCI
+setMethod(
+  f = "FilterCCI",
+  signature = "scDiffCom",
+  definition = function(
+    object,
+    new_threshold_quantile_score = NULL,
+    new_threshold_p_value_specificity = NULL,
+    new_threshold_p_value_de = NULL,
+    new_threshold_logfc = NULL,
+    skip_ora = FALSE,
+    verbose = TRUE
+  ) {
+    run_filtering_and_ora(
+      object = object,
+      new_threshold_quantile_score = new_threshold_quantile_score,
+      new_threshold_p_value_specificity = new_threshold_p_value_specificity,
+      new_threshold_p_value_de = new_threshold_p_value_de,
+      new_threshold_logfc = new_threshold_logfc,
+      skip_ora = skip_ora,
+      verbose = verbose,
+      class_signature = "scDiffCom"
+    )
+  }
+)
+
+#' @rdname FilterCCI
+setMethod(
+  f = "FilterCCI",
+  signature = "scDiffComCombined",
+  definition = function(
+    object,
+    new_threshold_quantile_score = NULL,
+    new_threshold_p_value_specificity = NULL,
+    new_threshold_p_value_de = NULL,
+    new_threshold_logfc = NULL,
+    skip_ora = FALSE,
+    verbose = TRUE
+  ) {
+    run_filtering_and_ora(
+      object = object,
+      new_threshold_quantile_score = new_threshold_quantile_score,
+      new_threshold_p_value_specificity = new_threshold_p_value_specificity,
+      new_threshold_p_value_de = new_threshold_p_value_de,
+      new_threshold_logfc = new_threshold_logfc,
+      skip_ora = skip_ora,
+      verbose = verbose,
+      class_signature = "scDiffComCombined"
+    )
+  }
+)
+
+#' xxx
+#'
 #' @param object xxx
-#' @param new_threshold_quantile_score xxx
-#' @param new_threshold_p_value_specificity xxx
-#' @param new_threshold_p_value_de xxx
-#' @param new_threshold_logfc xxx
-#' @param skip_ora xxx
-#' @param verbose Should messages be printed?
-#'
-#' @rdname FilterCCI
-#' @export
-#' @method FilterCCI scDiffComCombined
-#'
-FilterCCI.scDiffComCombined <- function(
-  object,
-  new_threshold_quantile_score = NULL,
-  new_threshold_p_value_specificity = NULL,
-  new_threshold_p_value_de = NULL,
-  new_threshold_logfc = NULL,
-  skip_ora = FALSE,
-  verbose = TRUE,
-  ...
-) {
-  run_filtering_and_ora(
-    object = object,
-    new_threshold_quantile_score = new_threshold_quantile_score,
-    new_threshold_p_value_specificity = new_threshold_p_value_specificity,
-    new_threshold_p_value_de = new_threshold_p_value_de,
-    new_threshold_logfc = new_threshold_logfc,
-    skip_ora = skip_ora,
-    verbose = verbose,
-    class_signature = "scDiffComCombined"
-  )
-}
-
-
-#' @param categories A character vector specifying the categories on which to perform the analysis. One data.table is returned
-#'  for each category. Set to \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")} by default.
-#' @param overwrite Should existing categories be overwriten in case they match with new categories?
-#' @param verbose Should messages be printed?
-#'
-#' @rdname RunORA
-#' @export
-#' @method RunORA scDiffCom
-RunORA.scDiffCom <- function(
-  object,
-  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
-  overwrite = TRUE,
-  #stringent_or_default = "default",
-  #stringent_logfc_threshold = NULL,
-  verbose = TRUE,
-  ...
-) {
-  run_ora(
-    object = object,
-    categories = categories,
-    overwrite = overwrite,
-    stringent_or_default = "default",
-    stringent_logfc_threshold = NULL,
-    verbose = verbose,
-    class_signature = "scDiffCom",
-    global = FALSE
-  )
-}
-
 #' @param categories A character vector specifying the categories on which to perform the analysis. One data.table is returned
 #'  for each category. Set to \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")} by default.
 #' @param overwrite Should existing categories be overwritten in case they match with new categories?
 #' @param verbose Should messages be printed?
 #'
+#' @return xxx
+#'
+#' @export
+setGeneric(
+  name = "RunORA",
+  def = function(
+    object,
+    categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
+    overwrite = TRUE,
+    verbose = TRUE
+  ) standardGeneric("RunORA"),
+  signature = "object"
+)
+
 #' @rdname RunORA
-#' @export
-#' @method RunORA scDiffComCombined
-RunORA.scDiffComCombined <- function(
-  object,
-  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
-  overwrite = TRUE,
-  #stringent_or_default = "default",
-  #stringent_logfc_threshold = NULL,
-  #global = TRUE,
-  verbose = TRUE,
-  ...
-) {
-  run_ora(
-    object = object,
-    categories = categories,
-    overwrite = overwrite,
-    stringent_or_default = "default",
-    stringent_logfc_threshold = NULL,
-    verbose = verbose,
-    class_signature = "scDiffComCombined",
-    global = FALSE
-  )
-}
+setMethod(
+  f = "RunORA",
+  signature = "scDiffCom",
+  definition = function(
+    object,
+    categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
+    overwrite = TRUE,
+    #stringent_or_default = "default",
+    #stringent_logfc_threshold = NULL,
+    verbose = TRUE
+  ) {
+    run_ora(
+      object = object,
+      categories = categories,
+      overwrite = overwrite,
+      stringent_or_default = "default",
+      stringent_logfc_threshold = NULL,
+      verbose = verbose,
+      class_signature = "scDiffCom",
+      global = FALSE
+    )
+  }
+)
 
+#' @rdname RunORA
+setMethod(
+  f = "RunORA",
+  signature = "scDiffComCombined",
+  definition = function(
+    object,
+    categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
+    overwrite = TRUE,
+    #stringent_or_default = "default",
+    #stringent_logfc_threshold = NULL,
+    #global = TRUE,
+    verbose = TRUE
+  ) {
+    run_ora(
+      object = object,
+      categories = categories,
+      overwrite = overwrite,
+      stringent_or_default = "default",
+      stringent_logfc_threshold = NULL,
+      verbose = verbose,
+      class_signature = "scDiffComCombined",
+      global = FALSE
+    )
+  }
+)
+
+#' xxx
+#'
 #' @param object xxx
 #' @param category xxx
 #' @param regulation xxx
 #' @param max_terms_show xxx
 #' @param OR_threshold xxx
 #' @param p_value_threshold xxx
+#' @param ... Extra named arguments passed to PlotORA
 #'
-#' @rdname PlotORA
-#' @export
-#' @method PlotORA scDiffCom
-PlotORA.scDiffCom <- function(
-  object,
-  category,
-  regulation,
-  max_terms_show,
-  OR_threshold = 1,
-  p_value_threshold = 0.05,
-  #stringent = FALSE,
-  ...
-) {
-  stringent <- FALSE
-  if (stringent) {
-    #ora_dt <- get_ora_stringent(object)
-  } else {
-    ora_dt <- get_ora_table(object)
-  }
-  if (identical(ora_dt, list())) {
-    stop("No ORA data.table to extract from scDiffCom object")
-  }
-  if (!(category %in% names(ora_dt))) {
-    stop("Can't find the specified ORA category")
-  }
-  ora_dt <- ora_dt[[category]]
-  VALUE_ID <- "VALUE"
-  if(regulation == "UP") {
-    OR_ID <- "OR_UP"
-    p_value_ID <- "BH_P_VALUE_UP"
-    ORA_SCORE_ID <- "ORA_SCORE_UP"
-  } else if(regulation == "DOWN") {
-    OR_ID <- "OR_DOWN"
-    p_value_ID <- "BH_P_VALUE_DOWN"
-    ORA_SCORE_ID <- "ORA_SCORE_DOWN"
-
-  } else if(regulation == "FLAT") {
-    OR_ID <- "OR_FLAT"
-    p_value_ID <- "BH_P_VALUE_FLAT"
-    ORA_SCORE_ID <- "ORA_SCORE_FLAT"
-  } else {
-    stop("Can't find `regulation` type")
-  }
-  ora_dt <- ora_dt[get(OR_ID) > OR_threshold & get(p_value_ID) <= p_value_threshold][order(-get(ORA_SCORE_ID))]
-  if (nrow(ora_dt) == 0) {
-    return("No significant ORA results for the selected parameters.")
-  }
-  n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
-  ora_dt <- ora_dt[1:n_row_tokeep]
-  ggplot2::ggplot(ora_dt, aes(get(ORA_SCORE_ID), stats::reorder(get(VALUE_ID), get(ORA_SCORE_ID)))) +
-    geom_point(aes(size = -log10(get(p_value_ID)), color = log2(get(OR_ID)))) +
-    scale_color_gradient(low = "orange", high = "red") +
-    xlab("ORA score") +
-    ylab(category) +
-    labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
-    theme(text = element_text(size = 16))
-}
-
-#' @param object xxx
-#' @param subID xxx
-#' @param category xxx
-#' @param regulation xxx
-#' @param max_terms_show xxx
-#' @param OR_threshold xxx
-#' @param p_value_threshold xxx
-#' @param global xxx
+#' @return xxx
 #'
-#' @rdname PlotORA
 #' @export
-#' @method PlotORA scDiffComCombined
-PlotORA.scDiffComCombined <- function(
-  object,
-  subID,
-  category,
-  regulation,
-  max_terms_show,
-  global = FALSE,
-  OR_threshold = 1,
-  p_value_threshold = 0.05,
-  #stringent = FALSE,
-  ...
-) {
-  ID <- NULL
-  stringent <- FALSE
-  if (stringent) {
-    if (global) {
-      ora_dt <- object@ora_combined_stringent
-    } else {
-      ora_dt <- object@ora_stringent
-    }
-  } else {
-    if (global) {
-      ora_dt <- object@ora_combined_default
+setGeneric(
+  name = "PlotORA",
+  def = function(
+    object,
+    category,
+    regulation,
+    max_terms_show,
+    OR_threshold = 1,
+    p_value_threshold = 0.05,
+    ...
+  ) standardGeneric("PlotORA"),
+  signature = "object"
+)
+
+#' @rdname PlotORA
+setMethod(
+  f = "PlotORA",
+  signature = "scDiffCom",
+  definition = function(
+    object,
+    category,
+    regulation,
+    max_terms_show,
+    OR_threshold = 1,
+    p_value_threshold = 0.05
+    #stringent = FALSE,
+  ) {
+    stringent <- FALSE
+    if (stringent) {
+      #ora_dt <- get_ora_stringent(object)
     } else {
       ora_dt <- object@ora_table
     }
-  }
-  if (identical(ora_dt, list())) {
-    stop("No ORA data.table to exctract from scDiffCom object")
-  }
-  if (!(category %in% names(ora_dt))) {
-    stop("Can't find the specified ORA category")
-  }
-  ora_dt <- ora_dt[[category]]
-  if (!global) {
-    if (!(subID %in% unique(ora_dt$ID))) {
-      stop("`subID` must be present in the scDiffComCombined object")
+    if (identical(ora_dt, list())) {
+      stop("No ORA data.table to extract from scDiffCom object")
     }
-    ora_dt <- ora_dt[ID == subID]
-  }
+    if (!(category %in% names(ora_dt))) {
+      stop("Can't find the specified ORA category")
+    }
+    ora_dt <- ora_dt[[category]]
+    VALUE_ID <- "VALUE"
+    if(regulation == "UP") {
+      OR_ID <- "OR_UP"
+      p_value_ID <- "BH_P_VALUE_UP"
+      ORA_SCORE_ID <- "ORA_SCORE_UP"
+    } else if(regulation == "DOWN") {
+      OR_ID <- "OR_DOWN"
+      p_value_ID <- "BH_P_VALUE_DOWN"
+      ORA_SCORE_ID <- "ORA_SCORE_DOWN"
 
-  VALUE_ID <- "VALUE"
-  if(regulation == "UP") {
-    OR_ID <- "OR_UP"
-    p_value_ID <- "BH_P_VALUE_UP"
-    ORA_SCORE_ID <- "ORA_SCORE_UP"
-  } else if(regulation == "DOWN") {
-    OR_ID <- "OR_DOWN"
-    p_value_ID <- "BH_P_VALUE_DOWN"
-    ORA_SCORE_ID <- "ORA_SCORE_DOWN"
-
-  } else if(regulation == "FLAT") {
-    OR_ID <- "OR_FLAT"
-    p_value_ID <- "BH_P_VALUE_FLAT"
-    ORA_SCORE_ID <- "ORA_SCORE_FLAT"
-  } else {
-    stop("Can't find `regulation` type")
+    } else if(regulation == "FLAT") {
+      OR_ID <- "OR_FLAT"
+      p_value_ID <- "BH_P_VALUE_FLAT"
+      ORA_SCORE_ID <- "ORA_SCORE_FLAT"
+    } else {
+      stop("Can't find `regulation` type")
+    }
+    ora_dt <- ora_dt[get(OR_ID) > OR_threshold & get(p_value_ID) <= p_value_threshold][order(-get(ORA_SCORE_ID))]
+    if (nrow(ora_dt) == 0) {
+      return("No significant ORA results for the selected parameters.")
+    }
+    n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
+    ora_dt <- ora_dt[1:n_row_tokeep]
+    ggplot2::ggplot(ora_dt, aes(get(ORA_SCORE_ID), stats::reorder(get(VALUE_ID), get(ORA_SCORE_ID)))) +
+      geom_point(aes(size = -log10(get(p_value_ID)), color = log2(get(OR_ID)))) +
+      scale_color_gradient(low = "orange", high = "red") +
+      xlab("ORA score") +
+      ylab(category) +
+      labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
+      theme(text = element_text(size = 16))
   }
-  ora_dt <- ora_dt[get(OR_ID) > OR_threshold & get(p_value_ID) <= p_value_threshold][order(-get(ORA_SCORE_ID))]
-  if (nrow(ora_dt) == 0) {
-    return("No significant ORA results for the selected parameters.")
-  }
-  n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
-  ora_dt <- ora_dt[1:n_row_tokeep]
-  ggplot2::ggplot(ora_dt, aes(get(ORA_SCORE_ID), stats::reorder(get(VALUE_ID), get(ORA_SCORE_ID)))) +
-    geom_point(aes(size = -log10(get(p_value_ID)), color = log2(get(OR_ID)))) +
-    scale_color_gradient(low = "orange", high = "red") +
-    xlab("ORA score") +
-    ylab(category) +
-    labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
-    theme(text = element_text(size = 16))
-}
+)
 
+#' @param subID xxx
+#' @rdname PlotORA
+setMethod(
+  f = "PlotORA",
+  signature = "scDiffComCombined",
+  definition = function(
+    object,
+    category,
+    regulation,
+    max_terms_show,
+    OR_threshold = 1,
+    p_value_threshold = 0.05,
+    subID
+    #global = FALSE,
+  ) {
+    global <- FALSE
+    ID <- NULL
+    stringent <- FALSE
+    if (stringent) {
+      if (global) {
+        ora_dt <- object@ora_combined_stringent
+      } else {
+        ora_dt <- object@ora_stringent
+      }
+    } else {
+      if (global) {
+        ora_dt <- object@ora_combined_default
+      } else {
+        ora_dt <- object@ora_table
+      }
+    }
+    if (identical(ora_dt, list())) {
+      stop("No ORA data.table to exctract from scDiffCom object")
+    }
+    if (!(category %in% names(ora_dt))) {
+      stop("Can't find the specified ORA category")
+    }
+    ora_dt <- ora_dt[[category]]
+    if (!global) {
+      if (!(subID %in% unique(ora_dt$ID))) {
+        stop("`subID` must be present in the scDiffComCombined object")
+      }
+      ora_dt <- ora_dt[ID == subID]
+    }
+
+    VALUE_ID <- "VALUE"
+    if(regulation == "UP") {
+      OR_ID <- "OR_UP"
+      p_value_ID <- "BH_P_VALUE_UP"
+      ORA_SCORE_ID <- "ORA_SCORE_UP"
+    } else if(regulation == "DOWN") {
+      OR_ID <- "OR_DOWN"
+      p_value_ID <- "BH_P_VALUE_DOWN"
+      ORA_SCORE_ID <- "ORA_SCORE_DOWN"
+
+    } else if(regulation == "FLAT") {
+      OR_ID <- "OR_FLAT"
+      p_value_ID <- "BH_P_VALUE_FLAT"
+      ORA_SCORE_ID <- "ORA_SCORE_FLAT"
+    } else {
+      stop("Can't find `regulation` type")
+    }
+    ora_dt <- ora_dt[get(OR_ID) > OR_threshold & get(p_value_ID) <= p_value_threshold][order(-get(ORA_SCORE_ID))]
+    if (nrow(ora_dt) == 0) {
+      return("No significant ORA results for the selected parameters.")
+    }
+    n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
+    ora_dt <- ora_dt[1:n_row_tokeep]
+    ggplot2::ggplot(ora_dt, aes(get(ORA_SCORE_ID), stats::reorder(get(VALUE_ID), get(ORA_SCORE_ID)))) +
+      geom_point(aes(size = -log10(get(p_value_ID)), color = log2(get(OR_ID)))) +
+      scale_color_gradient(low = "orange", high = "red") +
+      xlab("ORA score") +
+      ylab(category) +
+      labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
+      theme(text = element_text(size = 16))
+  }
+)
+
+#' xxx
+#'
 #' @param object xxx
 #' @param network_type xxx
 #' @param layout_type xxx
 #' @param abbreviation_table xxx
+#' @param ... Extra named arguments passed to BuildNetwork
 #'
-#' @rdname BuildNetwork
+#' @return xxx
+#'
 #' @export
-#' @method BuildNetwork scDiffCom
-BuildNetwork.scDiffCom = function(
-  object,
-  network_type = c(
-    "condition1_network",
-    "condition2_network",
-    "difference_network",
-    "up_regulated_network",
-    "down_regulated_network",
-    "ORA_network"
-  ),
-  layout_type = c(
-    "conventional",
-    "bipartite"
-  ),
-  abbreviation_table = NULL,
-  #LRIs = NULL,
-  ...
-) {
-  network_type <- match.arg(network_type)
-  layout_type <- match.arg(layout_type)
-  return(
+setGeneric(
+  name = "BuildNetwork",
+  def = function(
+    object,
+    network_type = c(
+      "condition1_network",
+      "condition2_network",
+      "difference_network",
+      "up_regulated_network",
+      "down_regulated_network",
+      "ORA_network"
+    ),
+    layout_type = c(
+      "conventional",
+      "bipartite"
+    ),
+    abbreviation_table = NULL,
+    ...
+  ) standardGeneric("BuildNetwork"),
+  signature = "object"
+)
+
+#' @rdname BuildNetwork
+setMethod(
+  f = "BuildNetwork",
+  signature = "scDiffCom",
+  definition = function(
+    object,
+    network_type = c(
+      "condition1_network",
+      "condition2_network",
+      "difference_network",
+      "up_regulated_network",
+      "down_regulated_network",
+      "ORA_network"
+    ),
+    layout_type = c(
+      "conventional",
+      "bipartite"
+    ),
+    abbreviation_table = NULL
+  ) {
+    network_type <- match.arg(network_type)
+    layout_type <- match.arg(layout_type)
     build_interactive_network(
       object = object,
       network_type = network_type,
@@ -752,42 +872,36 @@ BuildNetwork.scDiffCom = function(
       abbreviation_table = abbreviation_table#,
       #LRIs = LRIs
     )
-  )
-}
-
-#' @param object xxx
-#' @param network_type xxx
-#' @param layout_type xxx
-#' @param ID xxx
-#'
-#' @rdname BuildNetwork
-#' @export
-#' @method BuildNetwork scDiffComCombined
-BuildNetwork.scDiffComCombined = function(
-  object,
-  network_type = c(
-    "condition1_network",
-    "condition2_network",
-    "difference_network",
-    "up_regulated_network",
-    "down_regulated_network",
-    "ORA_network"
-  ),
-  layout_type = c(
-    "conventional",
-    "bipartite"
-  ),
-  ID,
-  abbreviation_table,
-  #LRIs = NULL,
-  ...
-) {
-  network_type <- match.arg(network_type)
-  layout_type <- match.arg(layout_type)
-  if (!(ID %in% unique(object@cci_table_detected$ID))) {
-    stop("`ID` must be present in the scDiffComCombined object")
   }
-  return(
+)
+
+#' @param ID xxx
+#' @rdname BuildNetwork
+setMethod(
+  f = "BuildNetwork",
+  signature = "scDiffComCombined",
+  definition = function(
+    object,
+    network_type = c(
+      "condition1_network",
+      "condition2_network",
+      "difference_network",
+      "up_regulated_network",
+      "down_regulated_network",
+      "ORA_network"
+    ),
+    layout_type = c(
+      "conventional",
+      "bipartite"
+    ),
+    abbreviation_table,
+    ID
+  ) {
+    network_type <- match.arg(network_type)
+    layout_type <- match.arg(layout_type)
+    if (!(ID %in% unique(object@cci_table_detected$ID))) {
+      stop("`ID` must be present in the scDiffComCombined object")
+    }
     build_interactive_network(
       object = object,
       network_type = network_type,
@@ -797,5 +911,9 @@ BuildNetwork.scDiffComCombined = function(
       abbreviation_table = abbreviation_table#,
       #LRIs = LRIs
     )
-  )
-}
+  }
+)
+
+
+
+

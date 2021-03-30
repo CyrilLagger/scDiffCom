@@ -3,38 +3,11 @@
 \docType{class}
 \name{scDiffComBase-class}
 \alias{scDiffComBase-class}
-\alias{parameters,scDiffComBase-method}
-\alias{get_cci_table_raw,scDiffComBase-method}
-\alias{get_cci_table_detected,scDiffComBase-method}
-\alias{get_ora_table,scDiffComBase-method}
 \title{The scDiffComBase Class}
-\usage{
-\S4method{parameters}{scDiffComBase}(object)
-
-\S4method{get_cci_table_raw}{scDiffComBase}(object)
-
-\S4method{get_cci_table_detected}{scDiffComBase}(object)
-
-\S4method{get_ora_table}{scDiffComBase}(object)
-}
-\arguments{
-\item{object}{xxx}
-}
 \description{
 The scDiffComBase class is a virtual class that provides a template
 for the \code{scDiffCom} and \code{scDiffComCombined} classes.
 }
-\section{Methods (by generic)}{
-\itemize{
-\item \code{parameters}: Return scDiffCom \code{parameters}.
-
-\item \code{get_cci_table_raw}: Return scDiffCom \code{cci_table_raw}.
-
-\item \code{get_cci_table_detected}: Return scDiffCom \code{cci_table_detected}.
-
-\item \code{get_ora_table}: Return scDiffCom \code{ora_table}.
-}}
-
 \section{Slots}{
 
 \describe{

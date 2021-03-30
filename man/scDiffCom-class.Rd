@@ -3,23 +3,11 @@
 \docType{class}
 \name{scDiffCom-class}
 \alias{scDiffCom-class}
-\alias{distributions,scDiffCom-method}
 \title{The scDiffCom Class}
-\usage{
-\S4method{distributions}{scDiffCom}(object)
-}
-\arguments{
-\item{object}{xxx}
-}
 \description{
 A scDiffCom object stores the results of the intercellular communication analysis
  performed by \code{run_interaction_analysis} on a Seurat object.
 }
-\section{Methods (by generic)}{
-\itemize{
-\item \code{distributions}: Return scDiffCom \code{distributions}.
-}}
-
 \section{Slots}{
 
 \describe{

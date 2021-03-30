@@ -315,6 +315,10 @@ scdiffcom_objects <- lapply(
   }
 )
 
+# FilterCCI(
+#   scdiffcom_objects$cond_stat
+# )
+
 #test_that("todo", {
 #
 #})
@@ -469,6 +473,10 @@ test_that("fisher test is done correctly on GO terms", {
   )
 })
 
+# RunORA(
+#   scdiffcom_objects$cond_stat
+# )
+
 ## Check building combined-objects
 
 scdiffcom_objects_dup <- scdiffcom_objects
@@ -499,6 +507,84 @@ test_that("`Combine_scDiffCom` returns object of class `scDiffComCombined`", {
   expect_s4_class(scdiffcom_combined_objects$nocond_stat, "scDiffComCombined")
   expect_s4_class(scdiffcom_combined_objects$nocond_nostat, "scDiffComCombined")
 })
+
+## Check accessors ####
+#TODO
+retrieved_parameters <- lapply(
+  scdiffcom_objects,
+  GetParameters
+)
+
+retrieved_parameters_combined <- lapply(
+  scdiffcom_combined_objects,
+  GetParameters
+)
+
+retrieved_cci_tables <- lapply(
+  c("raw", "detected"),
+  function(type) {
+    lapply(
+      c(TRUE, FALSE),
+      function(simplified) {
+        lapply(
+          scdiffcom_objects,
+          GetTableCCI,
+          type = type,
+          simplified = simplified
+        )
+      }
+    )
+  }
+)
+
+retrieved_cci_tables_combined <- lapply(
+  c("raw", "detected"),
+  function(type) {
+    lapply(
+      c(TRUE, FALSE),
+      function(simplified) {
+        lapply(
+          scdiffcom_combined_objects,
+          GetTableCCI,
+          type = type,
+          simplified = simplified
+        )
+      }
+    )
+  }
+)
+
+retrieved_ora_tables <- lapply(
+  list("all", c("LRI", "ER_CELLTYPES", "GO_TERMS")),
+  function(categories) {
+    lapply(
+      c(TRUE, FALSE),
+      function(simplified) {
+        GetTableORA(
+          scdiffcom_objects$cond_stat,
+          categories = categories,
+          simplified = simplified
+        )
+      }
+    )
+  }
+)
+
+retrieved_ora_tables_combined <- lapply(
+  list("all", c("LRI", "ER_CELLTYPES", "GO_TERMS")),
+  function(categories) {
+    lapply(
+      c(TRUE, FALSE),
+      function(simplified) {
+        GetTableORA(
+          scdiffcom_combined_objects$cond_stat,
+          categories = categories,
+          simplified = simplified
+        )
+      }
+    )
+  }
+)
 
 ## Check BuildNetwork overall ####
 
@@ -540,6 +626,10 @@ test_that("dummy test to replace", {
 })
 
 all_networks[[6]][[2]]
+
+# BuildNetwork(
+#   scdiffcom_objects$cond_stat
+# )
 
 ## Check BuildNetwork step by step ####
 
