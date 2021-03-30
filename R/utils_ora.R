@@ -516,7 +516,7 @@ get_tables_ora <- function(
   if (!is.character(categories)) {
     stop("`categories` must be a character vector")
   }
-  tables <- object@ora_table
+  tables <- copy(object@ora_table)
   if (identical(tables, list())) {
     warning("The object does not contain ORA tables. Returning `NULL`")
     return(NULL)

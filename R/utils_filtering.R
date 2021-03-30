@@ -423,10 +423,10 @@ get_table_cci <- function(
   class_signature
 ) {
   if (type == "raw") {
-    table <- object@cci_table_raw
+    table <- copy(object@cci_table_raw)
   }
   if (type == "detected") {
-    table <- object@cci_table_detected
+    table <- copy(object@cci_table_detected)
     condition_inputs <- list(
       is_cond = object@parameters$conditional_analysis,
       cond1 = object@parameters$seurat_condition_id$cond1_name,
