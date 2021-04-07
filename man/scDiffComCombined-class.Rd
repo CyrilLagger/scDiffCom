@@ -5,20 +5,25 @@
 \alias{scDiffComCombined-class}
 \title{The scDiffComCombined Class}
 \description{
-A scDiffComCombined object stores the results of multiple scDiffCom objects at a single place.
- It also allows to run a global over-representation analysis.
+A scDiffComCombined object stores the results of multiple scDiffCom
+  objects at a single place.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{parameters}}{The list of parameters passed to \code{run_interaction_analysis}.}
+\item{\code{parameters}}{The list of parameters passed to
+\code{run_interaction_analysis}.}
 
-\item{\code{cci_table_raw}}{A data.table with all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \times m} rows,
-where \eqn{n} is the number of cell-types and \eqn{m} the number of ligand-receptor pairs.}
+\item{\code{cci_table_raw}}{A data.table with all possible cell-cell
+interactions (CCIs); namely with \eqn{n^2 \times m} rows,
+where \eqn{n} is the number of cell-types and \eqn{m} the number
+ of ligand-receptor pairs.}
 
-\item{\code{cci_table_detected}}{A data.table with the detected CCIs obtained from the raw data.table after filtering.}
+\item{\code{cci_table_detected}}{A data.table with the detected CCIs obtained
+from the raw data.table after filtering.}
 
-\item{\code{ora_table}}{A data.table storing the results of the over-representation analysis
-performed on the \code{cci_table_detected} table.}
+\item{\code{ora_table}}{A data.table storing the results of the
+over-representation analysis performed on the
+ \code{cci_table_detected} table.}
 }}
 

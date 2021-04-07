@@ -5,9 +5,8 @@
 \alias{LRI_human}
 \title{A database of human ligand-receptor interactions.}
 \format{
-A list with seven items:
+A list with the following items:
 \enumerate{
-  \item LRI_not_curated: a data.table of curated and non-curated LRIs
   \item LRI_curated: a data.table of curated LRIs
   \item LRI_curated_GO: a data.table with GO terms attached to
    curated LRIs
@@ -27,9 +26,8 @@ data(LRI_human)
 \description{
 A list that contains human ligand-receptor interactions (LRIs)
  with GO-term and KEGG-pathway annotations. The LRIs have been retrieved
- from eight databases (see References). Curated and non-curated LRIs
- are distinguished (note that only curated LRIs are used in scDiffCom
- interaction analysis, non-curated LRIs are given for reference).
+ from eight databases (see References). Note that only curated LRIs
+ have been kept.
 }
 \details{
 The dataset is built internally in scDiffCom according to

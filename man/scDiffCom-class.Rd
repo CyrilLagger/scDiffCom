@@ -5,24 +5,32 @@
 \alias{scDiffCom-class}
 \title{The scDiffCom Class}
 \description{
-A scDiffCom object stores the results of the intercellular communication analysis
- performed by \code{run_interaction_analysis} on a Seurat object.
+A scDiffCom object stores the results of the intercellular
+  communication analysis performed by \code{run_interaction_analysis}
+  from a Seurat object.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{parameters}}{The list of parameters passed to \code{run_interaction_analysis}.}
+\item{\code{parameters}}{The list of parameters passed to
+\code{run_interaction_analysis}.}
 
-\item{\code{cci_table_raw}}{A data.table with all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \times m} rows,
-where \eqn{n} is the number of cell-types and \eqn{m} the number of ligand-receptor pairs.}
+\item{\code{cci_table_raw}}{A data.table with all possible cell-cell
+interactions (CCIs); namely with \eqn{n^2 \times m} rows,
+where \eqn{n} is the number of cell-types and \eqn{m} the number
+ of ligand-receptor pairs.}
 
-\item{\code{cci_table_detected}}{A data.table with the detected CCIs obtained from the raw data.table after filtering.}
+\item{\code{cci_table_detected}}{A data.table with the detected CCIs obtained
+from the raw data.table after filtering.}
 
-\item{\code{ora_table}}{A data.table storing the results of the over-representation analysis
-performed on the \code{cci_table_detected} table.}
+\item{\code{ora_table}}{A data.table storing the results of the
+over-representation analysis performed on the
+ \code{cci_table_detected} table.}
 
-\item{\code{distributions}}{A list of matrices that contain the distributions over each CCI obtained from the permutation test(s).
-Storing such distributions will make the object very heavy for more than 1000 permutations. It is only intended to be used for
+\item{\code{distributions}}{A list of matrices that contain the distributions
+over each CCI obtained from the permutation test(s).
+Storing such distributions will make the object very heavy for more
+ than 1000 permutations. It is only intended to be used for
 benchmarking or debugging.}
 }}
 

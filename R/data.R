@@ -12,7 +12,7 @@
 #'
 #' @usage data(LRI_human)
 #'
-#' @format A list with seven items:
+#' @format A list with the following items:
 #' \enumerate{
 #'   \item LRI_curated: a data.table of curated LRIs
 #'   \item LRI_curated_GO: a data.table with GO terms attached to
@@ -54,7 +54,7 @@
 #'
 #' @usage data(LRI_mouse)
 #'
-#' @format A list with seven items:
+#' @format A list with the following items:
 #' \enumerate{
 #'   \item LRI_curated: a data.table of curated LRIs
 #'   \item LRI_curated_GO: a data.table with GO terms attached to

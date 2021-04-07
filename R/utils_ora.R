@@ -9,10 +9,20 @@ run_ora <- function(
   global
 ) {
   if (global == TRUE) {
-    stop("Global ORA analyis is not supported anymore. Use `global == FALSE`")
+    stop(
+      paste0(
+        "Global ORA analyis is not supported anymore.",
+        " Use `global == FALSE`"
+      )
+    )
   }
   if (stringent_or_default == "stringent") {
-    stop("Stringent ORA analysis is not supported anymore. Use `stringent_or_default == 'default'`")
+    stop(
+      paste0(
+        "Stringent ORA analysis is not supported anymore.",
+        " Use `stringent_or_default == 'default'`"
+      )
+    )
   }
   regulation <- c("UP", "DOWN", "FLAT", "DIFF")
   temp_param <- object@parameters
@@ -107,14 +117,26 @@ run_ora <- function(
         if (class_signature == "scDiffComCombined") {
           object@ora_combined_default <- res_ora
         } else {
-          stop("No ORA global analysis allowed for object of class `scDiffComCombined`")
+          stop(
+            paste0(
+              "No ORA global analysis allowed for object",
+              " of class `scDiffComCombined`"
+            )
+          )
         }
       } else {
         object@ora_table <- res_ora
       }
     } else if (stringent_or_default == "stringent") {
       if (is.null(stringent_logfc_threshold)) {
-        if (verbose) message("Choose a non-NULL `stringent_logfc_threshold` to perform stringent over-representation analysis.")
+        if (verbose) {
+          message(
+            paste0(
+              "Choose a non-NULL `stringent_logfc_threshold` to",
+              " perform stringent over-representation analysis."
+              )
+            )
+        }
       } else  {
         if(stringent_logfc_threshold > logfc_threshold) {
           if (!global) {
