@@ -1,6 +1,7 @@
 #' @import data.table
 #' @import ggplot2
-#' @importFrom methods new setClass setClassUnion setValidity setGeneric validObject
+#' @importFrom methods new setClass setClassUnion
+#'  setValidity setGeneric validObject
 #' @importFrom DelayedArray rowsum
 #' @importFrom magrittr "%>%"
 #'
@@ -20,12 +21,17 @@ setClassUnion(
 #' The scDiffComBase class is a virtual class that provides a template
 #' for the \code{scDiffCom} and \code{scDiffComCombined} classes.
 #'
-#' @slot parameters The list of parameters passed to \code{run_interaction_analysis}.
-#' @slot cci_table_raw A data.table with all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \times m} rows,
-#'  where \eqn{n} is the number of cell-types and \eqn{m} the number of ligand-receptor pairs.
-#' @slot cci_table_detected A data.table with the detected CCIs obtained from the raw data.table after filtering.
-#' @slot ora_table A data.table storing the results of the over-representation analysis
-#'  performed on the \code{cci_table_detected} table.
+#' @slot parameters The list of parameters passed to
+#'  \code{run_interaction_analysis}.
+#' @slot cci_table_raw A data.table with all possible cell-cell
+#'  interactions (CCIs); namely with \eqn{n^2 \times m} rows,
+#'  where \eqn{n} is the number of cell-types and \eqn{m} the number
+#'   of ligand-receptor pairs.
+#' @slot cci_table_detected A data.table with the detected CCIs obtained
+#'  from the raw data.table after filtering.
+#' @slot ora_table A data.table storing the results of the
+#'  over-representation analysis performed on the
+#'   \code{cci_table_detected} table.
 #' @name scDiffComBase-class
 #' @rdname scDiffComBase-class
 #'
@@ -50,17 +56,25 @@ setClass(
 
 #' The scDiffCom Class
 #'
-#'  A scDiffCom object stores the results of the intercellular communication analysis
-#'  performed by \code{run_interaction_analysis} on a Seurat object.
+#'  A scDiffCom object stores the results of the intercellular
+#'   communication analysis performed by \code{run_interaction_analysis}
+#'   from a Seurat object.
 #'
-#' @slot parameters The list of parameters passed to \code{run_interaction_analysis}.
-#' @slot cci_table_raw A data.table with all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \times m} rows,
-#'  where \eqn{n} is the number of cell-types and \eqn{m} the number of ligand-receptor pairs.
-#' @slot cci_table_detected A data.table with the detected CCIs obtained from the raw data.table after filtering.
-#' @slot ora_table A data.table storing the results of the over-representation analysis
-#'  performed on the \code{cci_table_detected} table.
-#' @slot distributions A list of matrices that contain the distributions over each CCI obtained from the permutation test(s).
-#'  Storing such distributions will make the object very heavy for more than 1000 permutations. It is only intended to be used for
+#' @slot parameters The list of parameters passed to
+#'  \code{run_interaction_analysis}.
+#' @slot cci_table_raw A data.table with all possible cell-cell
+#'  interactions (CCIs); namely with \eqn{n^2 \times m} rows,
+#'  where \eqn{n} is the number of cell-types and \eqn{m} the number
+#'   of ligand-receptor pairs.
+#' @slot cci_table_detected A data.table with the detected CCIs obtained
+#'  from the raw data.table after filtering.
+#' @slot ora_table A data.table storing the results of the
+#'  over-representation analysis performed on the
+#'   \code{cci_table_detected} table.
+#' @slot distributions A list of matrices that contain the distributions
+#'  over each CCI obtained from the permutation test(s).
+#'  Storing such distributions will make the object very heavy for more
+#'   than 1000 permutations. It is only intended to be used for
 #'  benchmarking or debugging.
 #'
 #' @name scDiffCom-class
@@ -79,15 +93,20 @@ setClass(
 
 #' The scDiffComCombined Class
 #'
-#'  A scDiffComCombined object stores the results of multiple scDiffCom objects at a single place.
-#'  It also allows to run a global over-representation analysis.
+#'  A scDiffComCombined object stores the results of multiple scDiffCom
+#'   objects at a single place.
 #'
-#' @slot parameters The list of parameters passed to \code{run_interaction_analysis}.
-#' @slot cci_table_raw A data.table with all possible cell-cell interactions (CCIs); namely with \eqn{n^2 \times m} rows,
-#'  where \eqn{n} is the number of cell-types and \eqn{m} the number of ligand-receptor pairs.
-#' @slot cci_table_detected A data.table with the detected CCIs obtained from the raw data.table after filtering.
-#' @slot ora_table A data.table storing the results of the over-representation analysis
-#'  performed on the \code{cci_table_detected} table.
+#' @slot parameters The list of parameters passed to
+#'  \code{run_interaction_analysis}.
+#' @slot cci_table_raw A data.table with all possible cell-cell
+#'  interactions (CCIs); namely with \eqn{n^2 \times m} rows,
+#'  where \eqn{n} is the number of cell-types and \eqn{m} the number
+#'   of ligand-receptor pairs.
+#' @slot cci_table_detected A data.table with the detected CCIs obtained
+#'  from the raw data.table after filtering.
+#' @slot ora_table A data.table storing the results of the
+#'  over-representation analysis performed on the
+#'   \code{cci_table_detected} table.
 #' @name scDiffComCombined-class
 #' @rdname scDiffComCombined-class
 #'
@@ -392,12 +411,22 @@ Combine_scDiffCom <- function(
   )
   if (is.null(list_of_ora_categories[[1]])) {
     if (verbose) {
-      message("Empty slot `ora_table` in input object. Returning empty slot `ora_table` in combined object.")
+      message(
+        paste0(
+          "Empty slot `ora_table` in input object.",
+          " Returning empty slot `ora_table` in combined object."
+          )
+      )
     }
     new_ora_table <- list()
   } else  if (length(unique(list_of_ora_categories)) != 1) {
     if (verbose) {
-      message("Objects to bind don't have the same ORA (default) categories. Returning empty slot `ora_table` in combined object.")
+      message(
+        paste0(
+          "Objects to bind don't have the same ORA (default) categories.",
+          " Returning empty slot `ora_table` in combined object."
+          )
+      )
     }
     new_ora_table <- list()
   } else {
@@ -491,6 +520,95 @@ Combine_scDiffCom <- function(
 }
 
 ################  Generics and Methods ####
+
+#' @param object xxx
+setMethod(
+  "show",
+  signature = "scDiffCom",
+  definition = function(
+    object
+  ) {
+    line_1 <- paste0(
+      "An object of class scDiffCom with name ",
+      object@parameters$object_name
+    )
+    if (is.null(object@parameters$seurat_condition_id)) {
+      if (!object@parameters$permutation_analysis) {
+        line_2 <- paste0(
+          "Analysis performed: ",
+          "detection only (without statistical test!) "
+        )
+      } else {
+        line_2 <- paste0(
+          "Analysis performed: ",
+          "detection only (with statistical test) "
+        )
+      }
+    } else {
+      if (!object@parameters$permutation_analysis) {
+        line_2 <- paste0(
+          "Analysis performed: ",
+          "differential analysis (without statistical test!) between ",
+          object@parameters$seurat_condition_id$cond1_name,
+          " and ",
+          object@parameters$seurat_condition_id$cond2_name,
+          " cells"
+        )
+      } else {
+        line_2 <- paste0(
+          "Analysis performed: ",
+          "differential analysis between ",
+          object@parameters$seurat_condition_id$cond1_name,
+          " and ",
+          object@parameters$seurat_condition_id$cond2_name,
+          " cells"
+
+        )
+      }
+    }
+    line_3 <- paste0(
+      nrow(object@cci_table_detected),
+      " detected CCIs across ",
+      length(unique(object@cci_table_detected$EMITTER_CELLTYPE)),
+      " cell types"
+    )
+    if (identical(object@ora_table, list())) {
+      line_4 <- "No over-representation results"
+    } else {
+      is_ora <- TRUE
+      ora_categories <- names(object@ora_table)
+      line_4 <- paste0(
+        "Over-representation results for ",
+        paste0(ora_categories, collapse = ", ")
+      )
+    }
+    cat(
+      paste(
+        line_1,
+        line_2,
+        line_3,
+        line_4,
+        sep = "\n"
+      )
+    )
+  }
+)
+
+#' @param object xxx
+setMethod(
+  "show",
+  signature = "scDiffComCombined",
+  definition = function(
+    object
+  ) {
+    line_1 <- paste0(
+      "An object of class scDiffComCombined"
+    )
+    cat(
+      line_1
+     )
+  }
+)
 
 #' xxx
 #'
@@ -586,7 +704,12 @@ setGeneric(
   name = "RunORA",
   def = function(
     object,
-    categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
+    categories = c(
+      "ER_CELLTYPES",
+      "LRI",
+      "GO_TERMS",
+      "KEGG_PWS"
+      ),
     overwrite = TRUE,
     verbose = TRUE
   ) standardGeneric("RunORA"),
@@ -599,7 +722,12 @@ setMethod(
   signature = "scDiffCom",
   definition = function(
     object,
-    categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
+    categories = c(
+      "ER_CELLTYPES",
+      "LRI",
+      "GO_TERMS",
+      "KEGG_PWS"
+      ),
     overwrite = TRUE,
     #stringent_or_default = "default",
     #stringent_logfc_threshold = NULL,
