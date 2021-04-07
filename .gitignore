@@ -3,5 +3,4 @@
 .RData
 .Ruserdata
 inst/doc
-R/cellphonedb_wrapper.R
-R/utils_cpdb_wrapper.R
+

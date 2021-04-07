@@ -1,7 +1,7 @@
 Package: scDiffCom
 Type: Package
 Title: Differential analysis of Intercellular Communication from scRNA-seq data
-Version: 0.1.0
+Version: 0.0.0.9000
 Authors@R: c(
     person("Cyril", "Lagger", email = "lagger.cyril@gmail.com",
     role = c("aut", "cre")),
@@ -10,15 +10,15 @@ Authors@R: c(
     person("Anais", "Equey", email = "anais.equey@gmail.com",
     role = c("ctb"))
     )
-Description: A statistical method to perform differential analyis of
-    intercellular communication from single-cell transcriptomics data.
-    From a pre-processed Seurat object as input, it infers cell-cell
-    interactions present in the dataset and how these interactions changes
-    between two conditions of interest (e.g. young vs old). It relies on an 
-    internal database of ligand-receptor interactions that has been gathered
-    from several published studies. The statistical method relies on a 
-    permutation test. The package also implements several tools to perform
-    downstream analysis and visualize the results.
+Description: Analysis tools to investigate changes in intercellular
+    communication from scRNA-seq data. Using a Seurat object as input,
+    the package infers which cell-cell interactions are present in the dataset
+    and how these interactions changes between two conditions of interest
+    (e.g. young vs old). It relies on an internal database of ligand-receptor
+    interactions (available for both human and mouse) that has been gathered
+    from several published studies. The differential analysis relies on a 
+    permutation test. The package also contains several tools to analyze and
+    and visualize the results.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -60,16 +60,12 @@ Imports:
     Seurat (>= 4.0.0)
 VignetteBuilder: knitr
 Collate: 
-    'cellphonedb_wrapper.R'
     'data.R'
-    'generics.R'
     'interaction_analysis.R'
     'objects.R'
     'utils_LRI.R'
     'utils_cci.R'
-    'utils_cpdb_wrapper.R'
     'utils_filtering.R'
-    'utils_fpm.R'
     'utils_interactiveNetworks.R'
     'utils_ora.R'
     'utils_permutation.R'
