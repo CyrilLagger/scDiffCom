@@ -2,9 +2,8 @@
 #'
 #' A list that contains human ligand-receptor interactions (LRIs)
 #'  with GO-term and KEGG-pathway annotations. The LRIs have been retrieved
-#'  from eight databases (see References). Curated and non-curated LRIs
-#'  are distinguished (note that only curated LRIs are used in scDiffCom
-#'  interaction analysis, non-curated LRIs are given for reference).
+#'  from eight databases (see References). Note that only curated LRIs
+#'  have been kept.
 #'
 #' The dataset is built internally in scDiffCom according to
 #'  scDiffCom:::build_LRI(species = "human").
@@ -15,7 +14,6 @@
 #'
 #' @format A list with seven items:
 #' \enumerate{
-#'   \item LRI_not_curated: a data.table of curated and non-curated LRIs
 #'   \item LRI_curated: a data.table of curated LRIs
 #'   \item LRI_curated_GO: a data.table with GO terms attached to
 #'    curated LRIs
@@ -47,9 +45,8 @@
 #'
 #' A list that contains mouse ligand-receptor interactions (LRIs)
 #'  with GO-term and KEGG-pathway annotations. The LRIs have been retrieved
-#'  from eight databases (see References). Curated and non-curated LRIs
-#'  are distinguished (note that only curated LRIs are used in scDiffCom
-#'  interaction analysis, non-curated LRIs are given for reference).
+#'  from eight databases (see References). Note that only curated LRIs
+#'  have been kept.
 #'
 #' The code to build the database is  scDiffCom:::build_LRI(species = "mouse")
 #'
@@ -59,7 +56,6 @@
 #'
 #' @format A list with seven items:
 #' \enumerate{
-#'   \item LRI_not_curated: a data.table of curated and non-curated LRIs
 #'   \item LRI_curated: a data.table of curated LRIs
 #'   \item LRI_curated_GO: a data.table with GO terms attached to
 #'    curated LRI
