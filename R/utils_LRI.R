@@ -21,7 +21,7 @@ build_LRI <- function(
     LR_db = LRI_curated$LR_full
   )
   return(list(
-    LRI_not_curated = LRI_not_curated$LR_full,
+    #LRI_not_curated = LRI_not_curated$LR_full,
     LRI_curated = LRI_curated$LR_full,
     LRI_curated_GO = LRI_GO,
     LRI_curated_KEGG = LRI_KEGG,
@@ -79,24 +79,24 @@ combine_LR_db <- function(
     LR_scTensor$LR <- LR_scTensor$LR[SOURCE != "PPI"]
   }
   LR_retrieved_dates <- list(
-    "connectomeDB2020" = LR_connectomeDB2020$retrieved_date,
-    "CellTalkDB" = LR_CellTalkDB$retrieved_date,
-    "scTensor" = LR_scTensor$retrieved_date,
-    "SingleCellSignalR" = LR_SingleCellSignalR$retrieved_date,
-    "NicheNet" = LR_NicheNet$retrieved_date,
-    "CellPhoneDB" = LR_CellPhoneDB$retrieved_date,
     "CellChat" = LR_CellChat$retrieved_date,
-    "ICELLNET" = LR_ICELLNET$retrieved_date
+    "CellPhoneDB" = LR_CellPhoneDB$retrieved_date,
+    "CellTalkDB" = LR_CellTalkDB$retrieved_date,
+    "connectomeDB2020" = LR_connectomeDB2020$retrieved_date,
+    "ICELLNET" = LR_ICELLNET$retrieved_date,
+    "NicheNet" = LR_NicheNet$retrieved_date,
+    "SingleCellSignalR" = LR_SingleCellSignalR$retrieved_date,
+    "scTensor" = LR_scTensor$retrieved_date
   )
   LR_retrieved_from <- list(
-    "connectomeDB2020" = LR_connectomeDB2020$retrieved_from,
-    "CellTalkDB" = LR_CellTalkDB$retrieved_from,
-    "scTensor" = LR_scTensor$retrieved_from,
-    "SingleCellSignalR" = LR_SingleCellSignalR$retrieved_from,
-    "NicheNet" = LR_NicheNet$retrieved_from,
-    "CellPhoneDB" = LR_CellPhoneDB$retrieved_from,
     "CellChat" = LR_CellChat$retrieved_from,
-    "ICELLNET" = LR_ICELLNET$retrieved_from
+    "CellPhoneDB" = LR_CellPhoneDB$retrieved_from,
+    "CellTalkDB" = LR_CellTalkDB$retrieved_from,
+    "connectomeDB2020" = LR_connectomeDB2020$retrieved_from,
+    "ICELLNET" = LR_ICELLNET$retrieved_from,
+    "NicheNet" = LR_NicheNet$retrieved_from,
+    "SingleCellSignalR" = LR_SingleCellSignalR$retrieved_from,
+    "scTensor" = LR_scTensor$retrieved_from
   )
   LR_full <- rbindlist(
     list(
@@ -303,8 +303,8 @@ combine_LR_db <- function(
     cols_to_keep <- c(
       cols_to_keep,
       "LRI",
-      paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3), "LR_SORTED",
-      "DATABASE", "N_DB", "SOURCE", "ANNOTATION", "FAMILY", "SUBFAMILY",
+      paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3),
+      "DATABASE", "SOURCE",
       paste0("LIGAND_", 1:2, "_CONF"), paste0("LIGAND_", 1:2, "_TYPE"),
       paste0("RECEPTOR_", 1:3, "_CONF"), paste0("RECEPTOR_", 1:3, "_TYPE")
     )
@@ -313,8 +313,8 @@ combine_LR_db <- function(
     cols_to_keep <- c(
       cols_to_keep,
       "LRI",
-      paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3), "LR_SORTED",
-      "DATABASE", "N_DB", "SOURCE", "ANNOTATION", "FAMILY", "SUBFAMILY"
+      paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3),
+      "DATABASE", "SOURCE"
     )
   }
   LR_full <- LR_full[, cols_to_keep, with = FALSE]
