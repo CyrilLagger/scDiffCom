@@ -1,9 +1,9 @@
 ---
-title: "scDiffCom-vignette"
+title: "scDiffCom: Investigating changes in intercellular communication"
 author: "Cyril Lagger, Eugen Ursu"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{scDiffCom-vignette}
+  %\VignetteIndexEntry{scDiffCom: Investigating changes in intercellular communication}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,66 +15,199 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Installation and dependencies
+We show here how to use [scDiffCom](https://github.com/CyrilLagger/scDiffCom)
+to investigate changes in intercellular communication from scRNA-seq data.
 
-```
-devtools::install_github("https://github.com/CyrilLagger/scDiffCom")
-```
-## Workflow
+## Standard Workflow
 
-### Load libraries
+### Setup a Seurat object
+
+`scDiffCom` requires as input a [Seurat](https://satijalab.org/seurat/) object
+that must satisfy some conditions:
+
+* Cells should have been previoulsy annotated with cell-types (such as
+explained for example
+[here](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html)).
+* The `meta.data` of the `Seurat` object should contain a column that
+indicates to which of two groups each cell belongs to. Note that although the 
+main aim of `scDiffCom` is to perform differential analysis, it is also possible
+to only perform a detection analysis (see below).
+* The slot `data` of the `Seurat` object should contain standard log-normalize
+values.
+
+For the purpose of this vignette, we use a dummy Seurat object available as
+part of `scDiffCom`. It corresponds to the liver scRNA-seq dataset from the
+[Tabula Muris Senis](https://tabula-muris-senis.ds.czbiohub.org/). Note that
+after normalization and pre-processing, the object has been down-sampled 
+(in both genes and cells) to keep it light. **As such, all results below are not
+intended to convey any meaningful biology.** For a real biological analysis
+using `scDiffCom` please see our scAgeCom analysis (article in prep.)
 
 ```{r setup}
 library(scDiffCom)
 library(Seurat)
+
+seurat_object <- scDiffCom::seurat_sample_tms_liver
+seurat_object
+
+# cell-type annotations are stored in "cell_type"
+head(seurat_object$cell_type)
+
+# the grouping condition (here by age) is stored in "age_group"
+head(seurat_object$age_group)
+table(seurat_object$age_group)
+
 ```
 
-### Prepare a dummy Seurat object
+### Database of ligand-receptor interactions
 
-```{r setup}
-seurat_sample <- scDiffCom::seurat_sample_tms_liver
-seurat_sample
-```
+As in several other intercellular communication studies, `scDiffCom` infers
+cell type to cell type communication patterns based on the gene expression of
+ligands and receptors known to interact. The package provides both a human 
+database and a mouse database of ligand-receptor interactions (LRIs)
+that have been retrieved and processed from eight public resources.
 
-### Run the interaction analysis 
+As shown below, `scDiffCom` uses these databases internally and the user
+do not need to call them explicitly to perform any interaction analysis. They
+are nevertheless accessible directly from the package.
+
 
 ```{r}
 
-scdc_age <- run_interaction_analysis(
-  seurat_object = seurat_sample,
-  LRdb_species = "mouse",
+# Loading the mouse LRIs
+data(LRI_mouse)
+
+# actual data.table with the interactions
+head(LRI_mouse$LRI_curated[, 1:7])
+
+# GO term annotation
+head(LRI_mouse$LRI_curated_GO)
+
+# KEGG Pathway annotation
+head(LRI_mouse$LRI_curated_KEGG)
+
+
+```
+
+
+### Run a standard differential analysis 
+
+All differential intercellular communication results can be obtained from a 
+single call to the function `run_interaction_analysis`. For a more advanced
+usage and control of all parameters, please see xxx and look at
+`?run_interation_analysis`.
+
+In standard mode, it will perform the following steps:
+
+ * Preprocess the data and meta.data of the Seurat object.
+ * Build a table of all potential cell-cell interactions (CCIs) of the form
+ (Emitter Cell Type, Receiver Cell Type, Ligand Gene(s), Receptor Gene(s)).
+ They are obtained by comparing the genes in the Seurat object to those of our
+ internal database of LRIs.
+ * Compute scores, detection rates,... for each CCI.
+ * Perform two different permutation tests to infer both the
+ specificity (as originally defined by
+ [CellPhoneDB](https://www.cellphonedb.org/)) and significance of change of 
+ each CCI.
+ * Based on their computed attributes, CCIs are either filtered out or
+ assigned to a regulation category: UP, DOWN, FLAT, NSC (non-significant 
+ change).
+ * Perform an over-representation analysis to infer dominant communication 
+ changes at the level of various categories (LRI, cell types, GO Terms,
+ KEGG pathways,...).
+ 
+By default `run_interaction_analysis` performs 1000 iterations for the
+permutation tests. In such as case, the analysis should only take a couple of
+minutes when run sequentially on the Seurat object considered here. For a real
+scenario with a bigger object and potentially more iterations (e.g. 10'0000), we 
+recommend to run the analysis in parallel by loading the `future` package and
+setting the `plan`.
+
+
+```{r}
+
+# access future options
+library(future)
+plan(sequential) # sequentially and in the current R process
+#plan(multisession, workers = 4) # background R sessions
+#plan(multicore, workers = 4) # forked R processes, not Windows/not RStudio
+
+# run the interaction analysis between young and old cells with
+# default parameters
+aging_example <- run_interaction_analysis(
+  seurat_object = seurat_object,
+  LRI_species = "mouse",
   seurat_celltype_id = "cell_type",
-  seurat_condition_id = list(column_name = "age_group", cond1_name = "YOUNG", cond2_name = "OLD"),
-  iterations = 1000
+  seurat_condition_id = list(
+    column_name = "age_group",
+    cond1_name = "YOUNG",
+    cond2_name = "OLD"
+  )
 )
 
 ```
 
-### Modify the filtering parameters
+### Explore the results
 
-### Display Volcano and ORA plots
+The output of `run_interaction_analysis` is an S4 object of class
+`scDiffCom`. We recommend to access the slot of the object by using
+the provided accessors
+
+```{r}
+aging_example
+
+# retrieving the list of parameters used to perform the analysis
+head(GetParameters(aging_example), 4)
+
+```
+
+The main results are stored as a data.table (one row per detected CCI) in
+the slot `cci_table_detected`. Each CCI is annotated with several attributes
+including logFC, adjusted p-values, final regulation assignment, etc.
 
 ```{r}
 
-PlotORA(
-  object = scdc_age,
-  category = "KEGG_PWS",
-  regulation = "DOWN",
-  max_terms_show = 20
+CCI_detected <- GetTableCCI(aging_example, "detected", simplified = TRUE)
+
+table(CCI_detected$REGULATION)
+
+top10_up_regulated <- CCI_detected[REGULATION == "UP"][order(-LOGFC)][1:10]
+top10_up_regulated$CCI
+
+top10_down_regulated <- CCI_detected[REGULATION == "DOWN"][order(LOGFC)][1:10]
+top10_down_regulated$CCI
+
+
+```
+Results from the over-representation analysis allows us to find patterns
+associated with, say, up-regulated CCIs.
+
+
+```{r}
+
+ORA_tables <- GetTableORA(aging_example, "all", simplified = TRUE)
+
+OR_LRI_up <- ORA_tables$LRI[OR_UP > 1 & BH_P_VALUE_UP <= 0.01]$VALUE
+OR_LRI_up
+
+OR_GO_up <- ORA_tables$GO_TERMS[OR_UP > 1 & BH_P_VALUE_UP <= 0.01]$VALUE
+head(OR_GO_up)
+
+```
+
+The over-representation performed on emitter and receiver cell types allows us 
+to build an interactive network of the dominant changes in the dataset.
+
+```{r}
+BuildNetwork(
+  object = aging_example,
+  network_type = "ORA_network",
+  layout_type = "bipartite"
 )
 
 ```
 
-### Display Summary network
+## Advanced functionalities
 
+TODO
 
-```{r}
-#library(tidyverse) # temporary fix
-#generate_interactive_network(
-#  tms_liver_interactions,
-#  "bipartite"
-#)
-```
-
-
-### Perform over-representation analysis on new categories
