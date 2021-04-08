@@ -181,7 +181,7 @@ setup_graph_config <- function(
       ORA_COLOR_UP = "#F94144", # red
       ORA_COLOR_DOWN = "#277DA1", # blue
       ORA_COLOR_DIFF = "#F9C74F",
-      ORA_COLOR_ROBUST = "#90BE6D",
+      ORA_COLOR_FLAT = "#90BE6D",
       ORA_COLOR_NONE = grDevices::rgb(0.2, 0.2, 0.2, alpha = 0.1),
       BREWER_N = 7,
       BREWER_NAME = "RdBu"
@@ -407,13 +407,18 @@ extract_edge_metadata <- function(
     edge_table[, "NUM_LRIS_DIFF" := NUM_LRIS_UP + NUM_LRIS_DOWN]
   }
   if (network_type == "ORA_network") {
+    cols_to_add <- c(
+      "ORA_TYPE",
+      "OR_UP", "OR_DOWN", "OR_FLAT",
+      "BH_P_VALUE_UP", "BH_P_VALUE_DOWN", "BH_P_VALUE_FLAT"
+    )
     edge_table[
       process_celltype_pairs_enrichment(
         ora_table_ER = ora_table_ER,
         config = config
       ),
       on = c("from==EMITTER_CELLTYPE", "to==RECEIVER_CELLTYPE"),
-      "ORA_TYPE" := i.ORA_TYPE
+      (cols_to_add) := mget(paste0("i.", cols_to_add))
     ]
   }
   # TODO: Enrich with other info: cell families, GOs, ORA on cell types.
@@ -443,19 +448,22 @@ process_celltype_pairs_enrichment <- function(
         "DOWN",
         ifelse(
           OR_FLAT >= OR_MIN & BH_P_VALUE_FLAT <= BH_MAX,
-          "ROBUST",
+          "FLAT",
           "NONE"
         )
       )
     )
   )]
-  cols_to_select <- c(
-    "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", "ORA_TYPE"#,
-    #"OR_DIFF", "OR_UP", "OR_DOWN", "OR_FLAT",
-    #"P_VALUE_DIFF", "P_VALUE_UP", "P_VALUE_DOWN", "P_VALUE_FLAT",
-    #"BH_P_VALUE_DIFF", "BH_P_VALUE_UP", "BH_P_VALUE_DOWN", "BH_P_VALUE_FLAT",
+  cols_to_select1 <- c(
+    "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", "ORA_TYPE"
   )
+  cols_to_select2 <- c(
+    "OR_UP", "OR_DOWN", "OR_FLAT",
+    "BH_P_VALUE_UP", "BH_P_VALUE_DOWN", "BH_P_VALUE_FLAT"
+  )
+  cols_to_select <- c(cols_to_select1, cols_to_select2)
   dt_ora <- dt_ora[, cols_to_select, with = FALSE]
+  dt_ora[, (cols_to_select2) := lapply(.SD, signif, 3), .SDcol = cols_to_select2]
   if (sum(is.na(dt_ora)) > 0 | sum(dt_ora == Inf) > 0 ) {
     stop("Inf or NA in `dt_ora`")
   }
@@ -474,12 +482,12 @@ add_edge_layout <- function(
   if (network_type == "ORA_network") {
     edge_table[
       data.table(
-        ORA_TYPE = c("DIFF", "UP", "DOWN", "ROBUST", "NONE"),
+        ORA_TYPE = c("DIFF", "UP", "DOWN", "FLAT", "NONE"),
         color = c(
           config$EDGE_COLORING$ORA_COLOR_DIFF,
           config$EDGE_COLORING$ORA_COLOR_UP,
           config$EDGE_COLORING$ORA_COLOR_DOWN,
-          config$EDGE_COLORING$ORA_COLOR_ROBUST,
+          config$EDGE_COLORING$ORA_COLOR_FLAT,
           config$EDGE_COLORING$ORA_COLOR_NONE
         )
       ),
@@ -515,7 +523,7 @@ add_edge_layout <- function(
       main_title <- paste0(
         "Number of up-regulated ligand-receptor interactions",
         " between cell type pairs"
-        )
+      )
     } else if (network_type == "down_regulated_network") {
       lab <- "NUM_LRIS_DOWN"
       main_title <- paste0(
@@ -539,10 +547,10 @@ add_edge_layout <- function(
   edge_table[, "color.hover" := color.color]
   edge_table[, "smooth" := TRUE]
   edge_table[, "arrow.size" := config$EDGE_STYLE$ARROW_SIZE]
-  #TODO add title
-  edge_table[, "title" := "doDO"]
-  #edges_[, title := edge_annotation_html(edges_, network_type)]
-  #num_interacts <- num_interactions_object(cci_table_detected = cci_table_detected)
+  edge_table <- edge_annotation_html(edge_table, network_type)
+  # num_interacts <- num_interactions_object(
+  #   cci_table_detected = cci_table_detected
+  #   )
   if (layout_type == "bipartite") {
     edge_table[, "from" := paste0(from, " (E)")]
     edge_table[, "to" := paste0(to, " (R)")]
@@ -1050,10 +1058,10 @@ edges_legend <- function(
         color = c(
           config$EDGE_COLORING$ORA_COLOR_DOWN,
           config$EDGE_COLORING$ORA_COLOR_UP,
-          config$EDGE_COLORING$ORA_COLOR_ROBUST,
+          config$EDGE_COLORING$ORA_COLOR_FLAT,
           config$EDGE_COLORING$ORA_COLOR_DIFF
         ),
-        label = c("DOWN", "UP", "STABLE", "UP&DOWN"),
+        label = c("DOWN", "UP", "FLAT", "UP&DOWN"),
         arrows = c("to", "to", "to", "to")
       )
     )
@@ -1077,7 +1085,7 @@ edges_legend <- function(
   } else if (network_type %in% c(
     "up_regulated_network",
     "down_regulated_network"
-    )) {
+  )) {
     return(data.frame(
       color = "darkblue",
       label = "toDo", # TODO
@@ -1090,109 +1098,106 @@ edges_legend <- function(
   }
 }
 
-#############
+edge_annotation_html <- function(
+  edge_table,
+  network_type
+) {
+  ORA_TYPE <- OR_UP <- BH_P_VALUE_UP <-
+    OR_DOWN <- BH_P_VALUE_DOWN <-
+    OR_FLAT <- BH_P_VALUE_FLAT <-
+    NUM_LRIS_TOTAL <- NUM_LRIS_UP <-
+    NUM_LRIS_DOWN <- NUM_LRIS_FLAT <- NULL
+  if (network_type != "ORA_network") {
+    edge_table[, "title" := ""]
+  } else {
+    edge_table[
+      ,
+      "title" := lapply(
+        1:nrow(.SD),
+        function(i) {
+          h1 <- "<h4> ORA results: </h4>"
+          if (ORA_TYPE[[i]] == "UP") {
+            ora_results <- as.character(
+              kableExtra::kbl(
+                matrix(
+                  c(
+                    "Odds Ratio UP:", OR_UP[[i]],
+                    "Adj. p-value UP:", BH_P_VALUE_UP[[i]]
+                  ),
+                  nrow = 2,
+                  byrow = TRUE
+                  )
+              )
+            )
+          } else if (ORA_TYPE[[i]] == "DOWN") {
+            ora_results <- as.character(
+              kableExtra::kbl(
+                matrix(
+                  c(
+                    "Odds Ratio DOWN:", OR_DOWN[[i]],
+                    "Adj. p-value DOWN:", BH_P_VALUE_DOWN[[i]]
+                  ),
+                  nrow = 2,
+                  byrow = TRUE
+                )
+              )
+            )
+          } else if (ORA_TYPE[[i]] == "FLAT") {
+            ora_results <- as.character(
+              kableExtra::kbl(
+                matrix(
+                  c(
+                    "Odds Ratio FLAT:", OR_FLAT[[i]],
+                    "Adj. p-value FLAT:", BH_P_VALUE_FLAT[[i]]
+                  ),
+                  nrow = 2,
+                  byrow = TRUE
+                )
+              )
+            )
+          } else {
+            ora_results <- as.character(
+              kableExtra::kbl(
+                matrix(
+                  c(
+                    "Odds Ratio UP:", OR_UP[[i]],
+                    "Adj. p-value UP:", BH_P_VALUE_UP[[i]],
+                    "Odds Ratio DOWN:", OR_DOWN[[i]],
+                    "Adj. p-value DOWN:", BH_P_VALUE_DOWN[[i]]
+                  ),
+                  nrow = 4,
+                  byrow = TRUE
+                )
+              )
+            )
+          }
+          n_inter <- as.character(
+            kableExtra::kbl(
+              matrix(
+                c(
+                  "TOTAL:", NUM_LRIS_TOTAL[[i]],
+                  "UP:", NUM_LRIS_UP[[i]],
+                  "DOWN:", NUM_LRIS_DOWN[[i]],
+                  "FLAT:", NUM_LRIS_FLAT[[i]]
+                ),
+                nrow = 4,
+                byrow = TRUE
+              )
+            )
+          )
+          paste0(
+            #h1,
+            ora_results,
+            "<br> Number of interactions: <br>",
+            n_inter
+          )
+        }
+      )
+    ]
+  }
 
-# ## deprecated
-# edge_annotation_html <- function(edges, network_representation_type) {
-#   edges_tmp <- copy(edges)
-#   edges_tmp[, network_representation_type := network_representation_type]
-#   annotations <- purrr::pmap(
-#     edges_tmp,
-#     function(COUNTS_TOTAL, COUNTS_UP, COUNTS_DOWN, COUNTS_DIFF, COUNTS_FLAT,
-#              OR_UP, OR_DOWN, OR_DIFF, OR_FLAT,
-#              BH_P_VALUE_UP, BH_P_VALUE_DOWN, BH_P_VALUE_DIFF, BH_P_VALUE_FLAT,
-#              EMITTER_CELLTYPE_CLEAN, RECEIVER_CELLTYPE_CLEAN,
-#              TISSUE_ENRICHED_LR,
-#              network_representation_type,
-#              ...) {
-#       if (network_representation_type != "ORA") {
-#         return(NULL)
-#       }
-#       format_float <- function(x) sprintf("%.1f", x)
-#       format_pval <- function(x) round(x, digits = 3)
-#       cellpair_counts_ora <- data.table::data.table(
-#         TYPE = c("Tissue counts", "Counts", "OR", "BH_P_VALUE"),
-#         TOTAL = c(num_interacts$TOTAL, as.integer(COUNTS_TOTAL), NA, NA),
-#         UP = c(num_interacts$UP, as.integer(COUNTS_UP), format_float(OR_UP), format_pval(BH_P_VALUE_UP)),
-#         DOWN = c(num_interacts$DOWN, as.integer(COUNTS_DOWN), format_float(OR_DOWN), format_pval(BH_P_VALUE_DOWN)),
-#         DIFF = c(num_interacts$DIFF, as.integer(COUNTS_DIFF), format_float(OR_DIFF), format_pval(BH_P_VALUE_DIFF)),
-#         FLAT = c(num_interacts$FLAT, as.integer(COUNTS_FLAT), format_float(OR_FLAT), format_pval(BH_P_VALUE_FLAT))
-#       )
-#       header <- sprintf("<h3> %s -(to)-> %s </h3>", EMITTER_CELLTYPE_CLEAN, RECEIVER_CELLTYPE_CLEAN)
-#       # TOP LR for cellpair
-#       # TODO: Extract function. Adds the LR table
-#       NUM_TOP_LR <- 5
-#       ER_celltype <- paste0(EMITTER_CELLTYPE_CLEAN, "_", RECEIVER_CELLTYPE_CLEAN)
-#       lr_genes_significant_sorted <- cci_table_detected[ER_CELLTYPES == ER_celltype
-#                                                   & REGULATION_SIMPLE %in% c("UP", "DOWN")][
-#                                                     order(-LOGFC_ABS),
-#                                                     list(LRI, LOGFC, REGULATION)
-#                                                   ][ # ORA_SCORE might overflow
-#                                                     1:min(NUM_TOP_LR, data.table::.N),
-#                                                   ]
-#       top_LR_table <- kableExtra::kbl(lr_genes_significant_sorted, caption = sprintf("Top %s LR by LOGFC_ABS", NUM_TOP_LR))
-#       # Activity of LR found in most cellpairs of tissue
-#       # TODO: Extract function
-#       NUM_FREQ_LR <- 5
-#       LR_freq <- ora_table_LR[order(-OR_DIFF), VALUE][1:NUM_FREQ_LR] # TODO: Counts or OR?
-#       dt <- cci_table_detected[
-#         ER_CELLTYPES == ER_celltype
-#       ][
-#         match(LR_freq, LRI)
-#       ][
-#         , list(LRI, LOGFC, REGULATION)
-#       ]
-#       dt[, LRI := LR_freq]
-#       # TODO: -> log base 2
-#       dt[, LOGFC := as.character(LOGFC)]
-#       dt[is.na(LOGFC), LOGFC := "Not detected"]
-#       freq_LR_table <- as.character(kableExtra::kbl(dt, caption = sprintf("Most frequent %s LR that change in tissue", NUM_FREQ_LR)))
-#
-#       # Activity of GO specific to the cell pair
-#       # TODO: Extract function
-#       NUM_TOP_GO <- 5
-#
-#       # ora_dt <- build_ora_dt(
-#       #   object@cci_table_detected[ER_CELLTYPES == ER_celltype],
-#       #   object@parameters$threshold_logfc,
-#       #   c("UP", "DOWN", "DIFF", "FLAT"),
-#       #   "GO_TERMS",
-#       #   "mouse", FALSE
-#       # )
-#
-#       # ora_dt <- ora_dt[, c("DIFFERENTIAL") := ifelse(
-#       #   BH_P_VALUE_UP < 0.05 & BH_P_VALUE_DOWN < 0.05, "DIFF", ifelse(
-#       #     BH_P_VALUE_UP < 0.05, "UP", ifelse(
-#       #       BH_P_VALUE_DOWN < 0.05, "DOWN", "FLAT"
-#       #     )
-#       #   )
-#       # )]
-#       #ora_dt <- ora_dt[DIFFERENTIAL %in% c("UP", "DOWN", "DIFF")]
-#       #ora_dt <- ora_dt[order(-OR_DIFF)]
-#       #num_rows_display <- min(dim(ora_dt)[1], NUM_TOP_GO)
-#       #ora_dt <- ora_dt[1:num_rows_display]
-#
-#       #GO_table <- ora_dt[, list(VALUE, DIFFERENTIAL)] # , OR_UP, BH_P_VALUE_UP, OR_DOWN, BH_P_VALUE_DOWN
-#       #GO_table <- kableExtra::kbl(GO_table, caption = sprintf("TOP %s enriched GO for ER tuple", NUM_TOP_GO))
-#       GO_table <- NULL #temporary fix to make the function faster
-#
-#       # TODO: Extract function
-#       html_break <- "</br>"
-#       html <- paste0(
-#         header,
-#         as.character(kableExtra::kbl(cellpair_counts_ora, caption = "Cell pair counts and ORA")),
-#         html_break,
-#         top_LR_table,
-#         html_break,
-#         freq_LR_table,
-#         html_break,
-#         GO_table
-#       )
-#       return(html)
-#     }
-#   )
-#   return(annotations)
-# }
+  return(edge_table)
+}
 
 # get_cci_change_graph <- function(cci_table_detected) {
 #   LOGFC <- value <- label <- color <- REGULATION <-
