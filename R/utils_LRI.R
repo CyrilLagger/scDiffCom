@@ -352,6 +352,7 @@ prepare_LR_connectomeDB2020 <- function(
   #Last time updated
   retrieved_date <- as.Date("2021-03-22")
   retrieved_from <- "https://asrhou.github.io/NATMI/"
+  #we checked manually that they are all HGCN Approved Symbol
   LR <- NATMI_connectomeDB2020
   setDT(LR)
   setnames(
@@ -433,6 +434,7 @@ prepare_LR_CellTalkDB <- function(
   }
   if (species == "human") {
     LR <- CellTalkDB_human
+    #we checked manually that they are all HGCN Approved Symbol
   }
   setDT(LR)
   setnames(
@@ -496,6 +498,8 @@ prepare_LR_ICELLNET <- function(
   #   na.strings = ""
   # )
   # actually saved as internal data
+  # there were two symbols that were not HGNC, probably typos in ICELLNET:
+  # 3,00 NPR and VCTN1. we fixed it in ICELLNET_human
   LR <- ICELLNET_human
   setDT(LR)
   setnames(
@@ -621,27 +625,30 @@ prepare_LR_CellChat <- function(
   LR[, LIGAND_1 := gsub(" ", "", LIGAND_1)]
   LR[, RECEPTOR_1 := gsub(" ", "", RECEPTOR_1)]
   LR[, RECEPTOR_2 := gsub(" ", "", RECEPTOR_2)]
+  # some CellChat gene names  are not mgi/HGNC_symbols
   if (species == "mouse") {
-    # some CellChat gene names (70) are not mgi_symbols...
-    convert_table <- CellChat_conversion
-    genes_to_rm <- convert_table[new == "remove"]
-    genes_to_change <- convert_table[new != "remove"]
-    LR <- LR[!(LIGAND_1 %in% genes_to_rm$old) &
-               !(RECEPTOR_1 %in% genes_to_rm$old) &
-               !(RECEPTOR_2 %in% genes_to_rm$old)]
-    LR[genes_to_change,
-       `:=`(LIGAND_1 = new),
-       on = "LIGAND_1==old"
-    ][
-      genes_to_change,
-      `:=`(RECEPTOR_1 = new),
-      on = "RECEPTOR_1==old"
-    ][
-      genes_to_change,
-      `:=`(RECEPTOR_2 = new),
-      on = "RECEPTOR_2==old"
-    ]
+    convert_table <- CellChat_conversion_mouse
   }
+  if (species == "human") {
+    convert_table <- CellChat_conversion_human
+  }
+  genes_to_rm <- convert_table[new == "remove"]
+  genes_to_change <- convert_table[new != "remove"]
+  LR <- LR[!(LIGAND_1 %in% genes_to_rm$old) &
+             !(RECEPTOR_1 %in% genes_to_rm$old) &
+             !(RECEPTOR_2 %in% genes_to_rm$old)]
+  LR[genes_to_change,
+     `:=`(LIGAND_1 = new),
+     on = "LIGAND_1==old"
+  ][
+    genes_to_change,
+    `:=`(RECEPTOR_1 = new),
+    on = "RECEPTOR_1==old"
+  ][
+    genes_to_change,
+    `:=`(RECEPTOR_2 = new),
+    on = "RECEPTOR_2==old"
+  ]
   LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
     temp <- c(LIGAND_1[[i]], RECEPTOR_1[[i]], RECEPTOR_2[[i]])
     temp <- temp[!is.na(temp)]
@@ -679,6 +686,10 @@ prepare_LR_CellPhoneDB <- function(
   LR <- create_LR_CellPhoneDB(
     deconvoluted = deconvoluted
   )
+  #there are 3 genes that are not HGNC approved symbol, we change them
+  LR[LR == "NOV"] <- "CCN3"
+  LR[LR == "WISP3"] <- "CCN6"
+  LR[LR == "YARS"] <- "YARS1"
   if (species == "mouse") {
     genes_temp <- unique(unlist(LR))
     genes_temp <- genes_temp[!is.na(genes_temp)]
@@ -984,6 +995,26 @@ prepare_LR_SingleCellSignalR <- function(
   retrieved_from <- "SingleCellSignalR::LRdb"
   LR <- SingleCellSignalR::LRdb
   setDT(LR)
+  #there are 19 genes that are not HGNC approved symbol, we change them
+  LR[LR == "BY55"] <- "CD160"
+  LR[LR == "C14orf1"] <- "ERG28"
+  LR[LR == "CTGF"] <- "CCN2"
+  LR[LR == "CYR61"] <- "CCN1"
+  LR[LR == "HFE2"] <- "HJV"
+  LR[LR == "HLAE"] <- "HLA-E"
+  LR[LR == "IL8"] <- "CXCL8"
+  LR[LR == "MFI2"] <- "MELTF"
+  LR[LR == "MLLT4"] <- "AFDN"
+  LR[LR == "MTf"] <- "MELTF"
+  LR[LR == "NGFRAP1"] <- "BEX3"
+  LR[LR == "NOV"] <- "CCN3"
+  LR[LR == "PVRL2"] <- "NECTIN2"
+  LR[LR == "RAP"] <- "LRPAP1"
+  LR[LR == "SHP1"] <- "PTPN6"
+  LR[LR == "SHP2"] <- "PTPN11"
+  LR[LR == "TIM-1"] <- "HAVCR1"
+  LR[LR == "TMEM8A"] <- "PGAP6"
+  LR[LR == "YARS"] <- "YARS1"
   setnames(
     x = LR,
     old = c("ligand", "receptor"),
@@ -1081,6 +1112,15 @@ prepare_LR_NicheNet <- function(
   retrieved_from <- "nichenetr::lr_network"
   LR <- nichenetr::lr_network
   setDT(LR)
+  #there are 8 genes that are not HGNC approved symbol, we change them
+  LR[LR == "ATP5B"] <- "ATP5F1B"
+  LR[LR == "CTGF"] <- "CCN2"
+  LR[LR == "CYR61"] <- "CCN1"
+  LR[LR == "HFE2"] <- "HJV"
+  LR[LR == "NOV"] <- "CCN3"
+  LR[LR == "WISP2"] <- "CCN5"
+  LR[LR == "WISP3"] <- "CCN6"
+  LR[LR == "YARS"] <- "YARS1"
   setnames(
     x = LR,
     old = c("from", "to", "source"),
