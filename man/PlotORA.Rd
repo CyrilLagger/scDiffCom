@@ -9,29 +9,32 @@
 PlotORA(
   object,
   category,
-  regulation,
+  regulation = c("UP", "DOWN", "FLAT"),
   max_terms_show,
+  GO_aspect = c("biological_process", "molecular_function", "cellular_component"),
   OR_threshold = 1,
-  p_value_threshold = 0.05,
+  bh_p_value_threshold = 0.05,
   ...
 )
 
 \S4method{PlotORA}{scDiffCom}(
   object,
   category,
-  regulation,
+  regulation = c("UP", "DOWN", "FLAT"),
   max_terms_show,
+  GO_aspect = c("biological_process", "molecular_function", "cellular_component"),
   OR_threshold = 1,
-  p_value_threshold = 0.05
+  bh_p_value_threshold = 0.05
 )
 
 \S4method{PlotORA}{scDiffComCombined}(
   object,
   category,
-  regulation,
+  regulation = c("UP", "DOWN", "FLAT"),
   max_terms_show,
+  GO_aspect = c("biological_process", "molecular_function", "cellular_component"),
   OR_threshold = 1,
-  p_value_threshold = 0.05,
+  bh_p_value_threshold = 0.05,
   subID
 )
 }
@@ -44,9 +47,11 @@ PlotORA(
 
 \item{max_terms_show}{xxx}
 
+\item{GO_aspect}{xxx}
+
 \item{OR_threshold}{xxx}
 
-\item{p_value_threshold}{xxx}
+\item{bh_p_value_threshold}{xxx}
 
 \item{...}{Extra named arguments passed to PlotORA}
 

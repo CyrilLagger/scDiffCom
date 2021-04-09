@@ -1,5 +1,4 @@
 #' @import data.table
-#' @import ggplot2
 #' @importFrom methods new setClass setClassUnion
 #'  setValidity setGeneric validObject
 #' @importFrom DelayedArray rowsum
@@ -21,17 +20,13 @@ setClassUnion(
 #' The scDiffComBase class is a virtual class that provides a template
 #' for the \code{scDiffCom} and \code{scDiffComCombined} classes.
 #'
-#' @slot parameters The list of parameters passed to
-#'  \code{run_interaction_analysis}.
-#' @slot cci_table_raw A data.table with all possible cell-cell
-#'  interactions (CCIs); namely with \eqn{n^2 \times m} rows,
-#'  where \eqn{n} is the number of cell-types and \eqn{m} the number
-#'   of ligand-receptor pairs.
-#' @slot cci_table_detected A data.table with the detected CCIs obtained
-#'  from the raw data.table after filtering.
-#' @slot ora_table A data.table storing the results of the
-#'  over-representation analysis performed on the
-#'   \code{cci_table_detected} table.
+#' @slot parameters A list of the parameters used to build the object.
+#' @slot cci_table_raw A data.table with all possible CCIs induced from
+#' the original Seurat object and the internal LRI database.
+#' @slot cci_table_detected A data.table with only the detected CCIs obtained
+#' after filtering.
+#' @slot ora_table A data.table with the results of the
+#'  over-representation analysis.
 #' @name scDiffComBase-class
 #' @rdname scDiffComBase-class
 #'
@@ -60,21 +55,15 @@ setClass(
 #'   communication analysis performed by \code{run_interaction_analysis}
 #'   from a Seurat object.
 #'
-#' @slot parameters The list of parameters passed to
-#'  \code{run_interaction_analysis}.
-#' @slot cci_table_raw A data.table with all possible cell-cell
-#'  interactions (CCIs); namely with \eqn{n^2 \times m} rows,
-#'  where \eqn{n} is the number of cell-types and \eqn{m} the number
-#'   of ligand-receptor pairs.
-#' @slot cci_table_detected A data.table with the detected CCIs obtained
-#'  from the raw data.table after filtering.
-#' @slot ora_table A data.table storing the results of the
-#'  over-representation analysis performed on the
-#'   \code{cci_table_detected} table.
-#' @slot distributions A list of matrices that contain the distributions
-#'  over each CCI obtained from the permutation test(s).
-#'  Storing such distributions will make the object very heavy for more
-#'   than 1000 permutations. It is only intended to be used for
+#' @slot parameters A list of the parameters used to build the object.
+#' @slot cci_table_raw A data.table with all possible CCIs induced from
+#' the original Seurat object and the internal LRI database.
+#' @slot cci_table_detected A data.table with only the detected CCIs obtained
+#' after filtering.
+#' @slot ora_table A data.table with the results of the
+#'  over-representation analysis.
+#' @slot distributions A list of matrices with the distributions
+#'  over each CCI obtained from the permutation test(s).Only to be used for
 #'  benchmarking or debugging.
 #'
 #' @name scDiffCom-class
@@ -96,17 +85,13 @@ setClass(
 #'  A scDiffComCombined object stores the results of multiple scDiffCom
 #'   objects at a single place.
 #'
-#' @slot parameters The list of parameters passed to
-#'  \code{run_interaction_analysis}.
-#' @slot cci_table_raw A data.table with all possible cell-cell
-#'  interactions (CCIs); namely with \eqn{n^2 \times m} rows,
-#'  where \eqn{n} is the number of cell-types and \eqn{m} the number
-#'   of ligand-receptor pairs.
-#' @slot cci_table_detected A data.table with the detected CCIs obtained
-#'  from the raw data.table after filtering.
-#' @slot ora_table A data.table storing the results of the
-#'  over-representation analysis performed on the
-#'   \code{cci_table_detected} table.
+#' @slot parameters A list of the parameters used to build the object.
+#' @slot cci_table_raw A data.table with all possible CCIs induced from
+#' the original Seurat object and the internal LRI database.
+#' @slot cci_table_detected A data.table with only the detected CCIs obtained
+#' after filtering.
+#' @slot ora_table A data.table with the results of the
+#'  over-representation analysis.
 #' @name scDiffComCombined-class
 #' @rdname scDiffComCombined-class
 #'
@@ -778,8 +763,9 @@ setMethod(
 #' @param category xxx
 #' @param regulation xxx
 #' @param max_terms_show xxx
+#' @param GO_aspect xxx
 #' @param OR_threshold xxx
-#' @param p_value_threshold xxx
+#' @param bh_p_value_threshold xxx
 #' @param ... Extra named arguments passed to PlotORA
 #'
 #' @return xxx
@@ -790,10 +776,15 @@ setGeneric(
   def = function(
     object,
     category,
-    regulation,
+    regulation = c("UP", "DOWN", "FLAT"),
     max_terms_show,
+    GO_aspect = c(
+      "biological_process",
+      "molecular_function",
+      "cellular_component"
+      ),
     OR_threshold = 1,
-    p_value_threshold = 0.05,
+    bh_p_value_threshold = 0.05,
     ...
   ) standardGeneric("PlotORA"),
   signature = "object"
@@ -806,55 +797,35 @@ setMethod(
   definition = function(
     object,
     category,
-    regulation,
+    regulation = c("UP", "DOWN", "FLAT"),
     max_terms_show,
+    GO_aspect = c(
+      "biological_process",
+      "molecular_function",
+      "cellular_component"
+    ),
     OR_threshold = 1,
-    p_value_threshold = 0.05
-    #stringent = FALSE,
+    bh_p_value_threshold = 0.05
   ) {
-    stringent <- FALSE
-    if (stringent) {
-      #ora_dt <- get_ora_stringent(object)
-    } else {
-      ora_dt <- object@ora_table
-    }
+    regulation <- match.arg(regulation)
+    GO_aspect <- match.arg(GO_aspect)
+    ora_dt <- object@ora_table
     if (identical(ora_dt, list())) {
       stop("No ORA data.table to extract from scDiffCom object")
     }
     if (!(category %in% names(ora_dt))) {
       stop("Can't find the specified ORA category")
     }
-    ora_dt <- ora_dt[[category]]
-    VALUE_ID <- "VALUE"
-    if(regulation == "UP") {
-      OR_ID <- "OR_UP"
-      p_value_ID <- "BH_P_VALUE_UP"
-      ORA_SCORE_ID <- "ORA_SCORE_UP"
-    } else if(regulation == "DOWN") {
-      OR_ID <- "OR_DOWN"
-      p_value_ID <- "BH_P_VALUE_DOWN"
-      ORA_SCORE_ID <- "ORA_SCORE_DOWN"
-
-    } else if(regulation == "FLAT") {
-      OR_ID <- "OR_FLAT"
-      p_value_ID <- "BH_P_VALUE_FLAT"
-      ORA_SCORE_ID <- "ORA_SCORE_FLAT"
-    } else {
-      stop("Can't find `regulation` type")
-    }
-    ora_dt <- ora_dt[get(OR_ID) > OR_threshold & get(p_value_ID) <= p_value_threshold][order(-get(ORA_SCORE_ID))]
-    if (nrow(ora_dt) == 0) {
-      return("No significant ORA results for the selected parameters.")
-    }
-    n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
-    ora_dt <- ora_dt[1:n_row_tokeep]
-    ggplot2::ggplot(ora_dt, aes(get(ORA_SCORE_ID), stats::reorder(get(VALUE_ID), get(ORA_SCORE_ID)))) +
-      geom_point(aes(size = -log10(get(p_value_ID)), color = log2(get(OR_ID)))) +
-      scale_color_gradient(low = "orange", high = "red") +
-      xlab("ORA score") +
-      ylab(category) +
-      labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
-      theme(text = element_text(size = 16))
+    ora_dt <- copy(ora_dt[[category]])
+    plot_ora(
+      ora_dt = ora_dt,
+      category = category,
+      regulation = regulation,
+      max_terms_show = max_terms_show,
+      GO_aspect = GO_aspect,
+      OR_threshold = OR_threshold ,
+      bh_p_value_threshold = bh_p_value_threshold
+    )
   }
 )
 
@@ -866,73 +837,41 @@ setMethod(
   definition = function(
     object,
     category,
-    regulation,
+    regulation = c("UP", "DOWN", "FLAT"),
     max_terms_show,
+    GO_aspect = c(
+      "biological_process",
+      "molecular_function",
+      "cellular_component"
+    ),
     OR_threshold = 1,
-    p_value_threshold = 0.05,
+    bh_p_value_threshold = 0.05,
     subID
-    #global = FALSE,
   ) {
-    global <- FALSE
     ID <- NULL
-    stringent <- FALSE
-    if (stringent) {
-      if (global) {
-        ora_dt <- object@ora_combined_stringent
-      } else {
-        ora_dt <- object@ora_stringent
-      }
-    } else {
-      if (global) {
-        ora_dt <- object@ora_combined_default
-      } else {
-        ora_dt <- object@ora_table
-      }
-    }
+    regulation <- match.arg(regulation)
+    GO_aspect <- match.arg(GO_aspect)
+    ora_dt <- object@ora_table
     if (identical(ora_dt, list())) {
       stop("No ORA data.table to exctract from scDiffCom object")
     }
     if (!(category %in% names(ora_dt))) {
       stop("Can't find the specified ORA category")
     }
-    ora_dt <- ora_dt[[category]]
-    if (!global) {
-      if (!(subID %in% unique(ora_dt$ID))) {
-        stop("`subID` must be present in the scDiffComCombined object")
-      }
-      ora_dt <- ora_dt[ID == subID]
+    ora_dt <- copy(ora_dt[[category]])
+    if (!(subID %in% unique(ora_dt$ID))) {
+      stop("`subID` must be present in the scDiffComCombined object")
     }
-
-    VALUE_ID <- "VALUE"
-    if(regulation == "UP") {
-      OR_ID <- "OR_UP"
-      p_value_ID <- "BH_P_VALUE_UP"
-      ORA_SCORE_ID <- "ORA_SCORE_UP"
-    } else if(regulation == "DOWN") {
-      OR_ID <- "OR_DOWN"
-      p_value_ID <- "BH_P_VALUE_DOWN"
-      ORA_SCORE_ID <- "ORA_SCORE_DOWN"
-
-    } else if(regulation == "FLAT") {
-      OR_ID <- "OR_FLAT"
-      p_value_ID <- "BH_P_VALUE_FLAT"
-      ORA_SCORE_ID <- "ORA_SCORE_FLAT"
-    } else {
-      stop("Can't find `regulation` type")
-    }
-    ora_dt <- ora_dt[get(OR_ID) > OR_threshold & get(p_value_ID) <= p_value_threshold][order(-get(ORA_SCORE_ID))]
-    if (nrow(ora_dt) == 0) {
-      return("No significant ORA results for the selected parameters.")
-    }
-    n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
-    ora_dt <- ora_dt[1:n_row_tokeep]
-    ggplot2::ggplot(ora_dt, aes(get(ORA_SCORE_ID), stats::reorder(get(VALUE_ID), get(ORA_SCORE_ID)))) +
-      geom_point(aes(size = -log10(get(p_value_ID)), color = log2(get(OR_ID)))) +
-      scale_color_gradient(low = "orange", high = "red") +
-      xlab("ORA score") +
-      ylab(category) +
-      labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
-      theme(text = element_text(size = 16))
+    ora_dt <- ora_dt[ID == subID]
+    plot_ora(
+      ora_dt = ora_dt,
+      category = category,
+      regulation = regulation,
+      max_terms_show = max_terms_show,
+      GO_aspect = GO_aspect,
+      OR_threshold = OR_threshold ,
+      bh_p_value_threshold = bh_p_value_threshold
+    )
   }
 )
 

@@ -508,6 +508,16 @@ test_that("`Combine_scDiffCom` returns object of class `scDiffComCombined`", {
   expect_s4_class(scdiffcom_combined_objects$nocond_nostat, "scDiffComCombined")
 })
 
+## Check PlotORA ####
+
+PlotORA(
+  object = scdiffcom_objects$cond_stat,
+  category = "GO_TERMS",
+  regulation = "DOWN",
+  max_terms_show = 20,
+  GO_aspect = "biological_process"
+)
+
 ## Check accessors ####
 #TODO
 retrieved_parameters <- lapply(

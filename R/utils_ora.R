@@ -579,3 +579,132 @@ get_tables_ora <- function(
   }
   tables
 }
+
+plot_ora <- function(
+  ora_dt,
+  category,
+  regulation,
+  max_terms_show,
+  GO_aspect,
+  OR_threshold,
+  bh_p_value_threshold
+) {
+  VALUE <- ASPECT <- LEVEL <-  NULL
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop(
+      paste0(
+        "Package \"ggplot2\" needed for this function to work.",
+        "Please install it."
+      ),
+      call. = FALSE
+    )
+  }
+  if(regulation == "UP") {
+    OR_ID <- "OR_UP"
+    p_value_ID <- "BH_P_VALUE_UP"
+    ORA_SCORE_ID <- "ORA_SCORE_UP"
+  } else if(regulation == "DOWN") {
+    OR_ID <- "OR_DOWN"
+    p_value_ID <- "BH_P_VALUE_DOWN"
+    ORA_SCORE_ID <- "ORA_SCORE_DOWN"
+  } else if(regulation == "FLAT") {
+    OR_ID <- "OR_FLAT"
+    p_value_ID <- "BH_P_VALUE_FLAT"
+    ORA_SCORE_ID <- "ORA_SCORE_FLAT"
+  } else {
+    stop("Can't find `regulation` type")
+  }
+  ora_dt <- ora_dt[
+    get(OR_ID) > OR_threshold &
+      get(p_value_ID) <= bh_p_value_threshold
+    ][order(-get(ORA_SCORE_ID))]
+  if (category == "GO_TERMS") {
+    ora_dt <- ora_dt[
+      ASPECT == GO_aspect
+    ]
+    ora_dt[, VALUE := paste0(
+      VALUE,
+      " (L",
+      LEVEL,
+      ")"
+    )]
+  }
+  if (nrow(ora_dt) == 0) {
+    return("No over-represented results.")
+  }
+  n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
+  ora_dt <- ora_dt[1:n_row_tokeep]
+  ora_dt$VALUE <- sapply(
+    ora_dt$VALUE,
+    function(i) {
+      words <- strsplit(i, " ")[[1]]
+      n_words <- length(words)
+      if (n_words >= 5) {
+        if (n_words%%2 == 0) {
+          mid <- n_words/2
+        } else {
+          mid <- (n_words+1)/2
+        }
+        res <- paste0(
+          paste0(words[1:mid], collapse = " "),
+          "\n",
+          paste0(words[(mid+1):length(words)], collapse = " ")
+        )
+      } else {
+        res <- i
+      }
+      res
+    }
+  )
+  category_label <- ifelse(
+    category == "LRI",
+    "Ligand-Receptor Interaction",
+    ifelse(
+      category == "ER_CELLTYPES",
+      "Cell Type Emitter/Receiver",
+      ifelse(
+        category == "GO_TERMS",
+        ifelse(
+          GO_aspect == "biological_process",
+          "GO Biological Process",
+          ifelse(
+            GO_aspect == "molecular_function",
+            "GO Molecular Function",
+            "GO Cellular Component"
+          )
+        ),
+        ifelse(
+          category == "KEGG_PWS",
+          "KEGG Pathway",
+          category
+        )
+      )
+    )
+  )
+  ggplot2::ggplot(
+    ora_dt,
+    ggplot2::aes(
+      get(ORA_SCORE_ID),
+      stats::reorder(get("VALUE"), get(ORA_SCORE_ID))
+    )
+  ) +
+    ggplot2::geom_point(
+      ggplot2::aes(
+        size = -log10(get(p_value_ID)),
+        color = log2(get(OR_ID))
+      )
+    ) +
+    ggplot2::scale_color_gradient(low = "orange", high = "red") +
+    ggplot2::xlab(paste0("ORA score ", regulation)) +
+    ggplot2::ylab(category_label) +
+    ggplot2::labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
+    ggplot2::theme(text = ggplot2::element_text(size = 18)) +
+    ggplot2::ggtitle(
+      paste0(
+        "Top ",
+        n_row_tokeep,
+        " keywords"
+        )
+    )
+}
+
