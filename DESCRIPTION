@@ -33,20 +33,19 @@ Suggests:
     LRBase.Mmu.eg.db,
     LRBase.Hsa.eg.db,
     nichenetr,
+    SingleCellSignalR,
     ontologyIndex,
     ontoProc,
-    SingleCellSignalR,
+    KEGGREST,
+    igraph,
+    kableExtra,
+    RColorBrewer,
+    visNetwork,
     testthat (>= 2.1.0),
     knitr,
     rmarkdown,
-    KEGGREST,
-    arules,
-    RColorBrewer,
-    kableExtra,
-    igraph,
     purrr,
-    scales,
-    visNetwork
+    ggplot2
 Imports: 
     data.table,
     DelayedArray,
@@ -55,7 +54,6 @@ Imports:
     methods,
     stats,
     utils,
-    ggplot2,
     magrittr,
     Seurat (>= 4.0.0)
 VignetteBuilder: knitr

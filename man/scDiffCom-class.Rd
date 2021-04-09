@@ -12,25 +12,19 @@ A scDiffCom object stores the results of the intercellular
 \section{Slots}{
 
 \describe{
-\item{\code{parameters}}{The list of parameters passed to
-\code{run_interaction_analysis}.}
+\item{\code{parameters}}{A list of the parameters used to build the object.}
 
-\item{\code{cci_table_raw}}{A data.table with all possible cell-cell
-interactions (CCIs); namely with \eqn{n^2 \times m} rows,
-where \eqn{n} is the number of cell-types and \eqn{m} the number
- of ligand-receptor pairs.}
+\item{\code{cci_table_raw}}{A data.table with all possible CCIs induced from
+the original Seurat object and the internal LRI database.}
 
-\item{\code{cci_table_detected}}{A data.table with the detected CCIs obtained
-from the raw data.table after filtering.}
+\item{\code{cci_table_detected}}{A data.table with only the detected CCIs obtained
+after filtering.}
 
-\item{\code{ora_table}}{A data.table storing the results of the
-over-representation analysis performed on the
- \code{cci_table_detected} table.}
+\item{\code{ora_table}}{A data.table with the results of the
+over-representation analysis.}
 
-\item{\code{distributions}}{A list of matrices that contain the distributions
-over each CCI obtained from the permutation test(s).
-Storing such distributions will make the object very heavy for more
- than 1000 permutations. It is only intended to be used for
+\item{\code{distributions}}{A list of matrices with the distributions
+over each CCI obtained from the permutation test(s).Only to be used for
 benchmarking or debugging.}
 }}
 

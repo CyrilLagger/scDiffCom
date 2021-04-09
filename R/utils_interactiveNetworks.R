@@ -7,6 +7,51 @@ build_interactive_network <- function(
   abbreviation_table
 ) {
   ID <- VALUE <- i.ABBR_CELLTYPE <- NULL
+  if (!requireNamespace("visNetwork", quietly = TRUE)) {
+    stop(
+      paste0(
+        "Package \"visNetwork\" needed for this function to work.",
+        "Please install it."
+      ),
+      call. = FALSE
+    )
+  }
+  if (!requireNamespace("RColorBrewer", quietly = TRUE)) {
+    stop(
+      paste0(
+        "Package \"RColorBrewer\" needed for this function to work.",
+        "Please install it."
+      ),
+      call. = FALSE
+    )
+  }
+  if (!requireNamespace("kableExtra", quietly = TRUE)) {
+    stop(
+      paste0(
+        "Package \"kableExtra\" needed for this function to work.",
+        "Please install it."
+      ),
+      call. = FALSE
+    )
+  }
+  if (!requireNamespace("igraph", quietly = TRUE)) {
+    stop(
+      paste0(
+        "Package \"igraph\" needed for this function to work.",
+        "Please install it."
+      ),
+      call. = FALSE
+    )
+  }
+  if (!requireNamespace("purrr", quietly = TRUE)) {
+    stop(
+      paste0(
+        "Package \"igraph\" needed for this function to work.",
+        "Please install it."
+      ),
+      call. = FALSE
+    )
+  }
   if (!object@parameters$permutation_analysis) {
     stop(
       paste0(
@@ -464,9 +509,9 @@ process_celltype_pairs_enrichment <- function(
   cols_to_select <- c(cols_to_select1, cols_to_select2)
   dt_ora <- dt_ora[, cols_to_select, with = FALSE]
   dt_ora[, (cols_to_select2) := lapply(.SD, signif, 3), .SDcol = cols_to_select2]
-  if (sum(is.na(dt_ora)) > 0 | sum(dt_ora == Inf) > 0 ) {
-    stop("Inf or NA in `dt_ora`")
-  }
+  # if (sum(is.na(dt_ora)) > 0 | sum(dt_ora == Inf) > 0 ) {
+  #   stop("Inf or NA in `dt_ora`")
+  # }
   return(dt_ora)
 }
 
@@ -971,11 +1016,6 @@ apply_visnetwork <- function(
   )
   # For NULL arguments, use the identity as pipeline step
   vis_funcs <- purrr::map_if(vis_funcs, is.null, ~ . %>% identity())
-  # vis_funcs <- ifelse(
-  #   is.null(vis_funcs),
-  #   ~ . %>% identity(),
-  #   vis_funcs
-  # )
   return(
     network_skeleton %>%
       (vis_funcs$nodes_global) %>%
