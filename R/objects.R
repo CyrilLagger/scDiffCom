@@ -506,6 +506,8 @@ Combine_scDiffCom <- function(
 
 ################  Generics and Methods ####
 
+#' xxx
+#'
 #' @param object xxx
 setMethod(
   "show",
@@ -579,6 +581,8 @@ setMethod(
   }
 )
 
+#' xxx
+#'
 #' @param object xxx
 setMethod(
   "show",
