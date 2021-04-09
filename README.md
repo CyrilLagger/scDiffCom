@@ -47,11 +47,9 @@ You can also get a stable CRAN release:
 
 ## Typical workflow
 
-For a usage example, please look at the vignette:
+For a usage example, please look at the vignette
+available [here](https://cyrillagger.github.io/scDiffCom/)
 
-```R
-browseVignettes("scDiffCom")
-```
 
 ## Reference
 
