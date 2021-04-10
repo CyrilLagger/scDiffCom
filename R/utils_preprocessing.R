@@ -10,6 +10,7 @@ extract_analysis_inputs <- function(
   log_scale,
   threshold_min_cells,
   LRI_table,
+  LRI_species,
   verbose
 ) {
   seurat_inputs <- extract_seurat_inputs(
@@ -26,6 +27,7 @@ extract_analysis_inputs <- function(
   LRI_inputs <- extract_LRI_inputs(
     data = seurat_inputs$data,
     LRI_table = LRI_table,
+    LRI_species = LRI_species,
     verbose = verbose
   )
   condition_inputs <- extract_condition_inputs(
@@ -59,12 +61,12 @@ extract_seurat_inputs <- function(
   verbose
 ) {
   cell_type <- NULL
-  mes <- "Extracting data from assay `"
+  mes <- "Extracting data from assay '"
   if (slot == "data") {
     mes <- paste0(
       mes,
       assay,
-      "` and slot 'data' (assuming normalized log1p-transformed data)."
+      "' and slot 'data' (assuming normalized log1p-transformed data)."
     )
   } else if (slot == "counts") {
     mes <- paste0(
@@ -80,14 +82,31 @@ extract_seurat_inputs <- function(
     assay = assay
   )
   if(!methods::is(temp_data, "dgCMatrix")) {
-    stop("`slot` of `seurat_object` must be of class `dgCMatrix`")
+    stop(
+      paste0(
+        "slot ",
+        slot,
+        " of 'seurat_object' must be of class 'dgCMatrix'"
+        )
+    )
   }
   if (slot == "data" & !log_scale) {
-    if (verbose) message("Converting data from log1p-transformed to non-log1p-transformed.")
+    if (verbose) {
+      message(
+        paste0(
+          "Converting normalized data from log1p-transformed ",
+          "to non-log1p-transformed."
+        )
+      )
+    }
     temp_data <- expm1(temp_data)
   }
   if (slot == "counts" & log_scale) {
-    if (verbose) message("Converting data from non-log1p-transformed to log1p-transformed.")
+    if (verbose) {
+      message(
+        "Converting data from non-log1p-transformed to log1p-transformed."
+      )
+    }
     temp_data <- log1p(temp_data)
   }
   temp_md <- copy(x = seurat_object[[]])
@@ -96,43 +115,88 @@ extract_seurat_inputs <- function(
     keep.rownames = "cell_id"
   )
   if (!(celltype_column_id %in% names(temp_md))) {
-    stop(paste0("Can't find column `", celltype_column_id, "` in the meta.data of `seurat_object`"))
+    stop(
+      paste0(
+        "Can't find column '",
+        celltype_column_id,
+        "' in the meta.data of 'seurat_object'")
+    )
   }
   if (!is.null(sample_column_id)) {
     if (!(sample_column_id %in% names(temp_md))) {
-      stop(paste0("Can't find column `", sample_column_id, "` in the meta.data of `seurat_object`"))
+      stop(
+        paste0(
+          "Can't find column '",
+          sample_column_id,
+          "' in the meta.data of 'seurat_object'"
+        )
+      )
     }
   }
   if (!is.null(condition_column_id)) {
     if (!(condition_column_id %in% names(temp_md))) {
-      stop(paste0("Can't find column `", condition_column_id, "` in the meta.data of `seurat_object`"))
+      stop(
+        paste0(
+          "Can't find column '",
+          condition_column_id,
+          "' in the meta.data of 'seurat_object'"
+        )
+      )
     }
   }
-  cols_to_keep <- c("cell_id", celltype_column_id, sample_column_id, condition_column_id)
+  cols_to_keep <- c(
+    "cell_id",
+    celltype_column_id,
+    sample_column_id,
+    condition_column_id
+  )
   temp_md <- temp_md[, cols_to_keep, with = FALSE]
   temp_md[, names(temp_md) := lapply(.SD, as.character)]
   if (!is.null(condition_column_id)) {
     temp_cond <- unique(temp_md[[condition_column_id]])
     if (length(temp_cond) != 2) {
-      stop(paste0("Column ", condition_column_id, " of `seurat_object` must contain exactly two groups:
-                  You have supplied ", length(temp_cond), " groups."))
+      stop(
+        paste0(
+          "meta.data ",
+          condition_column_id,
+          " of 'seurat_object' must contain exactly two groups (",
+          length(temp_cond),
+          " supplied)."
+        )
+      )
     }
     if(!is.null(sample_column_id)) {
       temp_cols <- c(sample_column_id, condition_column_id)
       temp_md_sample <- unique(temp_md[, temp_cols, with = FALSE])
       temp_samples <- unique(temp_md[[sample_column_id]])
       if (length(temp_samples) != nrow(temp_md_sample)) {
-        stop(paste0("Column ", sample_column_id, " of 'seurat_object' must match to column", condition_column_id))
+        stop(
+          paste0(
+            "Column ",
+            sample_column_id,
+            " of 'seurat_object' must match to column",
+            condition_column_id
+          )
+        )
       }
-      new_colnames <- c("cell_id", "cell_type", "sample_id", "condition")
+      new_colnames <- c(
+        "cell_id",
+        "cell_type",
+        "sample_id",
+        "condition"
+      )
     } else {
       new_colnames <- c("cell_id", "cell_type", "condition")
     }
   } else {
     if(!is.null(sample_column_id)) {
-      stop("Parameter `seurat_column_id` must be supplied when parameter `seurat_sample_id` is not NULL")
+      stop(
+        paste0(
+          "Parameter 'seurat_column_id' must be supplied ",
+          "when parameter 'seurat_sample_id' is not NULL"
+        )
+      )
     } else {
-
       new_colnames <- c("cell_id", "cell_type")
     }
   }
@@ -142,7 +206,9 @@ extract_seurat_inputs <- function(
     new = new_colnames
   )
   if(any(grepl("_", temp_md[["cell_type"]], fixed = TRUE))) {
-    warning("Underscores `_` are not allowed in cell-type names: replacing with `-`")
+    warning(
+      "Underscores ('_') are not allowed in cell-type names: replacing with '-'"
+    )
     temp_md[, cell_type := gsub(
       pattern = "_",
       replacement = "-",
@@ -156,14 +222,14 @@ extract_seurat_inputs <- function(
   metadata <- temp_md[cell_type %in% celltypes_filtered, ]
   data <- temp_data[, colnames(temp_data) %in% metadata$cell_id]
   mes <- paste0(
-    "Input data for analysis: ",
+    "Input data: ",
     nrow(data),
     " genes, ",
     ncol(data),
     " cells and ",
     length(unique(metadata$cell_type)),
     " cell-types."
-    )
+  )
   if (verbose) message(mes)
   list(
     data = data,
@@ -190,10 +256,13 @@ filter_celltypes <- function(
   }
   res <- names(filt[filt])
   if(length(res) < 2) {
-    stop(paste0(
-      "Inputs must contain at least 2 cell-types with at least ",
-      threshold_min_cells, " cells (in each condition)."
-      ))
+    stop(
+      paste0(
+        "Inputs must contain at least 2 cell-types with at least ",
+        threshold_min_cells,
+        " cells (in each condition)."
+      )
+    )
   }
   res
 }
@@ -201,12 +270,28 @@ filter_celltypes <- function(
 extract_LRI_inputs <- function(
   data,
   LRI_table,
+  LRI_species,
   verbose
 ) {
   LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <- RECEPTOR_3 <- NULL
-  cols_compulsory <- c("LRI", "LIGAND_1", "LIGAND_2", "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3")
+  cols_compulsory <- c(
+    "LRI",
+    "LIGAND_1",
+    "LIGAND_2",
+    "RECEPTOR_1",
+    "RECEPTOR_2",
+    "RECEPTOR_3"
+  )
   if (!all(cols_compulsory %in% names(LRI_table))) {
-    stop(paste0("`LRI_table` must contain the columns ", paste0(cols_compulsory, collapse = ", ")))
+    stop(
+      paste0(
+        "'LRI_table' must contain the columns ",
+        paste0(
+          cols_compulsory,
+          collapse = ", "
+        )
+      )
+    )
   }
   LRI_keep <- LRI_table[, cols_compulsory, with = FALSE]
   LRI_keep <- unique(LRI_keep)
@@ -216,7 +301,7 @@ extract_LRI_inputs <- function(
       LIGAND_2 %in% c(rownames(data), NA) &
       RECEPTOR_2 %in% c(rownames(data), NA) &
       RECEPTOR_3 %in% c(rownames(data), NA),
-    ]
+  ]
   LRI_genes <- unique(c(
     unique(LRI_keep$LIGAND_1),
     unique(LRI_keep$LIGAND_2),
@@ -227,18 +312,32 @@ extract_LRI_inputs <- function(
   data_keep <- data[rownames(data) %in% LRI_genes, ]
   n_ID <- length(unique(LRI_keep$LRI))
   if (n_ID == 0) {
-    stop("There are no genes from `LRI_table` in `seurat_object`")
+    stop(
+      paste0(
+        "There are no genes from 'LRI_table' in 'seurat_object'.",
+        " Have you supplied 'seurat_object' with correctly formatted gene ",
+        " symbols for your species (namely HGNC or MGI)? "
+        )
+    )
   }
   if (n_ID <= 10) {
     warning(
       paste0(
-        "Only ", n_ID, " ligand-receptor interactions found in the dataset.",
-        " We recommend to check that gene names in your data are in the correct format."
+        "Only ",
+        n_ID,
+        " ligand-receptor interactions found in the dataset.",
+        " Have you supplied 'seurat_object' with correctly formatted gene ",
+        " symbols for your species (namely HGNC or MGI)? "
       )
     )
   }
   if (all(is.na(LRI_keep$RECEPTOR_1)) | all(is.na(LRI_keep$LIGAND_1))) {
-    stop("`LRI_table` must not contain only NA in columns `LIGAND_1`` or `RECEPTOR_1`.")
+    stop(
+      paste0(
+        "'LRI_table' must not contain only NA in columns ",
+        "'LIGAND_1'' or 'RECEPTOR_1'."
+      )
+    )
   } else {
     if (all(is.na(LRI_keep$LIGAND_2))) {
       max_nL <- 1
@@ -248,25 +347,40 @@ extract_LRI_inputs <- function(
     }
     if (all(is.na(LRI_keep$RECEPTOR_2)) & all(is.na(LRI_keep$RECEPTOR_3))) {
       max_nR <- 1
-      LRI_keep <- base::subset(LRI_keep, select = -c(RECEPTOR_2, RECEPTOR_3))
+      LRI_keep <- base::subset(
+        LRI_keep,
+        select = -c(RECEPTOR_2, RECEPTOR_3)
+      )
     } else if (all(is.na(LRI_keep$RECEPTOR_2))) {
-      stop("`LRI_table` must not have only NA in column `RECEPTOR_2`` and non-NA in column `RECEPTOR_3`.")
+      stop(
+        paste0(
+          "'LRI_table' must not contain only NA in column ",
+          "'RECEPTOR_2'' and non-NA in column 'RECEPTOR_3'."
+        )
+      )
     } else if (all(is.na(LRI_keep$RECEPTOR_3))) {
       max_nR <- 2
-      LRI_keep <- base::subset(LRI_keep, select = -c(RECEPTOR_3))
+      LRI_keep <- base::subset(
+        LRI_keep,
+        select = -c(RECEPTOR_3)
+      )
     } else {
       max_nR <- 3
     }
   }
   mes <- paste0(
-    "Using a ligand-receptor database of ",
+    "Input ligand-receptor database:",
     length(unique(LRI_table$LRI)),
-    " interactions (",
+    " ",
+    LRI_species,
+    " interactions.\n",
+    "Number of potential LRIs in the dataset:",
     n_ID,
-    " present in the data).\n",
-    "Subsetting data (keeping ",
-    nrow(data_keep),
-    " genes)."
+    "."#,
+    #"\n",
+    #"Subsetting data (keeping ",
+    #nrow(data_keep),
+    #" genes)."
   )
   if (verbose) message(mes)
   list(
@@ -291,7 +405,12 @@ extract_condition_inputs <- function(
       is_samp = FALSE
     )
     if (!is.null(cond1_name) | !is.null(cond2_name)) {
-      warning("`condition_column_id` is NULL but either `cond1_name` or `cond2_name` is not NULL.")
+      warning(
+        paste0(
+          "'condition_column_id' is NULL but either 'cond1_name' or ",
+          "'cond2_name' is not NULL."
+          )
+      )
     }
   } else {
     if (is.null(sample_column_id)) {
@@ -314,7 +433,8 @@ extract_condition_inputs <- function(
       cond_info$cond2 <- conds[[1]]
     } else {
       stop(paste0(
-        "Either `cond1_name` or `cond2_name` does not match with the content of `condition_column_id`:",
+        "Either 'cond1_name' or 'cond2_name' does not match ",
+        "with the content of 'condition_column_id':",
         conds[[1]],
         " and ",
         conds[[2]],
@@ -322,19 +442,20 @@ extract_condition_inputs <- function(
       ))
     }
   }
-  mes <- "Interaction analysis will be performed"
+  mes <- "Type of analysis to be performed:"
   if (!cond_info$is_cond) {
     mes <- paste0(
       mes,
-      " on the full dataset at once (no differential expression analysis)."
+      " detection analysis without conditions."
     )
   } else {
     mes <- paste0(
       mes,
-      " with differential expression between the groups ",
+      " differential analysis between ",
       cond_info$cond1,
       " and ",
-      cond_info$cond2
+      cond_info$cond2,
+      " cells"
     )
     if(cond_info$is_samp) {
       mes <- paste0(

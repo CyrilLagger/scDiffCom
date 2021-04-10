@@ -1,88 +1,162 @@
 
-## we expand and test some steps of the main function run_interaction_analysis ####
+## We test key functions of the package ####
 
 #the analysis can be performed in different modes according to the parameters,
 #namely with or without conditions and with or without statistical test
 
-## we create a list of different parameters corresponding to each mode ####
+## create a list of different parameters corresponding to each mode ####
 
 parameters_mode <- list(
   wrong = list(
-    LRI_species = "rat",  seurat_celltype_id = c("cell_type", "cell_types"),
-    seurat_condition_id = list(column_name = "age_group", cond2_name = "OLD"),
+    LRI_species = "rat",
+    seurat_celltype_id = c("cell_type", "cell_types"),
+    seurat_condition_id = list(
+      column_name = "age_group",
+      cond2_name = "OLD"
+    ),
     iterations = 100.2,
-    object_name = 4, seurat_assay = list("RNA"), seurat_slot = "count", log_scale = "TRUE",
-    score_type = "geom", threshold_min_cells = -5, threshold_pct = 1.1,
-    threshold_quantile_score = 1.5, threshold_p_value_specificity = 1.1, threshold_p_value_de = 0,
-    threshold_logfc = 0, return_distributions = "FALSE", seed = 5.5, verbose = "TRUE"
+    object_name = 4,
+    seurat_assay = list("RNA"),
+    seurat_slot = "count",
+    log_scale = "TRUE",
+    score_type = "geom",
+    threshold_min_cells = -5,
+    threshold_pct = 1.1,
+    threshold_quantile_score = 1.5,
+    threshold_p_value_specificity = 1.1,
+    threshold_p_value_de = 0,
+    threshold_logfc = 0,
+    return_distributions = "FALSE",
+    seed = 5.5,
+    verbose = "TRUE"
   ),
   cond_stat = list(
-    LRI_species = "mouse", seurat_celltype_id = "cell_type",
-    seurat_condition_id = list(column_name = "age_group", cond1_name = "YOUNG", cond2_name = "OLD"),
+    LRI_species = "mouse",
+    seurat_celltype_id = "cell_type",
+    seurat_condition_id = list(
+      column_name = "age_group",
+      cond1_name = "YOUNG",
+      cond2_name = "OLD"
+    ),
     iterations = 10,
     object_name = "scdiffcom_cond_stat",
-    seurat_assay = "RNA", seurat_slot = "data", log_scale = FALSE, score_type = "geometric_mean",
-    threshold_min_cells = 5, threshold_pct = 0.1,
-    threshold_quantile_score = 0.2, threshold_p_value_specificity = 0.05,
-    threshold_p_value_de = 0.05, threshold_logfc = log(1.5),
-    return_distributions = FALSE, seed = 42, verbose = FALSE
+    seurat_assay = "RNA",
+    seurat_slot = "data",
+    log_scale = FALSE,
+    score_type = "geometric_mean",
+    threshold_min_cells = 5,
+    threshold_pct = 0.1,
+    threshold_quantile_score = 0.2,
+    threshold_p_value_specificity = 0.05,
+    threshold_p_value_de = 0.05,
+    threshold_logfc = log(1.5),
+    return_distributions = FALSE,
+    seed = 42,
+    verbose = FALSE
   ),
   cond_nostat = list(
-    LRI_species = "mouse", seurat_celltype_id = "cell_type",
-    seurat_condition_id = list(column_name = "age_group", cond1_name = "YOUNG", cond2_name = "OLD"),
+    LRI_species = "mouse",
+    seurat_celltype_id = "cell_type",
+    seurat_condition_id = list(
+      column_name = "age_group",
+      cond1_name = "YOUNG",
+      cond2_name = "OLD"
+    ),
     iterations = 0,
     object_name = "scdiffcom_cond_nostat",
-    seurat_assay = "RNA", seurat_slot = "data", log_scale = FALSE, score_type = "geometric_mean",
-    threshold_min_cells = 5, threshold_pct = 0.1,
-    threshold_quantile_score = 0.2, threshold_p_value_specificity = 0.05,
-    threshold_p_value_de = 0.05, threshold_logfc = log(1.5),
-    return_distributions = FALSE, seed = 42, verbose = FALSE
+    seurat_assay = "RNA",
+    seurat_slot = "data",
+    log_scale = FALSE,
+    score_type = "geometric_mean",
+    threshold_min_cells = 5,
+    threshold_pct = 0.1,
+    threshold_quantile_score = 0.2,
+    threshold_p_value_specificity = 0.05,
+    threshold_p_value_de = 0.05,
+    threshold_logfc = log(1.5),
+    return_distributions = FALSE,
+    seed = 42,
+    verbose = FALSE
   ),
   nocond_stat = list(
-    LRI_species = "mouse", seurat_celltype_id = "cell_type",
+    LRI_species = "mouse",
+    seurat_celltype_id = "cell_type",
     seurat_condition_id = NULL,
     iterations = 10,
     object_name = "scdiffcom_nocond_stat",
-    seurat_assay = "RNA", seurat_slot = "data", log_scale = FALSE, score_type = "geometric_mean",
-    threshold_min_cells = 5, threshold_pct = 0.1,
-    threshold_quantile_score = 0.2, threshold_p_value_specificity = 0.05,
-    threshold_p_value_de = 0.05, threshold_logfc = log(1.5),
-    return_distributions = FALSE, seed = 42, verbose = FALSE
+    seurat_assay = "RNA",
+    seurat_slot = "data",
+    log_scale = FALSE,
+    score_type = "geometric_mean",
+    threshold_min_cells = 5,
+    threshold_pct = 0.1,
+    threshold_quantile_score = 0.2,
+    threshold_p_value_specificity = 0.05,
+    threshold_p_value_de = 0.05,
+    threshold_logfc = log(1.5),
+    return_distributions = FALSE,
+    seed = 42,
+    verbose = FALSE
   ),
   nocond_nostat = list(
-    LRI_species = "mouse", seurat_celltype_id = "cell_type",
+    LRI_species = "mouse",
+    seurat_celltype_id = "cell_type",
     seurat_condition_id = NULL,
     iterations = 0,
     object_name = "scdiffcom_nocond_nostat",
-    seurat_assay = "RNA", seurat_slot = "data", log_scale = FALSE, score_type = "geometric_mean",
-    threshold_min_cells = 5, threshold_pct = 0.1,
-    threshold_quantile_score = 0.2, threshold_p_value_specificity = 0.05,
-    threshold_p_value_de = 0.05, threshold_logfc = log(1.5),
-    return_distributions = FALSE, seed = 42, verbose = FALSE
+    seurat_assay = "RNA",
+    seurat_slot = "data",
+    log_scale = FALSE,
+    score_type = "geometric_mean",
+    threshold_min_cells = 5,
+    threshold_pct = 0.1,
+    threshold_quantile_score = 0.2,
+    threshold_p_value_specificity = 0.05,
+    threshold_p_value_de = 0.05,
+    threshold_logfc = log(1.5),
+    return_distributions = FALSE,
+    seed = 42,
+    verbose = FALSE
   )
 )
 
 ## check parameter validation #####
+
 parameters_mode_validated <- lapply(
   parameters_mode,
   function(i) {
-    validate_parameters(i, from_inputs = TRUE)$params
+    validate_parameters(
+      i,
+      from_inputs = TRUE
+    )$params
   }
 )
 
 parameters_mode_validated_check <- lapply(
   parameters_mode,
   function(i) {
-    validate_parameters(i, from_inputs = TRUE)$check
+    validate_parameters(
+      i,
+      from_inputs = TRUE
+    )$check
   }
 )
 
-test_that("parameters are correclty validated", {
-  lapply(parameters_mode_validated_check[2:5], expect_null)
-  expect_equal(length(parameters_mode_validated$wrong), 18)
-})
+test_that(
+  "parameters are correclty validated",
+  {
+    lapply(
+      parameters_mode_validated_check[2:5],
+      expect_null
+    )
+    expect_equal(
+      length(parameters_mode_validated$wrong),
+      18
+    )
+  }
+)
 
-## load a small Seurat object for testing ####
+## load a light Seurat object for testing ####
 
 seurat_test <- scDiffCom::seurat_sample_tms_liver
 
@@ -103,43 +177,75 @@ inputs_test <- lapply(
       log_scale = param$log_scale,
       threshold_min_cells = param$threshold_min_cells,
       LRI_table = LRI_mouse$LRI_curated,
+      LRI_species = "mouse",
       verbose = param$verbose
     )
   }
 )
 
-test_that("data is extracted correctly in each mode", {
-  expect_identical(
-    inputs_test$cond_stat$data_tr["P9.MAA000907.3_11_M.1.1-1-1", "Adam15"],
-    expm1(seurat_test$RNA@data["Adam15", "P9.MAA000907.3_11_M.1.1-1-1"])
-  )
-  expect_identical(inputs_test$cond_stat$data_tr, inputs_test$cond_nostat$data_tr)
-  expect_identical(inputs_test$cond_stat$data_tr, inputs_test$nocond_stat$data_tr)
-  expect_identical(inputs_test$cond_stat$data_tr, inputs_test$nocond_nostat$data_tr)
-})
+test_that(
+  "data is extracted correctly in each mode",
+  {
+    expect_identical(
+      inputs_test$cond_stat$data_tr["P9.MAA000907.3_11_M.1.1-1-1", "Adam15"],
+      expm1(seurat_test$RNA@data["Adam15", "P9.MAA000907.3_11_M.1.1-1-1"])
+    )
+    expect_identical(
+      inputs_test$cond_stat$data_tr,
+      inputs_test$cond_nostat$data_tr
+    )
+    expect_identical(
+      inputs_test$cond_stat$data_tr,
+      inputs_test$nocond_stat$data_tr
+    )
+    expect_identical(
+      inputs_test$cond_stat$data_tr,
+      inputs_test$nocond_nostat$data_tr
+    )
+  }
+)
 
-test_that("meta.data is extracted correctly in each mode", {
-  expect_identical(
-    inputs_test$cond_stat$metadata$cell_id,
-    colnames(seurat_test)
-  )
-  expect_equivalent(
-    inputs_test$cond_stat$metadata$cell_type,
-    seurat_test$cell_type
-  )
-  expect_equivalent(
-    inputs_test$cond_stat$metadata$condition,
-    seurat_test$age_group
-  )
-  expect_identical(inputs_test$cond_stat$metadata, inputs_test$cond_nostat$metadata)
-  expect_identical(inputs_test$nocond_stat$metadata, inputs_test$nocond_nostat$metadata)
-})
+test_that(
+  "meta.data is extracted correctly in each mode",
+  {
+    expect_identical(
+      inputs_test$cond_stat$metadata$cell_id,
+      colnames(seurat_test)
+    )
+    expect_equivalent(
+      inputs_test$cond_stat$metadata$cell_type,
+      seurat_test$cell_type
+    )
+    expect_equivalent(
+      inputs_test$cond_stat$metadata$condition,
+      seurat_test$age_group
+    )
+    expect_identical(
+      inputs_test$cond_stat$metadata,
+      inputs_test$cond_nostat$metadata
+    )
+    expect_identical(
+      inputs_test$nocond_stat$metadata,
+      inputs_test$nocond_nostat$metadata
+    )
+  }
+)
 
 ## check the first round of the analysis ####
 
 templates_test <- lapply(
   inputs_test,
   create_cci_template
+)
+
+test_that(
+  "cci_template returns the correct number of CCIs",
+  {
+    expect_equal(
+      nrow(templates_test$cond_stat),
+      33275
+    )
+  }
 )
 
 cci_dt_simple_test <- lapply(
@@ -169,58 +275,157 @@ example_cci_test <- lapply(
 )
 
 example_data <- list(
-  EnoCond = as.vector(expm1(
-    subset(
-      seurat_test[c("Adam15"), ],
-      subset = cell_type == "hepatocyte")$RNA@data
-  )),
-  RnoCond = as.vector(expm1(
-    subset(
-      seurat_test[c("Itga5"), ],
-      subset = cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
-  )),
-  EY = as.vector(expm1(
-    subset(
-      seurat_test[c("Adam15"), ],
-      subset = age_group == "YOUNG" & cell_type == "hepatocyte")$RNA@data
-  )),
-  RY = as.vector(expm1(
-    subset(
-      seurat_test[c("Itga5"), ],
-      subset = age_group == "YOUNG" & cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
-  )),
-  EO = as.vector(expm1(
-    subset(
-      seurat_test[c("Adam15"), ],
-      subset = age_group == "OLD" & cell_type == "hepatocyte")$RNA@data
-  )),
-  RO = as.vector(expm1(
-    subset(
-      seurat_test[c("Itga5"), ],
-      subset = age_group == "OLD" & cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
-  ))
+  EnoCond = as.vector(
+    expm1(
+      subset(
+        seurat_test[c("Adam15"), ],
+        subset = cell_type == "hepatocyte")$RNA@data
+    )
+  ),
+  RnoCond = as.vector(
+    expm1(
+      subset(
+        seurat_test[c("Itga5"), ],
+        subset = cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
+    )
+  ),
+  EY = as.vector(
+    expm1(
+      subset(
+        seurat_test[c("Adam15"), ],
+        subset = age_group == "YOUNG" & cell_type == "hepatocyte")$RNA@data
+    )
+  ),
+  RY = as.vector(
+    expm1(
+      subset(
+        seurat_test[c("Itga5"), ],
+        subset = age_group == "YOUNG" &
+          cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
+    )
+  ),
+  EO = as.vector(
+    expm1(
+      subset(
+        seurat_test[c("Adam15"), ],
+        subset = age_group == "OLD" &
+          cell_type == "hepatocyte")$RNA@data
+    )
+  ),
+  RO = as.vector(
+    expm1(
+      subset(
+        seurat_test[c("Itga5"), ],
+        subset = age_group == "OLD" &
+          cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
+    )
+  )
 )
 
-test_that("`simple` data.table is returned correctly", {
-  expect_equivalent(mean(example_data$EnoCond > 0), example_cci_test$nocond_stat$L1_DETECTION_RATE)
-  expect_equivalent(mean(example_data$RnoCond > 0), example_cci_test$nocond_stat$R1_DETECTION_RATE)
-  expect_equivalent(mean(example_data$EY > 0), example_cci_test$cond_stat$L1_DETECTION_RATE_YOUNG)
-  expect_equivalent(mean(example_data$RY > 0), example_cci_test$cond_stat$R1_DETECTION_RATE_YOUNG)
-  expect_equivalent(mean(example_data$EO > 0), example_cci_test$cond_stat$L1_DETECTION_RATE_OLD)
-  expect_equivalent(mean(example_data$RO > 0), example_cci_test$cond_stat$R1_DETECTION_RATE_OLD)
-  expect_equivalent(mean(example_data$EnoCond), example_cci_test$nocond_stat$L1_EXPRESSION)
-  expect_equivalent(mean(example_data$RnoCond), example_cci_test$nocond_stat$R1_EXPRESSION)
-  expect_equivalent(mean(example_data$EY), example_cci_test$cond_stat$L1_EXPRESSION_YOUNG)
-  expect_equivalent(mean(example_data$RY), example_cci_test$cond_stat$R1_EXPRESSION_YOUNG)
-  expect_equivalent(mean(example_data$EO), example_cci_test$cond_stat$L1_EXPRESSION_OLD)
-  expect_equivalent(mean(example_data$RO), example_cci_test$cond_stat$R1_EXPRESSION_OLD)
-  expect_equivalent(sqrt(mean(example_data$EnoCond)*mean(example_data$RnoCond)), example_cci_test$nocond_stat$CCI_SCORE)
-  expect_equivalent(sqrt(mean(example_data$EnoCond)*mean(example_data$RnoCond)), example_cci_test$nocond_nostat$CCI_SCORE)
-  expect_equivalent(sqrt(mean(example_data$EY)*mean(example_data$RY)), example_cci_test$cond_stat$CCI_SCORE_YOUNG)
-  expect_equivalent(sqrt(mean(example_data$EO)*mean(example_data$RO)), example_cci_test$cond_stat$CCI_SCORE_OLD)
-  expect_identical(cci_dt_simple_test$cond_stat, cci_dt_simple_test$cond_nostat)
-  expect_identical(cci_dt_simple_test$nocond_stat, cci_dt_simple_test$nocond_nostat)
-})
+test_that(
+  "`simple` data.table is returned correctly",
+  {
+    expect_equivalent(
+      mean(
+        example_data$EnoCond > 0
+      ),
+      example_cci_test$nocond_stat$L1_DETECTION_RATE
+    )
+    expect_equivalent(
+      mean(
+        example_data$RnoCond > 0
+      ),
+      example_cci_test$nocond_stat$R1_DETECTION_RATE
+    )
+    expect_equivalent(
+      mean(
+        example_data$EY > 0
+      ),
+      example_cci_test$cond_stat$L1_DETECTION_RATE_YOUNG
+    )
+    expect_equivalent(
+      mean(
+        example_data$RY > 0
+      ),
+      example_cci_test$cond_stat$R1_DETECTION_RATE_YOUNG
+    )
+    expect_equivalent(
+      mean(
+        example_data$EO > 0
+      ),
+      example_cci_test$cond_stat$L1_DETECTION_RATE_OLD
+    )
+    expect_equivalent(
+      mean(
+        example_data$RO > 0
+      ),
+      example_cci_test$cond_stat$R1_DETECTION_RATE_OLD
+    )
+    expect_equivalent(
+      mean(
+        example_data$EnoCond
+      ),
+      example_cci_test$nocond_stat$L1_EXPRESSION
+    )
+    expect_equivalent(
+      mean(
+        example_data$RnoCond), example_cci_test$nocond_stat$R1_EXPRESSION
+    )
+    expect_equivalent(
+      mean(
+        example_data$EY
+      ),
+      example_cci_test$cond_stat$L1_EXPRESSION_YOUNG
+    )
+    expect_equivalent(
+      mean(
+        example_data$RY
+      ),
+      example_cci_test$cond_stat$R1_EXPRESSION_YOUNG
+    )
+    expect_equivalent(
+      mean(
+        example_data$EO), example_cci_test$cond_stat$L1_EXPRESSION_OLD)
+    expect_equivalent(
+      mean(
+        example_data$RO
+      ),
+      example_cci_test$cond_stat$R1_EXPRESSION_OLD
+    )
+    expect_equivalent(
+      sqrt(
+        mean(example_data$EnoCond)*mean(example_data$RnoCond)
+      ),
+      example_cci_test$nocond_stat$CCI_SCORE
+    )
+    expect_equivalent(
+      sqrt(
+        mean(example_data$EnoCond)*mean(example_data$RnoCond)
+      ),
+      example_cci_test$nocond_nostat$CCI_SCORE
+    )
+    expect_equivalent(
+      sqrt(
+        mean(example_data$EY)*mean(example_data$RY)
+      ),
+      example_cci_test$cond_stat$CCI_SCORE_YOUNG
+    )
+    expect_equivalent(
+      sqrt(
+        mean(example_data$EO)*mean(example_data$RO)
+      ),
+      example_cci_test$cond_stat$CCI_SCORE_OLD
+    )
+    expect_identical(
+      cci_dt_simple_test$cond_stat,
+      cci_dt_simple_test$cond_nostat
+    )
+    expect_identical(
+      cci_dt_simple_test$nocond_stat,
+      cci_dt_simple_test$nocond_nostat
+    )
+  }
+)
 
 ## check overall permutation analysis ####
 
@@ -286,6 +491,7 @@ scdiffcom_objects <- lapply(
     run_internal_raw_analysis(
       seurat_object = seurat_test,
       LRI_table = LRI_mouse$LRI_curated,
+      LRI_species = "mouse",
       params = params
     )
   }

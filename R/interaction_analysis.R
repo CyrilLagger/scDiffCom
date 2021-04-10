@@ -133,6 +133,7 @@ run_interaction_analysis <- function(
   object <- run_internal_raw_analysis(
     seurat_object = seurat_object,
     LRI_table = LRI_table,
+    LRI_species = LRI_species,
     params = analysis_parameters
   )
   object <- FilterCCI(
@@ -146,6 +147,7 @@ run_interaction_analysis <- function(
 run_internal_raw_analysis <- function(
   seurat_object,
   LRI_table,
+  LRI_species,
   params
 ) {
   verbose <- params$verbose
@@ -161,6 +163,7 @@ run_internal_raw_analysis <- function(
     log_scale = params$log_scale,
     threshold_min_cells = as.integer(params$threshold_min_cells),
     LRI_table = LRI_table,
+    LRI_species = LRI_species,
     verbose = params$verbose
   )
   cci_template <- create_cci_template(
