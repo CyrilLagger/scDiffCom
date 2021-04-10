@@ -76,7 +76,12 @@ add_sample_number <- function(
     new = new_cols
   )
   for (j in new_cols) {
-    set(template_table, i = which(is.na(template_table[[j]])), j = j, value = 0)
+    set(
+      template_table,
+      i = which(is.na(template_table[[j]])),
+      j = j,
+      value = 0
+    )
   }
   return(template_table)
 }
@@ -153,7 +158,12 @@ add_cell_number <- function(
     )
   }
   for (j in new_cols) {
-    set(template_table, i = which(is.na(template_table[[j]])), j = j, value = 0)
+    set(
+      template_table,
+      i = which(is.na(template_table[[j]])),
+      j = j,
+      value = 0
+    )
   }
   return(template_table)
 }
@@ -189,8 +199,15 @@ run_simple_cci_analysis <- function(
       return(cci_dt[["CCI_SCORE"]])
     } else {
       return(list(
-        cond1 = cci_dt[[paste0("CCI_SCORE_", analysis_inputs$condition$cond1)]],
-        cond2 = cci_dt[[paste0("CCI_SCORE_", analysis_inputs$condition$cond2)]]
+        cond1 = cci_dt[[paste0(
+          "CCI_SCORE_",
+          analysis_inputs$condition$cond1
+        )
+        ]],
+        cond2 = cci_dt[[paste0(
+          "CCI_SCORE_",
+          analysis_inputs$condition$cond2
+        )]]
       ))
     }
   }
@@ -219,14 +236,34 @@ run_simple_cci_analysis <- function(
   if (analysis_inputs$condition$is_cond) {
     if (log_scale) {
       dt[,
-         LOGFC := get(paste0("CCI_SCORE_", analysis_inputs$condition$cond2)) -
-           get(paste0("CCI_SCORE_", analysis_inputs$condition$cond1))
+         LOGFC := get(
+           paste0(
+             "CCI_SCORE_",
+             analysis_inputs$condition$cond2
+           )
+         ) -
+           get(
+             paste0(
+               "CCI_SCORE_",
+               analysis_inputs$condition$cond1
+             )
+           )
       ]
     } else {
       dt[,
          LOGFC := log(
-           get(paste0("CCI_SCORE_", analysis_inputs$condition$cond2)) /
-             get(paste0("CCI_SCORE_", analysis_inputs$condition$cond1))
+           get(
+             paste0(
+               "CCI_SCORE_",
+               analysis_inputs$condition$cond2
+             )
+           ) /
+             get(
+               paste0(
+                 "CCI_SCORE_",
+                 analysis_inputs$condition$cond1
+               )
+             )
          )
       ]
       dt[, LOGFC := ifelse(
@@ -248,7 +285,11 @@ aggregate_cells <- function(
   if (!is_cond) {
     group <- metadata[["cell_type"]]
   } else {
-    group <- paste(metadata[["condition"]], metadata[["cell_type"]], sep = "_")
+    group <- paste(
+      metadata[["condition"]],
+      metadata[["cell_type"]],
+      sep = "_"
+    )
   }
   sums <- DelayedArray::rowsum(
     x = data_tr,
@@ -304,7 +345,6 @@ build_cci_or_drate <- function(
     n_id <- 2
     pmin_id <- c(cond1_id, cond2_id)
   }
-  #new faster version
   dt <- as.data.table(
     x = t(averaged_expr),
     keep.rownames = "GENE",
@@ -315,10 +355,16 @@ build_cci_or_drate <- function(
     lct_temp <- length(ct_temp)
     if(lct_temp %% 2 !=0 ) stop("Internal error in `build_cci_or_drate`")
     ct_temp_keep <- unlist(
-      lapply(ct_temp, function(i) i[[2]])
+      lapply(
+        ct_temp,
+        function(i) i[[2]]
+      )
     )[1:(lct_temp/2)]
     ct_temp_check <- unlist(
-      lapply(ct_temp, function(i) i[[2]])
+      lapply(
+        ct_temp,
+        function(i) i[[2]]
+      )
     )[(lct_temp/2+1):lct_temp]
     if(!identical(ct_temp_check, ct_temp_keep)) {
       stop("Internal error in `build_cci_or_drate`")
@@ -396,61 +442,179 @@ build_cci_or_drate <- function(
   ]
   if (cci_or_drate == "cci") {
     if (score_type == "geometric_mean") {
-      full_dt[, (score_id) :=
-                lapply(1:n_id, function(x) {
-                  (
-                    sqrt(do.call(
-                      pmin,
-                      c(lapply(1:max_nL, function(i) {
-                        get(paste0("L", i, "_", name_tag, pmin_id[x]))
-                      }), na.rm = TRUE)
+      full_dt[
+        ,
+        (score_id) :=
+          lapply(
+            1:n_id,
+            function(x) {
+              sqrt(
+                do.call(
+                  pmin,
+                  c(
+                    lapply(
+                      1:max_nL,
+                      function(i) {
+                        get(
+                          paste0(
+                            "L",
+                            i,
+                            "_",
+                            name_tag,
+                            pmin_id[x]
+                          )
+                        )
+                      }
+                    ),
+                    na.rm = TRUE
+                  )
+                )
+                *
+                  do.call(
+                    pmin,
+                    c(
+                      lapply(
+                        1:max_nR,
+                        function(i) {
+                          get(
+                            paste0(
+                              "R",
+                              i,
+                              "_",
+                              name_tag,
+                              pmin_id[x]
+                            )
+                          )
+                        }
+                      ),
+                      na.rm = TRUE
                     )
-                    *
-                      do.call(
-                        pmin,
-                        c(lapply(1:max_nR, function(i) {
-                          get(paste0("R", i, "_", name_tag, pmin_id[x]))
-                        }), na.rm = TRUE)
-                      )
-                    ))
-                })]
+                  )
+              )
+            }
+          )
+      ]
     }
     if (score_type == "arithmetic_mean") {
-      full_dt[, (score_id) :=
-                lapply(1:n_id, function(x) {
-                  (
-                    do.call(
-                      pmin,
-                      c(lapply(1:max_nL, function(i) {
-                        get(paste0("L", i, "_", name_tag, pmin_id[x]))
-                      }), na.rm = TRUE)
+      full_dt[
+        ,
+        (score_id) :=
+          lapply(
+            1:n_id,
+            function(x) {
+              (
+                do.call(
+                  pmin,
+                  c(
+                    lapply(
+                      1:max_nL,
+                      function(i) {
+                        get(
+                          paste0(
+                            "L",
+                            i,
+                            "_",
+                            name_tag,
+                            pmin_id[x]
+                          )
+                        )
+                      }
+                    ),
+                    na.rm = TRUE
+                  )
+                )
+                +
+                  do.call(
+                    pmin,
+                    c(
+                      lapply(
+                        1:max_nR,
+                        function(i) {
+                          get(
+                            paste0(
+                              "R",
+                              i,
+                              "_",
+                              name_tag,
+                              pmin_id[x]
+                            )
+                          )
+                        }
+                      ),
+                      na.rm = TRUE
                     )
-                    +
-                      do.call(
-                        pmin,
-                        c(lapply(1:max_nR, function(i) {
-                          get(paste0("R", i, "_", name_tag, pmin_id[x]))
-                        }), na.rm = TRUE)
-                      )
-                  ) / 2
-                })]
+                  )
+              ) / 2
+            }
+          )
+      ]
     }
   } else if (cci_or_drate == "drate") {
-    full_dt[, (dr_id) :=
-              lapply(1:n_id, function(x) {
-                is_detected_full(
-                  x_dr = do.call(pmin, c(lapply(1:max_nL, function(i) {
-                    get(paste0("L", i, "_", name_tag, pmin_id[x]))
-                  }), na.rm = TRUE)),
-                  x_ncells = get(paste0("NCELLS_EMITTER", pmin_id[x])),
-                  y_dr = do.call(pmin, c(lapply(1:max_nR, function(i) {
-                    get(paste0("R", i, "_", name_tag, pmin_id[x]))
-                  }), na.rm = TRUE)),
-                  y_ncells = get(paste0("NCELLS_RECEIVER", pmin_id[x])),
-                  dr_thr = threshold_pct,
-                  threshold_min_cells = threshold_min_cells
+    full_dt[
+      ,
+      (dr_id) :=
+        lapply(
+          1:n_id,
+          function(x) {
+            is_detected_full(
+              x_dr = do.call(
+                pmin,
+                c(
+                  lapply(
+                    1:max_nL,
+                    function(i) {
+                      get(
+                        paste0(
+                          "L",
+                          i,
+                          "_",
+                          name_tag,
+                          pmin_id[x]
+                        )
+                      )
+                    }
+                  ),
+                  na.rm = TRUE
                 )
-              })]
+              ),
+              x_ncells = get(
+                paste0(
+                  "NCELLS_EMITTER",
+                  pmin_id[x]
+                )
+              ),
+              y_dr = do.call(
+                pmin,
+                c(
+                  lapply(
+                    1:max_nR,
+                    function(i) {
+                      get(
+                        paste0(
+                          "R",
+                          i,
+                          "_",
+                          name_tag,
+                          pmin_id[x]
+                        )
+                      )
+                    }
+                  ),
+                  na.rm = TRUE
+                )
+              ),
+              y_ncells = get(
+                paste0(
+                  "NCELLS_RECEIVER",
+                  pmin_id[x]
+                )
+              ),
+              dr_thr = threshold_pct,
+              threshold_min_cells = threshold_min_cells
+            )
+          }
+        )
+    ]
   }
   return(full_dt)
 }
