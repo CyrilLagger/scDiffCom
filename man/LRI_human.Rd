@@ -3,7 +3,7 @@
 \docType{data}
 \name{LRI_human}
 \alias{LRI_human}
-\title{A database of human ligand-receptor interactions.}
+\title{A collection of human ligand-receptor interactions.}
 \format{
 A list with the following items:
 \enumerate{
@@ -24,17 +24,18 @@ A list with the following items:
 data(LRI_human)
 }
 \description{
-A list that contains human ligand-receptor interactions (LRIs)
- with GO-term and KEGG-pathway annotations. The LRIs have been retrieved
+This dataset contains a data.table of curated human ligand-receptor
+ interactions as well as related annotations (GO Terms, KEGG Pathways) and
+ metadata.
+}
+\details{
+The dataset has been built internally in scDiffCom according to
+ scDiffCom:::build_LRI(species = "human"). The LRIs have been retrieved
  from eight databases (see References). Note that only curated LRIs
  have been kept.
 }
-\details{
-The dataset is built internally in scDiffCom according to
- scDiffCom:::build_LRI(species = "human").
-}
 \references{
-CellChat (\href{https://www.biorxiv.org/content/10.1101/2020.07.21.214387v1}{bioRxiv}),
+CellChat (\href{https://pubmed.ncbi.nlm.nih.gov/33597522/}{PMID: 33597522}),
  CellPhoneDB (\href{https://pubmed.ncbi.nlm.nih.gov/32103204/}{PMID: 32103204}),
  CellTalkDB (\href{https://pubmed.ncbi.nlm.nih.gov/33147626/}{PMID: 33147626}),
  connectomeDB2020 (\href{https://pubmed.ncbi.nlm.nih.gov/33024107/}{PMID: 33024107}),

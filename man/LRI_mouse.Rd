@@ -3,7 +3,7 @@
 \docType{data}
 \name{LRI_mouse}
 \alias{LRI_mouse}
-\title{A database of mouse ligand-receptor interactions.}
+\title{A collection of mouse ligand-receptor interactions.}
 \format{
 A list with the following items:
 \enumerate{
@@ -24,16 +24,18 @@ A list with the following items:
 data(LRI_mouse)
 }
 \description{
-A list that contains mouse ligand-receptor interactions (LRIs)
- with GO-term and KEGG-pathway annotations. The LRIs have been retrieved
+This dataset contains a data.table of curated mouse ligand-receptor
+ interactions as well as related annotations (GO Terms, KEGG Pathways) and
+ metadata.
+}
+\details{
+The dataset has been built internally in scDiffCom according to
+ scDiffCom:::build_LRI(species = "mouse"). The LRIs have been retrieved
  from eight databases (see References). Note that only curated LRIs
  have been kept.
 }
-\details{
-The code to build the database is  scDiffCom:::build_LRI(species = "mouse")
-}
 \references{
-CellChat (\href{https://www.biorxiv.org/content/10.1101/2020.07.21.214387v1}{bioRxiv}),
+CellChat (\href{https://pubmed.ncbi.nlm.nih.gov/33597522/}{PMID: 33597522}),
  CellPhoneDB (\href{https://pubmed.ncbi.nlm.nih.gov/32103204/}{PMID: 32103204}),
  CellTalkDB (\href{https://pubmed.ncbi.nlm.nih.gov/33147626/}{PMID: 33147626}),
  connectomeDB2020 (\href{https://pubmed.ncbi.nlm.nih.gov/33024107/}{PMID: 33024107}),

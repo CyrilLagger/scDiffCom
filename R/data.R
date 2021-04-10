@@ -1,12 +1,13 @@
-#' A database of human ligand-receptor interactions.
+#' A collection of human ligand-receptor interactions.
 #'
-#' A list that contains human ligand-receptor interactions (LRIs)
-#'  with GO-term and KEGG-pathway annotations. The LRIs have been retrieved
+#' This dataset contains a data.table of curated human ligand-receptor
+#'  interactions as well as related annotations (GO Terms, KEGG Pathways) and
+#'  metadata.
+#'
+#' The dataset has been built internally in scDiffCom according to
+#'  scDiffCom:::build_LRI(species = "human"). The LRIs have been retrieved
 #'  from eight databases (see References). Note that only curated LRIs
 #'  have been kept.
-#'
-#' The dataset is built internally in scDiffCom according to
-#'  scDiffCom:::build_LRI(species = "human").
 #'
 #' @docType data
 #'
@@ -29,7 +30,8 @@
 #'
 #' @keywords datasets
 #'
-#' @references CellChat (\href{https://www.biorxiv.org/content/10.1101/2020.07.21.214387v1}{bioRxiv}),
+#' @references
+#'  CellChat (\href{https://pubmed.ncbi.nlm.nih.gov/33597522/}{PMID: 33597522}),
 #'  CellPhoneDB (\href{https://pubmed.ncbi.nlm.nih.gov/32103204/}{PMID: 32103204}),
 #'  CellTalkDB (\href{https://pubmed.ncbi.nlm.nih.gov/33147626/}{PMID: 33147626}),
 #'  connectomeDB2020 (\href{https://pubmed.ncbi.nlm.nih.gov/33024107/}{PMID: 33024107}),
@@ -41,14 +43,16 @@
 #'
 "LRI_human"
 
-#' A database of mouse ligand-receptor interactions.
+#' A collection of mouse ligand-receptor interactions.
 #'
-#' A list that contains mouse ligand-receptor interactions (LRIs)
-#'  with GO-term and KEGG-pathway annotations. The LRIs have been retrieved
+#' This dataset contains a data.table of curated mouse ligand-receptor
+#'  interactions as well as related annotations (GO Terms, KEGG Pathways) and
+#'  metadata.
+#'
+#' The dataset has been built internally in scDiffCom according to
+#'  scDiffCom:::build_LRI(species = "mouse"). The LRIs have been retrieved
 #'  from eight databases (see References). Note that only curated LRIs
 #'  have been kept.
-#'
-#' The code to build the database is  scDiffCom:::build_LRI(species = "mouse")
 #'
 #' @docType data
 #'
@@ -71,7 +75,8 @@
 #'
 #' @keywords datasets
 #'
-#' @references CellChat (\href{https://www.biorxiv.org/content/10.1101/2020.07.21.214387v1}{bioRxiv}),
+#' @references
+#'  CellChat (\href{https://pubmed.ncbi.nlm.nih.gov/33597522/}{PMID: 33597522}),
 #'  CellPhoneDB (\href{https://pubmed.ncbi.nlm.nih.gov/32103204/}{PMID: 32103204}),
 #'  CellTalkDB (\href{https://pubmed.ncbi.nlm.nih.gov/33147626/}{PMID: 33147626}),
 #'  connectomeDB2020 (\href{https://pubmed.ncbi.nlm.nih.gov/33024107/}{PMID: 33024107}),
@@ -83,7 +88,7 @@
 #'
 "LRI_mouse"
 
-#' A down-sampled Seurat object used for testing and benchmarking
+#' A down-sampled Seurat object to use for testing and benchmarking
 #'
 #' This Seurat object has been down-sampled from the original
 #' Tabula Muris Senis Liver object. Pre-processing and normalization has
@@ -95,7 +100,7 @@
 #'
 #' @usage data(seurat_sample_tms_liver)
 #'
-#' @format An S4 object of class Seurat.
+#' @format An object of class Seurat.
 #'
 #' @keywords datasets
 #'

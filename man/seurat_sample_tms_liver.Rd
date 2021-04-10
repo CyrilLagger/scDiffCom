@@ -3,9 +3,9 @@
 \docType{data}
 \name{seurat_sample_tms_liver}
 \alias{seurat_sample_tms_liver}
-\title{A down-sampled Seurat object used for testing and benchmarking}
+\title{A down-sampled Seurat object to use for testing and benchmarking}
 \format{
-An S4 object of class Seurat.
+An object of class Seurat.
 }
 \usage{
 data(seurat_sample_tms_liver)
