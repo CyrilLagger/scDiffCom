@@ -1,6 +1,6 @@
 Package: scDiffCom
 Type: Package
-Title: Differential analysis of Intercellular Communication from scRNA-seq data
+Title: Differential Analysis of Intercellular Communication from scRNA-seq Data
 Version: 0.0.0.9000
 Authors@R: c(
     person("Cyril", "Lagger", email = "lagger.cyril@gmail.com",
@@ -58,6 +58,9 @@ Imports:
     utils,
     magrittr,
     Seurat (>= 4.0.0)
+Additional_repositories:
+    https://github.com/saeyslab/nichenetr,
+    https://github.com/sqjin/CellChat
 VignetteBuilder: knitr
 Collate: 
     'data.R'
