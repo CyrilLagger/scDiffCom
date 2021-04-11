@@ -1,6 +1,7 @@
 run_ora <- function(
   object,
   categories,
+  extra_annotations,
   overwrite,
   stringent_or_default,
   stringent_logfc_threshold,
@@ -25,6 +26,79 @@ run_ora <- function(
     )
   }
   regulation <- c("UP", "DOWN", "FLAT", "DIFF")
+  categories_acceptable <- c(
+    "LRI",
+    "LIGAND_COMPLEX",
+    "RECEPTOR_COMPLEX",
+    "ER_CELLTYPES",
+    "EMITTER_CELLTYPE",
+    "RECEIVER_CELLTYPE",
+    "GO_TERMS",
+    "KEGG_PWS"
+  )
+  if (!all(categories %in% categories_acceptable)) {
+    stop(
+      paste0(
+        "Accepted 'categories' for ORA are ",
+        paste0(
+          categories_acceptable,
+          collapse = ", "
+        )
+      )
+    )
+  }
+  if (!is.null(extra_annotations)) {
+    err_mess <- paste0(
+      "'extra_annotations' must be a list of data.tables or data.frames ",
+      "with exactly two columns each"
+    )
+    if (!is.list(extra_annotations)) {
+      stop(err_mess)
+    } else if (
+      any(
+        sapply(
+          extra_annotations,
+          function(i) {
+            !(methods::is(i, "data.table") | methods::is(i, "data.frame")) ||
+              length(colnames(i)) != 2
+          }
+        )
+      )
+    ) {
+      stop(err_mess)
+    } else {
+      extra_annotations <- lapply(
+        extra_annotations,
+        setDT
+      )
+      extra_base_categories <- sapply(
+        extra_annotations,
+        function(i) colnames(i)[[1]]
+      )
+      extra_new_categories <- sapply(
+        extra_annotations,
+        function(i) colnames(i)[[2]]
+      )
+      if (!all(extra_base_categories %in% categories_acceptable)) {
+        stop(
+          paste0(
+            "Name of the first colum of each table in 'extra_annotations' ",
+            "must be a standard ORA category."
+          )
+        )
+      } else if (any(extra_new_categories %in% categories_acceptable)) {
+        stop(
+          paste0(
+            "Name of the second colum of each table in 'extra_annotations' ",
+            "must be different from standard ORA categories."
+          )
+        )
+      } else {
+        categories <- c(categories, extra_new_categories)
+        names(extra_annotations) <- extra_new_categories
+      }
+    }
+  }
   temp_param <- object@parameters
   condition_inputs <- list(
     is_cond = temp_param$conditional_analysis,
@@ -88,6 +162,11 @@ run_ora <- function(
         categories_to_run,
         function(category) {
           temp_dt <- object@cci_table_detected
+          if (!(category %in% categories_acceptable)) {
+            extra_annotation <- extra_annotations[[category]]
+          } else {
+            extra_annotation <- NULL
+          }
           res <- temp_dt[
             ,
             build_ora_dt(
@@ -95,6 +174,7 @@ run_ora <- function(
               logfc_threshold = logfc_threshold,
               regulation = regulation,
               category = category,
+              extra_annotation = extra_annotation,
               species = temp_param$LRI_species,
               global = global
             ),
@@ -194,6 +274,11 @@ run_ora <- function(
             categories_stringent_to_run,
             function(category) {
               temp_dt <- object@cci_table_detected
+              if (!(category %in% categories_acceptable)) {
+                extra_annotation <- extra_annotation[[category]]
+              } else {
+                extra_annotation <- NULL
+              }
               res <- temp_dt[
                 ,
                 build_ora_dt(
@@ -201,6 +286,7 @@ run_ora <- function(
                   logfc_threshold = stringent_logfc_threshold,
                   regulation = regulation,
                   category = category,
+                  extra_annotation = extra_annotation,
                   species = temp_param$LRI_species,
                   global = global
                 ),
@@ -262,29 +348,29 @@ build_ora_dt <- function(
   logfc_threshold,
   regulation,
   category,
+  extra_annotation,
   species,
   global
 ) {
-  COUNTS_VALUE_REGULATED <- COUNTS_NOTVALUE_REGULATED <-
-    COUNTS_NOTVALUE_NOTREGULATED <- COUNTS_VALUE_NOTREGULATED <-
-    COUNTS_VALUE_REGULATED_temp <- COUNTS_VALUE_NOTREGULATED_temp<- CATEGORY <-
-    ER_CELLTYPES <- ID <-  NULL
+  ER_CELLTYPES <- LIGAND_COMPLEX <-
+    RECEPTOR_COMPLEX <- ID <- LRI <-  NULL
   cci_dt <- copy(
     cci_table_detected
   )
   if (global & (category == "ER_CELLTYPES")) {
     cci_dt[, ER_CELLTYPES := paste(ID, ER_CELLTYPES, sep = "_")]
   }
+  if (category == "LIGAND_COMPLEX") {
+    cci_dt[, LIGAND_COMPLEX := gsub(":.*", "", LRI)]
+  }
+  if (category == "RECEPTOR_COMPLEX") {
+    cci_dt[, RECEPTOR_COMPLEX := gsub(".*:", "", LRI)]
+  }
   ora_tables <- lapply(
     X = regulation,
     FUN = function(reg) {
-      if (category %in% c("GO_TERMS", "KEGG_PWS")) {
-        counts_dt <- extract_category_counts(
-          cci_table_detected = cci_dt,
-          category = "LRI",
-          reg = reg,
-          logfc_threshold = logfc_threshold
-        )
+      if (category %in% c("GO_TERMS", "KEGG_PWS") |
+          !is.null(extra_annotation)) {
         if (category == "GO_TERMS") {
           if (species == "mouse") {
             new_intersection_dt <- scDiffCom::LRI_mouse$LRI_curated_GO[
@@ -298,9 +384,10 @@ build_ora_dt <- function(
               c("LRI", "GO_ID", "GO_NAME")
             ]
           }
+          base_category <- "LRI"
           new_id <- "GO_ID"
           new_name <- "GO_NAME"
-          new_category <- "GO_intersection"
+          new_category <- "GO_TERMS"
         }
         if (category == "KEGG_PWS") {
           if (species == "mouse") {
@@ -309,64 +396,32 @@ build_ora_dt <- function(
           if (species == "human") {
             new_intersection_dt <- scDiffCom::LRI_human$LRI_curated_KEGG
           }
+          base_category <- "LRI"
           new_id <- "KEGG_ID"
           new_name <- "KEGG_NAME"
-          new_category <- "KEGG_intersection"
+          new_category <- "KEGG_PWS"
         }
-        counts_intersection_dt <- merge.data.table(
-          new_intersection_dt,
-          counts_dt,
-          by.x = "LRI",
-          by.y = "VALUE"
+        if (!is.null(extra_annotation)) {
+          new_intersection_dt <- extra_annotation
+          base_category <- colnames(extra_annotation)[[1]]
+          new_id <- NULL
+          new_name <- colnames(extra_annotation)[[2]]
+          new_category <- colnames(extra_annotation)[[2]]
+        }
+        counts_dt <- extract_category_counts(
+          cci_table_detected = cci_dt,
+          category = base_category,
+          reg = reg,
+          logfc_threshold = logfc_threshold
         )
-        counts_intersection_dt[
-          ,
-          c(
-            "COUNTS_VALUE_REGULATED_temp",
-            "COUNTS_VALUE_NOTREGULATED_temp"
-          ) :=
-            list(
-              sum(COUNTS_VALUE_REGULATED),
-              sum(COUNTS_VALUE_NOTREGULATED)
-            ),
-          by = new_id
-        ]
-        counts_intersection_dt[
-          ,
-          c(
-            "COUNTS_NOTVALUE_REGULATED_temp",
-            "COUNTS_NOTVALUE_NOTREGULATED_temp"
-          ) := list(
-            COUNTS_NOTVALUE_REGULATED +
-              COUNTS_VALUE_REGULATED -
-              COUNTS_VALUE_REGULATED_temp,
-            COUNTS_NOTVALUE_NOTREGULATED +
-              COUNTS_VALUE_NOTREGULATED -
-              COUNTS_VALUE_NOTREGULATED_temp
-          )]
-        counts_intersection_dt[, CATEGORY := new_category]
-        counts_intersection_dt[, c(
-          "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
-          "COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED",
-          "LRI"
-        ) := NULL]
-        counts_intersection_dt <- unique(counts_intersection_dt)
-        setnames(
-          counts_intersection_dt,
-          old = c(
-            new_id, new_name,
-            "COUNTS_VALUE_REGULATED_temp",
-            "COUNTS_VALUE_NOTREGULATED_temp",
-            "COUNTS_NOTVALUE_REGULATED_temp",
-            "COUNTS_NOTVALUE_NOTREGULATED_temp"
-          ),
-          new = c(
-            "VALUE_BIS", "VALUE",
-            "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
-            "COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED"
-          )
+        counts_dt <- extract_additional_category_counts(
+          counts_dt = counts_dt,
+          new_intersection_dt = new_intersection_dt,
+          base_category = base_category,
+          new_category = new_category,
+          new_id = new_id,
+          new_name = new_name
         )
-        counts_dt <- counts_intersection_dt
       } else {
         counts_dt <- extract_category_counts(
           cci_table_detected = cci_dt,
@@ -489,6 +544,106 @@ extract_category_counts <- function(
       )]
 
   return(dt_counts)
+}
+
+extract_additional_category_counts <- function(
+  counts_dt,
+  new_intersection_dt,
+  base_category,
+  new_category,
+  new_id,
+  new_name
+) {
+  CATEGORY <- COUNTS_VALUE_REGULATED <- COUNTS_NOTVALUE_REGULATED <-
+    COUNTS_NOTVALUE_NOTREGULATED <- COUNTS_VALUE_NOTREGULATED <-
+    COUNTS_VALUE_REGULATED_temp <- COUNTS_VALUE_NOTREGULATED_temp <- NULL
+  if (!identical(
+    class(counts_dt[["VALUE"]]),
+    class(new_intersection_dt[[base_category]])
+  )) {
+    stop(
+      paste0(
+        "First column of ",
+        new_category,
+        " (in 'extra_annotations') must be of the same type as column '",
+        base_category,
+        "'"
+      )
+    )
+  }
+  if (length(
+    intersect(
+      new_intersection_dt[[base_category]],
+      counts_dt[["VALUE"]]
+    )
+  ) == 0) {
+    stop(
+      "Can't find any matching term between first column of ",
+      new_category,
+      " and column '",
+      base_category,
+      "'"
+    )
+  }
+  counts_intersection_dt <- merge.data.table(
+    new_intersection_dt,
+    counts_dt,
+    by.x = base_category,
+    by.y = "VALUE"
+  )
+  counts_intersection_dt[
+    ,
+    c(
+      "COUNTS_VALUE_REGULATED_temp",
+      "COUNTS_VALUE_NOTREGULATED_temp"
+    ) :=
+      list(
+        sum(COUNTS_VALUE_REGULATED),
+        sum(COUNTS_VALUE_NOTREGULATED)
+      ),
+    by = new_name
+  ]
+  counts_intersection_dt[
+    ,
+    c(
+      "COUNTS_NOTVALUE_REGULATED_temp",
+      "COUNTS_NOTVALUE_NOTREGULATED_temp"
+    ) := list(
+      COUNTS_NOTVALUE_REGULATED +
+        COUNTS_VALUE_REGULATED -
+        COUNTS_VALUE_REGULATED_temp,
+      COUNTS_NOTVALUE_NOTREGULATED +
+        COUNTS_VALUE_NOTREGULATED -
+        COUNTS_VALUE_NOTREGULATED_temp
+    )]
+  counts_intersection_dt[, CATEGORY := new_category]
+  counts_intersection_dt[, c(
+    "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
+    "COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED",
+    base_category
+  ) := NULL]
+  counts_intersection_dt <- unique(counts_intersection_dt)
+  if (is.null(new_id)) {
+    col_new_id <- NULL
+  } else {
+    col_new_id <- "VALUE_BIS"
+  }
+  setnames(
+    counts_intersection_dt,
+    old = c(
+      new_name, new_id,
+      "COUNTS_VALUE_REGULATED_temp",
+      "COUNTS_VALUE_NOTREGULATED_temp",
+      "COUNTS_NOTVALUE_REGULATED_temp",
+      "COUNTS_NOTVALUE_NOTREGULATED_temp"
+    ),
+    new = c(
+      "VALUE", col_new_id,
+      "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
+      "COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED"
+    )
+  )
+  counts_intersection_dt
 }
 
 perform_ora_from_counts <- function(

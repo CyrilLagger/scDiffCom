@@ -414,11 +414,21 @@ setMethod(
   }
 )
 
-
 #' Filter a scDiffCom object with new filtering parameters
 #'
 #' Filtering (and ORA) is performed with new parameters.
 #'  \code{cci_table_detected} and \code{ora_table} are updated accordingly.
+#'
+#' When \code{FilterCCI} is called with new parameters, both
+#'  \code{cci_table_detected} and \code{ora_table} need to be updated. For
+#'  ORA, a call to \code{RunORA} is automatically performed on all standard
+#'  categories. Additional user-defined ORA categories can be added via the
+#'  parameter \code{extra_annotations}. The data.frames or data.tables in this
+#'  list must have exactly two columns that indicates a relationship between
+#'  values from a standard category (first column) to values of the new
+#'  category (second column). As a typical example, this
+#'  \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}
+#'  shows how to perform ORA on cell type families attached to each cell types.
 #'
 #' @param object \code{scDiffCom} object
 #' @param new_threshold_quantile_score New threshold value to update
@@ -437,9 +447,14 @@ setMethod(
 #' performed with the new parameters and \code{ora_table} is set to an
 #' empty list. May be useful if one wants to quickly test (loop-over) several
 #' values of parameters and by-passing the computing time of the ORA.
+#' @param extra_annotations Convenience parameter to perform ORA on user-defined
+#' non-standard categories. If \code{NULL} (default), ORA is
+#' performed on standard categories. Otherwise it must be a list of data.tables
+#' or data.frames (see Details).
 #' @param verbose If \code{TRUE} (default) progress messages are printed.
 #'
-#' @return A scDiffCom object with updated results.
+#' @return A scDiffCom object with updated results in \code{cci_table_detected}
+#' and \code{ora_table}.
 #'
 #' @export
 setGeneric(
@@ -451,6 +466,7 @@ setGeneric(
     new_threshold_p_value_de = NULL,
     new_threshold_logfc = NULL,
     skip_ora = FALSE,
+    extra_annotations = NULL,
     verbose = TRUE
     ) standardGeneric("FilterCCI"),
   signature = "object"
@@ -467,6 +483,7 @@ setMethod(
     new_threshold_p_value_de = NULL,
     new_threshold_logfc = NULL,
     skip_ora = FALSE,
+    extra_annotations = NULL,
     verbose = TRUE
   ) {
     run_filtering_and_ora(
@@ -476,6 +493,7 @@ setMethod(
       new_threshold_p_value_de = new_threshold_p_value_de,
       new_threshold_logfc = new_threshold_logfc,
       skip_ora = skip_ora,
+      extra_annotations = extra_annotations,
       verbose = verbose,
       class_signature = "scDiffCom"
     )
@@ -484,14 +502,28 @@ setMethod(
 
 #' Run over-representation analysis
 #'
-#' Perform over-representation analysis (ORA) on a scDiffCom object. Note that
-#' ORA is run automatically on default categories when calling
-#' \code{run_interaction_analysis} or \code{FilterCCI}. This function may be
-#' useful to perform ORA on other custom categories.
+#' Perform over-representation analysis (ORA) on a scDiffCom object, with
+#' the possibility to define custom categories in addition to the standard
+#' ones supported by default.
+#'
+#' Additional user-defined ORA categories can be added via the
+#'  parameter \code{extra_annotations}. The data.frames or data.tables in this
+#'  list must have exactly two columns that indicates a relationship between
+#'  values from a standard category (first column) to values of the new
+#'  category (second column). As a typical example, this
+#'  \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}
+#'  shows how to perform ORA on cell type families attached to each cell types.
 #'
 #' @param object \code{scDiffCom} object
-#' @param categories Name of the categories on which to perform ORA. Default
-#' is \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")}.
+#' @param categories Names of the standard categories on which to perform ORA.
+#'  Default is all standard categories, namely
+#'  \code{c("LRI", "LIGAND_COMPLEX", "RECEPTOR_COMPLEX", "ER_CELLTYPES",
+#'  "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", "GO_TERMS", "KEGG_PWS")}
+#' @param extra_annotations Convenience parameter to perform ORA on user-defined
+#' non-standard categories. If \code{NULL} (default), ORA is
+#' performed only on standard categories from \code{categories}. Otherwise it
+#' must be a list of data.tables
+#' or data.frames (see Details).
 #' @param overwrite If \code{TRUE} (default), previous results are overwritten
 #' in case they correspond to a category passed in \code{categories}.
 #' @param verbose If \code{TRUE} (default) progress messages are printed.
@@ -504,11 +536,16 @@ setGeneric(
   def = function(
     object,
     categories = c(
-      "ER_CELLTYPES",
       "LRI",
+      "LIGAND_COMPLEX",
+      "RECEPTOR_COMPLEX",
+      "ER_CELLTYPES",
+      "EMITTER_CELLTYPE",
+      "RECEIVER_CELLTYPE",
       "GO_TERMS",
       "KEGG_PWS"
-      ),
+    ),
+    extra_annotations = NULL,
     overwrite = TRUE,
     verbose = TRUE
   ) standardGeneric("RunORA"),
@@ -521,12 +558,17 @@ setMethod(
   signature = "scDiffCom",
   definition = function(
     object,
-    categories = c(
-      "ER_CELLTYPES",
+    categories =c(
       "LRI",
+      "LIGAND_COMPLEX",
+      "RECEPTOR_COMPLEX",
+      "ER_CELLTYPES",
+      "EMITTER_CELLTYPE",
+      "RECEIVER_CELLTYPE",
       "GO_TERMS",
       "KEGG_PWS"
-      ),
+    ),
+    extra_annotations = NULL,
     overwrite = TRUE,
     #stringent_or_default = "default",
     #stringent_logfc_threshold = NULL,
@@ -535,6 +577,7 @@ setMethod(
     run_ora(
       object = object,
       categories = categories,
+      extra_annotations = extra_annotations,
       overwrite = overwrite,
       stringent_or_default = "default",
       stringent_logfc_threshold = NULL,

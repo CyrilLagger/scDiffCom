@@ -12,6 +12,7 @@ FilterCCI(
   new_threshold_p_value_de = NULL,
   new_threshold_logfc = NULL,
   skip_ora = FALSE,
+  extra_annotations = NULL,
   verbose = TRUE
 )
 
@@ -22,6 +23,7 @@ FilterCCI(
   new_threshold_p_value_de = NULL,
   new_threshold_logfc = NULL,
   skip_ora = FALSE,
+  extra_annotations = NULL,
   verbose = TRUE
 )
 }
@@ -49,12 +51,30 @@ performed with the new parameters and \code{ora_table} is set to an
 empty list. May be useful if one wants to quickly test (loop-over) several
 values of parameters and by-passing the computing time of the ORA.}
 
+\item{extra_annotations}{Convenience parameter to perform ORA on user-defined
+non-standard categories. If \code{NULL} (default), ORA is
+performed on standard categories. Otherwise it must be a list of data.tables
+or data.frames (see Details).}
+
 \item{verbose}{If \code{TRUE} (default) progress messages are printed.}
 }
 \value{
-A scDiffCom object with updated results.
+A scDiffCom object with updated results in \code{cci_table_detected}
+and \code{ora_table}.
 }
 \description{
 Filtering (and ORA) is performed with new parameters.
  \code{cci_table_detected} and \code{ora_table} are updated accordingly.
+}
+\details{
+When \code{FilterCCI} is called with new parameters, both
+ \code{cci_table_detected} and \code{ora_table} need to be updated. For
+ ORA, a call to \code{RunORA} is automatically performed on all standard
+ categories. Additional user-defined ORA categories can be added via the
+ parameter \code{extra_annotations}. The data.frames or data.tables in this
+ list must have exactly two columns that indicates a relationship between
+ values from a standard category (first column) to values of the new
+ category (second column). As a typical example, this
+ \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}
+ shows how to perform ORA on cell type families attached to each cell types.
 }

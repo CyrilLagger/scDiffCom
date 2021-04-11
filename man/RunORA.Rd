@@ -7,14 +7,18 @@
 \usage{
 RunORA(
   object,
-  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
+  categories = c("LRI", "LIGAND_COMPLEX", "RECEPTOR_COMPLEX", "ER_CELLTYPES",
+    "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", "GO_TERMS", "KEGG_PWS"),
+  extra_annotations = NULL,
   overwrite = TRUE,
   verbose = TRUE
 )
 
 \S4method{RunORA}{scDiffCom}(
   object,
-  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
+  categories = c("LRI", "LIGAND_COMPLEX", "RECEPTOR_COMPLEX", "ER_CELLTYPES",
+    "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", "GO_TERMS", "KEGG_PWS"),
+  extra_annotations = NULL,
   overwrite = TRUE,
   verbose = TRUE
 )
@@ -22,8 +26,16 @@ RunORA(
 \arguments{
 \item{object}{\code{scDiffCom} object}
 
-\item{categories}{Name of the categories on which to perform ORA. Default
-is \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")}.}
+\item{categories}{Names of the standard categories on which to perform ORA.
+Default is all standard categories, namely
+\code{c("LRI", "LIGAND_COMPLEX", "RECEPTOR_COMPLEX", "ER_CELLTYPES",
+"EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", "GO_TERMS", "KEGG_PWS")}}
+
+\item{extra_annotations}{Convenience parameter to perform ORA on user-defined
+non-standard categories. If \code{NULL} (default), ORA is
+performed only on standard categories from \code{categories}. Otherwise it
+must be a list of data.tables
+or data.frames (see Details).}
 
 \item{overwrite}{If \code{TRUE} (default), previous results are overwritten
 in case they correspond to a category passed in \code{categories}.}
@@ -34,8 +46,16 @@ in case they correspond to a category passed in \code{categories}.}
 A scDiffCom object with updated \code{ora_table}.
 }
 \description{
-Perform over-representation analysis (ORA) on a scDiffCom object. Note that
-ORA is run automatically on default categories when calling
-\code{run_interaction_analysis} or \code{FilterCCI}. This function may be
-useful to perform ORA on other custom categories.
+Perform over-representation analysis (ORA) on a scDiffCom object, with
+the possibility to define custom categories in addition to the standard
+ones supported by default.
+}
+\details{
+Additional user-defined ORA categories can be added via the
+ parameter \code{extra_annotations}. The data.frames or data.tables in this
+ list must have exactly two columns that indicates a relationship between
+ values from a standard category (first column) to values of the new
+ category (second column). As a typical example, this
+ \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}
+ shows how to perform ORA on cell type families attached to each cell types.
 }
