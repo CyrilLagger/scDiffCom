@@ -15,9 +15,9 @@ Description: Analysis tools to investigate changes in intercellular
     the package infers which cell-cell interactions are present in the dataset
     and how these interactions changes between two conditions of interest
     (e.g. young vs old). It relies on an internal database of ligand-receptor
-    interactions (available for both human and mouse) that has been gathered
+    interactions (available for both human and mouse) that have been gathered
     from several published studies. The differential analysis relies on a 
-    permutation test. The package also contains several tools to analyze and
+    permutation test. The package also contains several tools to analyze
     and visualize the results.
 License: MIT + file LICENSE
 Encoding: UTF-8
