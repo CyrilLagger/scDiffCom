@@ -12,7 +12,7 @@ run_ora <- function(
     stop(
       paste0(
         "Global ORA analyis is not supported anymore.",
-        " Use `global == FALSE`"
+        " Use 'global == FALSE'"
       )
     )
   }
@@ -20,7 +20,7 @@ run_ora <- function(
     stop(
       paste0(
         "Stringent ORA analysis is not supported anymore.",
-        " Use `stringent_or_default == 'default'`"
+        " Use 'stringent_or_default == 'default''"
       )
     )
   }
@@ -120,7 +120,7 @@ run_ora <- function(
           stop(
             paste0(
               "No ORA global analysis allowed for object",
-              " of class `scDiffComCombined`"
+              " of class 'scDiffComCombined'"
             )
           )
         }
@@ -132,10 +132,10 @@ run_ora <- function(
         if (verbose) {
           message(
             paste0(
-              "Choose a non-NULL `stringent_logfc_threshold` to",
+              "Choose a non-NULL 'stringent_logfc_threshold' to",
               " perform stringent over-representation analysis."
-              )
             )
+          )
         }
       } else  {
         if(stringent_logfc_threshold > logfc_threshold) {
@@ -147,7 +147,8 @@ run_ora <- function(
           categories_old_stringent <- names(temp_ora_stringent)
           if (is.null(categories_old_stringent)) {
             mes <- paste0(
-              "Performing stringent over-representation analysis on the specified categories: ",
+              "Performing stringent over-representation analysis ",
+              "on the specified categories: ",
               paste0(categories, collapse = ", "),
               "."
             )
@@ -156,7 +157,8 @@ run_ora <- function(
           } else {
             if (overwrite) {
               mes <- paste0(
-                "Performing stringent over-representation analysis on the specified categories: ",
+                "Performing stringent over-representation analysis ",
+                "on the specified categories: ",
                 paste0(categories, collapse = ", "),
                 ".\n",
                 "Erasing all previous ORA results: ",
@@ -166,13 +168,23 @@ run_ora <- function(
               if (verbose) message(mes)
               categories_stringent_to_run <- categories
             } else {
-              categories_stringent_to_run <- setdiff(categories, categories_old_stringent)
+              categories_stringent_to_run <- setdiff(
+                categories,
+                categories_old_stringent
+              )
               mes <- paste0(
-                "Performing stringent over-representation analysis on the specified categories: ",
+                "Performing stringent over-representation analysis ",
+                "on the specified categories: ",
                 paste0(categories_stringent_to_run, collapse = ", "),
                 ".\n",
                 "Keeping previous ORA results: ",
-                paste0(setdiff(categories_old_stringent, categories_stringent_to_run), collapse = ", "),
+                paste0(
+                  setdiff(
+                    categories_old_stringent,
+                    categories_stringent_to_run
+                  ),
+                  collapse = ", "
+                ),
                 "."
               )
               if (verbose) message(mes)
@@ -211,21 +223,36 @@ run_ora <- function(
             if (class_signature == "scDiffComCombined") {
               object@ora_combined_stringent <- res_ora_stringent
             } else {
-              stop("No ORA global analysis allowed for object of class `scDiffComCombined`")
+              stop(
+                paste0(
+                  "No ORA global analysis allowed for object of ",
+                  "class 'scDiffComCombined'"
+                )
+              )
             }
           } else {
             object@ora_stringent <- res_ora_stringent
           }
         } else {
-          if (verbose) message("The supposedly `stringent` logfc is actually less `stringent` than the default parameter.
-                               Choose a higher value.")
+          if (verbose) {
+            message(
+              paste0(
+                "The supposedly 'stringent' logfc is actually less ",
+                "'stringent' than the default parameter. Choose a higher value."
+              )
+            )
+          }
         }
       }
     } else {
-      stop("Can't recognize parameter `stringent_or_default")
+      stop("Can't recognize parameter 'stringent_or_default")
     }
   } else {
-    if (verbose) message("No over-representation analysis available for the selected parameters.")
+    if (verbose) {
+      message(
+        "No over-representation analysis available for the selected parameters."
+      )
+    }
   }
   return(object)
 }
@@ -292,17 +319,31 @@ build_ora_dt <- function(
           by.x = "LRI",
           by.y = "VALUE"
         )
-        counts_intersection_dt[, c("COUNTS_VALUE_REGULATED_temp", "COUNTS_VALUE_NOTREGULATED_temp") :=
-                                 list(
-                                   sum(COUNTS_VALUE_REGULATED),
-                                   sum(COUNTS_VALUE_NOTREGULATED)
-                                 ),
-                               by = new_id
+        counts_intersection_dt[
+          ,
+          c(
+            "COUNTS_VALUE_REGULATED_temp",
+            "COUNTS_VALUE_NOTREGULATED_temp"
+          ) :=
+            list(
+              sum(COUNTS_VALUE_REGULATED),
+              sum(COUNTS_VALUE_NOTREGULATED)
+            ),
+          by = new_id
         ]
-        counts_intersection_dt[, c("COUNTS_NOTVALUE_REGULATED_temp", "COUNTS_NOTVALUE_NOTREGULATED_temp") := list(
-          COUNTS_NOTVALUE_REGULATED + COUNTS_VALUE_REGULATED - COUNTS_VALUE_REGULATED_temp,
-          COUNTS_NOTVALUE_NOTREGULATED + COUNTS_VALUE_NOTREGULATED - COUNTS_VALUE_NOTREGULATED_temp
-        )]
+        counts_intersection_dt[
+          ,
+          c(
+            "COUNTS_NOTVALUE_REGULATED_temp",
+            "COUNTS_NOTVALUE_NOTREGULATED_temp"
+          ) := list(
+            COUNTS_NOTVALUE_REGULATED +
+              COUNTS_VALUE_REGULATED -
+              COUNTS_VALUE_REGULATED_temp,
+            COUNTS_NOTVALUE_NOTREGULATED +
+              COUNTS_VALUE_NOTREGULATED -
+              COUNTS_VALUE_NOTREGULATED_temp
+          )]
         counts_intersection_dt[, CATEGORY := new_category]
         counts_intersection_dt[, c(
           "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
@@ -312,10 +353,18 @@ build_ora_dt <- function(
         counts_intersection_dt <- unique(counts_intersection_dt)
         data.table::setnames(
           counts_intersection_dt,
-          old = c(new_id, new_name, "COUNTS_VALUE_REGULATED_temp", "COUNTS_VALUE_NOTREGULATED_temp",
-                  "COUNTS_NOTVALUE_REGULATED_temp", "COUNTS_NOTVALUE_NOTREGULATED_temp"),
-          new = c("VALUE_BIS", "VALUE", "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
-                  "COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED")
+          old = c(
+            new_id, new_name,
+            "COUNTS_VALUE_REGULATED_temp",
+            "COUNTS_VALUE_NOTREGULATED_temp",
+            "COUNTS_NOTVALUE_REGULATED_temp",
+            "COUNTS_NOTVALUE_NOTREGULATED_temp"
+          ),
+          new = c(
+            "VALUE_BIS", "VALUE",
+            "COUNTS_VALUE_REGULATED", "COUNTS_VALUE_NOTREGULATED",
+            "COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED"
+          )
         )
         counts_dt <- counts_intersection_dt
       } else {
@@ -330,7 +379,10 @@ build_ora_dt <- function(
         counts_dt = counts_dt
       )
       cols_to_rename <- colnames(counts_dt)
-      cols_to_rename <- cols_to_rename[!(cols_to_rename %in% c("VALUE", "VALUE_BIS", "CATEGORY"))]
+      cols_to_rename <- cols_to_rename[
+        !(cols_to_rename %in%
+            c("VALUE", "VALUE_BIS", "CATEGORY"))
+      ]
       data.table::setnames(
         x = counts_dt,
         old = cols_to_rename,
@@ -362,16 +414,29 @@ extract_category_counts <- function(
   reg,
   logfc_threshold
 ) {
-  REGULATION <- COUNTS_VALUE_REGULATED <- COUNTS_VALUE_NOTREGULATED <- LOGFC <- NULL
+  REGULATION <- COUNTS_VALUE_REGULATED <-
+    COUNTS_VALUE_NOTREGULATED <- LOGFC <- NULL
   if (reg == "UP") {
-    dt_regulated <- cci_table_detected[REGULATION == "UP" & LOGFC >= logfc_threshold]
-    dt_notregulated <- cci_table_detected[!(REGULATION == "UP" & LOGFC >= logfc_threshold)]
+    dt_regulated <- cci_table_detected[
+      REGULATION == "UP" & LOGFC >= logfc_threshold
+    ]
+    dt_notregulated <- cci_table_detected[
+      !(REGULATION == "UP" & LOGFC >= logfc_threshold)
+    ]
   } else if (reg == "DOWN") {
-    dt_regulated <- cci_table_detected[REGULATION == "DOWN" & LOGFC <= -logfc_threshold]
-    dt_notregulated <- cci_table_detected[!(REGULATION == "DOWN" & LOGFC <= -logfc_threshold)]
+    dt_regulated <- cci_table_detected[
+      REGULATION == "DOWN" & LOGFC <= -logfc_threshold
+    ]
+    dt_notregulated <- cci_table_detected[
+      !(REGULATION == "DOWN" & LOGFC <= -logfc_threshold)
+    ]
   } else if (reg == "DIFF") {
-    dt_regulated <- cci_table_detected[REGULATION %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold]
-    dt_notregulated <- cci_table_detected[!(REGULATION %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold)]
+    dt_regulated <- cci_table_detected[
+      REGULATION %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold
+    ]
+    dt_notregulated <- cci_table_detected[
+      !(REGULATION %in% c("UP", "DOWN") & abs(LOGFC) >= logfc_threshold)
+    ]
   } else if (reg == "FLAT") {
     dt_regulated <- cci_table_detected[REGULATION == "FLAT"]
     dt_notregulated <- cci_table_detected[REGULATION != "FLAT"]
@@ -383,8 +448,20 @@ extract_category_counts <- function(
       X = category,
       FUN = function(categ) {
         data.table::merge.data.table(
-          x = dt_regulated[, list(CATEGORY = categ, COUNTS_VALUE_REGULATED = .N), by = list(VALUE = get(categ))],
-          y = dt_notregulated[, list(CATEGORY = categ, COUNTS_VALUE_NOTREGULATED = .N), by = list(VALUE = get(categ))],
+          x = dt_regulated[
+            ,
+            list(
+              CATEGORY = categ,
+              COUNTS_VALUE_REGULATED = .N
+            ),
+            by = list(VALUE = get(categ))],
+          y = dt_notregulated[
+            ,
+            list(
+              CATEGORY = categ,
+              COUNTS_VALUE_NOTREGULATED = .N
+            ),
+            by = list(VALUE = get(categ))],
           by = c("VALUE", "CATEGORY"),
           all = TRUE
         )
@@ -400,11 +477,16 @@ extract_category_counts <- function(
   )
   COUNTS_REGULATED <- dt_regulated[, .N]
   COUNTS_NOTREGULATED <- dt_notregulated[, .N]
-  dt_counts <- dt_counts[, c("COUNTS_NOTVALUE_REGULATED", "COUNTS_NOTVALUE_NOTREGULATED") :=
-                           list(
-                             COUNTS_REGULATED - COUNTS_VALUE_REGULATED,
-                             COUNTS_NOTREGULATED - COUNTS_VALUE_NOTREGULATED
-                           )]
+  dt_counts <- dt_counts[
+    ,
+    c(
+      "COUNTS_NOTVALUE_REGULATED",
+      "COUNTS_NOTVALUE_NOTREGULATED"
+    ) :=
+      list(
+        COUNTS_REGULATED - COUNTS_VALUE_REGULATED,
+        COUNTS_NOTREGULATED - COUNTS_VALUE_NOTREGULATED
+      )]
 
   return(dt_counts)
 }
@@ -458,7 +540,10 @@ clip_infinite_OR <- function(
     COUNTS_VALUE_NOTREGULATED <- COUNTS_NOTVALUE_REGULATED <- NULL
   ORA_dt[, OR := ifelse(
     is.infinite(OR),
-    (COUNTS_VALUE_REGULATED + 1) * (COUNTS_NOTVALUE_NOTREGULATED + 1) / ((COUNTS_VALUE_NOTREGULATED + 1) * (COUNTS_NOTVALUE_REGULATED + 1)),
+    (COUNTS_VALUE_REGULATED + 1) *
+      (COUNTS_NOTVALUE_NOTREGULATED + 1) /
+      ((COUNTS_VALUE_NOTREGULATED + 1) *
+         (COUNTS_NOTVALUE_REGULATED + 1)),
     OR
   )]
   return(ORA_dt)
@@ -510,8 +595,10 @@ kulc <- function(
   COUNTS_NOTVALUE_REGULATED,
   COUNTS_NOTVALUE_NOTREGULATED
 ) {
-  P_AB <- COUNTS_VALUE_REGULATED / (COUNTS_VALUE_REGULATED + COUNTS_NOTVALUE_REGULATED)
-  P_BA <- COUNTS_VALUE_REGULATED / (COUNTS_VALUE_REGULATED + COUNTS_VALUE_NOTREGULATED)
+  P_AB <- COUNTS_VALUE_REGULATED /
+    (COUNTS_VALUE_REGULATED + COUNTS_NOTVALUE_REGULATED)
+  P_BA <- COUNTS_VALUE_REGULATED /
+    (COUNTS_VALUE_REGULATED + COUNTS_VALUE_NOTREGULATED)
   avg <- (P_AB + P_BA) / 2
   return(avg)
 }
@@ -536,11 +623,11 @@ get_tables_ora <- function(
   class_signature
 ) {
   if (!is.character(categories)) {
-    stop("`categories` must be a character vector")
+    stop("'categories' must be a character vector")
   }
   tables <- copy(object@ora_table)
   if (identical(tables, list())) {
-    warning("The object does not contain ORA tables. Returning `NULL`")
+    warning("The object does not contain ORA tables. Returning 'NULL'")
     return(NULL)
   }
   categories_in <- names(tables)
@@ -548,7 +635,7 @@ get_tables_ora <- function(
     categories <- categories_in
   }
   if (!all(categories %in% categories_in)) {
-    stop("All `categories` must be present in the object.")
+    stop("All 'categories' must be present in the object.")
   }
   tables <- tables[categories]
   if (simplified) {
@@ -612,12 +699,12 @@ plot_ora <- function(
     p_value_ID <- "BH_P_VALUE_FLAT"
     ORA_SCORE_ID <- "ORA_SCORE_FLAT"
   } else {
-    stop("Can't find `regulation` type")
+    stop("Can't find 'regulation' type")
   }
   ora_dt <- ora_dt[
     get(OR_ID) > OR_threshold &
       get(p_value_ID) <= bh_p_value_threshold
-    ][order(-get(ORA_SCORE_ID))]
+  ][order(-get(ORA_SCORE_ID))]
   if (category == "GO_TERMS") {
     ora_dt <- ora_dt[
       ASPECT == GO_aspect
@@ -697,14 +784,17 @@ plot_ora <- function(
     ggplot2::scale_color_gradient(low = "orange", high = "red") +
     ggplot2::xlab(paste0("ORA score ", regulation)) +
     ggplot2::ylab(category_label) +
-    ggplot2::labs(size = "-log10(Adj. P-Value)", color = "log2(Odds Ratio)") +
+    ggplot2::labs(
+      size = "-log10(Adj. P-Value)",
+      color = "log2(Odds Ratio)"
+    ) +
     ggplot2::theme(text = ggplot2::element_text(size = 18)) +
     ggplot2::ggtitle(
       paste0(
         "Top ",
         n_row_tokeep,
         " keywords"
-        )
+      )
     )
 }
 
