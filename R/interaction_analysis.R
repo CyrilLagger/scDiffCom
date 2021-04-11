@@ -128,8 +128,23 @@
 #' results.
 #' @param verbose If \code{TRUE} (default), print progress messages.
 #'
-#' @return An S4 object of class \code{\link{scDiffCom}}.
+#' @return An S4 object of class \code{\link{scDiffCom-class}}.
 #' @export
+#' @examples
+#' \dontrun{
+#' run_interaction_analysis(
+#'   seurat_object = seurat_sample_tms_liver,
+#'   LRI_species = "mouse",
+#'   seurat_celltype_id = "cell_type",
+#'   seurat_condition_id = list(
+#'     column_name = "age_group",
+#'     cond1_name = "YOUNG",
+#'     cond2_name = "OLD"
+#'   )
+#' )
+#' }
+
+
 run_interaction_analysis <- function(
   seurat_object,
   LRI_species,
