@@ -382,6 +382,39 @@ setMethod(
   }
 )
 
+#' Create a copy of a scDiffCom object without the "raw" CCI table
+#'
+#' This function will replace \code{cci_table_raw} by an empty list. It may
+#' be useful to save space for large datasets. However, after this operation,
+#' no filtering and ORA can be re-run on the new object, meaning that obtaining
+#' results for different filtering parameters will require the perform the full
+#' analysis from scratch.
+#'
+#' @param object \code{scDiffCom} object
+#'
+#' @return A scDiffCom object with an empty list for \code{cci_table_raw}.
+#'
+#' @export
+setGeneric(
+  name = "EraseRawCCI",
+  def = function(object) standardGeneric("EraseRawCCI"),
+  signature = "object"
+)
+
+#' @rdname EraseRawCCI
+setMethod(
+  f = "EraseRawCCI",
+  signature = "scDiffCom",
+  definition = function(
+    object
+  ) {
+    new_object <- object
+    new_object@cci_table_raw <- list()
+    new_object
+  }
+)
+
+
 #' Filter a scDiffCom object with new filtering parameters
 #'
 #' Filtering (and ORA) is performed with new parameters.
