@@ -369,12 +369,12 @@ extract_LRI_inputs <- function(
     }
   }
   mes <- paste0(
-    "Input ligand-receptor database:",
+    "Input ligand-receptor database: ",
     length(unique(LRI_table$LRI)),
     " ",
     LRI_species,
     " interactions.\n",
-    "Number of potential LRIs in the dataset:",
+    "Number of LRIs that match to genes present in the dataset: ",
     n_ID,
     "."#,
     #"\n",
