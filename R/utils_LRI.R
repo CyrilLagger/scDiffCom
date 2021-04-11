@@ -1595,9 +1595,11 @@ get_ECM_genes <- function(
 ) {
   go_id <- mgi_symbol <- NULL
   LRI_curated = scDiffCom::LRI_mouse$LRI_curated
-  GO_interactions = get_GO_interactions(species,
-                                        LRI_curated,
-                                        only_genes_annotations = TRUE)
+  GO_interactions = get_GO_interactions(
+    species,
+    LRI_curated,
+    only_genes_annotations = TRUE
+  )
   GO_interactions = GO_interactions[go_id != ""]
 
   get_ECM_GOs <- function() {
