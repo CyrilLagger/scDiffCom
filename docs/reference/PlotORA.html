@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>xxx — PlotORA • scDiffCom</title>
+<title>Display top over-represented keywords — PlotORA • scDiffCom</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,10 @@
 
 
 
-<meta property="og:title" content="xxx — PlotORA" />
-<meta property="og:description" content="xxx" />
+<meta property="og:title" content="Display top over-represented keywords — PlotORA" />
+<meta property="og:description" content="Plot a graph that shows the top over-represented terms of a given
+category for a given regulation. Terms are ordered by their ORA scores,
+computed from their odds ratios and adjusted p-values." />
 
 
 
@@ -118,24 +120,25 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>xxx</h1>
+    <h1>Display top over-represented keywords</h1>
     
     <div class="hidden name"><code>PlotORA.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>xxx</p>
+    <p>Plot a graph that shows the top over-represented terms of a given
+category for a given regulation. Terms are ordered by their ORA scores,
+computed from their odds ratios and adjusted p-values.</p>
     </div>
 
     <pre class="usage"><span class='fu'>PlotORA</span><span class='op'>(</span>
   <span class='va'>object</span>,
   <span class='va'>category</span>,
   regulation <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"UP"</span>, <span class='st'>"DOWN"</span>, <span class='st'>"FLAT"</span><span class='op'>)</span>,
-  <span class='va'>max_terms_show</span>,
+  max_terms_show <span class='op'>=</span> <span class='fl'>20</span>,
   GO_aspect <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"biological_process"</span>, <span class='st'>"molecular_function"</span>, <span class='st'>"cellular_component"</span><span class='op'>)</span>,
   OR_threshold <span class='op'>=</span> <span class='fl'>1</span>,
-  bh_p_value_threshold <span class='op'>=</span> <span class='fl'>0.05</span>,
-  <span class='va'>...</span>
+  bh_p_value_threshold <span class='op'>=</span> <span class='fl'>0.05</span>
 <span class='op'>)</span>
 
 <span class='co'># S4 method for scDiffCom</span>
@@ -143,22 +146,10 @@
   <span class='va'>object</span>,
   <span class='va'>category</span>,
   regulation <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"UP"</span>, <span class='st'>"DOWN"</span>, <span class='st'>"FLAT"</span><span class='op'>)</span>,
-  <span class='va'>max_terms_show</span>,
+  max_terms_show <span class='op'>=</span> <span class='fl'>20</span>,
   GO_aspect <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"biological_process"</span>, <span class='st'>"molecular_function"</span>, <span class='st'>"cellular_component"</span><span class='op'>)</span>,
   OR_threshold <span class='op'>=</span> <span class='fl'>1</span>,
   bh_p_value_threshold <span class='op'>=</span> <span class='fl'>0.05</span>
-<span class='op'>)</span>
-
-<span class='co'># S4 method for scDiffComCombined</span>
-<span class='fu'>PlotORA</span><span class='op'>(</span>
-  <span class='va'>object</span>,
-  <span class='va'>category</span>,
-  regulation <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"UP"</span>, <span class='st'>"DOWN"</span>, <span class='st'>"FLAT"</span><span class='op'>)</span>,
-  <span class='va'>max_terms_show</span>,
-  GO_aspect <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"biological_process"</span>, <span class='st'>"molecular_function"</span>, <span class='st'>"cellular_component"</span><span class='op'>)</span>,
-  OR_threshold <span class='op'>=</span> <span class='fl'>1</span>,
-  bh_p_value_threshold <span class='op'>=</span> <span class='fl'>0.05</span>,
-  <span class='va'>subID</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -166,45 +157,49 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>object</th>
-      <td><p>xxx</p></td>
+      <td><p><code>scDiffCom</code> object</p></td>
     </tr>
     <tr>
       <th>category</th>
-      <td><p>xxx</p></td>
+      <td><p>ORA category to display. Must be the name of one of the
+category present in <code>ora_table</code>.</p></td>
     </tr>
     <tr>
       <th>regulation</th>
-      <td><p>xxx</p></td>
+      <td><p>ORA regulation to display. Can be either <code>UP</code>
+(default), <code>DOWN</code> or <code>FLAT</code>.</p></td>
     </tr>
     <tr>
       <th>max_terms_show</th>
-      <td><p>xxx</p></td>
+      <td><p>Maximum number of terms to display. Default is
+<code>20</code>.</p></td>
     </tr>
     <tr>
       <th>GO_aspect</th>
-      <td><p>xxx</p></td>
+      <td><p>Name of the GO aspect to display when
+<code>category == "GO_TERMS"</code>. Can be either <code>biological_process</code> (
+default), <code>molecular_function</code> or <code>cellular_component</code>.</p></td>
     </tr>
     <tr>
       <th>OR_threshold</th>
-      <td><p>xxx</p></td>
+      <td><p>Only the terms with an odds ratio above this threshold
+will be displayed. Default is <code>1</code>, meaning no filtering is performed.</p></td>
     </tr>
     <tr>
       <th>bh_p_value_threshold</th>
-      <td><p>xxx</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>Extra named arguments passed to PlotORA</p></td>
-    </tr>
-    <tr>
-      <th>subID</th>
-      <td><p>xxx</p></td>
+      <td><p>Only the terms with an adjusted p-value below
+this threshold (and always below 0.05) will be displayed. Default is
+ <code>0.05</code>.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>xxx</p>
+    <p>A ggplot object</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The ORA score is computed as the product between <code>log2(odds ratio)</code> and
+<code>-log10(adj. p-value)</code>.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

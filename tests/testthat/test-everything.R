@@ -459,23 +459,49 @@ cci_permutation_test_with_distr <- lapply(
   }
 )
 
-test_that("data.table returned by permutation test is correctly formatted", {
-  expect_identical(cci_dt_simple_test$cond_stat$LRI, cci_permutation_test$cond$cci_raw$LRI)
-  expect_identical(cci_dt_simple_test$cond_stat[, 4:38], cci_permutation_test$cond$cci_raw[, 4:38])
-  expect_identical(cci_dt_simple_test$nocond_stat[, 4:22], cci_permutation_test$nocond$cci_raw[, 4:22])
-  expect_identical(cci_dt_simple_test$cond_stat$LRI, cci_permutation_test_with_distr$cond$cci_raw$LRI)
-  expect_identical(cci_dt_simple_test$cond_stat[, 4:38], cci_permutation_test_with_distr$cond$cci_raw[, 4:38])
-  expect_identical(cci_dt_simple_test$nocond_stat[, 4:22], cci_permutation_test_with_distr$nocond$cci_raw[, 4:22])
-})
+test_that(
+  "data.table returned by permutation test is correctly formatted", {
+    expect_identical(
+      cci_dt_simple_test$cond_stat$LRI,
+      cci_permutation_test$cond$cci_raw$LRI
+    )
+    expect_identical(
+      cci_dt_simple_test$cond_stat[, 4:38],
+      cci_permutation_test$cond$cci_raw[, 4:38]
+    )
+    expect_identical(
+      cci_dt_simple_test$nocond_stat[, 4:22],
+      cci_permutation_test$nocond$cci_raw[, 4:22]
+    )
+    expect_identical(
+      cci_dt_simple_test$cond_stat$LRI,
+      cci_permutation_test_with_distr$cond$cci_raw$LRI
+    )
+    expect_identical(
+      cci_dt_simple_test$cond_stat[, 4:38],
+      cci_permutation_test_with_distr$cond$cci_raw[, 4:38]
+    )
+    expect_identical(
+      cci_dt_simple_test$nocond_stat[, 4:22],
+      cci_permutation_test_with_distr$nocond$cci_raw[, 4:22]
+    )
+  })
 
-test_that("permutation results are identical (using same seed) with or without returning the disributions", {
-  expect_identical(cci_permutation_test_with_distr$cond$cci_raw$P_VALUE_DE,
-                   cci_permutation_test$cond$cci_raw$P_VALUE_DE )
-  expect_identical(cci_permutation_test_with_distr$cond$cci_raw$P_VALUE_OLD,
-                   cci_permutation_test$cond$cci_raw$P_VALUE_OLD)
-  expect_identical(cci_permutation_test_with_distr$cond$cci_raw$P_VALUE_YOUNG,
-                   cci_permutation_test$cond$cci_raw$P_VALUE_YOUNG)
-})
+test_that(
+  "permutation results are identical (using same seed) with or without returning the distributions", {
+    expect_identical(
+      cci_permutation_test_with_distr$cond$cci_raw$P_VALUE_DE,
+      cci_permutation_test$cond$cci_raw$P_VALUE_DE
+    )
+    expect_identical(
+      cci_permutation_test_with_distr$cond$cci_raw$P_VALUE_OLD,
+      cci_permutation_test$cond$cci_raw$P_VALUE_OLD
+    )
+    expect_identical(
+      cci_permutation_test_with_distr$cond$cci_raw$P_VALUE_YOUNG,
+      cci_permutation_test$cond$cci_raw$P_VALUE_YOUNG
+    )
+  })
 
 
 ## benchmarking of permutation test and internal functions ####
@@ -685,34 +711,34 @@ test_that("fisher test is done correctly on GO terms", {
 
 ## Check building combined-objects
 
-scdiffcom_objects_dup <- scdiffcom_objects
-
-scdiffcom_objects_dup <- lapply(
-  scdiffcom_objects_dup,
-  function(i) {
-    i@parameters$object_name <- paste0(i@parameters$object_name, "_dup")
-    return(i)
-  }
-)
-
-scdiffcom_combined_objects <- lapply(
-  seq_along(scdiffcom_objects),
-  function(i) {
-    Combine_scDiffCom(
-      l = list(scdiffcom_objects[[i]], scdiffcom_objects_dup[[i]]),
-      object_name = paste0(scdiffcom_objects[[i]]@parameters$object_name, "_combined"),
-      verbose = FALSE
-    )
-  }
-)
-names(scdiffcom_combined_objects) <- names(scdiffcom_objects)
-
-test_that("`Combine_scDiffCom` returns object of class `scDiffComCombined`", {
-  expect_s4_class(scdiffcom_combined_objects$cond_stat, "scDiffComCombined")
-  expect_s4_class(scdiffcom_combined_objects$cond_nostat, "scDiffComCombined")
-  expect_s4_class(scdiffcom_combined_objects$nocond_stat, "scDiffComCombined")
-  expect_s4_class(scdiffcom_combined_objects$nocond_nostat, "scDiffComCombined")
-})
+# scdiffcom_objects_dup <- scdiffcom_objects
+#
+# scdiffcom_objects_dup <- lapply(
+#   scdiffcom_objects_dup,
+#   function(i) {
+#     i@parameters$object_name <- paste0(i@parameters$object_name, "_dup")
+#     return(i)
+#   }
+# )
+#
+# scdiffcom_combined_objects <- lapply(
+#   seq_along(scdiffcom_objects),
+#   function(i) {
+#     Combine_scDiffCom(
+#       l = list(scdiffcom_objects[[i]], scdiffcom_objects_dup[[i]]),
+#       object_name = paste0(scdiffcom_objects[[i]]@parameters$object_name, "_combined"),
+#       verbose = FALSE
+#     )
+#   }
+# )
+# names(scdiffcom_combined_objects) <- names(scdiffcom_objects)
+#
+# test_that("`Combine_scDiffCom` returns object of class `scDiffComCombined`", {
+#   expect_s4_class(scdiffcom_combined_objects$cond_stat, "scDiffComCombined")
+#   expect_s4_class(scdiffcom_combined_objects$cond_nostat, "scDiffComCombined")
+#   expect_s4_class(scdiffcom_combined_objects$nocond_stat, "scDiffComCombined")
+#   expect_s4_class(scdiffcom_combined_objects$nocond_nostat, "scDiffComCombined")
+# })
 
 ## Check PlotORA ####
 
@@ -731,10 +757,10 @@ retrieved_parameters <- lapply(
   GetParameters
 )
 
-retrieved_parameters_combined <- lapply(
-  scdiffcom_combined_objects,
-  GetParameters
-)
+# retrieved_parameters_combined <- lapply(
+#   scdiffcom_combined_objects,
+#   GetParameters
+# )
 
 retrieved_cci_tables <- lapply(
   c("raw", "detected"),
@@ -753,22 +779,22 @@ retrieved_cci_tables <- lapply(
   }
 )
 
-retrieved_cci_tables_combined <- lapply(
-  c("raw", "detected"),
-  function(type) {
-    lapply(
-      c(TRUE, FALSE),
-      function(simplified) {
-        lapply(
-          scdiffcom_combined_objects,
-          GetTableCCI,
-          type = type,
-          simplified = simplified
-        )
-      }
-    )
-  }
-)
+# retrieved_cci_tables_combined <- lapply(
+#   c("raw", "detected"),
+#   function(type) {
+#     lapply(
+#       c(TRUE, FALSE),
+#       function(simplified) {
+#         lapply(
+#           scdiffcom_combined_objects,
+#           GetTableCCI,
+#           type = type,
+#           simplified = simplified
+#         )
+#       }
+#     )
+#   }
+# )
 
 retrieved_ora_tables <- lapply(
   list("all", c("LRI", "ER_CELLTYPES", "GO_TERMS")),
@@ -786,21 +812,21 @@ retrieved_ora_tables <- lapply(
   }
 )
 
-retrieved_ora_tables_combined <- lapply(
-  list("all", c("LRI", "ER_CELLTYPES", "GO_TERMS")),
-  function(categories) {
-    lapply(
-      c(TRUE, FALSE),
-      function(simplified) {
-        GetTableORA(
-          scdiffcom_combined_objects$cond_stat,
-          categories = categories,
-          simplified = simplified
-        )
-      }
-    )
-  }
-)
+# retrieved_ora_tables_combined <- lapply(
+#   list("all", c("LRI", "ER_CELLTYPES", "GO_TERMS")),
+#   function(categories) {
+#     lapply(
+#       c(TRUE, FALSE),
+#       function(simplified) {
+#         GetTableORA(
+#           scdiffcom_combined_objects$cond_stat,
+#           categories = categories,
+#           simplified = simplified
+#         )
+#       }
+#     )
+#   }
+# )
 
 ## Check BuildNetwork overall ####
 

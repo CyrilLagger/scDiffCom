@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>xxx — BuildNetwork • scDiffCom</title>
+<title>Display 'cell type to cell type' interactive networks — BuildNetwork • scDiffCom</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,9 @@
 
 
 
-<meta property="og:title" content="xxx — BuildNetwork" />
-<meta property="og:description" content="xxx" />
+<meta property="og:title" content="Display 'cell type to cell type' interactive networks — BuildNetwork" />
+<meta property="og:description" content="Create and plot interactive networks that convey various types of
+information regarding cell type to cell type communication." />
 
 
 
@@ -118,41 +119,29 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>xxx</h1>
+    <h1>Display 'cell type to cell type' interactive networks</h1>
     
     <div class="hidden name"><code>BuildNetwork.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>xxx</p>
+    <p>Create and plot interactive networks that convey various types of
+information regarding cell type to cell type communication.</p>
     </div>
 
     <pre class="usage"><span class='fu'>BuildNetwork</span><span class='op'>(</span>
   <span class='va'>object</span>,
-  network_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"condition1_network"</span>, <span class='st'>"condition2_network"</span>, <span class='st'>"difference_network"</span>,
-    <span class='st'>"up_regulated_network"</span>, <span class='st'>"down_regulated_network"</span>, <span class='st'>"ORA_network"</span><span class='op'>)</span>,
-  layout_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"conventional"</span>, <span class='st'>"bipartite"</span><span class='op'>)</span>,
-  abbreviation_table <span class='op'>=</span> <span class='cn'>NULL</span>,
-  <span class='va'>...</span>
+  network_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"ORA_network"</span><span class='op'>)</span>,
+  layout_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"bipartite"</span>, <span class='st'>"conventional"</span><span class='op'>)</span>,
+  abbreviation_table <span class='op'>=</span> <span class='cn'>NULL</span>
 <span class='op'>)</span>
 
 <span class='co'># S4 method for scDiffCom</span>
 <span class='fu'>BuildNetwork</span><span class='op'>(</span>
   <span class='va'>object</span>,
-  network_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"condition1_network"</span>, <span class='st'>"condition2_network"</span>, <span class='st'>"difference_network"</span>,
-    <span class='st'>"up_regulated_network"</span>, <span class='st'>"down_regulated_network"</span>, <span class='st'>"ORA_network"</span><span class='op'>)</span>,
-  layout_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"conventional"</span>, <span class='st'>"bipartite"</span><span class='op'>)</span>,
+  network_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"ORA_network"</span><span class='op'>)</span>,
+  layout_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"bipartite"</span>, <span class='st'>"conventional"</span><span class='op'>)</span>,
   abbreviation_table <span class='op'>=</span> <span class='cn'>NULL</span>
-<span class='op'>)</span>
-
-<span class='co'># S4 method for scDiffComCombined</span>
-<span class='fu'>BuildNetwork</span><span class='op'>(</span>
-  <span class='va'>object</span>,
-  network_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"condition1_network"</span>, <span class='st'>"condition2_network"</span>, <span class='st'>"difference_network"</span>,
-    <span class='st'>"up_regulated_network"</span>, <span class='st'>"down_regulated_network"</span>, <span class='st'>"ORA_network"</span><span class='op'>)</span>,
-  layout_type <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"conventional"</span>, <span class='st'>"bipartite"</span><span class='op'>)</span>,
-  <span class='va'>abbreviation_table</span>,
-  <span class='va'>ID</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -160,33 +149,31 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>object</th>
-      <td><p>xxx</p></td>
+      <td><p><code>scDiffCom</code> object</p></td>
     </tr>
     <tr>
       <th>network_type</th>
-      <td><p>xxx</p></td>
+      <td><p>Type of network to display. Currently, only the type
+<code>ORA_network</code> (default) is supported.</p></td>
     </tr>
     <tr>
       <th>layout_type</th>
-      <td><p>xxx</p></td>
+      <td><p>Layout of the network to display. Can either be
+<code>"bipartite"</code> (default) or <code>"conventional"</code>.</p></td>
     </tr>
     <tr>
       <th>abbreviation_table</th>
-      <td><p>xxx</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>Extra named arguments passed to BuildNetwork</p></td>
-    </tr>
-    <tr>
-      <th>ID</th>
-      <td><p>xxx</p></td>
+      <td><p>Table with abbreviations
+for the cell types present in the <code>object</code>. If <code>NULL</code> (default),
+full names of the cell-types are displayed. Otherwise, it must be a
+data.frame or data.table with exactly two columns of names
+<code>ORIGINAL_CELLTYPE</code> and <code>ABBR_CELLTYPE</code>.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>xxx</p>
+    <p>A visNetwork object</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

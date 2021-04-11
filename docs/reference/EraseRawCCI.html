@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>A down-sampled Seurat object to use for testing and benchmarking — seurat_sample_tms_liver • scDiffCom</title>
+<title>Create a copy of a scDiffCom object without the "raw" CCI table — EraseRawCCI • scDiffCom</title>
 
 
 <!-- jquery -->
@@ -39,12 +39,12 @@
 
 
 
-<meta property="og:title" content="A down-sampled Seurat object to use for testing and benchmarking — seurat_sample_tms_liver" />
-<meta property="og:description" content="This Seurat object has been down-sampled from the original
-Tabula Muris Senis Liver object. Pre-processing and normalization has
-been performed before down-sampling. It contains 726 features (genes) and
-468 samples (cells). It is only intended to be used for testing and
-benchmarking and does not contain meaningful biological information." />
+<meta property="og:title" content="Create a copy of a scDiffCom object without the "raw" CCI table — EraseRawCCI" />
+<meta property="og:description" content="This function will replace cci_table_raw by an empty list. It may
+be useful to save space for large datasets. However, after this operation,
+no filtering and ORA can be re-run on the new object, meaning that obtaining
+results for different filtering parameters will require the perform the full
+analysis from scratch." />
 
 
 
@@ -122,30 +122,36 @@ benchmarking and does not contain meaningful biological information." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>A down-sampled Seurat object to use for testing and benchmarking</h1>
+    <h1>Create a copy of a scDiffCom object without the "raw" CCI table</h1>
     
-    <div class="hidden name"><code>seurat_sample_tms_liver.Rd</code></div>
+    <div class="hidden name"><code>EraseRawCCI.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This Seurat object has been down-sampled from the original
-Tabula Muris Senis Liver object. Pre-processing and normalization has
-been performed before down-sampling. It contains 726 features (genes) and
-468 samples (cells). It is only intended to be used for testing and
-benchmarking and does not contain meaningful biological information.</p>
+    <p>This function will replace <code>cci_table_raw</code> by an empty list. It may
+be useful to save space for large datasets. However, after this operation,
+no filtering and ORA can be re-run on the new object, meaning that obtaining
+results for different filtering parameters will require the perform the full
+analysis from scratch.</p>
     </div>
 
-    <pre class="usage"><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>seurat_sample_tms_liver</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>EraseRawCCI</span><span class='op'>(</span><span class='va'>object</span><span class='op'>)</span>
 
+<span class='co'># S4 method for scDiffCom</span>
+<span class='fu'>EraseRawCCI</span><span class='op'>(</span><span class='va'>object</span><span class='op'>)</span></pre>
 
-    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>object</th>
+      <td><p><code>scDiffCom</code> object</p></td>
+    </tr>
+    </table>
 
-    <p>An object of class Seurat.</p>
-    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p><em>A single-cell transcriptomic atlas characterizes
- ageing tissues in the mouse</em>, Tabula Muris Consortium (2020)
-(<a href='https://pubmed.ncbi.nlm.nih.gov/32669714/'>PMID: 32669714</a>)</p>
+    <p>A scDiffCom object with an empty list for <code>cci_table_raw</code>.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

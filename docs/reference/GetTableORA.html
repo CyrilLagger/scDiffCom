@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Return some of the scDiffCom ORA data.tables — GetTableORA • scDiffCom</title>
+<title>Return information from some of the scDiffCom ORA data.tables — GetTableORA • scDiffCom</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Return some of the scDiffCom ORA data.tables — GetTableORA" />
-<meta property="og:description" content="Return some of the scDiffCom ORA data.tables" />
+<meta property="og:title" content="Return information from some of the scDiffCom ORA data.tables — GetTableORA" />
+<meta property="og:description" content="Return information from some of the scDiffCom ORA data.tables" />
 
 
 
@@ -118,21 +118,18 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Return some of the scDiffCom ORA data.tables</h1>
+    <h1>Return information from some of the scDiffCom ORA data.tables</h1>
     
     <div class="hidden name"><code>GetTableORA.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Return some of the scDiffCom ORA data.tables</p>
+    <p>Return information from some of the scDiffCom ORA data.tables</p>
     </div>
 
     <pre class="usage"><span class='fu'>GetTableORA</span><span class='op'>(</span><span class='va'>object</span>, <span class='va'>categories</span>, <span class='va'>simplified</span><span class='op'>)</span>
 
 <span class='co'># S4 method for scDiffCom</span>
-<span class='fu'>GetTableORA</span><span class='op'>(</span><span class='va'>object</span>, categories <span class='op'>=</span> <span class='st'>"all"</span>, simplified <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
-
-<span class='co'># S4 method for scDiffComCombined</span>
 <span class='fu'>GetTableORA</span><span class='op'>(</span><span class='va'>object</span>, categories <span class='op'>=</span> <span class='st'>"all"</span>, simplified <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -140,17 +137,17 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>object</th>
-      <td><p>An object of class `scDiffCom` or `scDiffComCombined`</p></td>
+      <td><p><code>scDiffCom</code> object</p></td>
     </tr>
     <tr>
       <th>categories</th>
-      <td><p>A character vector indicating which ORA tables
-to return. Default (<code>"all"</code>) returns all of them.</p></td>
+      <td><p>Names of the categories to return. If <code>"all"</code>
+(default), returns all of them.</p></td>
     </tr>
     <tr>
       <th>simplified</th>
-      <td><p>Logical indicating if all columns or only the most
-informative ones are returned for each data.table. Default is <code>TRUE</code>.</p></td>
+      <td><p>If <code>TRUE</code> (default) only the most
+informative columns of the data.table are returned.</p></td>
     </tr>
     </table>
 

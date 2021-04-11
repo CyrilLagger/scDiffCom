@@ -40,9 +40,8 @@
 
 
 <meta property="og:title" content="The scDiffCom Class — scDiffCom-class" />
-<meta property="og:description" content="A scDiffCom object stores the results of the intercellular
-  communication analysis performed by run_interaction_analysis
-  from a Seurat object." />
+<meta property="og:description" content="An object of this class stores the intercellular communication results
+obtained by calling run_interaction_analysis." />
 
 
 
@@ -126,9 +125,8 @@
     </div>
 
     <div class="ref-description">
-    <p>A scDiffCom object stores the results of the intercellular
-  communication analysis performed by <code>run_interaction_analysis</code>
-  from a Seurat object.</p>
+    <p>An object of this class stores the intercellular communication results
+obtained by calling <code>run_interaction_analysis</code>.</p>
     </div>
 
 
@@ -138,20 +136,18 @@
     
 
 <dl>
-<dt><code>parameters</code></dt><dd><p>A list of the parameters used to build the object.</p></dd>
+<dt><code>parameters</code></dt><dd><p>List of parameters used to build the object.</p></dd>
 
-<dt><code>cci_table_raw</code></dt><dd><p>A data.table with all possible CCIs induced from
+<dt><code>cci_table_raw</code></dt><dd><p>Data.table with all potential CCIs induced from
 the original Seurat object and the internal LRI database.</p></dd>
 
-<dt><code>cci_table_detected</code></dt><dd><p>A data.table with only the detected CCIs obtained
-after filtering.</p></dd>
+<dt><code>cci_table_detected</code></dt><dd><p>Data.table with only the detected CCIs.</p></dd>
 
-<dt><code>ora_table</code></dt><dd><p>A data.table with the results of the
+<dt><code>ora_table</code></dt><dd><p>List of data.tables with the results of the
 over-representation analysis.</p></dd>
 
-<dt><code>distributions</code></dt><dd><p>A list of matrices with the distributions
-over each CCI obtained from the permutation test(s).Only to be used for
-benchmarking or debugging.</p></dd>
+<dt><code>distributions</code></dt><dd><p>List of matrices with the null distributions of each
+CCI.</p></dd>
 
 </dl>
 

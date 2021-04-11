@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>xxx — FilterCCI • scDiffCom</title>
+<title>Filter a scDiffCom object with new filtering parameters — FilterCCI • scDiffCom</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,9 @@
 
 
 
-<meta property="og:title" content="xxx — FilterCCI" />
-<meta property="og:description" content="xxx" />
+<meta property="og:title" content="Filter a scDiffCom object with new filtering parameters — FilterCCI" />
+<meta property="og:description" content="Filtering (and ORA) is performed with new parameters.
+ cci_table_detected and ora_table are updated accordingly." />
 
 
 
@@ -118,13 +119,14 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>xxx</h1>
+    <h1>Filter a scDiffCom object with new filtering parameters</h1>
     
     <div class="hidden name"><code>FilterCCI.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>xxx</p>
+    <p>Filtering (and ORA) is performed with new parameters.
+ <code>cci_table_detected</code> and <code>ora_table</code> are updated accordingly.</p>
     </div>
 
     <pre class="usage"><span class='fu'>FilterCCI</span><span class='op'>(</span>
@@ -146,17 +148,6 @@
   new_threshold_logfc <span class='op'>=</span> <span class='cn'>NULL</span>,
   skip_ora <span class='op'>=</span> <span class='cn'>FALSE</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
-<span class='op'>)</span>
-
-<span class='co'># S4 method for scDiffComCombined</span>
-<span class='fu'>FilterCCI</span><span class='op'>(</span>
-  <span class='va'>object</span>,
-  new_threshold_quantile_score <span class='op'>=</span> <span class='cn'>NULL</span>,
-  new_threshold_p_value_specificity <span class='op'>=</span> <span class='cn'>NULL</span>,
-  new_threshold_p_value_de <span class='op'>=</span> <span class='cn'>NULL</span>,
-  new_threshold_logfc <span class='op'>=</span> <span class='cn'>NULL</span>,
-  skip_ora <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -164,37 +155,48 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>object</th>
-      <td><p>xxx</p></td>
+      <td><p><code>scDiffCom</code> object</p></td>
     </tr>
     <tr>
       <th>new_threshold_quantile_score</th>
-      <td><p>xxx</p></td>
+      <td><p>New threshold value to update
+<code>threshold_quantile_score</code>. If <code>NULL</code> (default),
+the value is not updated.</p></td>
     </tr>
     <tr>
       <th>new_threshold_p_value_specificity</th>
-      <td><p>xxx</p></td>
+      <td><p>New threshold value to update
+<code>threshold_p_value_specificity</code>. If <code>NULL</code> (default),
+the value is not updated.</p></td>
     </tr>
     <tr>
       <th>new_threshold_p_value_de</th>
-      <td><p>xxx</p></td>
+      <td><p>New threshold value to update
+<code>threshold_p_value_de</code>. If <code>NULL</code> (default),
+the value is not updated.</p></td>
     </tr>
     <tr>
       <th>new_threshold_logfc</th>
-      <td><p>xxx</p></td>
+      <td><p>New threshold value to update
+<code>threshold_logfc</code>. If <code>NULL</code> (default),
+the value is not updated.</p></td>
     </tr>
     <tr>
       <th>skip_ora</th>
-      <td><p>xxx</p></td>
+      <td><p>Default is <code>FALSE</code>. If <code>TRUE</code>, the ORA is not
+performed with the new parameters and <code>ora_table</code> is set to an
+empty list. May be useful if one wants to quickly test (loop-over) several
+values of parameters and by-passing the computing time of the ORA.</p></td>
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>Should messages be printed?</p></td>
+      <td><p>If <code>TRUE</code> (default) progress messages are printed.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>xxx</p>
+    <p>A scDiffCom object with updated results.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

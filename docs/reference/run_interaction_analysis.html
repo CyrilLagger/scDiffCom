@@ -40,9 +40,14 @@
 
 
 <meta property="og:title" content="Run (differential) intercellular communication analysis — run_interaction_analysis" />
-<meta property="og:description" content="Perform (differential) cell-cell interaction analysis based on
- scRNA-seq data (as a Seurat object) and an internal database of
- ligand-receptor interactions (LRIs)." />
+<meta property="og:description" content="Perform (differential) cell type to cell type interaction analysis from
+ scRNA-seq data (in the form of a
+ Seurat object)
+ based on a internal database of ligand-receptor interactions (LRIs). It
+ infers biologically relevant cell-cell interactions (CCIs) and how they
+ change between two conditions of interest. An over-representation analysis
+ is also directly conducted to determine dominant changing signals at the
+ level of the genes, cell types and GO Terms/KEGG Pathways." />
 
 
 
@@ -126,9 +131,14 @@
     </div>
 
     <div class="ref-description">
-    <p>Perform (differential) cell-cell interaction analysis based on
- scRNA-seq data (as a Seurat object) and an internal database of
- ligand-receptor interactions (LRIs).</p>
+    <p>Perform (differential) cell type to cell type interaction analysis from
+ scRNA-seq data (in the form of a
+ <a href='https://satijalab.org/seurat/index.html'>Seurat object</a>)
+ based on a internal database of ligand-receptor interactions (LRIs). It
+ infers biologically relevant cell-cell interactions (CCIs) and how they
+ change between two conditions of interest. An over-representation analysis
+ is also directly conducted to determine dominant changing signals at the
+ level of the genes, cell types and GO Terms/KEGG Pathways.</p>
     </div>
 
     <pre class="usage"><span class='fu'>run_interaction_analysis</span><span class='op'>(</span>
@@ -158,126 +168,193 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>seurat_object</th>
-      <td><p><em>Seurat</em> object that contains normalized data
-and relevant <code>meta.data</code> annotations. Gene names must be MGI (mouse)
-or HGNC (human).</p></td>
+      <td><p><code>Seurat</code> object with normalized data. Must
+contain relevant <code>meta.data</code> columns (see below). Gene names must be
+ MGI (mouse) or HGNC (human) approved symbols.</p></td>
     </tr>
     <tr>
       <th>LRI_species</th>
-      <td><p>Either "mouse" or "human". It specifies which internal
-LRI database to use.</p></td>
+      <td><p>Species corresponding to <code>seurat_object</code> and that
+indicates which internal LRI database to use. Can either be <code>"mouse"</code>
+or <code>"human"</code>.</p></td>
     </tr>
     <tr>
       <th>seurat_celltype_id</th>
-      <td><p>Column name of the <em>Seurat</em> <code>meta.data</code>
-that indicates the cell-type of each cell (e.g.: <code>"CELL_TYPE"</code>).</p></td>
+      <td><p>Name of the <code>meta.data</code> column that contains
+the cell-type annotations (e.g.: <code>"CELL_TYPE"</code>).</p></td>
     </tr>
     <tr>
       <th>seurat_condition_id</th>
-      <td><p>For differential analysis, a list with three
-named items:</p><ol>
-<li><p>column_name: Column name of the <em>Seurat</em> <code>meta.data</code>
-   that indicates to which of two groups each cell belongs (e.g. "AGE")</p></li>
-<li><p>cond1_name: name of the first condition (e.g. "YOUNG")</p></li>
-<li><p>cond2_name: name of the second condition (e.g. "OLD")</p></li>
-</ol><p>By convention, LOGFC are positive when <code>score(cond2) &gt; score(cond1)</code>.
-Setting this parameter to <code>NULL</code> allows the user to not perform the
-differential analysis and only return detected cell-cell interactions.</p></td>
+      <td><p>List that contains information regarding the
+groups/conditions on which to perform differential analysis. Must contain
+three named items:</p><ol>
+<li><p><code>column_name</code>: name of the <code>meta.data</code> column
+   that indicates the group of each cell (e.g. <code>"AGE"</code>)</p></li>
+<li><p>cond1_name: name of the first condition (e.g. <code>"YOUNG"</code>)</p></li>
+<li><p>cond2_name: name of the second condition (e.g. <code>"OLD"</code>)</p></li>
+</ol><p>Can also be set to <code>NULL</code> to only perform a detection analysis
+(see Details).</p></td>
     </tr>
     <tr>
       <th>iterations</th>
-      <td><p>Number of permutations for the statistical analysis.
-Default is <code>1000</code>. Can be set to <code>0</code> to quickly return partial
-results without performing the statistical analysis.</p></td>
+      <td><p>Number of permutations to perform the statistical
+analysis. The default (<code>1000</code>) is a good compromise to obtain
+reasonably accurate p-values in a short time. If computing resources
+allows it, it is recommended to choose a higher value (e.g. <code>10000</code>)
+and to run the analysis in parallel (see Details). Can also be set to
+<code>0</code> for debugging and quickly returning partial results without
+statistical significance.</p></td>
     </tr>
     <tr>
       <th>scdiffcom_object_name</th>
-      <td><p>Name of the <em>scDiffCom</em> object that will
-be returned. Default is "scDiffCom_object". Having different names for
-different objects is useful to combine them later on in an
-<em>scDiffComCombined</em> object.</p></td>
+      <td><p>Name of the <code>scDiffCom</code> object that will
+be returned.</p></td>
     </tr>
     <tr>
       <th>seurat_assay</th>
-      <td><p><em>Seurat</em> assay from which to extract the data.
-Default is "RNA".</p></td>
+      <td><p>Assay of <code>seurat_object</code> from which to extract data.
+See Details for an explanation on how data are extracted based on the three
+parameters <code>seurat_assay</code>, <code>seurat_slot</code> and <code>log_scale</code>.</p></td>
     </tr>
     <tr>
       <th>seurat_slot</th>
-      <td><p><em>Seurat</em> slot from which to extract the data.
-Default is "data".</p></td>
+      <td><p>Slot of <code>seurat_object</code> from which to extract data.
+See Details for an explanation on how data are extracted based on the three
+parameters <code>seurat_assay</code>, <code>seurat_slot</code> and <code>log_scale</code>.</p></td>
     </tr>
     <tr>
       <th>log_scale</th>
-      <td><p>Whether to use log-normalized data or non-log-normalized
-data. Default is <code>FALSE</code>.</p></td>
+      <td><p>When <code>FALSE</code> (the default, recommended), data are
+treated as normalized but not log1p-transformed. See Details for an
+explanation on how data are extracted based on the three
+parameters <code>seurat_assay</code>, <code>seurat_slot</code> and <code>log_scale</code>.</p></td>
     </tr>
     <tr>
       <th>score_type</th>
-      <td><p>Either "geometric_mean" (default) or "arithmetic_mean".
-THe metric to compute the CCI score.</p></td>
+      <td><p>Metric used to compute cell-cell interaction (CCI) scores.
+Can either be <code>"geometric_mean"</code> (default) or <code>"arithmetic_mean"</code>.
+It is strongly recommended to use the geometric mean, especially when
+performing differential analysis. The arithmetic mean might be used when
+uniquely doing a detection analysis and results want to be compared
+with those of another package.</p></td>
     </tr>
     <tr>
       <th>threshold_min_cells</th>
-      <td><p>Used to filter out CCIs for which either the
-ligand(s) or receptor(s) are expressed in less cells than this threshold.
-Cell-types that have less cells that the threshold are removed initially.
-Default is <code>5</code>.</p></td>
+      <td><p>Minimal number of cells - of a given cell type
+and condition - required to express a gene for this gene to be considered
+expressed in the corresponding cell type. Incidentally, cell types with
+less cells than this threshold are removed from the analysis.
+Set to  <code>5</code> by default.</p></td>
     </tr>
     <tr>
       <th>threshold_pct</th>
-      <td><p>Used to filter out the CCIs for which either the
-ligand(s) or receptor(s) are expressed in less than this fraction of the
-cells. Default is <code>0.1</code>.</p></td>
+      <td><p>Minimal fraction of cells - of a given cell type
+and condition - required to express a gene for this gene to be considered
+expressed in the corresponding cell type. Set to  <code>0.1</code> by default.</p></td>
     </tr>
     <tr>
       <th>threshold_quantile_score</th>
-      <td><p>Quantile value used to filter interactions
-with low scores. Default is <code>0.2</code>. Can be modified at will after
-statistical analysis.</p></td>
+      <td><p>Threshold value used in conjunction with
+<code>threshold_p_value_specificity</code> to establish if a CCI is considered as
+"detected". The default (<code>0.2</code>) indicates that CCIs with a score
+in the 20% lowest-scores are not considered detected. Can be modified
+without the need to re-perform the permutation analysis (see Details).</p></td>
     </tr>
     <tr>
       <th>threshold_p_value_specificity</th>
-      <td><p>Maximal BH p-value to consider
-an interaction to be specific. Default is <code>0.05</code>. Can be modified at
-will after statistical analysis.</p></td>
+      <td><p>Threshold value used in conjunction
+with <code>threshold_quantile_score</code> to establish if a CCI is considered as
+"detected". CCIs with a specificity p-value above the threshold (<code>0.05</code>
+by default) are not considered detected. Can be modified
+without the need to re-perform the permutation analysis (see Details).</p></td>
     </tr>
     <tr>
       <th>threshold_p_value_de</th>
-      <td><p>Maximal BH p-value to consider an interaction
-to be differentially expressed. Default is <code>0.05</code>. Can be modified at
-will after statistical analysis.</p></td>
+      <td><p>Threshold value used in conjunction
+with <code>threshold_logfc</code> to establish how CCIs are differentially
+expressed between <code>cond1_name</code> and <code>cond2_name</code>. CCIs with a
+differential p-value above the threshold (<code>0.05</code> by default) are not
+considered to change significantly. Can be modified without the need to
+re-perform the permutation analysis (see Details).</p></td>
     </tr>
     <tr>
       <th>threshold_logfc</th>
-      <td><p>Minimal LOGFC (natural log scale) to consider an
-interaction to be differentially expressed. Default is <code><a href='https://rdrr.io/r/base/Log.html'>log(1.5)</a></code>.
-Can be modified at will after statistical analysis.</p></td>
+      <td><p>Threshold value used in conjunction with
+<code>threshold_p_value_de</code> to establish how CCIs are differentially
+expressed between <code>cond1_name</code> and <code>cond2_name</code>. CCIs with an
+absolute logFC below the threshold (<code><a href='https://rdrr.io/r/base/Log.html'>log(1.5)</a></code> by default) are
+considered "FLAT". Can be modified without the need to
+re-perform the permutation analysis (see Details).</p></td>
     </tr>
     <tr>
       <th>return_distributions</th>
-      <td><p>Whether to return the null distributions
-computed by the permutation test. For benchmarking and testing purpose.
-Only available when computing less than or 1000 <code>iterations</code> for
-memory concerns. Default is <code>FALSE</code>.</p></td>
+      <td><p><code>FALSE</code> by default. If <code>TRUE</code>, the
+distributions obtained from the permutation test are returned alongside
+the other results. May be used for testing or benchmarking purposes. Can
+only be enabled when <code>iterations</code> is less than <code>1000</code> in order
+to avoid out of memory issues.</p></td>
     </tr>
     <tr>
       <th>seed</th>
-      <td><p>Set a random seed. Default is <code>42</code>.</p></td>
+      <td><p>Set a random seed (<code>42</code> by default) to obtain reproducible
+results.</p></td>
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>Whether to print messages. Default is <code>TRUE</code>.</p></td>
+      <td><p>If <code>TRUE</code> (default), print progress messages.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>An S4 object of class <code>scDiffCom</code>.</p>
+    <p>An S4 object of class <code><a href='scDiffCom-class.html'>scDiffCom-class</a></code>.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>TODO</p>
+    <p>The primary use of this function (and of the package) is to perform
+ differential analysis of intercellular communication. However, it is also
+ possible to only perform a detection analysis (by setting
+ <code>seurat_condition_id</code> to <code>NULL</code>), for example if one wants to
+ infer cell-cell interactions from a dataset without conditions on the cells.</p>
+<p>By convention when performing differential analysis, LOGFC are computed as
+ <code><a href='https://rdrr.io/r/base/Log.html'>log(score(cond2_name)/score(cond1_name))</a></code>. In other words,
+ "UP"-regulated CCIs have for example a larger score in <code>cond2_name</code>.</p>
+<p>Parallel computing. If computer resources allows it, it is recommended to
+ run this function in parallel in order to speed up the analysis for large
+ dataset and/or to obtain better accuracy on the p-values by setting a higher
+ number of <code>iterations</code>. This is as simple as loading the
+ <a href='https://cran.r-project.org/web/packages/future/index.html'>future</a>
+ package and setting an appropriate <code>plan</code> (see e.g. this
+ <a href='https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html'>vignette</a>).</p>
+<p>Data extraction. The UMI or read counts matrix is extracted from
+ the assay <code>seurat_assay</code> and the slot <code>seurat_slot</code>. By default,
+ it is assumed that <code>seurat_object</code> contains log1p-transformed
+ normalized data in the slot "data" of its assay "RNA". If <code>log_scale</code>
+ is <code>FALSE</code> (as recommended), the data are <code><a href='https://rdrr.io/r/base/Log.html'>expm1()</a></code> transformed
+ in order to recover normalized values but not in log scale.</p>
+<p>Modifying filtering parameters (differential analysis only). As long as
+ the slot <code>cci_table_raw</code> of
+ the returned scDiffCom object is not erased, filtering parameters can be
+ modified to recompute the slots <code>cci_table_detected</code> and
+ <code>ora_table</code>, without re-performing the time consuming permutation
+ analysis. This may be useful if one wants a fast way to analyze how the
+ results behave in function of, say, different LOGFC thresholds. In practice,
+ this can be done by calling the functions <code><a href='FilterCCI.html'>FilterCCI</a></code> or
+ <code><a href='RunORA.html'>RunORA</a></code>.</p>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='fu'>run_interaction_analysis</span><span class='op'>(</span>
+  seurat_object <span class='op'>=</span> <span class='va'>seurat_sample_tms_liver</span>,
+  LRI_species <span class='op'>=</span> <span class='st'>"mouse"</span>,
+  seurat_celltype_id <span class='op'>=</span> <span class='st'>"cell_type"</span>,
+  seurat_condition_id <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>
+    column_name <span class='op'>=</span> <span class='st'>"age_group"</span>,
+    cond1_name <span class='op'>=</span> <span class='st'>"YOUNG"</span>,
+    cond2_name <span class='op'>=</span> <span class='st'>"OLD"</span>
+  <span class='op'>)</span>
+<span class='op'>)</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

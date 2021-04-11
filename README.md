@@ -3,7 +3,7 @@
 
 ## Overview
 
-This package provides analysis tools to investigate changes in intercellular 
+This package provides tools to investigate changes in intercellular 
 communication between two conditions of interest in scRNA-seq datasets.
 
 It relies on a curated collection of ligand-receptor interactions (available for 
@@ -47,8 +47,8 @@ You can also get a stable CRAN release:
 
 ## Typical workflow
 
-For a usage example, please look at the vignette
-available [here](https://cyrillagger.github.io/scDiffCom/)
+For a usage example, please look at the vignette available
+[here](https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html)
 
 
 ## Reference
