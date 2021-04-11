@@ -94,8 +94,8 @@ head(LRI_mouse$LRI_curated_KEGG)
 
 All differential intercellular communication results can be obtained from a 
 single call to the function `run_interaction_analysis`. For a more advanced
-usage and control of all parameters, please see xxx and look at
-`?run_interation_analysis`.
+usage and control of all parameters, please see the relevant section below
+and look at `?run_interation_analysis`.
 
 In standard mode, it will perform the following steps:
 
@@ -240,6 +240,7 @@ aging_example_strong_logfc <- FilterCCI(
 ### Performing ORA on a custom category
 
 ```{r}
+library(data.table)
 
 cell_types <-  c(
   "B cell",
@@ -280,7 +281,8 @@ detection_example <- run_interaction_analysis(
   seurat_object = seurat_object,
   LRI_species = "mouse",
   seurat_celltype_id = "cell_type",
-  seurat_condition_id = NULL
+  seurat_condition_id = NULL,
+  iterations = 100
 )
 
 ```

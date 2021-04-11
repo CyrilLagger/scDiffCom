@@ -45,7 +45,8 @@ Suggests:
     knitr,
     rmarkdown,
     purrr,
-    ggplot2
+    ggplot2,
+    pkgdown
 Imports: 
     data.table,
     DelayedArray,

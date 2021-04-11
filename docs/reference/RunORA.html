@@ -40,10 +40,9 @@
 
 
 <meta property="og:title" content="Run over-representation analysis — RunORA" />
-<meta property="og:description" content="Perform over-representation analysis (ORA) on a scDiffCom object. Note that
-ORA is run automatically on default categories when calling
-run_interaction_analysis or FilterCCI. This function may be
-useful to perform ORA on other custom categories." />
+<meta property="og:description" content="Perform over-representation analysis (ORA) on a scDiffCom object, with
+the possibility to define custom categories in addition to the standard
+ones supported by default." />
 
 
 
@@ -127,15 +126,16 @@ useful to perform ORA on other custom categories." />
     </div>
 
     <div class="ref-description">
-    <p>Perform over-representation analysis (ORA) on a scDiffCom object. Note that
-ORA is run automatically on default categories when calling
-<code>run_interaction_analysis</code> or <code>FilterCCI</code>. This function may be
-useful to perform ORA on other custom categories.</p>
+    <p>Perform over-representation analysis (ORA) on a scDiffCom object, with
+the possibility to define custom categories in addition to the standard
+ones supported by default.</p>
     </div>
 
     <pre class="usage"><span class='fu'>RunORA</span><span class='op'>(</span>
   <span class='va'>object</span>,
-  categories <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"ER_CELLTYPES"</span>, <span class='st'>"LRI"</span>, <span class='st'>"GO_TERMS"</span>, <span class='st'>"KEGG_PWS"</span><span class='op'>)</span>,
+  categories <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"LRI"</span>, <span class='st'>"LIGAND_COMPLEX"</span>, <span class='st'>"RECEPTOR_COMPLEX"</span>, <span class='st'>"ER_CELLTYPES"</span>,
+    <span class='st'>"EMITTER_CELLTYPE"</span>, <span class='st'>"RECEIVER_CELLTYPE"</span>, <span class='st'>"GO_TERMS"</span>, <span class='st'>"KEGG_PWS"</span><span class='op'>)</span>,
+  extra_annotations <span class='op'>=</span> <span class='cn'>NULL</span>,
   overwrite <span class='op'>=</span> <span class='cn'>TRUE</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span>
@@ -143,7 +143,9 @@ useful to perform ORA on other custom categories.</p>
 <span class='co'># S4 method for scDiffCom</span>
 <span class='fu'>RunORA</span><span class='op'>(</span>
   <span class='va'>object</span>,
-  categories <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"ER_CELLTYPES"</span>, <span class='st'>"LRI"</span>, <span class='st'>"GO_TERMS"</span>, <span class='st'>"KEGG_PWS"</span><span class='op'>)</span>,
+  categories <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"LRI"</span>, <span class='st'>"LIGAND_COMPLEX"</span>, <span class='st'>"RECEPTOR_COMPLEX"</span>, <span class='st'>"ER_CELLTYPES"</span>,
+    <span class='st'>"EMITTER_CELLTYPE"</span>, <span class='st'>"RECEIVER_CELLTYPE"</span>, <span class='st'>"GO_TERMS"</span>, <span class='st'>"KEGG_PWS"</span><span class='op'>)</span>,
+  extra_annotations <span class='op'>=</span> <span class='cn'>NULL</span>,
   overwrite <span class='op'>=</span> <span class='cn'>TRUE</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
@@ -157,8 +159,18 @@ useful to perform ORA on other custom categories.</p>
     </tr>
     <tr>
       <th>categories</th>
-      <td><p>Name of the categories on which to perform ORA. Default
-is <code><a href='https://rdrr.io/r/base/c.html'>c("ER_CELLTYPES", "LRI", "GO_TERMS")</a></code>.</p></td>
+      <td><p>Names of the standard categories on which to perform ORA.
+Default is all standard categories, namely
+<code><a href='https://rdrr.io/r/base/c.html'>c("LRI", "LIGAND_COMPLEX", "RECEPTOR_COMPLEX", "ER_CELLTYPES",
+"EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", "GO_TERMS", "KEGG_PWS")</a></code></p></td>
+    </tr>
+    <tr>
+      <th>extra_annotations</th>
+      <td><p>Convenience parameter to perform ORA on user-defined
+non-standard categories. If <code>NULL</code> (default), ORA is
+performed only on standard categories from <code>categories</code>. Otherwise it
+must be a list of data.tables
+or data.frames (see Details).</p></td>
     </tr>
     <tr>
       <th>overwrite</th>
@@ -174,6 +186,15 @@ in case they correspond to a category passed in <code>categories</code>.</p></td
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A scDiffCom object with updated <code>ora_table</code>.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Additional user-defined ORA categories can be added via the
+ parameter <code>extra_annotations</code>. The data.frames or data.tables in this
+ list must have exactly two columns that indicates a relationship between
+ values from a standard category (first column) to values of the new
+ category (second column). As a typical example, this
+ <a href='https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html'>vignette</a>
+ shows how to perform ORA on cell type families attached to each cell types.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

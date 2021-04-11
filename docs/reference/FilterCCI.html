@@ -136,6 +136,7 @@
   new_threshold_p_value_de <span class='op'>=</span> <span class='cn'>NULL</span>,
   new_threshold_logfc <span class='op'>=</span> <span class='cn'>NULL</span>,
   skip_ora <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  extra_annotations <span class='op'>=</span> <span class='cn'>NULL</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span>
 
@@ -147,6 +148,7 @@
   new_threshold_p_value_de <span class='op'>=</span> <span class='cn'>NULL</span>,
   new_threshold_logfc <span class='op'>=</span> <span class='cn'>NULL</span>,
   skip_ora <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  extra_annotations <span class='op'>=</span> <span class='cn'>NULL</span>,
   verbose <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
@@ -189,6 +191,13 @@ empty list. May be useful if one wants to quickly test (loop-over) several
 values of parameters and by-passing the computing time of the ORA.</p></td>
     </tr>
     <tr>
+      <th>extra_annotations</th>
+      <td><p>Convenience parameter to perform ORA on user-defined
+non-standard categories. If <code>NULL</code> (default), ORA is
+performed on standard categories. Otherwise it must be a list of data.tables
+or data.frames (see Details).</p></td>
+    </tr>
+    <tr>
       <th>verbose</th>
       <td><p>If <code>TRUE</code> (default) progress messages are printed.</p></td>
     </tr>
@@ -196,7 +205,20 @@ values of parameters and by-passing the computing time of the ORA.</p></td>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A scDiffCom object with updated results.</p>
+    <p>A scDiffCom object with updated results in <code>cci_table_detected</code>
+and <code>ora_table</code>.</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>When <code>FilterCCI</code> is called with new parameters, both
+ <code>cci_table_detected</code> and <code>ora_table</code> need to be updated. For
+ ORA, a call to <code>RunORA</code> is automatically performed on all standard
+ categories. Additional user-defined ORA categories can be added via the
+ parameter <code>extra_annotations</code>. The data.frames or data.tables in this
+ list must have exactly two columns that indicates a relationship between
+ values from a standard category (first column) to values of the new
+ category (second column). As a typical example, this
+ <a href='https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html'>vignette</a>
+ shows how to perform ORA on cell type families attached to each cell types.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
