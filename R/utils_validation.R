@@ -1,8 +1,4 @@
-#' Check the parameters
-#'
-#' @param params A list of parameters.
-#'
-#' @noRd
+
 validate_parameters <- function(
   params,
   from_inputs
@@ -155,12 +151,9 @@ validate_parameters <- function(
   )
 }
 
-#' Check the validity of \code{parameters}
-#'
-#' @param parameters A list of parameters to check the validity of.
-#'
-#' @noRd
-validate_slot_parameters <- function(parameters) {
+validate_slot_parameters <- function(
+  parameters
+) {
   res <- validate_parameters(
     params = parameters,
     from_inputs = FALSE
@@ -175,12 +168,6 @@ validate_slot_parameters <- function(parameters) {
   }
 }
 
-#' Check the validity of \code{cci_table_raw}
-#'
-#' @param parameters A list of parameters.
-#' @param cci_table_raw A data.table to check the validity of.
-#'
-#' @noRd
 validate_slot_cci_table_raw <- function(
   parameters,
   cci_table_raw
@@ -188,12 +175,6 @@ validate_slot_cci_table_raw <- function(
   NULL
 }
 
-#' Check the validity of \code{cci_table_detected}
-#'
-#' @param parameters A list of parameters.
-#' @param cci_table_detected A data.table to check the validity of.
-#'
-#' @noRd
 validate_slot_cci_table_detected <- function(
   parameters,
   cci_table_detected
@@ -201,12 +182,6 @@ validate_slot_cci_table_detected <- function(
   NULL
 }
 
-#' Check the validity of \code{ora_table}
-#'
-#' @param parameters A list of parameters.
-#' @param ora_table A list of data.tables to check the validity of.
-#'
-#' @noRd
 validate_slot_ora_table <- function(
   parameters,
   ora_table
@@ -214,12 +189,6 @@ validate_slot_ora_table <- function(
   NULL
 }
 
-#' Check the validity of \code{ora_stringent}
-#'
-#' @param parameters A list of parameters.
-#' @param ora_table A list of data.tables to check the validity of.
-#'
-#' @noRd
 validate_slot_ora_stringent <- function(
   parameters,
   ora_table
@@ -227,12 +196,6 @@ validate_slot_ora_stringent <- function(
   NULL
 }
 
-#' Check the validity of \code{distributions}
-#'
-#' @param parameters A list of parameters.
-#' @param distributions A list of matrices to check the validity of.
-#'
-#' @noRd
 validate_slot_distributions <- function(
   parameters,
   distributions
@@ -240,7 +203,7 @@ validate_slot_distributions <- function(
   NULL
 }
 
-validate_slot_is_combined <- function()
-{
+validate_slot_is_combined <- function(
+) {
   NULL
 }

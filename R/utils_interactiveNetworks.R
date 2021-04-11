@@ -75,7 +75,9 @@ build_interactive_network <- function(
   cci_table_detected <- copy(object@cci_table_detected)
   if (class_signature == "scDiffComCombined") {
     object_name <- subobject_name
-    cci_table_detected <- cci_table_detected[ID == subobject_name][, ID := NULL]
+    cci_table_detected <- cci_table_detected[
+      ID == subobject_name
+      ][, ID := NULL]
   } else {
     object_name <- object@parameters$object_name
   }
@@ -90,7 +92,9 @@ build_interactive_network <- function(
         paste0(
           "No abbreviation will be used:",
           " `abbreviation table` must be a 2-colum data.frame or data.table",
-          "with names ORIGINAL_CELLTYPE and ABBR_CELLTYPE"))
+          "with names ORIGINAL_CELLTYPE and ABBR_CELLTYPE"
+          )
+        )
       abbreviation_table <- NULL
     } else {
       setDT(abbreviation_table)
@@ -508,7 +512,10 @@ process_celltype_pairs_enrichment <- function(
   )
   cols_to_select <- c(cols_to_select1, cols_to_select2)
   dt_ora <- dt_ora[, cols_to_select, with = FALSE]
-  dt_ora[, (cols_to_select2) := lapply(.SD, signif, 3), .SDcol = cols_to_select2]
+  dt_ora[
+    ,
+    (cols_to_select2) := lapply(.SD, signif, 3), .SDcol = cols_to_select2
+    ]
   # if (sum(is.na(dt_ora)) > 0 | sum(dt_ora == Inf) > 0 ) {
   #   stop("Inf or NA in `dt_ora`")
   # }
@@ -1105,7 +1112,10 @@ edges_legend <- function(
         arrows = c("to", "to", "to", "to")
       )
     )
-  } else if (network_type %in% c("condition1_network", "condition2_network")) {
+  } else if (network_type %in% c(
+    "condition1_network",
+    "condition2_network"
+    )) {
     return(
       data.frame(
         color = "darkblue",
@@ -1235,7 +1245,6 @@ edge_annotation_html <- function(
       )
     ]
   }
-
   return(edge_table)
 }
 
