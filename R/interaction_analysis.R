@@ -143,8 +143,6 @@
 #'   )
 #' )
 #' }
-
-
 run_interaction_analysis <- function(
   seurat_object,
   LRI_species,

@@ -269,7 +269,7 @@ build_ora_dt <- function(
     COUNTS_NOTVALUE_NOTREGULATED <- COUNTS_VALUE_NOTREGULATED <-
     COUNTS_VALUE_REGULATED_temp <- COUNTS_VALUE_NOTREGULATED_temp<- CATEGORY <-
     ER_CELLTYPES <- ID <-  NULL
-  cci_dt <- data.table::copy(
+  cci_dt <- copy(
     cci_table_detected
   )
   if (global & (category == "ER_CELLTYPES")) {
@@ -313,7 +313,7 @@ build_ora_dt <- function(
           new_name <- "KEGG_NAME"
           new_category <- "KEGG_intersection"
         }
-        counts_intersection_dt <- data.table::merge.data.table(
+        counts_intersection_dt <- merge.data.table(
           new_intersection_dt,
           counts_dt,
           by.x = "LRI",
@@ -351,7 +351,7 @@ build_ora_dt <- function(
           "LRI"
         ) := NULL]
         counts_intersection_dt <- unique(counts_intersection_dt)
-        data.table::setnames(
+        setnames(
           counts_intersection_dt,
           old = c(
             new_id, new_name,
@@ -383,7 +383,7 @@ build_ora_dt <- function(
         !(cols_to_rename %in%
             c("VALUE", "VALUE_BIS", "CATEGORY"))
       ]
-      data.table::setnames(
+      setnames(
         x = counts_dt,
         old = cols_to_rename,
         new = paste0(cols_to_rename, "_", reg)
@@ -443,11 +443,11 @@ extract_category_counts <- function(
   } else {
     stop("Type of ORA not supported.")
   }
-  dt_counts <- data.table::rbindlist(
+  dt_counts <- rbindlist(
     l = lapply(
       X = category,
       FUN = function(categ) {
-        data.table::merge.data.table(
+        merge.data.table(
           x = dt_regulated[
             ,
             list(
@@ -469,7 +469,7 @@ extract_category_counts <- function(
     ),
     use.names = TRUE
   )
-  data.table::setnafill(
+  setnafill(
     x = dt_counts,
     type = "const",
     fill = 0,
