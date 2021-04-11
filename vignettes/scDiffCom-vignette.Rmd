@@ -179,19 +179,36 @@ top10_down_regulated$CCI
 
 
 ```
-Results from the over-representation analysis allows us to find patterns
-associated with, say, up-regulated CCIs.
+Results from the over-representation analysis allows us to find dominant
+changing patterns. This can be accessed from the slot \code{ora_table} and the
+top terms can be visualized on a plot.
 
 
 ```{r}
 
+# retrieve ORA results for all categories
 ORA_tables <- GetTableORA(aging_example, "all", simplified = TRUE)
 
+# investigate the up-regulated LRIs
 OR_LRI_up <- ORA_tables$LRI[OR_UP > 1 & BH_P_VALUE_UP <= 0.01]$VALUE
 OR_LRI_up
 
-OR_GO_up <- ORA_tables$GO_TERMS[OR_UP > 1 & BH_P_VALUE_UP <= 0.01]$VALUE
-head(OR_GO_up)
+PlotORA(
+  object = aging_example,
+  category = "LRI",
+  regulation = "UP"
+)
+
+# investigate the down-regulated GO-terms
+OR_GO_down <- ORA_tables$GO_TERMS[OR_UP > 1 & BH_P_VALUE_UP <= 0.01]$VALUE
+head(OR_GO_down)
+
+PlotORA(
+  object = aging_example,
+  category = "GO_TERMS",
+  regulation = "DOWN",
+  GO_aspect = "biological_process"
+)
 
 ```
 
@@ -209,4 +226,63 @@ BuildNetwork(
 
 ## Advanced functionalities
 
-TODO
+### Modifying filtering parameters
+
+```{r}
+
+aging_example_strong_logfc <- FilterCCI(
+  object = aging_example,
+  new_threshold_logfc = log(2)
+)
+
+```
+
+### Performing ORA on a custom category
+
+```{r}
+
+cell_types <-  c(
+  "B cell",
+  "T cell",
+  "endothelial cell of hepatic sinusoid",
+  "hepatocyte",
+  "myeloid leukocyte"
+)
+cell_families <- c(
+  "leukocyte",
+  "leukocyte",
+  "endothelial cell",
+  "epithelial cell",
+  "leukocyte"
+)
+
+cell_families_dt <- data.table(
+  EMITTER_CELLTYPE = cell_types,
+  EMITTER_CELLFAMILY = cell_families
+)
+
+RunORA(
+  object = aging_example,
+  categories = c("LRI"),
+  extra_annotations = list(
+    cell_families_dt
+  ),
+  overwrite = TRUE
+)
+
+```
+
+### Running a detection analysis without differential analysis
+
+```{r}
+
+detection_example <- run_interaction_analysis(
+  seurat_object = seurat_object,
+  LRI_species = "mouse",
+  seurat_celltype_id = "cell_type",
+  seurat_condition_id = NULL
+)
+
+```
+
+### Returning null distributions
