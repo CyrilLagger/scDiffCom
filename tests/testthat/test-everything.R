@@ -564,6 +564,7 @@ scdiffcom_objects <- lapply(
     run_ora(
       object  = object,
       categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
+      extra_annotations = NULL,
       overwrite = TRUE,
       stringent_or_default = "default",
       stringent_logfc_threshold = NULL,
@@ -705,9 +706,36 @@ test_that("fisher test is done correctly on GO terms", {
   )
 })
 
-# RunORA(
-#   scdiffcom_objects$cond_stat
-# )
+## Adding extra annotations to ORA #####
+
+cell_types <-  c(
+  "B cell",
+  "T cell",
+  "endothelial cell of hepatic sinusoid",
+  "hepatocyte",
+  "myeloid leukocyte"
+)
+cell_families <- c(
+  "leukocyte",
+  "leukocyte",
+  "endothelial cell",
+  "epithelial cell",
+  "leukocyte"
+)
+
+cell_families_dt <- data.table(
+  EMITTER_CELLTYPE = cell_types,
+  EMITTER_CELLFAMILY = cell_families
+)
+
+RunORA(
+  object = scdiffcom_objects$cond_stat,
+  categories = c("LRI"),
+  extra_annotations = list(
+    cell_families_dt
+  ),
+  overwrite = TRUE
+)
 
 ## Check building combined-objects
 
