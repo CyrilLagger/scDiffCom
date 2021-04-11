@@ -33,7 +33,7 @@ run_filtering_and_ora <- function(
     stop(paste0(
       "Invalid parameters: ",
       paste0(check_parameters$check, collapse = " and ")
-      ))
+    ))
   } else {
     temp_param <- check_parameters$params
   }
@@ -45,7 +45,7 @@ run_filtering_and_ora <- function(
     cond2 = temp_param$seurat_condition_id$cond2_name
   )
   cci_dt <- copy(x = object@cci_table_raw)
-  if (verbose) message("Filtering and cleaning `raw` CCIs.")
+  if (verbose) message("Filtering and cleaning 'raw' CCIs.")
   cci_dt <- process_cci_raw(
     cci_dt = cci_dt,
     condition_inputs = condition_inputs,
@@ -156,7 +156,7 @@ process_cci_raw <- function(
     cci_dt <- cci_dt[
       get(paste0("IS_CCI_EXPRESSED_", condition_inputs$cond1)) == TRUE |
         get(paste0("IS_CCI_EXPRESSED_", condition_inputs$cond2)) == TRUE
-      ]
+    ]
     if (permutation_analysis) {
       cci_dt[, c(
         paste0("BH_P_VALUE_", condition_inputs$cond1),
@@ -165,11 +165,11 @@ process_cci_raw <- function(
       ) := list(
         stats::p.adjust(
           get(paste0("P_VALUE_", condition_inputs$cond1)
-              ),
+          ),
           method = "BH"),
         stats::p.adjust(
           get(paste0("P_VALUE_", condition_inputs$cond2)
-              ),
+          ),
           method = "BH"),
         stats::p.adjust(P_VALUE_DE, method = "BH")
       ),
@@ -194,45 +194,45 @@ process_cci_raw <- function(
               condition_inputs$cond1)) == TRUE][[paste0(
                 "CCI_SCORE_",
                 condition_inputs$cond1
-                )]],
+              )]],
             .SD[get(paste0(
               "IS_CCI_EXPRESSED_",
               condition_inputs$cond2)
-              ) == TRUE][[paste0(
-                "CCI_SCORE_",
-                condition_inputs$cond2
-                )]]
+            ) == TRUE][[paste0(
+              "CCI_SCORE_",
+              condition_inputs$cond2
+            )]]
           ),
           probs = threshold_quantile_score
         )
         is_cci_score_1 <- (get(paste0(
           "CCI_SCORE_",
           condition_inputs$cond1
-          )) >= threshold_score_temp)
+        )) >= threshold_score_temp)
         is_cci_score_2 <- (get(paste0(
           "CCI_SCORE_",
           condition_inputs$cond2
-          )) >= threshold_score_temp)
+        )) >= threshold_score_temp)
         is_cci_specific_1 <- get(paste0(
           "BH_P_VALUE_",
           condition_inputs$cond1
-          )) <= threshold_p_value_specificity
+        )) <= threshold_p_value_specificity
         is_cci_specific_2 <- get(paste0(
           "BH_P_VALUE_",
           condition_inputs$cond2
-          )) <= threshold_p_value_specificity
+        )) <= threshold_p_value_specificity
         is_de_logfc <- LOGFC_ABS >= threshold_logfc
         is_de_significant <- BH_P_VALUE_DE <= threshold_p_value_de
         de_direction <- fifelse(LOGFC > 0, "UP", "DOWN")
         is_cci_detected_1 <- (get(paste0(
           "IS_CCI_EXPRESSED_",
           condition_inputs$cond1
-          )) == TRUE) &
+        )) == TRUE) &
           is_cci_score_1 & is_cci_specific_1
         is_cci_detected_2 <- (get(paste0(
           "IS_CCI_EXPRESSED_",
           condition_inputs$cond2
-          )) == TRUE) &
+        )) == TRUE) &
           is_cci_score_2 & is_cci_specific_2
         is_cci_de <- is_de_logfc & is_de_significant
         list(
@@ -245,30 +245,32 @@ process_cci_raw <- function(
       },
       by = temp_by
       ]
-      cci_dt[, REGULATION :=
-               ifelse(
-                 !get(paste0("IS_CCI_DETECTED_", condition_inputs$cond1)) &
-                   !get(paste0("IS_CCI_DETECTED_", condition_inputs$cond2)),
-                 "NOT_DETECTED",
-                 ifelse(
-                   IS_DE_LOGFC & IS_DE_SIGNIFICANT & DE_DIRECTION == "UP",
-                   "UP",
-                   ifelse(
-                     IS_DE_LOGFC & IS_DE_SIGNIFICANT & DE_DIRECTION == "DOWN",
-                     "DOWN",
-                     ifelse(
-                       !IS_DE_LOGFC,
-                       "FLAT",
-                       ifelse(
-                         IS_DE_LOGFC & !IS_DE_SIGNIFICANT,
-                         "NSC",
-                         "There is a problem here!"
-                       )
-                     )
-                   )
-                 )
-               )
-             ]
+      cci_dt[
+        ,
+        REGULATION :=
+          ifelse(
+            !get(paste0("IS_CCI_DETECTED_", condition_inputs$cond1)) &
+              !get(paste0("IS_CCI_DETECTED_", condition_inputs$cond2)),
+            "NOT_DETECTED",
+            ifelse(
+              IS_DE_LOGFC & IS_DE_SIGNIFICANT & DE_DIRECTION == "UP",
+              "UP",
+              ifelse(
+                IS_DE_LOGFC & IS_DE_SIGNIFICANT & DE_DIRECTION == "DOWN",
+                "DOWN",
+                ifelse(
+                  !IS_DE_LOGFC,
+                  "FLAT",
+                  ifelse(
+                    IS_DE_LOGFC & !IS_DE_SIGNIFICANT,
+                    "NSC",
+                    "There is a problem here!"
+                  )
+                )
+              )
+            )
+          )
+      ]
       if ("There is a problem here!" %in% cci_dt[["REGULATION"]]) {
         stop("Error when assigning regulation to CCIs.")
       }
