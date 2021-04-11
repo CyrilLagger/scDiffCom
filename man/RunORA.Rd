@@ -3,8 +3,7 @@
 \name{RunORA}
 \alias{RunORA}
 \alias{RunORA,scDiffCom-method}
-\alias{RunORA,scDiffComCombined-method}
-\title{xxx}
+\title{Run over-representation analysis}
 \usage{
 RunORA(
   object,
@@ -19,27 +18,24 @@ RunORA(
   overwrite = TRUE,
   verbose = TRUE
 )
-
-\S4method{RunORA}{scDiffComCombined}(
-  object,
-  categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
-  overwrite = TRUE,
-  verbose = TRUE
-)
 }
 \arguments{
-\item{object}{xxx}
+\item{object}{\code{scDiffCom} object}
 
-\item{categories}{A character vector specifying the categories on which to perform the analysis. One data.table is returned
-for each category. Set to \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")} by default.}
+\item{categories}{Name of the categories on which to perform ORA. Default
+is \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")}.}
 
-\item{overwrite}{Should existing categories be overwritten in case they match with new categories?}
+\item{overwrite}{If \code{TRUE} (default), previous results are overwritten
+in case they correspond to a category passed in \code{categories}.}
 
-\item{verbose}{Should messages be printed?}
+\item{verbose}{If \code{TRUE} (default) progress messages are printed.}
 }
 \value{
-xxx
+A scDiffCom object with updated \code{ora_table}.
 }
 \description{
-xxx
+Perform over-representation analysis (ORA) on a scDiffCom object. Note that
+ORA is run automatically on default categories when calling
+\code{run_interaction_analysis} or \code{FilterCCI}. This function may be
+useful to perform ORA on other custom categories.
 }

@@ -5,26 +5,23 @@
 \alias{scDiffCom-class}
 \title{The scDiffCom Class}
 \description{
-A scDiffCom object stores the results of the intercellular
-  communication analysis performed by \code{run_interaction_analysis}
-  from a Seurat object.
+An object of this class stores the intercellular communication results
+obtained by calling \code{run_interaction_analysis}.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{parameters}}{A list of the parameters used to build the object.}
+\item{\code{parameters}}{List of parameters used to build the object.}
 
-\item{\code{cci_table_raw}}{A data.table with all possible CCIs induced from
+\item{\code{cci_table_raw}}{Data.table with all potential CCIs induced from
 the original Seurat object and the internal LRI database.}
 
-\item{\code{cci_table_detected}}{A data.table with only the detected CCIs obtained
-after filtering.}
+\item{\code{cci_table_detected}}{Data.table with only the detected CCIs.}
 
-\item{\code{ora_table}}{A data.table with the results of the
+\item{\code{ora_table}}{List of data.tables with the results of the
 over-representation analysis.}
 
-\item{\code{distributions}}{A list of matrices with the distributions
-over each CCI obtained from the permutation test(s).Only to be used for
-benchmarking or debugging.}
+\item{\code{distributions}}{List of matrices with the null distributions of each
+CCI.}
 }}
 

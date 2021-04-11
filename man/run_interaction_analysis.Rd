@@ -129,7 +129,7 @@ results.}
 \item{verbose}{If \code{TRUE} (default), print progress messages.}
 }
 \value{
-An S4 object of class \code{\link{scDiffCom}}.
+An S4 object of class \code{\link{scDiffCom-class}}.
 }
 \description{
 Perform (differential) cell type to cell type interaction analysis from
@@ -176,4 +176,18 @@ The primary use of this function (and of the package) is to perform
  results behave in function of, say, different LOGFC thresholds. In practice,
  this can be done by calling the functions \code{\link{FilterCCI}} or
  \code{\link{RunORA}}.
+}
+\examples{
+\dontrun{
+run_interaction_analysis(
+  seurat_object = seurat_sample_tms_liver,
+  LRI_species = "mouse",
+  seurat_celltype_id = "cell_type",
+  seurat_condition_id = list(
+    column_name = "age_group",
+    cond1_name = "YOUNG",
+    cond2_name = "OLD"
+  )
+)
+}
 }

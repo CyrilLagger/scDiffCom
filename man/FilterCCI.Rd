@@ -3,8 +3,7 @@
 \name{FilterCCI}
 \alias{FilterCCI}
 \alias{FilterCCI,scDiffCom-method}
-\alias{FilterCCI,scDiffComCombined-method}
-\title{xxx}
+\title{Filter a scDiffCom object with new filtering parameters}
 \usage{
 FilterCCI(
   object,
@@ -25,35 +24,37 @@ FilterCCI(
   skip_ora = FALSE,
   verbose = TRUE
 )
-
-\S4method{FilterCCI}{scDiffComCombined}(
-  object,
-  new_threshold_quantile_score = NULL,
-  new_threshold_p_value_specificity = NULL,
-  new_threshold_p_value_de = NULL,
-  new_threshold_logfc = NULL,
-  skip_ora = FALSE,
-  verbose = TRUE
-)
 }
 \arguments{
-\item{object}{xxx}
+\item{object}{\code{scDiffCom} object}
 
-\item{new_threshold_quantile_score}{xxx}
+\item{new_threshold_quantile_score}{New threshold value to update
+\code{threshold_quantile_score}. If \code{NULL} (default),
+the value is not updated.}
 
-\item{new_threshold_p_value_specificity}{xxx}
+\item{new_threshold_p_value_specificity}{New threshold value to update
+\code{threshold_p_value_specificity}. If \code{NULL} (default),
+the value is not updated.}
 
-\item{new_threshold_p_value_de}{xxx}
+\item{new_threshold_p_value_de}{New threshold value to update
+\code{threshold_p_value_de}. If \code{NULL} (default),
+the value is not updated.}
 
-\item{new_threshold_logfc}{xxx}
+\item{new_threshold_logfc}{New threshold value to update
+\code{threshold_logfc}. If \code{NULL} (default),
+the value is not updated.}
 
-\item{skip_ora}{xxx}
+\item{skip_ora}{Default is \code{FALSE}. If \code{TRUE}, the ORA is not
+performed with the new parameters and \code{ora_table} is set to an
+empty list. May be useful if one wants to quickly test (loop-over) several
+values of parameters and by-passing the computing time of the ORA.}
 
-\item{verbose}{Should messages be printed?}
+\item{verbose}{If \code{TRUE} (default) progress messages are printed.}
 }
 \value{
-xxx
+A scDiffCom object with updated results.
 }
 \description{
-xxx
+Filtering (and ORA) is performed with new parameters.
+ \code{cci_table_detected} and \code{ora_table} are updated accordingly.
 }

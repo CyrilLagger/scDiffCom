@@ -3,27 +3,24 @@
 \name{GetTableORA}
 \alias{GetTableORA}
 \alias{GetTableORA,scDiffCom-method}
-\alias{GetTableORA,scDiffComCombined-method}
-\title{Return some of the scDiffCom ORA data.tables}
+\title{Return information from some of the scDiffCom ORA data.tables}
 \usage{
 GetTableORA(object, categories, simplified)
 
 \S4method{GetTableORA}{scDiffCom}(object, categories = "all", simplified = TRUE)
-
-\S4method{GetTableORA}{scDiffComCombined}(object, categories = "all", simplified = TRUE)
 }
 \arguments{
-\item{object}{An object of class `scDiffCom` or `scDiffComCombined`}
+\item{object}{\code{scDiffCom} object}
 
-\item{categories}{A character vector indicating which ORA tables
-to return. Default (\code{"all"}) returns all of them.}
+\item{categories}{Names of the categories to return. If \code{"all"}
+(default), returns all of them.}
 
-\item{simplified}{Logical indicating if all columns or only the most
-informative ones are returned for each data.table. Default is \code{TRUE}.}
+\item{simplified}{If \code{TRUE} (default) only the most
+informative columns of the data.table are returned.}
 }
 \value{
 A list of data.tables
 }
 \description{
-Return some of the scDiffCom ORA data.tables
+Return information from some of the scDiffCom ORA data.tables
 }

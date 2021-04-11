@@ -3,14 +3,14 @@
 \name{GetParameters}
 \alias{GetParameters}
 \alias{GetParameters,scDiffComBase-method}
-\title{Return the slot \code{parameters} from an scDiffCom object}
+\title{Return the slot \code{parameters} from a scDiffCom object}
 \usage{
 GetParameters(object)
 
 \S4method{GetParameters}{scDiffComBase}(object)
 }
 \arguments{
-\item{object}{An object of class `scDiffCom` or `scDiffComCombined`}
+\item{object}{\code{scDiffCom} object}
 }
 \value{
 A list of parameters

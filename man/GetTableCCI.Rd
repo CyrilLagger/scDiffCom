@@ -3,27 +3,24 @@
 \name{GetTableCCI}
 \alias{GetTableCCI}
 \alias{GetTableCCI,scDiffCom-method}
-\alias{GetTableCCI,scDiffComCombined-method}
-\title{Return one of the scDiffCom CCI data.tables}
+\title{Return information from one of the scDiffCom CCI data.tables}
 \usage{
 GetTableCCI(object, type, simplified)
 
 \S4method{GetTableCCI}{scDiffCom}(object, type = c("detected", "raw"), simplified = TRUE)
-
-\S4method{GetTableCCI}{scDiffComCombined}(object, type = c("detected", "raw"), simplified = TRUE)
 }
 \arguments{
-\item{object}{An object of class `scDiffCom` or `scDiffComCombined`}
+\item{object}{\code{scDiffCom} object}
 
-\item{type}{Specifies the table to return: either "detected" or "raw".
-Default is \code{"detected"}.}
+\item{type}{Table to extract information from. Can be either
+\code{"detected"} (default) or \code{"raw"}.}
 
-\item{simplified}{Logical indicating if all columns or only the most
-informative ones are returned. Default is \code{TRUE}.}
+\item{simplified}{If \code{TRUE} (default) only the most
+informative columns of the data.table are returned.}
 }
 \value{
 A data.table
 }
 \description{
-Return one of the scDiffCom CCI data.tables
+Return information from one of the scDiffCom CCI data.tables
 }

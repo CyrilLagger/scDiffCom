@@ -3,15 +3,15 @@
 \name{GetDistributions}
 \alias{GetDistributions}
 \alias{GetDistributions,scDiffCom-method}
-\title{Return the slot \code{distributions} from an scDiffCom object}
+\title{Return the slot \code{distributions} from a scDiffCom object}
 \usage{
 GetDistributions(object)
 
 \S4method{GetDistributions}{scDiffCom}(object)
 }
 \arguments{
-\item{object}{An scDiffCom object.}
+\item{object}{\code{scDiffCom} object}
 }
 \description{
-Return the slot \code{distributions} from an scDiffCom object
+Return the slot \code{distributions} from a scDiffCom object
 }

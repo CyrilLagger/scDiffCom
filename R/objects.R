@@ -8,28 +8,13 @@ NULL
 
 utils::globalVariables(".")
 
-################  Class definitions ################
+################ Class definitions ################
 
 setClassUnion(
   name = "list_or_data.table",
   members = c("list", "data.table")
 )
 
-#' The scDiffComBase Class
-#'
-#' The scDiffComBase class is a virtual class that provides a template
-#' for the \code{scDiffCom} and \code{scDiffComCombined} classes.
-#'
-#' @slot parameters A list of the parameters used to build the object.
-#' @slot cci_table_raw A data.table with all possible CCIs induced from
-#' the original Seurat object and the internal LRI database.
-#' @slot cci_table_detected A data.table with only the detected CCIs obtained
-#' after filtering.
-#' @slot ora_table A data.table with the results of the
-#'  over-representation analysis.
-#' @name scDiffComBase-class
-#' @rdname scDiffComBase-class
-#'
 setClass(
   Class = "scDiffComBase",
   contains = "VIRTUAL",
@@ -51,20 +36,17 @@ setClass(
 
 #' The scDiffCom Class
 #'
-#'  A scDiffCom object stores the results of the intercellular
-#'   communication analysis performed by \code{run_interaction_analysis}
-#'   from a Seurat object.
+#' An object of this class stores the intercellular communication results
+#' obtained by calling \code{run_interaction_analysis}.
 #'
-#' @slot parameters A list of the parameters used to build the object.
-#' @slot cci_table_raw A data.table with all possible CCIs induced from
+#' @slot parameters List of parameters used to build the object.
+#' @slot cci_table_raw Data.table with all potential CCIs induced from
 #' the original Seurat object and the internal LRI database.
-#' @slot cci_table_detected A data.table with only the detected CCIs obtained
-#' after filtering.
-#' @slot ora_table A data.table with the results of the
+#' @slot cci_table_detected Data.table with only the detected CCIs.
+#' @slot ora_table List of data.tables with the results of the
 #'  over-representation analysis.
-#' @slot distributions A list of matrices with the distributions
-#'  over each CCI obtained from the permutation test(s).Only to be used for
-#'  benchmarking or debugging.
+#' @slot distributions List of matrices with the null distributions of each
+#' CCI.
 #'
 #' @name scDiffCom-class
 #' @rdname scDiffCom-class
@@ -80,35 +62,34 @@ setClass(
   contains = "scDiffComBase"
 )
 
-#' The scDiffComCombined Class
-#'
-#'  A scDiffComCombined object stores the results of multiple scDiffCom
-#'   objects at a single place.
-#'
-#' @slot parameters A list of the parameters used to build the object.
-#' @slot cci_table_raw A data.table with all possible CCIs induced from
-#' the original Seurat object and the internal LRI database.
-#' @slot cci_table_detected A data.table with only the detected CCIs obtained
-#' after filtering.
-#' @slot ora_table A data.table with the results of the
-#'  over-representation analysis.
-#' @name scDiffComCombined-class
-#' @rdname scDiffComCombined-class
-#'
-setClass(
-  Class = "scDiffComCombined",
-  contains = "scDiffComBase"#,
-  # slots = c(
-  #   ora_combined_default = "list_or_data.table",
-  #   ora_combined_stringent = "list_or_data.table"
-  # ),
-  # prototype = list(
-  #   ora_combined_default = list(),
-  #   ora_combined_stringent = list()
-  # )
-)
+# #' The scDiffComCombined Class
+# #'
+# #' An object of this class stores the intercellular communication results
+# #' from several scDiffCom objects.
+# #'
+# #' @slot parameters List of parameters used to build the object.
+# #' @slot cci_table_raw Data.table with all potential CCIs induced from
+# #' the original Seurat object and the internal LRI database.
+# #' @slot cci_table_detected Data.table with only the detected CCIs.
+# #' @slot ora_table List of data.tables with the results of the
+# #'  over-representation analysis.
+# #' @name scDiffComCombined-class
+# #' @rdname scDiffComCombined-class
+# #'
+# setClass(
+#   Class = "scDiffComCombined",
+#   contains = "scDiffComBase"#,
+#   # slots = c(
+#   #   ora_combined_default = "list_or_data.table",
+#   #   ora_combined_stringent = "list_or_data.table"
+#   # ),
+#   # prototype = list(
+#   #   ora_combined_default = list(),
+#   #   ora_combined_stringent = list()
+#   # )
+# )
 
-################  Validity functions ################
+################ Validity functions ################
 
 setValidity(
   Class = "scDiffComBase",
@@ -159,30 +140,30 @@ setValidity(
   }
 )
 
-setValidity(
-  Class = "scDiffComCombined",
-  method = function(object) {
-    validity_check <- NULL
-    #validity_check <- c(
-    #  validate_slot_combined_object()
-    #)
-    if (is.null(validity_check)) {
-      TRUE
-    } else {
-      paste0(validity_check, collapse = " AND ")
-    }
-  }
-)
+# setValidity(
+#   Class = "scDiffComCombined",
+#   method = function(object) {
+#     validity_check <- NULL
+#     #validity_check <- c(
+#     #  validate_slot_combined_object()
+#     #)
+#     if (is.null(validity_check)) {
+#       TRUE
+#     } else {
+#       paste0(validity_check, collapse = " AND ")
+#     }
+#   }
+# )
 
-################  Accessors ################
+################ Accessors ################
 
-#' Return the slot \code{parameters} from an scDiffCom object
+#' Return the slot \code{parameters} from a scDiffCom object
 #'
 #' Return the parameters that have been passed to
 #'  \code{\link{run_interaction_analysis}} to compute
 #'  the scDiffCom object.
 #'
-#' @param object An object of class `scDiffCom` or `scDiffComCombined`
+#' @param object \code{scDiffCom} object
 #'
 #' @return A list of parameters
 #'
@@ -199,13 +180,13 @@ setMethod(
   definition = function(object) object@parameters
 )
 
-#' Return one of the scDiffCom CCI data.tables
+#' Return information from one of the scDiffCom CCI data.tables
 #'
-#' @param object An object of class `scDiffCom` or `scDiffComCombined`
-#' @param type Specifies the table to return: either "detected" or "raw".
-#'  Default is \code{"detected"}.
-#' @param simplified Logical indicating if all columns or only the most
-#'  informative ones are returned. Default is \code{TRUE}.
+#' @param object \code{scDiffCom} object
+#' @param type Table to extract information from. Can be either
+#' \code{"detected"} (default) or \code{"raw"}.
+#' @param simplified If \code{TRUE} (default) only the most
+#'  informative columns of the data.table are returned.
 #'
 #' @return A data.table
 #'
@@ -235,32 +216,32 @@ setMethod(
   }
 )
 
-#' @rdname GetTableCCI
-setMethod(
-  f = "GetTableCCI",
-  signature = "scDiffComCombined",
-  definition = function(
-    object,
-    type = c("detected", "raw"),
-    simplified = TRUE
-  ) {
-    type <- match.arg(type)
-    get_table_cci(
-      object = object,
-      type = type,
-      simplified = simplified,
-      class_signature = "scDiffComCombined"
-    )
-  }
-)
+# #' @rdname GetTableCCI
+# setMethod(
+#   f = "GetTableCCI",
+#   signature = "scDiffComCombined",
+#   definition = function(
+#     object,
+#     type = c("detected", "raw"),
+#     simplified = TRUE
+#   ) {
+#     type <- match.arg(type)
+#     get_table_cci(
+#       object = object,
+#       type = type,
+#       simplified = simplified,
+#       class_signature = "scDiffComCombined"
+#     )
+#   }
+# )
 
-#' Return some of the scDiffCom ORA data.tables
+#' Return information from some of the scDiffCom ORA data.tables
 #'
-#' @param object An object of class `scDiffCom` or `scDiffComCombined`
-#' @param categories A character vector indicating which ORA tables
-#'  to return. Default (\code{"all"}) returns all of them.
-#' @param simplified Logical indicating if all columns or only the most
-#'  informative ones are returned for each data.table. Default is \code{TRUE}.
+#' @param object \code{scDiffCom} object
+#' @param categories Names of the categories to return. If \code{"all"}
+#' (default), returns all of them.
+#' @param simplified If \code{TRUE} (default) only the most
+#'  informative columns of the data.table are returned.
 #'
 #' @return A list of data.tables
 #'
@@ -289,27 +270,27 @@ setMethod(
   }
 )
 
-#' @rdname GetTableORA
-setMethod(
-  f = "GetTableORA",
-  signature = "scDiffComCombined",
-  definition = function(
-    object,
-    categories = "all",
-    simplified = TRUE
-  ) {
-    get_tables_ora(
-      object = object,
-      categories = categories,
-      simplified = simplified,
-      class_signature = "scDiffComCombined"
-    )
-  }
-)
+# #' @rdname GetTableORA
+# setMethod(
+#   f = "GetTableORA",
+#   signature = "scDiffComCombined",
+#   definition = function(
+#     object,
+#     categories = "all",
+#     simplified = TRUE
+#   ) {
+#     get_tables_ora(
+#       object = object,
+#       categories = categories,
+#       simplified = simplified,
+#       class_signature = "scDiffComCombined"
+#     )
+#   }
+# )
 
-#' Return the slot \code{distributions} from an scDiffCom object
+#' Return the slot \code{distributions} from a scDiffCom object
 #'
-#' @param object An scDiffCom object.
+#' @param object \code{scDiffCom} object
 #'
 #' @export
 setGeneric(
@@ -324,191 +305,11 @@ setMethod(
   definition = function(object) object@distributions
 )
 
-################  Functions ################
+################ Generics and Methods ####
 
-#' Combine several scDiffCom objects together.
+#' Display a scDiffCom object
 #'
-#' @param l A list of scDiffCom objects.
-#' @param object_name The name of the combined object that will be created.
-#' @param verbose Should messages be printed?
-#'
-#' @return An object of class scDiffComCombined
-#' @export
-Combine_scDiffCom <- function(
-  l,
-  object_name,
-  verbose
-) {
-  list_of_names <- sapply(
-    l,
-    function(i) {
-      if(!methods::is(object = i, "scDiffCom")) {
-        stop("All objects to combine must be of class `scDiffCom`")
-      }
-      i@parameters$object_name
-    }
-  )
-  if(length(unique(list_of_names)) != length(list_of_names)) {
-    stop("All names of the objects to combine must be different")
-  }
-  list_of_params <-
-    lapply(
-    l,
-    function(i) {
-      temp <- i@parameters
-      temp$object_name <- NULL
-      temp$max_nL <- NULL
-      temp$max_nR <- NULL
-      temp$verbose <- NULL
-      temp$seed <- NULL
-      return(temp)
-    }
-  )
-  if(length(unique(list_of_params)) != 1) {
-    stop("Defining parameters from all scDiffCom objects must be identical.")
-  }
-  new_param <- l[[1]]@parameters
-  new_param$object_name <- object_name
-  new_param$max_nL <- max(sapply(l, function(i) i@parameters$max_nL))
-  new_param$max_nR <- max(sapply(l, function(i) i@parameters$max_nR))
-  new_param$verbose <- NA
-  new_param$seed <- sapply(l, function(i) i@parameters$seed)
-  if (verbose) message("Binding all raw CCIs.")
-  list_of_cci_table_raw <- lapply(l, function(i) i@cci_table_raw)
-  names(list_of_cci_table_raw) <- list_of_names
-  new_cci_table_raw <- rbindlist(
-    l = list_of_cci_table_raw,
-    use.names = TRUE,
-    fill = TRUE,
-    idcol = "ID"
-  )
-  if (verbose) message("Binding all detected CCIs.")
-  list_of_cci_table_detected <- lapply(l, function(i) i@cci_table_detected)
-  names(list_of_cci_table_detected) <- list_of_names
-  new_cci_table_detected <- rbindlist(
-    l = list_of_cci_table_detected,
-    use.names = TRUE,
-    fill = TRUE,
-    idcol = "ID"
-  )
-  list_of_ora_categories <- lapply(
-    l, function(i) names(i@ora_table)
-  )
-  if (is.null(list_of_ora_categories[[1]])) {
-    if (verbose) {
-      message(
-        paste0(
-          "Empty slot `ora_table` in input object.",
-          " Returning empty slot `ora_table` in combined object."
-          )
-      )
-    }
-    new_ora_table <- list()
-  } else  if (length(unique(list_of_ora_categories)) != 1) {
-    if (verbose) {
-      message(
-        paste0(
-          "Objects to bind don't have the same ORA (default) categories.",
-          " Returning empty slot `ora_table` in combined object."
-          )
-      )
-    }
-    new_ora_table <- list()
-  } else {
-    if (verbose) {
-      message("Binding `ora_table` results.")
-    }
-    new_ora_table <- sapply(
-      list_of_ora_categories[[1]],
-      function(categ) {
-        list_of_ora <- lapply(
-          l,
-          function(i) {
-            i@ora_table[[categ]]
-          }
-        )
-        names(list_of_ora) <- list_of_names
-        rbindlist(
-          l = list_of_ora ,
-          use.names = TRUE,
-          fill = TRUE,
-          idcol = "ID"
-        )
-      },
-      USE.NAMES = TRUE,
-      simplify = FALSE
-    )
-  }
-  # list_of_ora_categories <- lapply(
-  #   l, function(i) names(i@ora_stringent)
-  # )
-  # if (is.null(list_of_ora_categories[[1]])) {
-  #   if (verbose) {
-  #     message("Empty slot `ora_stringent` in input object. Returning empty slot `ora_stringent` in combined object.")
-  #   }
-  #   new_ora_stringent <- list()
-  # } else  if (length(unique(list_of_ora_categories)) != 1) {
-  #   if (verbose) {
-  #     message("Objects to bind don't have the same ORA (stringent) categories. Returning empty slot `ora_stringent` in combined object.")
-  #   }
-  #   new_ora_stringent <- list()
-  # } else {
-  #   if (verbose) {
-  #     message("Binding `ora_stringent` results.")
-  #   }
-  #   new_ora_stringent <- sapply(
-  #     list_of_ora_categories[[1]],
-  #     function(categ) {
-  #       list_of_ora <- lapply(
-  #         l,
-  #         function(i) {
-  #           i@ora_stringent[[categ]]
-  #         }
-  #       )
-  #       names(list_of_ora) <- list_of_names
-  #       rbindlist(
-  #         l = list_of_ora ,
-  #         use.names = TRUE,
-  #         fill = TRUE,
-  #         idcol = "ID"
-  #       )
-  #     },
-  #     USE.NAMES = TRUE,
-  #     simplify = FALSE
-  #   )
-  # }
-  new_object <- methods::new(
-    "scDiffComCombined",
-    parameters = new_param,
-    cci_table_raw = new_cci_table_raw,
-    cci_table_detected = new_cci_table_detected,
-    ora_table = new_ora_table#,
-    #ora_stringent = new_ora_stringent,
-    #ora_combined_default = list(),
-    #ora_combined_stringent = list()
-  )
-  # if (verbose) {
-  #   message("Performing combined ORA (default categories).")
-  # }
-  # new_object <- run_ora(
-  #   object = new_object,
-  #   categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS", "ID"),
-  #   overwrite = TRUE,
-  #   stringent_or_default = "default",
-  #   stringent_logfc_threshold = NULL,
-  #   verbose = verbose,
-  #   class_signature = "scDiffComCombined",
-  #   global = TRUE
-  # )
-  if (verbose) message("Returning combined object.")
-  return(new_object)
-}
-
-################  Generics and Methods ####
-
-#' xxx
-#'
-#' @param object xxx
+#' @param object \code{scDiffCom} object
 setMethod(
   "show",
   signature = "scDiffCom",
@@ -581,35 +382,31 @@ setMethod(
   }
 )
 
-#' xxx
+#' Filter a scDiffCom object with new filtering parameters
 #'
-#' @param object xxx
-setMethod(
-  "show",
-  signature = "scDiffComCombined",
-  definition = function(
-    object
-  ) {
-    line_1 <- paste0(
-      "An object of class scDiffComCombined"
-    )
-    cat(
-      line_1
-     )
-  }
-)
-
-#' xxx
+#' Filtering (and ORA) is performed with new parameters.
+#'  \code{cci_table_detected} and \code{ora_table} are updated accordingly.
 #'
-#' @param object xxx
-#' @param new_threshold_quantile_score xxx
-#' @param new_threshold_p_value_specificity xxx
-#' @param new_threshold_p_value_de xxx
-#' @param new_threshold_logfc xxx
-#' @param skip_ora xxx
-#' @param verbose Should messages be printed?
+#' @param object \code{scDiffCom} object
+#' @param new_threshold_quantile_score New threshold value to update
+#'  \code{threshold_quantile_score}. If \code{NULL} (default),
+#'  the value is not updated.
+#' @param new_threshold_p_value_specificity New threshold value to update
+#'  \code{threshold_p_value_specificity}. If \code{NULL} (default),
+#'  the value is not updated.
+#' @param new_threshold_p_value_de New threshold value to update
+#'  \code{threshold_p_value_de}. If \code{NULL} (default),
+#'  the value is not updated.
+#' @param new_threshold_logfc New threshold value to update
+#'  \code{threshold_logfc}. If \code{NULL} (default),
+#'  the value is not updated.
+#' @param skip_ora Default is \code{FALSE}. If \code{TRUE}, the ORA is not
+#' performed with the new parameters and \code{ora_table} is set to an
+#' empty list. May be useful if one wants to quickly test (loop-over) several
+#' values of parameters and by-passing the computing time of the ORA.
+#' @param verbose If \code{TRUE} (default) progress messages are printed.
 #'
-#' @return xxx
+#' @return A scDiffCom object with updated results.
 #'
 #' @export
 setGeneric(
@@ -652,41 +449,21 @@ setMethod(
   }
 )
 
-#' @rdname FilterCCI
-setMethod(
-  f = "FilterCCI",
-  signature = "scDiffComCombined",
-  definition = function(
-    object,
-    new_threshold_quantile_score = NULL,
-    new_threshold_p_value_specificity = NULL,
-    new_threshold_p_value_de = NULL,
-    new_threshold_logfc = NULL,
-    skip_ora = FALSE,
-    verbose = TRUE
-  ) {
-    run_filtering_and_ora(
-      object = object,
-      new_threshold_quantile_score = new_threshold_quantile_score,
-      new_threshold_p_value_specificity = new_threshold_p_value_specificity,
-      new_threshold_p_value_de = new_threshold_p_value_de,
-      new_threshold_logfc = new_threshold_logfc,
-      skip_ora = skip_ora,
-      verbose = verbose,
-      class_signature = "scDiffComCombined"
-    )
-  }
-)
-
-#' xxx
+#' Run over-representation analysis
 #'
-#' @param object xxx
-#' @param categories A character vector specifying the categories on which to perform the analysis. One data.table is returned
-#'  for each category. Set to \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")} by default.
-#' @param overwrite Should existing categories be overwritten in case they match with new categories?
-#' @param verbose Should messages be printed?
+#' Perform over-representation analysis (ORA) on a scDiffCom object. Note that
+#' ORA is run automatically on default categories when calling
+#' \code{run_interaction_analysis} or \code{FilterCCI}. This function may be
+#' useful to perform ORA on other custom categories.
 #'
-#' @return xxx
+#' @param object \code{scDiffCom} object
+#' @param categories Name of the categories on which to perform ORA. Default
+#' is \code{c("ER_CELLTYPES", "LRI", "GO_TERMS")}.
+#' @param overwrite If \code{TRUE} (default), previous results are overwritten
+#' in case they correspond to a category passed in \code{categories}.
+#' @param verbose If \code{TRUE} (default) progress messages are printed.
+#'
+#' @return A scDiffCom object with updated \code{ora_table}.
 #'
 #' @export
 setGeneric(
@@ -735,44 +512,33 @@ setMethod(
   }
 )
 
-#' @rdname RunORA
-setMethod(
-  f = "RunORA",
-  signature = "scDiffComCombined",
-  definition = function(
-    object,
-    categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
-    overwrite = TRUE,
-    #stringent_or_default = "default",
-    #stringent_logfc_threshold = NULL,
-    #global = TRUE,
-    verbose = TRUE
-  ) {
-    run_ora(
-      object = object,
-      categories = categories,
-      overwrite = overwrite,
-      stringent_or_default = "default",
-      stringent_logfc_threshold = NULL,
-      verbose = verbose,
-      class_signature = "scDiffComCombined",
-      global = FALSE
-    )
-  }
-)
 
-#' xxx
+#' Display top over-represented keywords
 #'
-#' @param object xxx
-#' @param category xxx
-#' @param regulation xxx
-#' @param max_terms_show xxx
-#' @param GO_aspect xxx
-#' @param OR_threshold xxx
-#' @param bh_p_value_threshold xxx
-#' @param ... Extra named arguments passed to PlotORA
+#' Plot a graph that shows the top over-represented terms of a given
+#' category for a given regulation. Terms are ordered by their ORA scores,
+#' computed from their odds ratios and adjusted p-values.
 #'
-#' @return xxx
+#' The ORA score is computed as the product between \code{log2(odds ratio)} and
+#' \code{-log10(adj. p-value)}.
+#'
+#' @param object \code{scDiffCom} object
+#' @param category ORA category to display. Must be the name of one of the
+#' category present in \code{ora_table}.
+#' @param regulation ORA regulation to display. Can be either \code{UP}
+#' (default), \code{DOWN} or \code{FLAT}.
+#' @param max_terms_show Maximum number of terms to display. Default is
+#'  \code{20}.
+#' @param GO_aspect Name of the GO aspect to display when
+#'  \code{category == "GO_TERMS"}. Can be either \code{biological_process} (
+#'  default), \code{molecular_function} or \code{cellular_component}.
+#' @param OR_threshold Only the terms with an odds ratio above this threshold
+#' will be displayed. Default is \code{1}, meaning no filtering is performed.
+#' @param bh_p_value_threshold Only the terms with an adjusted p-value below
+#' this threshold (and always below 0.05) will be displayed. Default is
+#'  \code{0.05}.
+#'
+#' @return A ggplot object
 #'
 #' @export
 setGeneric(
@@ -781,15 +547,14 @@ setGeneric(
     object,
     category,
     regulation = c("UP", "DOWN", "FLAT"),
-    max_terms_show,
+    max_terms_show = 20,
     GO_aspect = c(
       "biological_process",
       "molecular_function",
       "cellular_component"
       ),
     OR_threshold = 1,
-    bh_p_value_threshold = 0.05,
-    ...
+    bh_p_value_threshold = 0.05
   ) standardGeneric("PlotORA"),
   signature = "object"
 )
@@ -802,7 +567,7 @@ setMethod(
     object,
     category,
     regulation = c("UP", "DOWN", "FLAT"),
-    max_terms_show,
+    max_terms_show = 20,
     GO_aspect = c(
       "biological_process",
       "molecular_function",
@@ -833,61 +598,29 @@ setMethod(
   }
 )
 
-#' @param subID xxx
-#' @rdname PlotORA
-setMethod(
-  f = "PlotORA",
-  signature = "scDiffComCombined",
-  definition = function(
-    object,
-    category,
-    regulation = c("UP", "DOWN", "FLAT"),
-    max_terms_show,
-    GO_aspect = c(
-      "biological_process",
-      "molecular_function",
-      "cellular_component"
-    ),
-    OR_threshold = 1,
-    bh_p_value_threshold = 0.05,
-    subID
-  ) {
-    ID <- NULL
-    regulation <- match.arg(regulation)
-    GO_aspect <- match.arg(GO_aspect)
-    ora_dt <- object@ora_table
-    if (identical(ora_dt, list())) {
-      stop("No ORA data.table to exctract from scDiffCom object")
-    }
-    if (!(category %in% names(ora_dt))) {
-      stop("Can't find the specified ORA category")
-    }
-    ora_dt <- copy(ora_dt[[category]])
-    if (!(subID %in% unique(ora_dt$ID))) {
-      stop("`subID` must be present in the scDiffComCombined object")
-    }
-    ora_dt <- ora_dt[ID == subID]
-    plot_ora(
-      ora_dt = ora_dt,
-      category = category,
-      regulation = regulation,
-      max_terms_show = max_terms_show,
-      GO_aspect = GO_aspect,
-      OR_threshold = OR_threshold ,
-      bh_p_value_threshold = bh_p_value_threshold
-    )
-  }
+paste0(
+  "No abbreviation will be used:",
+  " `abbreviation table` must be a 2-colum data.frame or data.table",
+  "with names ORIGINAL_CELLTYPE and ABBR_CELLTYPE"
 )
 
-#' xxx
+#' Display 'cell type to cell type' interactive networks
 #'
-#' @param object xxx
-#' @param network_type xxx
-#' @param layout_type xxx
-#' @param abbreviation_table xxx
-#' @param ... Extra named arguments passed to BuildNetwork
+#' Create and plot interactive networks that convey various types of
+#' information regarding cell type to cell type communication.
 #'
-#' @return xxx
+#' @param object \code{scDiffCom} object
+#' @param network_type Type of network to display. Currently, only the type
+#' \code{ORA_network} (default) is supported.
+#' @param layout_type Layout of the network to display. Can either be
+#' \code{"bipartite"} (default) or \code{"conventional"}.
+#' @param abbreviation_table Table with abbreviations
+#' for the cell types present in the \code{object}. If \code{NULL} (default),
+#' full names of the cell-types are displayed. Otherwise, it must be a
+#' data.frame or data.table with exactly two columns of names
+#' \code{ORIGINAL_CELLTYPE} and \code{ABBR_CELLTYPE}.
+#'
+#' @return A visNetwork object
 #'
 #' @export
 setGeneric(
@@ -895,19 +628,18 @@ setGeneric(
   def = function(
     object,
     network_type = c(
-      "condition1_network",
-      "condition2_network",
-      "difference_network",
-      "up_regulated_network",
-      "down_regulated_network",
+      #"condition1_network",
+      #"condition2_network",
+      #"difference_network",
+      #"up_regulated_network",
+      #"down_regulated_network",
       "ORA_network"
     ),
     layout_type = c(
-      "conventional",
-      "bipartite"
+      "bipartite",
+      "conventional"
     ),
-    abbreviation_table = NULL,
-    ...
+    abbreviation_table = NULL
   ) standardGeneric("BuildNetwork"),
   signature = "object"
 )
@@ -919,16 +651,16 @@ setMethod(
   definition = function(
     object,
     network_type = c(
-      "condition1_network",
-      "condition2_network",
-      "difference_network",
-      "up_regulated_network",
-      "down_regulated_network",
+      #"condition1_network",
+      #"condition2_network",
+      #"difference_network",
+      #"up_regulated_network",
+      #"down_regulated_network",
       "ORA_network"
     ),
     layout_type = c(
-      "conventional",
-      "bipartite"
+      "bipartite",
+      "conventional"
     ),
     abbreviation_table = NULL
   ) {
@@ -946,45 +678,343 @@ setMethod(
   }
 )
 
-#' @param ID xxx
-#' @rdname BuildNetwork
-setMethod(
-  f = "BuildNetwork",
-  signature = "scDiffComCombined",
-  definition = function(
-    object,
-    network_type = c(
-      "condition1_network",
-      "condition2_network",
-      "difference_network",
-      "up_regulated_network",
-      "down_regulated_network",
-      "ORA_network"
-    ),
-    layout_type = c(
-      "conventional",
-      "bipartite"
-    ),
-    abbreviation_table,
-    ID
-  ) {
-    network_type <- match.arg(network_type)
-    layout_type <- match.arg(layout_type)
-    if (!(ID %in% unique(object@cci_table_detected$ID))) {
-      stop("`ID` must be present in the scDiffComCombined object")
-    }
-    build_interactive_network(
-      object = object,
-      network_type = network_type,
-      layout_type = layout_type,
-      class_signature = "scDiffComCombined",
-      subobject_name = ID,
-      abbreviation_table = abbreviation_table#,
-      #LRIs = LRIs
-    )
-  }
-)
 
 
+################ Not implemented generics/methods ################
+
+# #' xxx
+# #'
+# #' @param object xxx
+# setMethod(
+#   "show",
+#   signature = "scDiffComCombined",
+#   definition = function(
+#     object
+#   ) {
+#     line_1 <- paste0(
+#       "An object of class scDiffComCombined"
+#     )
+#     cat(
+#       line_1
+#      )
+#   }
+# )
+
+# #' @rdname FilterCCI
+# setMethod(
+#   f = "FilterCCI",
+#   signature = "scDiffComCombined",
+#   definition = function(
+#     object,
+#     new_threshold_quantile_score = NULL,
+#     new_threshold_p_value_specificity = NULL,
+#     new_threshold_p_value_de = NULL,
+#     new_threshold_logfc = NULL,
+#     skip_ora = FALSE,
+#     verbose = TRUE
+#   ) {
+#     run_filtering_and_ora(
+#       object = object,
+#       new_threshold_quantile_score = new_threshold_quantile_score,
+#       new_threshold_p_value_specificity = new_threshold_p_value_specificity,
+#       new_threshold_p_value_de = new_threshold_p_value_de,
+#       new_threshold_logfc = new_threshold_logfc,
+#       skip_ora = skip_ora,
+#       verbose = verbose,
+#       class_signature = "scDiffComCombined"
+#     )
+#   }
+# )
+
+# #' @rdname RunORA
+# setMethod(
+#   f = "RunORA",
+#   signature = "scDiffComCombined",
+#   definition = function(
+#     object,
+#     categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
+#     overwrite = TRUE,
+#     #stringent_or_default = "default",
+#     #stringent_logfc_threshold = NULL,
+#     #global = TRUE,
+#     verbose = TRUE
+#   ) {
+#     run_ora(
+#       object = object,
+#       categories = categories,
+#       overwrite = overwrite,
+#       stringent_or_default = "default",
+#       stringent_logfc_threshold = NULL,
+#       verbose = verbose,
+#       class_signature = "scDiffComCombined",
+#       global = FALSE
+#     )
+#   }
+# )
+
+# #' @param subID xxx
+# #' @rdname PlotORA
+# setMethod(
+#   f = "PlotORA",
+#   signature = "scDiffComCombined",
+#   definition = function(
+#     object,
+#     category,
+#     regulation = c("UP", "DOWN", "FLAT"),
+#     max_terms_show,
+#     GO_aspect = c(
+#       "biological_process",
+#       "molecular_function",
+#       "cellular_component"
+#     ),
+#     OR_threshold = 1,
+#     bh_p_value_threshold = 0.05,
+#     subID
+#   ) {
+#     ID <- NULL
+#     regulation <- match.arg(regulation)
+#     GO_aspect <- match.arg(GO_aspect)
+#     ora_dt <- object@ora_table
+#     if (identical(ora_dt, list())) {
+#       stop("No ORA data.table to exctract from scDiffCom object")
+#     }
+#     if (!(category %in% names(ora_dt))) {
+#       stop("Can't find the specified ORA category")
+#     }
+#     ora_dt <- copy(ora_dt[[category]])
+#     if (!(subID %in% unique(ora_dt$ID))) {
+#       stop("`subID` must be present in the scDiffComCombined object")
+#     }
+#     ora_dt <- ora_dt[ID == subID]
+#     plot_ora(
+#       ora_dt = ora_dt,
+#       category = category,
+#       regulation = regulation,
+#       max_terms_show = max_terms_show,
+#       GO_aspect = GO_aspect,
+#       OR_threshold = OR_threshold ,
+#       bh_p_value_threshold = bh_p_value_threshold
+#     )
+#   }
+# )
+
+# #' @param ID xxx
+# #' @rdname BuildNetwork
+# setMethod(
+#   f = "BuildNetwork",
+#   signature = "scDiffComCombined",
+#   definition = function(
+#     object,
+#     network_type = c(
+#       "condition1_network",
+#       "condition2_network",
+#       "difference_network",
+#       "up_regulated_network",
+#       "down_regulated_network",
+#       "ORA_network"
+#     ),
+#     layout_type = c(
+#       "conventional",
+#       "bipartite"
+#     ),
+#     abbreviation_table,
+#     ID
+#   ) {
+#     network_type <- match.arg(network_type)
+#     layout_type <- match.arg(layout_type)
+#     if (!(ID %in% unique(object@cci_table_detected$ID))) {
+#       stop("`ID` must be present in the scDiffComCombined object")
+#     }
+#     build_interactive_network(
+#       object = object,
+#       network_type = network_type,
+#       layout_type = layout_type,
+#       class_signature = "scDiffComCombined",
+#       subobject_name = ID,
+#       abbreviation_table = abbreviation_table#,
+#       #LRIs = LRIs
+#     )
+#   }
+# )
+
+################ Functions (not implemented) ################
+
+# #' Combine several scDiffCom objects together.
+# #'
+# #' @param l A list of scDiffCom objects.
+# #' @param object_name The name of the combined object that will be created.
+# #' @param verbose Should messages be printed?
+# #'
+# #' @return An object of class scDiffComCombined
+# #' @export
+# Combine_scDiffCom <- function(
+#   l,
+#   object_name,
+#   verbose
+# ) {
+#   list_of_names <- sapply(
+#     l,
+#     function(i) {
+#       if(!methods::is(object = i, "scDiffCom")) {
+#         stop("All objects to combine must be of class `scDiffCom`")
+#       }
+#       i@parameters$object_name
+#     }
+#   )
+#   if(length(unique(list_of_names)) != length(list_of_names)) {
+#     stop("All names of the objects to combine must be different")
+#   }
+#   list_of_params <-
+#     lapply(
+#     l,
+#     function(i) {
+#       temp <- i@parameters
+#       temp$object_name <- NULL
+#       temp$max_nL <- NULL
+#       temp$max_nR <- NULL
+#       temp$verbose <- NULL
+#       temp$seed <- NULL
+#       return(temp)
+#     }
+#   )
+#   if(length(unique(list_of_params)) != 1) {
+#     stop("Defining parameters from all scDiffCom objects must be identical.")
+#   }
+#   new_param <- l[[1]]@parameters
+#   new_param$object_name <- object_name
+#   new_param$max_nL <- max(sapply(l, function(i) i@parameters$max_nL))
+#   new_param$max_nR <- max(sapply(l, function(i) i@parameters$max_nR))
+#   new_param$verbose <- NA
+#   new_param$seed <- sapply(l, function(i) i@parameters$seed)
+#   if (verbose) message("Binding all raw CCIs.")
+#   list_of_cci_table_raw <- lapply(l, function(i) i@cci_table_raw)
+#   names(list_of_cci_table_raw) <- list_of_names
+#   new_cci_table_raw <- rbindlist(
+#     l = list_of_cci_table_raw,
+#     use.names = TRUE,
+#     fill = TRUE,
+#     idcol = "ID"
+#   )
+#   if (verbose) message("Binding all detected CCIs.")
+#   list_of_cci_table_detected <- lapply(l, function(i) i@cci_table_detected)
+#   names(list_of_cci_table_detected) <- list_of_names
+#   new_cci_table_detected <- rbindlist(
+#     l = list_of_cci_table_detected,
+#     use.names = TRUE,
+#     fill = TRUE,
+#     idcol = "ID"
+#   )
+#   list_of_ora_categories <- lapply(
+#     l, function(i) names(i@ora_table)
+#   )
+#   if (is.null(list_of_ora_categories[[1]])) {
+#     if (verbose) {
+#       message(
+#         paste0(
+#           "Empty slot `ora_table` in input object.",
+#           " Returning empty slot `ora_table` in combined object."
+#           )
+#       )
+#     }
+#     new_ora_table <- list()
+#   } else  if (length(unique(list_of_ora_categories)) != 1) {
+#     if (verbose) {
+#       message(
+#         paste0(
+#           "Objects to bind don't have the same ORA (default) categories.",
+#           " Returning empty slot `ora_table` in combined object."
+#           )
+#       )
+#     }
+#     new_ora_table <- list()
+#   } else {
+#     if (verbose) {
+#       message("Binding `ora_table` results.")
+#     }
+#     new_ora_table <- sapply(
+#       list_of_ora_categories[[1]],
+#       function(categ) {
+#         list_of_ora <- lapply(
+#           l,
+#           function(i) {
+#             i@ora_table[[categ]]
+#           }
+#         )
+#         names(list_of_ora) <- list_of_names
+#         rbindlist(
+#           l = list_of_ora ,
+#           use.names = TRUE,
+#           fill = TRUE,
+#           idcol = "ID"
+#         )
+#       },
+#       USE.NAMES = TRUE,
+#       simplify = FALSE
+#     )
+#   }
+#   # list_of_ora_categories <- lapply(
+#   #   l, function(i) names(i@ora_stringent)
+#   # )
+#   # if (is.null(list_of_ora_categories[[1]])) {
+#   #   if (verbose) {
+#   #     message("Empty slot `ora_stringent` in input object. Returning empty slot `ora_stringent` in combined object.")
+#   #   }
+#   #   new_ora_stringent <- list()
+#   # } else  if (length(unique(list_of_ora_categories)) != 1) {
+#   #   if (verbose) {
+#   #     message("Objects to bind don't have the same ORA (stringent) categories. Returning empty slot `ora_stringent` in combined object.")
+#   #   }
+#   #   new_ora_stringent <- list()
+#   # } else {
+#   #   if (verbose) {
+#   #     message("Binding `ora_stringent` results.")
+#   #   }
+#   #   new_ora_stringent <- sapply(
+#   #     list_of_ora_categories[[1]],
+#   #     function(categ) {
+#   #       list_of_ora <- lapply(
+#   #         l,
+#   #         function(i) {
+#   #           i@ora_stringent[[categ]]
+#   #         }
+#   #       )
+#   #       names(list_of_ora) <- list_of_names
+#   #       rbindlist(
+#   #         l = list_of_ora ,
+#   #         use.names = TRUE,
+#   #         fill = TRUE,
+#   #         idcol = "ID"
+#   #       )
+#   #     },
+#   #     USE.NAMES = TRUE,
+#   #     simplify = FALSE
+#   #   )
+#   # }
+#   new_object <- methods::new(
+#     "scDiffComCombined",
+#     parameters = new_param,
+#     cci_table_raw = new_cci_table_raw,
+#     cci_table_detected = new_cci_table_detected,
+#     ora_table = new_ora_table#,
+#     #ora_stringent = new_ora_stringent,
+#     #ora_combined_default = list(),
+#     #ora_combined_stringent = list()
+#   )
+#   # if (verbose) {
+#   #   message("Performing combined ORA (default categories).")
+#   # }
+#   # new_object <- run_ora(
+#   #   object = new_object,
+#   #   categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS", "ID"),
+#   #   overwrite = TRUE,
+#   #   stringent_or_default = "default",
+#   #   stringent_logfc_threshold = NULL,
+#   #   verbose = verbose,
+#   #   class_signature = "scDiffComCombined",
+#   #   global = TRUE
+#   # )
+#   if (verbose) message("Returning combined object.")
+#   return(new_object)
+# }
 
 

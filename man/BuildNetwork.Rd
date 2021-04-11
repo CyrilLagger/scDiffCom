@@ -3,51 +3,41 @@
 \name{BuildNetwork}
 \alias{BuildNetwork}
 \alias{BuildNetwork,scDiffCom-method}
-\alias{BuildNetwork,scDiffComCombined-method}
-\title{xxx}
+\title{Display 'cell type to cell type' interactive networks}
 \usage{
 BuildNetwork(
   object,
-  network_type = c("condition1_network", "condition2_network", "difference_network",
-    "up_regulated_network", "down_regulated_network", "ORA_network"),
-  layout_type = c("conventional", "bipartite"),
-  abbreviation_table = NULL,
-  ...
+  network_type = c("ORA_network"),
+  layout_type = c("bipartite", "conventional"),
+  abbreviation_table = NULL
 )
 
 \S4method{BuildNetwork}{scDiffCom}(
   object,
-  network_type = c("condition1_network", "condition2_network", "difference_network",
-    "up_regulated_network", "down_regulated_network", "ORA_network"),
-  layout_type = c("conventional", "bipartite"),
+  network_type = c("ORA_network"),
+  layout_type = c("bipartite", "conventional"),
   abbreviation_table = NULL
-)
-
-\S4method{BuildNetwork}{scDiffComCombined}(
-  object,
-  network_type = c("condition1_network", "condition2_network", "difference_network",
-    "up_regulated_network", "down_regulated_network", "ORA_network"),
-  layout_type = c("conventional", "bipartite"),
-  abbreviation_table,
-  ID
 )
 }
 \arguments{
-\item{object}{xxx}
+\item{object}{\code{scDiffCom} object}
 
-\item{network_type}{xxx}
+\item{network_type}{Type of network to display. Currently, only the type
+\code{ORA_network} (default) is supported.}
 
-\item{layout_type}{xxx}
+\item{layout_type}{Layout of the network to display. Can either be
+\code{"bipartite"} (default) or \code{"conventional"}.}
 
-\item{abbreviation_table}{xxx}
-
-\item{...}{Extra named arguments passed to BuildNetwork}
-
-\item{ID}{xxx}
+\item{abbreviation_table}{Table with abbreviations
+for the cell types present in the \code{object}. If \code{NULL} (default),
+full names of the cell-types are displayed. Otherwise, it must be a
+data.frame or data.table with exactly two columns of names
+\code{ORIGINAL_CELLTYPE} and \code{ABBR_CELLTYPE}.}
 }
 \value{
-xxx
+A visNetwork object
 }
 \description{
-xxx
+Create and plot interactive networks that convey various types of
+information regarding cell type to cell type communication.
 }

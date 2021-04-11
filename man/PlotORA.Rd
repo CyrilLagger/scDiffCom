@@ -3,63 +3,60 @@
 \name{PlotORA}
 \alias{PlotORA}
 \alias{PlotORA,scDiffCom-method}
-\alias{PlotORA,scDiffComCombined-method}
-\title{xxx}
+\title{Display top over-represented keywords}
 \usage{
 PlotORA(
   object,
   category,
   regulation = c("UP", "DOWN", "FLAT"),
-  max_terms_show,
+  max_terms_show = 20,
   GO_aspect = c("biological_process", "molecular_function", "cellular_component"),
   OR_threshold = 1,
-  bh_p_value_threshold = 0.05,
-  ...
+  bh_p_value_threshold = 0.05
 )
 
 \S4method{PlotORA}{scDiffCom}(
   object,
   category,
   regulation = c("UP", "DOWN", "FLAT"),
-  max_terms_show,
+  max_terms_show = 20,
   GO_aspect = c("biological_process", "molecular_function", "cellular_component"),
   OR_threshold = 1,
   bh_p_value_threshold = 0.05
 )
-
-\S4method{PlotORA}{scDiffComCombined}(
-  object,
-  category,
-  regulation = c("UP", "DOWN", "FLAT"),
-  max_terms_show,
-  GO_aspect = c("biological_process", "molecular_function", "cellular_component"),
-  OR_threshold = 1,
-  bh_p_value_threshold = 0.05,
-  subID
-)
 }
 \arguments{
-\item{object}{xxx}
+\item{object}{\code{scDiffCom} object}
 
-\item{category}{xxx}
+\item{category}{ORA category to display. Must be the name of one of the
+category present in \code{ora_table}.}
 
-\item{regulation}{xxx}
+\item{regulation}{ORA regulation to display. Can be either \code{UP}
+(default), \code{DOWN} or \code{FLAT}.}
 
-\item{max_terms_show}{xxx}
+\item{max_terms_show}{Maximum number of terms to display. Default is
+\code{20}.}
 
-\item{GO_aspect}{xxx}
+\item{GO_aspect}{Name of the GO aspect to display when
+\code{category == "GO_TERMS"}. Can be either \code{biological_process} (
+default), \code{molecular_function} or \code{cellular_component}.}
 
-\item{OR_threshold}{xxx}
+\item{OR_threshold}{Only the terms with an odds ratio above this threshold
+will be displayed. Default is \code{1}, meaning no filtering is performed.}
 
-\item{bh_p_value_threshold}{xxx}
-
-\item{...}{Extra named arguments passed to PlotORA}
-
-\item{subID}{xxx}
+\item{bh_p_value_threshold}{Only the terms with an adjusted p-value below
+this threshold (and always below 0.05) will be displayed. Default is
+ \code{0.05}.}
 }
 \value{
-xxx
+A ggplot object
 }
 \description{
-xxx
+Plot a graph that shows the top over-represented terms of a given
+category for a given regulation. Terms are ordered by their ORA scores,
+computed from their odds ratios and adjusted p-values.
+}
+\details{
+The ORA score is computed as the product between \code{log2(odds ratio)} and
+\code{-log10(adj. p-value)}.
 }
