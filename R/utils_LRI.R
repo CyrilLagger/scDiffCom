@@ -591,22 +591,24 @@ prepare_LR_CellChat <- function(
 ) {
   LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_2 <- LR_SORTED <- SOURCE <-
     interaction_name_2 <- temp <- new <- NULL
-  if (!requireNamespace("CellChat", quietly = TRUE)) {
-    stop(
-      paste0(
-        "Package \"CellChat\" needed for this function to work.",
-        "Please install it."
-      ),
-      call. = FALSE
-    )
-  }
+  # if (!requireNamespace("CellChat", quietly = TRUE)) {
+  #   stop(
+  #     paste0(
+  #       "Package \"CellChat\" needed for this function to work.",
+  #       "Please install it."
+  #     ),
+  #     call. = FALSE
+  #   )
+  # }
   retrieved_date <- as.Date("2021-03-22")
   retrieved_from <- "CellChat::CellChatDB"
   if (species == "mouse") {
-    LR <- CellChat::CellChatDB.mouse$interaction
+    #LR <- CellChat::CellChatDB.mouse$interaction
+    LR <- CellChat_mouse
   }
   if (species == "human") {
-    LR <- CellChat::CellChatDB.human$interaction
+    #LR <- CellChat::CellChatDB.human$interaction
+    LR <- CellChat_human
   }
   setDT(LR)
   setnames(
@@ -1099,18 +1101,19 @@ prepare_LR_NicheNet <- function(
   one2one
 ) {
   LR_SORTED <- SOURCE <- R3 <- NULL
-  if (!requireNamespace("nichenetr", quietly = TRUE)) {
-    stop(
-      paste0(
-        "Package \"nichenetr\" needed for this function to work.",
-        "Please install it."
-      ),
-      call. = FALSE
-    )
-  }
+  # if (!requireNamespace("nichenetr", quietly = TRUE)) {
+  #   stop(
+  #     paste0(
+  #       "Package \"nichenetr\" needed for this function to work.",
+  #       "Please install it."
+  #     ),
+  #     call. = FALSE
+  #   )
+  # }
   retrieved_date <- as.Date("2021-03-22")
   retrieved_from <- "nichenetr::lr_network"
-  LR <- nichenetr::lr_network
+  #LR <- nichenetr::lr_network
+  LR <- NICHENET_human
   setDT(LR)
   #there are 8 genes that are not HGNC approved symbol, we change them
   LR[LR == "ATP5B"] <- "ATP5F1B"

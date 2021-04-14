@@ -30,10 +30,8 @@ Suggests:
     AnnotationDbi,
     AnnotationHub,
     biomaRt,
-    CellChat,
     LRBase.Mmu.eg.db,
     LRBase.Hsa.eg.db,
-    nichenetr,
     SingleCellSignalR,
     ontologyIndex,
     ontoProc,
@@ -58,9 +56,6 @@ Imports:
     utils,
     magrittr,
     Seurat (>= 4.0.0)
-Remotes:
-    saeyslab/nichenetr,
-    sqjin/CellChat
 VignetteBuilder: knitr
 Collate: 
     'data.R'
