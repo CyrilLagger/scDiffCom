@@ -58,9 +58,9 @@ Imports:
     utils,
     magrittr,
     Seurat (>= 4.0.0)
-Additional_repositories:
-    https://github.com/saeyslab/nichenetr,
-    https://github.com/sqjin/CellChat
+Remotes:
+    saeyslab/nichenetr,
+    sqjin/CellChat
 VignetteBuilder: knitr
 Collate: 
     'data.R'
