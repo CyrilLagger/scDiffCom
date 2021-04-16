@@ -865,15 +865,15 @@ plot_ora <- function(
       ASPECT == GO_aspect
     ]
     ora_dt[, VALUE := paste0(
-      VALUE,
-      " (L",
+      "(L",
       LEVEL,
-      ")"
+      ") ",
+      VALUE
     )]
   }
-  if (nrow(ora_dt) == 0) {
-    return("No over-represented results.")
-  }
+  # if (nrow(ora_dt) == 0) {
+  #   return("No over-represented results.")
+  # }
   n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
   ora_dt <- ora_dt[1:n_row_tokeep]
   ora_dt$VALUE <- sapply(
@@ -900,25 +900,41 @@ plot_ora <- function(
   )
   category_label <- ifelse(
     category == "LRI",
-    "Ligand-Receptor Interaction",
+    "Ligand-Receptor Interactions",
     ifelse(
-      category == "ER_CELLTYPES",
-      "Cell Type Emitter/Receiver",
+      category == "LIGAND_COMPLEX",
+      "Ligand Genes",
       ifelse(
-        category == "GO_TERMS",
+        category == "RECEPTOR_COMPLEX",
+        "Receptor Genes",
         ifelse(
-          GO_aspect == "biological_process",
-          "GO Biological Process",
+          category == "ER_CELLTYPES",
+          "Emitter-Receiver Cell Types",
           ifelse(
-            GO_aspect == "molecular_function",
-            "GO Molecular Function",
-            "GO Cellular Component"
+            category == "EMITTER_CELLTYPE",
+            "Emitter Cell Types",
+            ifelse(
+              category == "RECEIVER_CELLTYPE",
+              "Receiver Cell Types",
+              ifelse(
+                category == "GO_TERMS",
+                ifelse(
+                  GO_aspect == "biological_process",
+                  "GO Biological Processes",
+                  ifelse(
+                    GO_aspect == "molecular_function",
+                    "GO Molecular Functions",
+                    "GO Cellular Components"
+                  )
+                ),
+                ifelse(
+                  category == "KEGG_PWS",
+                  "KEGG Pathways",
+                  category
+                )
+              )
+            )
           )
-        ),
-        ifelse(
-          category == "KEGG_PWS",
-          "KEGG Pathway",
-          category
         )
       )
     )
@@ -938,17 +954,24 @@ plot_ora <- function(
     ) +
     ggplot2::scale_color_gradient(low = "orange", high = "red") +
     ggplot2::xlab(paste0("ORA score ", regulation)) +
-    ggplot2::ylab(category_label) +
+    #ggplot2::ylab(category_label) +
+    ggplot2::ylab("") +
     ggplot2::labs(
       size = "-log10(Adj. P-Value)",
       color = "log2(Odds Ratio)"
     ) +
-    ggplot2::theme(text = ggplot2::element_text(size = 18)) +
+    ggplot2::theme(text = ggplot2::element_text(size = 14)) +
+    ggplot2::theme(legend.position = c(0.8, 0.3)) +
+    ggplot2::theme(legend.title = ggplot2::element_text(size = 12)) +
+    ggplot2::theme(legend.text = ggplot2::element_text(size = 12)) +
     ggplot2::ggtitle(
       paste0(
         "Top ",
         n_row_tokeep,
-        " keywords"
+        " ",
+        regulation,
+        " ",
+        category_label
       )
     )
 }
