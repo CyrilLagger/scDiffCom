@@ -6,7 +6,8 @@ build_interactive_network <- function(
   subobject_name,
   abbreviation_table
 ) {
-  ID <- VALUE <- i.ABBR_CELLTYPE <- NULL
+  ID <- VALUE <- i.ABBR_CELLTYPE <- EMITTER_CELLTYPE <-
+    RECEIVER_CELLTYPE <- NULL
   if (!requireNamespace("visNetwork", quietly = TRUE)) {
     stop(
       paste0(
@@ -120,6 +121,14 @@ build_interactive_network <- function(
             " `abbreviation table` must not contain duplicated rows"))
         abbreviation_table <- NULL
       } else {
+        cci_table_detected[
+          ,
+          "EMITTER_CELLTYPE_ORIGINAL" := EMITTER_CELLTYPE
+        ]
+        cci_table_detected[
+          ,
+          "RECEIVER_CELLTYPE_ORIGINAL" := RECEIVER_CELLTYPE
+        ]
         cci_table_detected[
           abbreviation_table,
           on = "EMITTER_CELLTYPE==ORIGINAL_CELLTYPE",
@@ -287,7 +296,7 @@ setup_graph_config <- function(
     VISNETWORK = list(
       WIDTH = "100%",
       HEIGHT = NULL,
-      BACKGROUND = "white"
+      BACKGROUND = 	"#F5F5F5"
     )
   )
   return(GRAPH_CONFIG)
@@ -663,19 +672,53 @@ extract_vertex_metadata <- function(
     unique(cci_table_detected[["EMITTER_CELLTYPE"]]),
     unique(cci_table_detected[["RECEIVER_CELLTYPE"]])
   )
-  if (layout_type == "conventional") {
-    vertex_table <- data.table(name = all_cell_types)
-  } else if (layout_type == "bipartite") {
-    vertex_table <- rbindlist(
-      l = list(
-        "EMITTER" = data.table(
-          name = all_cell_types, #paste0(all_cell_types, " (E)"),
-          vertex_types = TRUE),
-        "RECEIVER" = data.table(
-          name = all_cell_types, # paste0(all_cell_types, " (R)"),
-          vertex_types = FALSE)
-      )
+  if ("EMITTER_CELLTYPE_ORIGINAL" %in% colnames(cci_table_detected)) {
+    all_cell_types_original <- union(
+      unique(cci_table_detected[["EMITTER_CELLTYPE_ORIGINAL"]]),
+      unique(cci_table_detected[["RECEIVER_CELLTYPE_ORIGINAL"]])
     )
+  }
+  if (layout_type == "conventional") {
+    if ("EMITTER_CELLTYPE_ORIGINAL" %in% colnames(cci_table_detected)) {
+      vertex_table <- data.table(
+        name = all_cell_types,
+        name_original = all_cell_types_original
+      )
+    } else {
+      vertex_table <- data.table(
+        name = all_cell_types
+      )
+    }
+  } else if (layout_type == "bipartite") {
+    if ("EMITTER_CELLTYPE_ORIGINAL" %in% colnames(cci_table_detected)) {
+      vertex_table <- rbindlist(
+        l = list(
+          "EMITTER" = data.table(
+            name = all_cell_types, #paste0(all_cell_types, " (E)"),
+            name_original = all_cell_types_original,
+            vertex_types = TRUE
+          ),
+          "RECEIVER" = data.table(
+            name = all_cell_types, # paste0(all_cell_types, " (R)"),
+            name_original = all_cell_types_original,
+            vertex_types = FALSE
+          )
+        )
+      )
+    } else {
+      vertex_table <- rbindlist(
+        l = list(
+          "EMITTER" = data.table(
+            name = all_cell_types, #paste0(all_cell_types, " (E)"),
+            vertex_types = TRUE
+          ),
+          "RECEIVER" = data.table(
+            name = all_cell_types, # paste0(all_cell_types, " (R)"),
+            vertex_types = FALSE
+          )
+        )
+      )
+    }
   }
   if (is.null(conds)) {
     NCELLS_TABLE <- unique(cci_table_detected[
@@ -723,7 +766,7 @@ add_vertex_layout <- function(
   layout_type,
   config
 ) {
-  num_cells <- vertex.size <- name <- vertex_types <- NULL
+  num_cells <- vertex.size <- name <- vertex_types <- name_original <- NULL
   vertex_table[, "vertex.size" := rescale_internal(
     v = num_cells,
     min_ = config$VERTEX_STYLE$MINSIZE,
@@ -748,13 +791,25 @@ add_vertex_layout <- function(
     )
   ]
   if (is.null(conds)) {
-    vertex_table[, "title" := paste0(
-      "<h3> ", name, " </h3><p> Number of Cells: ", num_cells, " </p>"
-    )]
+    if ("name_original" %in% colnames(vertex_table)) {
+      vertex_table[, "title" := paste0(
+        "<h3> ", name_original, " </h3><p> Number of Cells: ", num_cells, " </p>"
+      )]
+    } else {
+      vertex_table[, "title" := paste0(
+        "<h3> ", name, " </h3><p> Number of Cells: ", num_cells, " </p>"
+      )]
+    }
   } else {
-    vertex_table[, "title" := paste0(
-      "<h3> ", name, " </h3><p> Avg. Number of Cells: ", num_cells, " </p>"
-    )]
+    if ("name_original" %in% colnames(vertex_table)) {
+      vertex_table[, "title" := paste0(
+        "<h3> ", name_original, " </h3><p> Avg. Number of Cells: ", num_cells, " </p>"
+      )]
+    } else {
+      vertex_table[, "title" := paste0(
+        "<h3> ", name, " </h3><p> Avg. Number of Cells: ", num_cells, " </p>"
+      )]
+    }
   }
   if (layout_type == "bipartite") {
     vertex_table[, c("group", "level") := list(
@@ -954,8 +1009,8 @@ get_network_components <- function(
       width = config$VISNETWORK$WIDTH,
       height = config$VISNETWORK$HEIGHT,
       main = edges$main_title[[1]],
-      submain = sprintf("%s", object_name),
-      footer = sprintf("Network type: %s", layout_type),
+      #submain = sprintf("%s", object_name),
+      #footer = sprintf("Network type: %s", layout_type),
       background = config$VISNETWORK$BACKGROUND
     ),
     nodes_global = . %>% visNetwork::visNodes(
@@ -988,7 +1043,7 @@ get_network_components <- function(
         config = config
       ),
       useGroups = FALSE,
-      zoom = TRUE
+      zoom = FALSE
     ),
     physics = . %>% visNetwork::visPhysics(
       enabled = FALSE,
