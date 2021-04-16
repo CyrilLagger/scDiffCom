@@ -898,8 +898,14 @@ test_that("dummy test to replace", {
 all_networks[[6]][[2]]
 
 # BuildNetwork(
-#   scdiffcom_objects$cond_stat
+#   scdiffcom_objects$cond_stat,
+#   abbreviation_table = data.table::data.table(
+#     ORIGINAL_CELLTYPE = cell_types,
+#     ABBR_CELLTYPE = c("a", "b", "c", "d", "e")
+#   )
+#   #layout_type = "conventional"
 # )
+
 
 ## Check BuildNetwork step by step ####
 

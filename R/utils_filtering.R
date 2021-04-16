@@ -170,12 +170,12 @@ process_cci_raw <- function(
     temp_by <- "ID"
   }
   if (condition_inputs$is_cond) {
-    cci_dt <- cci_dt[
+    dt <- cci_dt[
       get(paste0("IS_CCI_EXPRESSED_", condition_inputs$cond1)) == TRUE |
         get(paste0("IS_CCI_EXPRESSED_", condition_inputs$cond2)) == TRUE
     ]
     if (permutation_analysis) {
-      cci_dt[, c(
+      dt[, c(
         paste0("BH_P_VALUE_", condition_inputs$cond1),
         paste0("BH_P_VALUE_", condition_inputs$cond2),
         "BH_P_VALUE_DE"
@@ -192,7 +192,7 @@ process_cci_raw <- function(
       ),
       by = temp_by
       ]
-      cci_dt[, c(
+      dt[, c(
         paste0("IS_CCI_SCORE_", condition_inputs$cond1),
         paste0("IS_CCI_SCORE_", condition_inputs$cond2),
         paste0("IS_CCI_SPECIFIC_", condition_inputs$cond1),
@@ -262,7 +262,7 @@ process_cci_raw <- function(
       },
       by = temp_by
       ]
-      cci_dt[
+      dt[
         ,
         REGULATION :=
           ifelse(
@@ -288,19 +288,19 @@ process_cci_raw <- function(
             )
           )
       ]
-      if ("There is a problem here!" %in% cci_dt[["REGULATION"]]) {
+      if ("There is a problem here!" %in% dt[["REGULATION"]]) {
         stop("Error when assigning regulation to CCIs.")
       }
-      cci_dt <- cci_dt[REGULATION != "NOT_DETECTED"]
+      dt <- dt[REGULATION != "NOT_DETECTED"]
     }
   } else {
-    cci_dt <- cci_dt[IS_CCI_EXPRESSED == TRUE]
+    dt <- cci_dt[IS_CCI_EXPRESSED == TRUE]
     if (permutation_analysis) {
-      cci_dt[
+      dt[
         ,
         BH_P_VALUE := stats::p.adjust(P_VALUE, method = "BH"),
         by = temp_by]
-      cci_dt[, c(
+      dt[, c(
         "IS_CCI_SCORE",
         "IS_CCI_SPECIFIC",
         "IS_CCI_DETECTED"
@@ -322,12 +322,12 @@ process_cci_raw <- function(
       ]
     }
   }
-  cci_dt[, ER_CELLTYPES := paste(
+  dt[, ER_CELLTYPES := paste(
     EMITTER_CELLTYPE,
     RECEIVER_CELLTYPE,
     sep = "_")]
-  cci_dt[, CCI := paste(ER_CELLTYPES, LRI, sep = "_")]
-  return(cci_dt)
+  dt[, CCI := paste(ER_CELLTYPES, LRI, sep = "_")]
+  return(dt)
 }
 
 clean_colnames <- function(

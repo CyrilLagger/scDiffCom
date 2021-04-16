@@ -165,7 +165,9 @@ run_interaction_analysis <- function(
   verbose = TRUE
 ) {
   if (!methods::is(seurat_object, "Seurat")) {
-    stop("'seurat_object' must be an object of class Seurat")
+    stop(
+      "'seurat_object' must be an object of class Seurat"
+      )
   }
   analysis_parameters <- list(
     LRI_species = LRI_species,
@@ -192,18 +194,20 @@ run_interaction_analysis <- function(
     from_inputs = TRUE
   )
   if (!is.null(check_parameters$check)) {
-    stop(paste0(
-      "Invalid parameters: ",
-      paste0(check_parameters$check, collapse = " and ")
-      ))
+    stop(
+      paste0(
+        "Invalid parameters: ",
+        paste0(check_parameters$check, collapse = " and ")
+      )
+    )
   } else {
     analysis_parameters <- check_parameters$params
   }
   if (LRI_species == "human") {
-    LRI_table <- scDiffCom::LRI_human$LRI_curated
+    LRI_table <- copy(scDiffCom::LRI_human$LRI_curated)
   }
   if (LRI_species == "mouse") {
-    LRI_table <- scDiffCom::LRI_mouse$LRI_curated
+    LRI_table <- copy(scDiffCom::LRI_mouse$LRI_curated)
   }
   set.seed(seed)
   object <- run_internal_raw_analysis(
