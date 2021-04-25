@@ -840,7 +840,10 @@ plot_ora <- function(
   OR_threshold,
   bh_p_value_threshold
 ) {
-  VALUE <- ASPECT <- LEVEL <-  NULL
+  VALUE <- ASPECT <- LEVEL <-
+    OR <- OR_UP <- OR_DOWN <- OR_FLAT <-
+    BH_PVAL <- BH_P_VALUE_UP <- BH_P_VALUE_DOWN <- BH_P_VALUE_FLAT <-
+    ORA_SCORE <- ORA_SCORE_UP <- ORA_SCORE_DOWN <- ORA_SCORE_FLAT <- NULL
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop(
       paste0(
