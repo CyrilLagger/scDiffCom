@@ -507,7 +507,7 @@ test_that(
 ## benchmarking of permutation test and internal functions ####
 #library(profvis)
 #library(microbenchmark)
-#toDO
+#TODO
 
 ## check object is returned correctly ####
 
@@ -529,7 +529,7 @@ test_that("scDiffCom raw object is returned properly", {
   )
 })
 
-## Check filtering without ORA ####
+## Check internal filtering without ORA ####
 
 scdiffcom_objects <- lapply(
   scdiffcom_objects,
@@ -547,16 +547,12 @@ scdiffcom_objects <- lapply(
   }
 )
 
-# FilterCCI(
-#   scdiffcom_objects$cond_stat
-# )
-
 #test_that("todo", {
 #
 #})
 
 
-## check ORA ####
+## check internal ORA ####
 
 scdiffcom_objects <- lapply(
   scdiffcom_objects,
@@ -676,7 +672,6 @@ contingency_table_test_GO_flat <- matrix(
   2,2
 )
 fisher_GO_flat <- fisher.test(contingency_table_test_GO_flat)
-fisher_GO_flat_cor <- fisher.test(contingency_table_test_GO_flat+1)
 
 test_that("fisher test is done correctly on GO terms", {
   expect_equivalent(
@@ -697,7 +692,7 @@ test_that("fisher test is done correctly on GO terms", {
   )
   expect_equal(
     scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0022406"]$OR_FLAT[[1]],
-    fisher_GO_flat_cor$estimate[[1]],
+    fisher_GO_flat$estimate[[1]],
     tolerance = 0.01
   )
   expect_equivalent(
@@ -706,7 +701,18 @@ test_that("fisher test is done correctly on GO terms", {
   )
 })
 
-## Adding extra annotations to ORA #####
+## Check exported Filtering and ORA ####
+
+FilterCCI(
+  object = scdiffcom_objects$cond_stat,
+  new_threshold_quantile_score = 0.25,
+  new_threshold_p_value_specificity = 0.01,
+  new_threshold_p_value_de = 0.01,
+  new_threshold_logfc = 0.01,
+  skip_ora = FALSE
+)
+
+## check adding extra annotations to ORA #####
 
 cell_types <-  c(
   "B cell",
@@ -787,16 +793,11 @@ PlotORA(
 )
 
 ## Check accessors ####
-#TODO
+
 retrieved_parameters <- lapply(
   scdiffcom_objects,
   GetParameters
 )
-
-# retrieved_parameters_combined <- lapply(
-#   scdiffcom_combined_objects,
-#   GetParameters
-# )
 
 retrieved_cci_tables <- lapply(
   c("raw", "detected"),
@@ -815,23 +816,6 @@ retrieved_cci_tables <- lapply(
   }
 )
 
-# retrieved_cci_tables_combined <- lapply(
-#   c("raw", "detected"),
-#   function(type) {
-#     lapply(
-#       c(TRUE, FALSE),
-#       function(simplified) {
-#         lapply(
-#           scdiffcom_combined_objects,
-#           GetTableCCI,
-#           type = type,
-#           simplified = simplified
-#         )
-#       }
-#     )
-#   }
-# )
-
 retrieved_ora_tables <- lapply(
   list("all", c("LRI", "ER_CELLTYPES", "GO_TERMS")),
   function(categories) {
@@ -848,21 +832,9 @@ retrieved_ora_tables <- lapply(
   }
 )
 
-# retrieved_ora_tables_combined <- lapply(
-#   list("all", c("LRI", "ER_CELLTYPES", "GO_TERMS")),
-#   function(categories) {
-#     lapply(
-#       c(TRUE, FALSE),
-#       function(simplified) {
-#         GetTableORA(
-#           scdiffcom_combined_objects$cond_stat,
-#           categories = categories,
-#           simplified = simplified
-#         )
-#       }
-#     )
-#   }
-# )
+## check erase raw CCIs ####
+
+EraseRawCCI(scdiffcom_objects$cond_stat)
 
 ## Check BuildNetwork overall ####
 
@@ -905,15 +877,9 @@ test_that("dummy test to replace", {
 
 all_networks[[6]][[2]]
 
-# BuildNetwork(
-#   scdiffcom_objects$cond_stat,
-#   abbreviation_table = data.table::data.table(
-#     ORIGINAL_CELLTYPE = cell_types,
-#     ABBR_CELLTYPE = c("a", "b", "c", "d", "e")
-#   )
-#   #layout_type = "conventional"
-# )
-
+BuildNetwork(
+  object = scdiffcom_objects$cond_stat
+)
 
 ## Check BuildNetwork step by step ####
 
