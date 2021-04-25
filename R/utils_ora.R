@@ -677,13 +677,22 @@ perform_ora_from_counts <- function(
   temp_bh_dt <- counts_dt[COUNTS_VALUE_REGULATED > 0]
   temp_bh_dt[, "BH_P_VALUE" := list(stats::p.adjust(P_VALUE, method = "BH"))]
   counts_dt[temp_bh_dt, on = "VALUE", "BH_P_VALUE" := i.BH_P_VALUE]
-  counts_dt <- clip_infinite_OR(
-    ORA_dt = counts_dt
-  )
+  # counts_dt <- clip_infinite_OR(
+  #   ORA_dt = counts_dt
+  # )
+  # counts_dt[, ORA_SCORE := ifelse(
+  #   OR <= 1,
+  #   0,
+  #   -log10(BH_P_VALUE) * log2(OR)
+  # )]
   counts_dt[, ORA_SCORE := ifelse(
-    OR <= 1,
+    OR <= 1 | BH_P_VALUE >= 0.05,
     0,
-    -log10(BH_P_VALUE) * log2(OR)
+    ifelse(
+      is.infinite(OR),
+      Inf,
+      -log10(BH_P_VALUE) * log2(OR)
+    )
   )]
   return(counts_dt)
 }
@@ -841,43 +850,79 @@ plot_ora <- function(
       call. = FALSE
     )
   }
+  if (OR_threshold < 1) {
+    stop(
+      "'OR_thtreshold' muste be bigger than 1"
+    )
+  }
+  if (bh_p_value_threshold > 0.05) {
+    stop(
+      "'bh_p_value_threshold' must be smaller than 0.05"
+    )
+  }
+  dt <- copy(ora_dt)
   if(regulation == "UP") {
-    OR_ID <- "OR_UP"
-    p_value_ID <- "BH_P_VALUE_UP"
-    ORA_SCORE_ID <- "ORA_SCORE_UP"
+    dt[, OR := OR_UP]
+    dt[, BH_PVAL := BH_P_VALUE_UP]
+    dt[, ORA_SCORE := ORA_SCORE_UP ]
   } else if(regulation == "DOWN") {
-    OR_ID <- "OR_DOWN"
-    p_value_ID <- "BH_P_VALUE_DOWN"
-    ORA_SCORE_ID <- "ORA_SCORE_DOWN"
+    dt[, OR := OR_DOWN]
+    dt[, BH_PVAL := BH_P_VALUE_DOWN]
+    dt[, ORA_SCORE := ORA_SCORE_DOWN ]
   } else if(regulation == "FLAT") {
-    OR_ID <- "OR_FLAT"
-    p_value_ID <- "BH_P_VALUE_FLAT"
-    ORA_SCORE_ID <- "ORA_SCORE_FLAT"
+    dt[, OR := OR_FLAT]
+    dt[, BH_PVAL := BH_P_VALUE_FLAT]
+    dt[, ORA_SCORE := ORA_SCORE_FLAT ]
   } else {
     stop("Can't find 'regulation' type")
   }
-  ora_dt <- ora_dt[
-    get(OR_ID) > OR_threshold &
-      get(p_value_ID) <= bh_p_value_threshold
-  ][order(-get(ORA_SCORE_ID))]
   if (category == "GO_TERMS") {
-    ora_dt <- ora_dt[
+    dt <- dt[
       ASPECT == GO_aspect
     ]
-    ora_dt[, VALUE := paste0(
+    dt[, VALUE := paste0(
       "(L",
       LEVEL,
       ") ",
       VALUE
     )]
   }
-  # if (nrow(ora_dt) == 0) {
-  #   return("No over-represented results.")
-  # }
-  n_row_tokeep <- min(max_terms_show, nrow(ora_dt))
-  ora_dt <- ora_dt[1:n_row_tokeep]
-  ora_dt$VALUE <- sapply(
-    ora_dt$VALUE,
+  dt <- dt[
+    OR > 1 &
+      BH_PVAL <= 0.05
+  ]
+  if (any(is.infinite(dt$OR))) {
+    dt[, VALUE := ifelse(
+      is.infinite(OR),
+      paste0("INF: ", VALUE),
+      VALUE
+    )]
+    dt_finite <- dt[is.finite(OR)]
+    if (nrow(dt_finite) > 0) {
+      dt[
+        ,
+        OR := ifelse(
+          is.infinite(OR),
+          1 + max(dt_finite$OR),
+          OR
+        )
+      ]
+    } else {
+      dt[, OR = 100]
+    }
+    dt[
+      ,
+      ORA_SCORE := -log10(BH_PVAL) * log2(OR)
+    ]
+  }
+  dt <- dt[
+    OR > OR_threshold &
+      BH_PVAL <= bh_p_value_threshold
+  ][order(-ORA_SCORE)]
+  n_row_tokeep <- min(max_terms_show, nrow(dt))
+  dt <- dt[1:n_row_tokeep]
+  dt$VALUE <- sapply(
+    dt$VALUE,
     function(i) {
       words <- strsplit(i, " ")[[1]]
       n_words <- length(words)
@@ -940,21 +985,20 @@ plot_ora <- function(
     )
   )
   ggplot2::ggplot(
-    ora_dt,
+    dt,
     ggplot2::aes(
-      get(ORA_SCORE_ID),
-      stats::reorder(get("VALUE"), get(ORA_SCORE_ID))
+      ORA_SCORE,
+      stats::reorder(VALUE, ORA_SCORE)
     )
   ) +
     ggplot2::geom_point(
       ggplot2::aes(
-        size = -log10(get(p_value_ID)),
-        color = log2(get(OR_ID))
+        size = -log10(BH_PVAL),
+        color = log2(OR)
       )
     ) +
     ggplot2::scale_color_gradient(low = "orange", high = "red") +
     ggplot2::xlab(paste0("ORA score ", regulation)) +
-    #ggplot2::ylab(category_label) +
     ggplot2::ylab("") +
     ggplot2::labs(
       size = "-log10(Adj. P-Value)",

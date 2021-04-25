@@ -778,6 +778,14 @@ PlotORA(
   GO_aspect = "biological_process"
 )
 
+PlotORA(
+  object = scdiffcom_objects$cond_stat,
+  category = "ER_CELLTYPES",
+  regulation = "DOWN",
+  max_terms_show = 20,
+  GO_aspect = "biological_process"
+)
+
 ## Check accessors ####
 #TODO
 retrieved_parameters <- lapply(
