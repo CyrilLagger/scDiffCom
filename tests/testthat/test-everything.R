@@ -836,7 +836,7 @@ retrieved_ora_tables <- lapply(
 
 EraseRawCCI(scdiffcom_objects$cond_stat)
 
-## Check BuildNetwork overall ####
+## check BuildNetwork overall ####
 
 types_of_network = c(
   "condition1_network",
@@ -881,11 +881,11 @@ BuildNetwork(
   object = scdiffcom_objects$cond_stat
 )
 
-## Check BuildNetwork step by step ####
+## check BuildNetwork step by step ####
 
 #TODO
 
-## Check construct_graph ####
+## check construct_graph ####
 
 # ig_cond_stat <- construct_graph(
 #   cci_table_detected = scdiffcom_objects$cond_stat@cci_table_detected,
@@ -909,7 +909,7 @@ BuildNetwork(
 # igraph::edge.attributes(ig_nocond_stat)
 # igraph::vertex.attributes(ig_nocond_stat)
 #
-# ## Check setup_graph #####
+# ## check setup_graph #####
 #
 # setup_test <- setup_graph(
 #   G = ig_cond_stat,
@@ -919,7 +919,7 @@ BuildNetwork(
 # )
 #
 #
-# ## Check build_igraph ####
+# ## check build_igraph ####
 #
 # igb_cond_stat <- build_igraph(
 #   cci_table_detected = scdiffcom_objects$cond_stat@cci_table_detected,
@@ -929,7 +929,7 @@ BuildNetwork(
 # )
 # plot(igb_cond_stat)
 #
-# ## Check network_skeleton ####
+# ## check network_skeleton ####
 #
 # interactive_from_igraph <- function(
 #   cci_table_detected,
