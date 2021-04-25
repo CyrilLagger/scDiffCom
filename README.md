@@ -1,48 +1,61 @@
 
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # scDiffCom
 
-## Overview
+<!-- badges: start -->
 
-This package provides tools to investigate changes in intercellular 
-communication between two conditions of interest in scRNA-seq datasets.
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+<!-- badges: end -->
 
-It relies on a curated collection of ligand-receptor interactions (available for 
-human and mouse) that have been retrieved and processed from eight public
-databases.
+The goal of scDiffCom is to provides tools to investigate changes in
+intercellular communication between two conditions of interest in
+scRNA-seq datasets.
 
+It relies on a curated collection of ligand-receptor interactions
+(available for human and mouse) that have been retrieved and processed
+from eight public databases.
 <details>
-    <summary>Click here to display the ligand-receptor sources</summary>
-- [CellChat](http://www.cellchat.org/)
-- [CellPhoneDB](https://www.cellphonedb.org/)
-- [CellTalkDB](http://tcm.zju.edu.cn/celltalkdb/)
-- [connectomeDB2020](https://github.com/forrest-lab/NATMI)
-- [ICELLNET](https://github.com/soumelis-lab/ICELLNET)
-- [NicheNet](https://github.com/saeyslab/nichenetr)
-- [SingleCellSignalR](http://www.bioconductor.org/packages/release/bioc/html/SingleCellSignalR.html)
-- [scTensor](https://github.com/rikenbit/scTensor)
-</details>&nbsp;
+<summary>
+Display LRI databases
+</summary>
 
-Using as input a [Seurat](https://satijalab.org/seurat/) object that should
-contain cells annotated by cell-types and by two groups of interest
-(e.g. young/old), the package infers cell-cell interactions that
-potentially correspond to biological signals and significantly change between
-the two conditions. For implementation details regarding the statistical
-approach used in `scDiffCom` please see our (article in preparation). 
+-   [CellChat](http://www.cellchat.org/)
+-   [CellPhoneDB](https://www.cellphonedb.org/)
+-   [CellTalkDB](http://tcm.zju.edu.cn/celltalkdb/)
+-   [connectomeDB2020](https://github.com/forrest-lab/NATMI)
+-   [ICELLNET](https://github.com/soumelis-lab/ICELLNET)
+-   [NicheNet](https://github.com/saeyslab/nichenetr)
+-   [SingleCellSignalR](http://www.bioconductor.org/packages/release/bioc/html/SingleCellSignalR.html)
+-   [scTensor](https://github.com/rikenbit/scTensor)
 
+</details>
+
+ 
+
+Using as input a [Seurat](https://satijalab.org/seurat/) object that
+should contain cells annotated by cell-types and by two groups of
+interest (e.g. young/old), the package infers cell-cell interactions
+that potentially correspond to biological signals and significantly
+change between the two conditions. For implementation details regarding
+the statistical approach used in `scDiffCom` please see our (article in
+preparation).
 
 ## Installation
 
-To get the most recent version, please run:
+You can install the released version of scDiffCom from
+[CRAN](https://CRAN.R-project.org) with:
 
-```R
-if(!require(devtools)) install.packages("devtools")
-devtools::install_github("CyrilLagger/scDiffCom")
+``` r
+#(not available yet)
 ```
 
-You can also get a stable CRAN release:
+And the development version from [GitHub](https://github.com/) with:
 
-```R
-#(not available yet)
+``` r
+# install.packages("devtools")
+devtools::install_github("CyrilLagger/scDiffCom")
 ```
 
 ## Typical workflow
@@ -50,9 +63,6 @@ You can also get a stable CRAN release:
 For a usage example, please look at the vignette available
 [here](https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html)
 
-
 ## Reference
 
-TBA
-
-
+(manuscript in preparation)
