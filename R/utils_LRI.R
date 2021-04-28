@@ -360,6 +360,11 @@ prepare_LR_connectomeDB2020 <- function(
     old = c("Ligand.gene.symbol", "Receptor.gene.symbol", "PMID.support"),
     new = c("L1", "R1", "SOURCE")
   )
+  #remove genes that should be excluded according to our manual curation
+  LR <- LR[
+    !(L1 %in% GENES_to_remove_human$gene) &
+      !(R1 %in% GENES_to_remove_human$gene)
+  ]
   if (species == "mouse") {
     ortho <- get_orthologs(
       genes = unique(c(LR$L1, LR$R1)),
@@ -442,6 +447,19 @@ prepare_LR_CellTalkDB <- function(
     old = c("ligand_gene_symbol", "receptor_gene_symbol", "evidence"),
     new = c("LIGAND_1", "RECEPTOR_1", "SOURCE")
   )
+  #remove genes that should be excluded according to our manual curation
+  if (species == "mouse") {
+    LR <- LR[
+      !(LIGAND_1 %in% GENES_to_remove_mouse$gene) &
+        !(RECEPTOR_1 %in% GENES_to_remove_mouse$gene)
+    ]
+  }
+  if (species == "human") {
+    LR <- LR[
+      !(LIGAND_1 %in% GENES_to_remove_human$gene) &
+        !(RECEPTOR_1 %in% GENES_to_remove_human$gene)
+    ]
+  }
   LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
     temp <- c(
       sapply(1:1, function(j) {
@@ -516,6 +534,14 @@ prepare_LR_ICELLNET <- function(
     )
   )
   LR[, R3 := ifelse(R3 %in% c(" ", "    "), NA, R3)]
+  #remove genes that should be excluded according to our manual curation
+  LR <- LR[
+    !(L1 %in% GENES_to_remove_human$gene) &
+      !(L2 %in% GENES_to_remove_human$gene) &
+      !(R1 %in% GENES_to_remove_human$gene) &
+      !(R2 %in% GENES_to_remove_human$gene) &
+      !(R3 %in% GENES_to_remove_human$gene)
+  ]
   if (species == "mouse") {
     ortho <- get_orthologs(
       genes = unique(c(LR$L1, LR$L2, LR$R1, LR$R2, LR$R3)),
@@ -651,6 +677,21 @@ prepare_LR_CellChat <- function(
     `:=`(RECEPTOR_2 = new),
     on = "RECEPTOR_2==old"
   ]
+  #remove genes that should be excluded according to our manual curation
+  if (species == "mouse") {
+    LR <- LR[
+      !(LIGAND_1 %in% GENES_to_remove_mouse$gene) &
+        !(RECEPTOR_1 %in% GENES_to_remove_mouse$gene) &
+        !(RECEPTOR_2 %in% GENES_to_remove_mouse$gene)
+    ]
+  }
+  if (species == "human") {
+    LR <- LR[
+      !(LIGAND_1 %in% GENES_to_remove_human$gene) &
+        !(RECEPTOR_1 %in% GENES_to_remove_human$gene) &
+        !(RECEPTOR_2 %in% GENES_to_remove_human$gene)
+    ]
+  }
   LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
     temp <- c(LIGAND_1[[i]], RECEPTOR_1[[i]], RECEPTOR_2[[i]])
     temp <- temp[!is.na(temp)]
@@ -692,6 +733,14 @@ prepare_LR_CellPhoneDB <- function(
   LR[LR == "NOV"] <- "CCN3"
   LR[LR == "WISP3"] <- "CCN6"
   LR[LR == "YARS"] <- "YARS1"
+  #remove genes that should be excluded according to our manual curation
+  LR <- LR[
+    !(L_1 %in% GENES_to_remove_human$gene) &
+      !(L_2 %in% GENES_to_remove_human$gene) &
+      !(R_1 %in% GENES_to_remove_human$gene) &
+      !(R_2 %in% GENES_to_remove_human$gene) &
+      !(R_3 %in% GENES_to_remove_human$gene)
+  ]
   if (species == "mouse") {
     genes_temp <- unique(unlist(LR))
     genes_temp <- genes_temp[!is.na(genes_temp)]
@@ -1022,6 +1071,11 @@ prepare_LR_SingleCellSignalR <- function(
     old = c("ligand", "receptor"),
     new = c("L1", "R1")
   )
+  #remove genes that should be excluded according to our manual curation
+  LR <- LR[
+    !(L1 %in% GENES_to_remove_human$gene) &
+      !(R1 %in% GENES_to_remove_human$gene)
+  ]
   if (species == "mouse") {
     ortho <- get_orthologs(
       genes = unique(c(LR$L1, LR$R1)),
@@ -1129,6 +1183,11 @@ prepare_LR_NicheNet <- function(
     old = c("from", "to", "source"),
     new = c("L1", "R1", "SOURCE")
   )
+  #remove genes that should be excluded according to our manual curation
+  LR <- LR[
+    !(L1 %in% GENES_to_remove_human$gene) &
+      !(R1 %in% GENES_to_remove_human$gene)
+  ]
   if (species == "mouse") {
     ortho <- get_orthologs(
       genes = unique(c(LR$L1, LR$R1)),
@@ -1321,6 +1380,19 @@ prepare_LR_scTensor <- function(
     "LR_SORTED", "SOURCE",
     "LIGAND_1", "RECEPTOR_1"
   )
+  #remove genes that should be excluded according to our manual curation
+  if (species == "mouse") {
+    LR <- LR[
+      !(LIGAND_1 %in% GENES_to_remove_mouse$gene) &
+        !(RECEPTOR_1 %in% GENES_to_remove_mouse$gene)
+    ]
+  }
+  if (species == "human") {
+    LR <- LR[
+      !(LIGAND_1 %in% GENES_to_remove_human$gene) &
+        !(RECEPTOR_1 %in% GENES_to_remove_human$gene)
+    ]
+  }
   if (species == "mouse") {
     LR[, SOURCE := gsub("ENSEMBL_DLRP|NCBI_DLRP", "SCT:DLRP", SOURCE)]
     LR[, SOURCE := gsub("ENSEMBL_IUPHAR|NCBI_IUPHAR", "IUPHAR", SOURCE)]
