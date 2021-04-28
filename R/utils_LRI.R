@@ -348,7 +348,7 @@ prepare_LR_connectomeDB2020 <- function(
   species,
   one2one
 ) {
-  LR_SORTED <- SOURCE <- NULL
+  LR_SORTED <- SOURCE <- L1 <- R1 <- NULL
   #Last time updated
   retrieved_date <- as.Date("2021-03-22")
   retrieved_from <- "https://asrhou.github.io/NATMI/"
@@ -431,7 +431,7 @@ prepare_LR_connectomeDB2020 <- function(
 prepare_LR_CellTalkDB <- function(
   species
 ) {
-  LR_SORTED <- SOURCE <- NULL
+  LR_SORTED <- SOURCE <- LIGAND_1 <- RECEPTOR_1 <- NULL
   retrieved_date <- as.Date("2021-03-22")
   retrieved_from <- "http://tcm.zju.edu.cn/celltalkdb/"
   if (species == "mouse") {
@@ -498,7 +498,7 @@ prepare_LR_ICELLNET <- function(
   species,
   one2one
 ) {
-  LR_SORTED <- SOURCE <- R3 <- NULL
+  LR_SORTED <- SOURCE <- L1 <- L2 <- R1 <- R2 <- R3 <- NULL
   retrieved_date <- as.Date("2021-03-22")
   retrieved_from <- paste0(
     "https://raw.githubusercontent.com/soumelis-lab/",
@@ -721,7 +721,8 @@ prepare_LR_CellPhoneDB <- function(
   deconvoluted,
   keep_id
 ) {
-  LR_SORTED <- NULL
+  LR_SORTED <- L_1 <- L_2 <-
+    R_1 <- R_2 <- R_3 <- NULL
   retrieved_date <- as.Date("2021-03-22")
   retrieved_from <- paste0(
     "https://github.com/Teichlab/cellphonedb-data/blob/master/cellphone.db"
@@ -1032,7 +1033,7 @@ prepare_LR_SingleCellSignalR <- function(
   species,
   one2one
 ) {
-  LR_SORTED <- SOURCE <- PMIDs <- NULL
+  LR_SORTED <- SOURCE <- PMIDs <- L1 <- R1 <- NULL
   if (!requireNamespace("SingleCellSignalR", quietly = TRUE)) {
     stop(
       paste0(
@@ -1154,7 +1155,7 @@ prepare_LR_NicheNet <- function(
   species,
   one2one
 ) {
-  LR_SORTED <- SOURCE <- R3 <- NULL
+  LR_SORTED <- SOURCE <- L1 <- R1 <- NULL
   # if (!requireNamespace("nichenetr", quietly = TRUE)) {
   #   stop(
   #     paste0(

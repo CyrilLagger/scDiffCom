@@ -243,7 +243,7 @@ test_that(
   {
     expect_equal(
       nrow(templates_test$cond_stat),
-      33275
+      30475
     )
   }
 )
@@ -780,7 +780,7 @@ PlotORA(
   object = scdiffcom_objects$cond_stat,
   category = "GO_TERMS",
   regulation = "DOWN",
-  max_terms_show = 20,
+  max_terms_show = 50,
   GO_aspect = "biological_process"
 )
 
