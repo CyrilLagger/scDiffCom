@@ -304,9 +304,9 @@ combine_LR_db <- function(
       cols_to_keep,
       "LRI",
       paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3),
-      "DATABASE", "SOURCE",
-      paste0("LIGAND_", 1:2, "_CONF"), paste0("LIGAND_", 1:2, "_TYPE"),
-      paste0("RECEPTOR_", 1:3, "_CONF"), paste0("RECEPTOR_", 1:3, "_TYPE")
+      "DATABASE", "SOURCE"#,
+      #paste0("LIGAND_", 1:2, "_CONF"), paste0("LIGAND_", 1:2, "_TYPE"),
+      #paste0("RECEPTOR_", 1:3, "_CONF"), paste0("RECEPTOR_", 1:3, "_TYPE")
     )
   }
   if (species == "human") {
