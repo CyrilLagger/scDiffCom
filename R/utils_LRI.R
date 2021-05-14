@@ -1558,8 +1558,11 @@ get_GO_interactions <- function(
   }
   ALL_LR_genes <- unique(
     unlist(
-      LR_db[, c("LIGAND_1", "LIGAND_2", "RECEPTOR_1",
-                "RECEPTOR_2", "RECEPTOR_3")]
+      LR_db[
+        ,
+        c("LIGAND_1", "LIGAND_2", "RECEPTOR_1",
+          "RECEPTOR_2", "RECEPTOR_3")
+      ]
     )
   )
   ALL_LR_genes <- ALL_LR_genes[!is.na(ALL_LR_genes)]
