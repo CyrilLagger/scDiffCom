@@ -895,11 +895,14 @@ plot_ora <- function(
       BH_PVAL <= 0.05
   ]
   if (any(is.infinite(dt$OR))) {
-    dt[, VALUE := ifelse(
-      is.infinite(OR),
-      paste0("INF: ", VALUE),
-      VALUE
-    )]
+    dt[
+      ,
+      VALUE := ifelse(
+        is.infinite(OR),
+        paste0("INF: ", VALUE),
+        VALUE
+      )
+    ]
     dt_finite <- dt[is.finite(OR)]
     if (nrow(dt_finite) > 0) {
       dt[
@@ -911,7 +914,7 @@ plot_ora <- function(
         )
       ]
     } else {
-      dt[, OR = 100]
+      dt[, OR := 100]
     }
     dt[
       ,
