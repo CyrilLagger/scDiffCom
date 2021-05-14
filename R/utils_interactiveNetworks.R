@@ -462,6 +462,7 @@ extract_edge_metadata <- function(
       on = c("from==EMITTER_CELLTYPE", "to==RECEIVER_CELLTYPE"),
       "NUM_LRIS_NSC" := i.N
     ]
+    edge_table[is.na(edge_table)] <- 0
     edge_table[, "NUM_LRIS_DIFF" := NUM_LRIS_UP + NUM_LRIS_DOWN]
   }
   if (network_type == "ORA_network") {
@@ -477,6 +478,14 @@ extract_edge_metadata <- function(
       ),
       on = c("from==EMITTER_CELLTYPE", "to==RECEIVER_CELLTYPE"),
       (cols_to_add) := mget(paste0("i.", cols_to_add))
+    ]
+    edge_table[
+      ,
+      ORA_TYPE := ifelse(
+        is.na(ORA_TYPE),
+        "NONE",
+        ORA_TYPE
+      )
     ]
   }
   # TODO: Enrich with other info: cell families, GOs, ORA on cell types.
