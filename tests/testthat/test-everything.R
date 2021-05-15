@@ -559,7 +559,16 @@ scdiffcom_objects <- lapply(
   function(object) {
     run_ora(
       object  = object,
-      categories = c("ER_CELLTYPES", "LRI", "GO_TERMS", "KEGG_PWS"),
+      categories = c(
+        "LRI",
+        "LIGAND_COMPLEX",
+        "RECEPTOR_COMPLEX",
+        "ER_CELLTYPES",
+        "EMITTER_CELLTYPE",
+        "RECEIVER_CELLTYPE",
+        "GO_TERMS",
+        "KEGG_PWS"
+      ),
       extra_annotations = NULL,
       overwrite = TRUE,
       stringent_or_default = "default",

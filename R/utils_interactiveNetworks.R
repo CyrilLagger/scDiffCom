@@ -78,7 +78,7 @@ build_interactive_network <- function(
     object_name <- subobject_name
     cci_table_detected <- cci_table_detected[
       ID == subobject_name
-      ][, ID := NULL]
+    ][, ID := NULL]
   } else {
     object_name <- object@parameters$object_name
   }
@@ -94,8 +94,8 @@ build_interactive_network <- function(
           "No abbreviation will be used:",
           " `abbreviation table` must be a 2-colum data.frame or data.table",
           "with names ORIGINAL_CELLTYPE and ABBR_CELLTYPE"
-          )
         )
+      )
       abbreviation_table <- NULL
     } else {
       setDT(abbreviation_table)
@@ -145,6 +145,8 @@ build_interactive_network <- function(
       cci_table_detected = cci_table_detected,
       conds = NULL,
       ora_table_ER = NULL,
+      ora_table_EMITTER = NULL,
+      ora_table_RECEIVER = NULL,
       ora_table_LR = NULL,
       network_type = "condition1_network",
       layout_type = layout_type,
@@ -167,9 +169,13 @@ build_interactive_network <- function(
         ))
       }
       ora_table_ER <- copy(object@ora_table$ER_CELLTYPES)
+      ora_table_EMITTER <- copy(object@ora_table$EMITTER_CELLTYPE)
+      ora_table_RECEIVER <- copy(object@ora_table$RECEIVER_CELLTYPE)
       ora_table_LR <- copy(object@ora_table$LRI)
       if (class_signature == "scDiffComCombined") {
         ora_table_ER <- ora_table_ER[ID == subobject_name][, ID := NULL]
+        ora_table_EMITTER <- ora_table_EMITTER[ID == subobject_name][, ID := NULL]
+        ora_table_RECEIVER <- ora_table_RECEIVER[ID == subobject_name][, ID := NULL]
         ora_table_LR <- ora_table_LR[ID == subobject_name][, ID := NULL]
       }
       ora_table_ER[, c("EMITTER_CELLTYPE", "RECEIVER_CELLTYPE") := list(
@@ -185,15 +191,27 @@ build_interactive_network <- function(
           abbreviation_table,
           on = "RECEIVER_CELLTYPE==ORIGINAL_CELLTYPE",
           "RECEIVER_CELLTYPE" := i.ABBR_CELLTYPE]
+        ora_table_EMITTER[
+          abbreviation_table,
+          on = "VALUE==ORIGINAL_CELLTYPE",
+          "VALUE" := i.ABBR_CELLTYPE]
+        ora_table_RECEIVER[
+          abbreviation_table,
+          on = "VALUE==ORIGINAL_CELLTYPE",
+          "VALUE" := i.ABBR_CELLTYPE]
       }
     } else {
       ora_table_ER <- NULL
+      ora_table_EMITTER <- NULL
+      ora_table_RECEIVER <- NULL
       ora_table_LR <- NULL
     }
     network <- interactive_from_igraph(
       cci_table_detected = cci_table_detected,
       conds = conds,
       ora_table_ER = ora_table_ER,
+      ora_table_EMITTER = ora_table_EMITTER,
+      ora_table_RECEIVER = ora_table_RECEIVER,
       ora_table_LR = ora_table_LR,
       network_type = network_type,
       layout_type = layout_type,
@@ -207,6 +225,8 @@ interactive_from_igraph <- function(
   cci_table_detected,
   conds,
   ora_table_ER,
+  ora_table_EMITTER,
+  ora_table_RECEIVER,
   ora_table_LR,
   network_type,
   layout_type,
@@ -217,6 +237,8 @@ interactive_from_igraph <- function(
     cci_table_detected = cci_table_detected,
     conds = conds,
     ora_table_ER = ora_table_ER,
+    ora_table_EMITTER = ora_table_EMITTER,
+    ora_table_RECEIVER = ora_table_RECEIVER,
     ora_table_LR = ora_table_LR,
     network_type = network_type,
     layout_type = layout_type,
@@ -225,6 +247,7 @@ interactive_from_igraph <- function(
   interactive_network <- build_visnetwork(
     G = G,
     object_name = object_name,
+    conds = conds,
     network_type = network_type,
     layout_type = layout_type,
     config = config
@@ -250,14 +273,29 @@ setup_graph_config <- function(
     ),
     NODE_COLORING = list(
       BACKGROUND = "#f8961e",
+      ORA_COLOR_UP = "#F94144", # red
+      ORA_COLOR_DOWN = "#277DA1", # blue
+      ORA_COLOR_DIFF = "#F9C74F",
+      ORA_COLOR_FLAT = "#90BE6D",
+      ORA_COLOR_NONE = "#a6a6a6",
       BORDER = "#577590",
       HIGHLIGHT = list(
         BACKGROUND = "#43AA8B",
-        BORDER = "#577590"
+        BORDER = "#577590",
+        ORA_COLOR_UP = "#F94144", # red
+        ORA_COLOR_DOWN = "#277DA1", # blue
+        ORA_COLOR_DIFF = "#F9C74F",
+        ORA_COLOR_FLAT = "#90BE6D",
+        ORA_COLOR_NONE = "#a6a6a6"
       ),
       HOVER = list(
         BACKGROUND = "#43AA8B",
-        BORDER = "#577590"
+        BORDER = "#577590",
+        ORA_COLOR_UP = "#F94144", # red
+        ORA_COLOR_DOWN = "#277DA1", # blue
+        ORA_COLOR_DIFF = "#F9C74F",
+        ORA_COLOR_FLAT = "#90BE6D",
+        ORA_COLOR_NONE = "#a6a6a6"
       )
     ),
     EDGE_STYLE = list(
@@ -306,6 +344,8 @@ build_igraph <- function(
   cci_table_detected,
   conds,
   ora_table_ER,
+  ora_table_EMITTER,
+  ora_table_RECEIVER,
   ora_table_LR,
   network_type,
   layout_type,
@@ -324,6 +364,8 @@ build_igraph <- function(
     cci_table_detected = cci_table_detected,
     edge_table = edge_table,
     conds = conds,
+    ora_table_EMITTER = ora_table_EMITTER,
+    ora_table_RECEIVER = ora_table_RECEIVER,
     network_type = network_type,
     layout_type = layout_type,
     config = config
@@ -381,7 +423,7 @@ extract_edge_metadata <- function(
   config
 ) {
   IS_CCI_EXPRESSED <- i.N <- REGULATION <-
-    NUM_LRIS_UP <- NUM_LRIS_DOWN <- i.ORA_TYPE <- NULL
+    NUM_LRIS_UP <- NUM_LRIS_DOWN <- i.ORA_TYPE <- ORA_TYPE <- NULL
   all_cell_types <- union(
     unique(cci_table_detected[["EMITTER_CELLTYPE"]]),
     unique(cci_table_detected[["RECEIVER_CELLTYPE"]])
@@ -533,7 +575,7 @@ process_celltype_pairs_enrichment <- function(
   dt_ora[
     ,
     (cols_to_select2) := lapply(.SD, signif, 3), .SDcol = cols_to_select2
-    ]
+  ]
   # if (sum(is.na(dt_ora)) > 0 | sum(dt_ora == Inf) > 0 ) {
   #   stop("Inf or NA in `dt_ora`")
   # }
@@ -565,7 +607,7 @@ add_edge_layout <- function(
       "color.color" := i.color
     ]
     lab <- "NUM_LRIS_TOTAL"
-    main_title <- "Over-represented cell type pairs"
+    main_title <- "Over-represented cell types and pairs"
   } else {
     if (network_type == "condition1_network") {
       if (is.null(conds)) {
@@ -651,6 +693,8 @@ build_vertex_table <- function(
   cci_table_detected,
   edge_table,
   conds,
+  ora_table_EMITTER,
+  ora_table_RECEIVER,
   network_type,
   layout_type,
   config
@@ -658,7 +702,11 @@ build_vertex_table <- function(
   vertex_table <- extract_vertex_metadata(
     cci_table_detected = cci_table_detected,
     conds = conds,
-    layout_type = layout_type
+    ora_table_EMITTER = ora_table_EMITTER,
+    ora_table_RECEIVER = ora_table_RECEIVER,
+    network_type = network_type,
+    layout_type = layout_type,
+    config = config
   )
   vertex_table <- add_vertex_layout(
     vertex_table = vertex_table,
@@ -674,9 +722,13 @@ build_vertex_table <- function(
 extract_vertex_metadata <- function(
   cci_table_detected,
   conds,
-  layout_type
+  ora_table_EMITTER,
+  ora_table_RECEIVER,
+  network_type,
+  layout_type,
+  config
 ) {
-  i.NCELLS_EMITTER <- i.NCELLS_AVG <- name <- vertex_types <- NULL
+  i.NCELLS_EMITTER <- i.NCELLS_AVG <- name <- vertex_types <- ORA_TYPE <- NULL
   all_cell_types <- union(
     unique(cci_table_detected[["EMITTER_CELLTYPE"]]),
     unique(cci_table_detected[["RECEIVER_CELLTYPE"]])
@@ -763,8 +815,112 @@ extract_vertex_metadata <- function(
       paste0(name, " (E)"),
       paste0(name, " (R)")
     )]
+    if (network_type == "ORA_network") {
+      cols_to_add <- c(
+        "ORA_TYPE",
+        "OR_UP", "OR_DOWN", "OR_FLAT",
+        "BH_P_VALUE_UP", "BH_P_VALUE_DOWN", "BH_P_VALUE_FLAT"
+      )
+      vertex_table[
+        process_celltype_ER_enrichment(
+          ora_table_EMITTER = ora_table_EMITTER,
+          ora_table_RECEIVER = ora_table_RECEIVER,
+          config = config
+        ),
+        on = c("name==VALUE"),
+        (cols_to_add) := mget(paste0("i.", cols_to_add))
+      ]
+      vertex_table[
+        ,
+        ORA_TYPE := ifelse(
+          is.na(ORA_TYPE),
+          "NONE",
+          ORA_TYPE
+        )
+      ]
+    }
   }
   return(vertex_table)
+}
+
+process_celltype_ER_enrichment <- function(
+  ora_table_EMITTER,
+  ora_table_RECEIVER,
+  config
+) {
+  OR_UP <- OR_DOWN <- OR_FLAT <- VALUE <-
+    BH_P_VALUE_UP <- BH_P_VALUE_DOWN <- BH_P_VALUE_FLAT <- NULL
+  dt_ora_E <- copy(ora_table_EMITTER)
+  dt_ora_R <- copy(ora_table_RECEIVER)
+  dt_ora_E[, VALUE := paste(VALUE, "(E)")]
+  dt_ora_R[, VALUE := paste(VALUE, "(R)")]
+  OR_MIN <- config$ORA_PARAMETERS$CUTOFF_OR
+  BH_MAX <- config$ORA_PARAMETERS$CUTOFF_BHP
+  dt_ora_E[
+    ,
+    "ORA_TYPE" := ifelse(
+      OR_UP >= OR_MIN &
+        BH_P_VALUE_UP <= BH_MAX &
+        OR_DOWN >= OR_MIN &
+        BH_P_VALUE_DOWN <= BH_MAX,
+      "DIFF",
+      ifelse(
+        OR_UP >= OR_MIN & BH_P_VALUE_UP <= BH_MAX,
+        "UP",
+        ifelse(
+          OR_DOWN >= OR_MIN & BH_P_VALUE_DOWN <= BH_MAX,
+          "DOWN",
+          ifelse(
+            OR_FLAT >= OR_MIN & BH_P_VALUE_FLAT <= BH_MAX,
+            "FLAT",
+            "NONE"
+          )
+        )
+      )
+    )]
+  dt_ora_R[
+    ,
+    "ORA_TYPE" := ifelse(
+      OR_UP >= OR_MIN &
+        BH_P_VALUE_UP <= BH_MAX &
+        OR_DOWN >= OR_MIN &
+        BH_P_VALUE_DOWN <= BH_MAX,
+      "DIFF",
+      ifelse(
+        OR_UP >= OR_MIN & BH_P_VALUE_UP <= BH_MAX,
+        "UP",
+        ifelse(
+          OR_DOWN >= OR_MIN & BH_P_VALUE_DOWN <= BH_MAX,
+          "DOWN",
+          ifelse(
+            OR_FLAT >= OR_MIN & BH_P_VALUE_FLAT <= BH_MAX,
+            "FLAT",
+            "NONE"
+          )
+        )
+      )
+    )]
+  cols_to_select1 <- c(
+    "VALUE", "ORA_TYPE"
+  )
+  cols_to_select2 <- c(
+    "OR_UP", "OR_DOWN", "OR_FLAT",
+    "BH_P_VALUE_UP", "BH_P_VALUE_DOWN", "BH_P_VALUE_FLAT"
+  )
+  cols_to_select <- c(cols_to_select1, cols_to_select2)
+  dt_ora_E <- dt_ora_E[, cols_to_select, with = FALSE]
+  dt_ora_R <- dt_ora_R[, cols_to_select, with = FALSE]
+  dt_ora <- rbindlist(
+    list(dt_ora_E, dt_ora_R)
+  )
+  dt_ora[
+    ,
+    (cols_to_select2) := lapply(.SD, signif, 3), .SDcol = cols_to_select2
+  ]
+  # if (sum(is.na(dt_ora)) > 0 | sum(dt_ora == Inf) > 0 ) {
+  #   stop("Inf or NA in `dt_ora`")
+  # }
+  return(dt_ora)
 }
 
 add_vertex_layout <- function(
@@ -783,22 +939,63 @@ add_vertex_layout <- function(
   )]
   vertex_table[
     ,
-    c("id", "label", "value",
-      "color.background", "color.border",
-      "color.highlight.background", "color.highlight.border",
-      "color.hover.background", "color.hover.border",
-      "shadow"
-    ) := list(
-      name, name, vertex.size,
-      config$NODE_COLORING$BACKGROUND,
-      config$NODE_COLORING$BORDER,
-      config$NODE_COLORING$HIGHLIGHT$BACKGROUND,
-      config$NODE_COLORING$HIGHLIGHT$BORDER,
-      config$NODE_COLORING$HOVER$BACKGROUND,
-      config$NODE_COLORING$HOVER$BORDER,
-      TRUE
+    c("id", "label", "value") := list(
+      name, name, vertex.size
     )
   ]
+  col_colors <- c(
+    "color.background", "color.border",
+    "color.highlight.background", "color.highlight.border",
+    "color.hover.background", "color.hover.border",
+    "shadow"
+  )
+  if (network_type == "ORA_network" & layout_type == "bipartite") {
+    vertex_table[
+      data.table(
+        ORA_TYPE = c("DIFF", "UP", "DOWN", "FLAT", "NONE"),
+        color.background = c(
+          config$NODE_COLORING$ORA_COLOR_DIFF,
+          config$NODE_COLORING$ORA_COLOR_UP,
+          config$NODE_COLORING$ORA_COLOR_DOWN,
+          config$NODE_COLORING$ORA_COLOR_FLAT,
+          config$NODE_COLORING$ORA_COLOR_NONE
+        ),
+        color.border = config$NODE_COLORING$BORDER,
+        color.highlight.background = c(
+          config$NODE_COLORING$HIGHLIGHT$ORA_COLOR_DIFF,
+          config$NODE_COLORING$HIGHLIGHT$ORA_COLOR_UP,
+          config$NODE_COLORING$HIGHLIGHT$ORA_COLOR_DOWN,
+          config$NODE_COLORING$HIGHLIGHT$ORA_COLOR_FLAT,
+          config$NODE_COLORING$HIGHLIGHT$ORA_COLOR_NONE
+        ),
+        color.highlight.border = config$NODE_COLORING$HIGHLIGHT$BORDER,
+        color.hover.background = c(
+          config$NODE_COLORING$HOVER$ORA_COLOR_DIFF,
+          config$NODE_COLORING$HOVER$ORA_COLOR_UP,
+          config$NODE_COLORING$HOVER$ORA_COLOR_DOWN,
+          config$NODE_COLORING$HOVER$ORA_COLOR_FLAT,
+          config$NODE_COLORING$HOVER$ORA_COLOR_NONE
+        ),
+        color.hover.border = config$NODE_COLORING$HOVER$BORDER,
+        shadow = TRUE
+      ),
+      on = "ORA_TYPE" ,
+      (col_colors) := mget(paste0("i.", col_colors))
+    ]
+  } else {
+    vertex_table[
+      ,
+      (col_colors) := list(
+        config$NODE_COLORING$BACKGROUND,
+        config$NODE_COLORING$BORDER,
+        config$NODE_COLORING$HIGHLIGHT$BACKGROUND,
+        config$NODE_COLORING$HIGHLIGHT$BORDER,
+        config$NODE_COLORING$HOVER$BACKGROUND,
+        config$NODE_COLORING$HOVER$BORDER,
+        TRUE
+      )
+    ]
+  }
   if (is.null(conds)) {
     if ("name_original" %in% colnames(vertex_table)) {
       vertex_table[, "title" := paste0(
@@ -974,6 +1171,7 @@ setup_layout <- function(
 build_visnetwork <- function(
   G,
   object_name,
+  conds,
   network_type,
   layout_type,
   config
@@ -984,6 +1182,7 @@ build_visnetwork <- function(
     nodes = nodes,
     edges = edges,
     object_name = object_name,
+    conds = conds,
     layout = G$layout,
     network_type = network_type,
     layout_type = layout_type,
@@ -997,6 +1196,7 @@ get_network_components <- function(
   nodes,
   edges,
   object_name,
+  conds,
   layout,
   network_type,
   layout_type,
@@ -1041,7 +1241,7 @@ get_network_components <- function(
     configure = configure_component,
     legend = . %>% visNetwork::visLegend(
       enabled = TRUE,
-      main = "Legend",
+      main = paste(conds[[1]], "to", conds[[2]], "Regulation"),
       position = "right",
       addEdges = edges_legend(
         network_type = network_type,
@@ -1049,10 +1249,13 @@ get_network_components <- function(
       ),
       addNodes = nodes_legend(
         network_type = network_type,
+        layout_type = layout_type,
         config = config
       ),
       useGroups = FALSE,
-      zoom = FALSE
+      zoom = FALSE,
+      ncol = 2,
+      width = 0.3
     ),
     physics = . %>% visNetwork::visPhysics(
       enabled = FALSE,
@@ -1148,15 +1351,32 @@ get_visnetwork_interactive <- function(
 
 nodes_legend <- function(
   network_type,
+  layout_type,
   config
 ) {
-  return(
-    data.frame(
-      label = c("Cell Type"),
-      shape = c("dot"),
-      color = c(config$NODE_COLORING$BACKGROUND)
+  if (network_type == "ORA_network" & layout_type == "bipartite") {
+    return(
+      data.frame(
+        color = c(
+          config$NODE_COLORING$ORA_COLOR_UP,
+          config$NODE_COLORING$ORA_COLOR_DOWN,
+          config$NODE_COLORING$ORA_COLOR_FLAT,
+          config$NODE_COLORING$ORA_COLOR_DIFF#,
+          #config$NODE_COLORING$ORA_COLOR_NONE
+        ),
+        label = c("UP", "DOWN", "FLAT", "UP&DOWN"),#, "NOT OR"),
+        shape = c("dot", "dot", "dot", "dot")#, "dot")
+      )
     )
-  )
+  } else {
+    return(
+      data.frame(
+        label = c("Cell Type"),
+        shape = c("dot"),
+        color = c(config$NODE_COLORING$BACKGROUND)
+      )
+    )
+  }
 }
 
 edges_legend <- function(
@@ -1167,19 +1387,19 @@ edges_legend <- function(
     return(
       data.frame(
         color = c(
-          config$EDGE_COLORING$ORA_COLOR_DOWN,
           config$EDGE_COLORING$ORA_COLOR_UP,
+          config$EDGE_COLORING$ORA_COLOR_DOWN,
           config$EDGE_COLORING$ORA_COLOR_FLAT,
           config$EDGE_COLORING$ORA_COLOR_DIFF
         ),
-        label = c("DOWN", "UP", "FLAT", "UP&DOWN"),
+        label = c("UP", "DOWN", "FLAT", "UP&DOWN"),
         arrows = c("to", "to", "to", "to")
       )
     )
   } else if (network_type %in% c(
     "condition1_network",
     "condition2_network"
-    )) {
+  )) {
     return(
       data.frame(
         color = "darkblue",
@@ -1240,7 +1460,7 @@ edge_annotation_html <- function(
                   ),
                   nrow = 2,
                   byrow = TRUE
-                  )
+                )
               )
             )
           } else if (ORA_TYPE[[i]] == "DOWN") {
