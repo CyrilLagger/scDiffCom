@@ -787,7 +787,7 @@ RunORA(
 
 PlotORA(
   object = scdiffcom_objects$cond_stat,
-  category = "GO_TERMS",
+  category = "LRI",
   regulation = "DOWN",
   max_terms_show = 50,
   GO_aspect = "biological_process"

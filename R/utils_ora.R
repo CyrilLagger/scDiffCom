@@ -895,11 +895,12 @@ plot_ora <- function(
       BH_PVAL <= 0.05
   ]
   if (any(is.infinite(dt$OR))) {
+    extra_label_annotation <- " (* : infinite odds ratios are normalized)"
     dt[
       ,
       VALUE := ifelse(
         is.infinite(OR),
-        paste0("INF: ", VALUE),
+        paste0("* ", VALUE),
         VALUE
       )
     ]
@@ -920,6 +921,8 @@ plot_ora <- function(
       ,
       ORA_SCORE := -log10(BH_PVAL) * log2(OR)
     ]
+  } else {
+    extra_label_annotation <- NULL
   }
   dt <- dt[
     OR > OR_threshold &
@@ -1008,12 +1011,14 @@ plot_ora <- function(
     ggplot2::ylab("") +
     ggplot2::labs(
       size = "-log10(Adj. P-Value)",
-      color = "log2(Odds Ratio)"
+      color = "log2(Odds Ratio)",
+      caption = extra_label_annotation
     ) +
     ggplot2::theme(text = ggplot2::element_text(size = 14)) +
     ggplot2::theme(legend.position = c(0.8, 0.3)) +
     ggplot2::theme(legend.title = ggplot2::element_text(size = 12)) +
     ggplot2::theme(legend.text = ggplot2::element_text(size = 12)) +
+    ggplot2::theme(plot.title.position = "plot") +
     ggplot2::ggtitle(
       paste0(
         "Top ",
