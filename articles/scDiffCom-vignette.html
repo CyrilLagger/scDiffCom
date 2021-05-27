@@ -97,7 +97,8 @@
 <p><code>scDiffCom</code> requires as input a <a href="https://satijalab.org/seurat/">Seurat</a> object that must satisfy some conditions:</p>
 <ul>
 <li>Cells should have been previously annotated with cell-types (such as explained for example <a href="https://satijalab.org/seurat/articles/pbmc3k_tutorial.html">here</a>).</li>
-<li>The <code>meta.data</code> of the <code>Seurat</code> object should contain a column that indicates to which of two groups each cell belongs to. Note that although the main aim of <code>scDiffCom</code> is to perform differential analysis, it is also possible to only perform a detection analysis (see below).</li>
+<li>
+<code>meta.data</code> of the <code>Seurat</code> object should contain a column that indicates to which of two groups each cell belongs to. Note that although the main aim of <code>scDiffCom</code> is to perform differential analysis, it is also possible to only perform a detection analysis (see below).</li>
 <li>The slot <code>data</code> of the <code>Seurat</code> object should contain standard log-normalize values.</li>
 </ul>
 <p>For the purpose of this vignette, we use a dummy Seurat object available as part of <code>scDiffCom</code>. It corresponds to the liver scRNA-seq dataset from <a href="https://tabula-muris-senis.ds.czbiohub.org/">Tabula Muris Senis</a>. Note that after normalization and pre-processing, the object has been down-sampled (both genes and cells) to keep it light. <strong>As such, all results below are not intended to convey any meaningful biology.</strong> For a real biological analysis using <code>scDiffCom</code> please see our scAgeCom analysis (article in prep.)</p>

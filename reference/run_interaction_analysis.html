@@ -47,7 +47,7 @@
  infers biologically relevant cell-cell interactions (CCIs) and how they
  change between two conditions of interest. An over-representation analysis
  is also directly conducted to determine dominant changing signals at the
- level of the genes, cell types and GO Terms/KEGG Pathways." />
+ level of the genes, cell types, GO Terms and KEGG Pathways." />
 
 
 
@@ -138,7 +138,7 @@
  infers biologically relevant cell-cell interactions (CCIs) and how they
  change between two conditions of interest. An over-representation analysis
  is also directly conducted to determine dominant changing signals at the
- level of the genes, cell types and GO Terms/KEGG Pathways.</p>
+ level of the genes, cell types, GO Terms and KEGG Pathways.</p>
     </div>
 
     <pre class="usage"><span class='fu'>run_interaction_analysis</span><span class='op'>(</span>
@@ -235,7 +235,7 @@ parameters <code>seurat_assay</code>, <code>seurat_slot</code> and <code>log_sca
 Can either be <code>"geometric_mean"</code> (default) or <code>"arithmetic_mean"</code>.
 It is strongly recommended to use the geometric mean, especially when
 performing differential analysis. The arithmetic mean might be used when
-uniquely doing a detection analysis and results want to be compared
+uniquely doing a detection analysis or if the results want to be compared
 with those of another package.</p></td>
     </tr>
     <tr>
@@ -244,7 +244,7 @@ with those of another package.</p></td>
 and condition - required to express a gene for this gene to be considered
 expressed in the corresponding cell type. Incidentally, cell types with
 less cells than this threshold are removed from the analysis.
-Set to  <code>5</code> by default.</p></td>
+Set to <code>5</code> by default.</p></td>
     </tr>
     <tr>
       <th>threshold_pct</th>
@@ -317,7 +317,7 @@ results.</p></td>
  infer cell-cell interactions from a dataset without conditions on the cells.</p>
 <p>By convention when performing differential analysis, LOGFC are computed as
  <code><a href='https://rdrr.io/r/base/Log.html'>log(score(cond2_name)/score(cond1_name))</a></code>. In other words,
- "UP"-regulated CCIs have for example a larger score in <code>cond2_name</code>.</p>
+ "UP"-regulated CCIs have a larger score in <code>cond2_name</code>.</p>
 <p>Parallel computing. If computer resources allows it, it is recommended to
  run this function in parallel in order to speed up the analysis for large
  dataset and/or to obtain better accuracy on the p-values by setting a higher
@@ -330,7 +330,7 @@ results.</p></td>
  it is assumed that <code>seurat_object</code> contains log1p-transformed
  normalized data in the slot "data" of its assay "RNA". If <code>log_scale</code>
  is <code>FALSE</code> (as recommended), the data are <code><a href='https://rdrr.io/r/base/Log.html'>expm1()</a></code> transformed
- in order to recover normalized values but not in log scale.</p>
+ in order to recover normalized values not in log scale.</p>
 <p>Modifying filtering parameters (differential analysis only). As long as
  the slot <code>cci_table_raw</code> of
  the returned scDiffCom object is not erased, filtering parameters can be
