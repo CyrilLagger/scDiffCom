@@ -12,7 +12,7 @@ data(seurat_sample_tms_liver)
 }
 \description{
 This Seurat object has been down-sampled from the original
-Tabula Muris Senis Liver object. Pre-processing and normalization has
+Tabula Muris Senis liver object. Pre-processing and normalization has
 been performed before down-sampling. It contains 726 features (genes) and
 468 samples (cells). It is only intended to be used for testing and
 benchmarking and does not contain meaningful biological information.

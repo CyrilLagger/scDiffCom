@@ -21,7 +21,7 @@ the original Seurat object and the internal LRI database.}
 \item{\code{ora_table}}{List of data.tables with the results of the
 over-representation analysis.}
 
-\item{\code{distributions}}{List of matrices with the null distributions of each
+\item{\code{distributions}}{List of matrices with the null distributions for each
 CCI.}
 }}
 

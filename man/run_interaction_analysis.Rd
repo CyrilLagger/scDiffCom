@@ -78,14 +78,14 @@ parameters \code{seurat_assay}, \code{seurat_slot} and \code{log_scale}.}
 Can either be \code{"geometric_mean"} (default) or \code{"arithmetic_mean"}.
 It is strongly recommended to use the geometric mean, especially when
 performing differential analysis. The arithmetic mean might be used when
-uniquely doing a detection analysis and results want to be compared
+uniquely doing a detection analysis or if the results want to be compared
 with those of another package.}
 
 \item{threshold_min_cells}{Minimal number of cells - of a given cell type
 and condition - required to express a gene for this gene to be considered
 expressed in the corresponding cell type. Incidentally, cell types with
 less cells than this threshold are removed from the analysis.
-Set to  \code{5} by default.}
+Set to \code{5} by default.}
 
 \item{threshold_pct}{Minimal fraction of cells - of a given cell type
 and condition - required to express a gene for this gene to be considered
@@ -139,7 +139,7 @@ Perform (differential) cell type to cell type interaction analysis from
  infers biologically relevant cell-cell interactions (CCIs) and how they
  change between two conditions of interest. An over-representation analysis
  is also directly conducted to determine dominant changing signals at the
- level of the genes, cell types and GO Terms/KEGG Pathways.
+ level of the genes, cell types, GO Terms and KEGG Pathways.
 }
 \details{
 The primary use of this function (and of the package) is to perform
@@ -150,7 +150,7 @@ The primary use of this function (and of the package) is to perform
 
  By convention when performing differential analysis, LOGFC are computed as
  \code{log(score(cond2_name)/score(cond1_name))}. In other words,
- "UP"-regulated CCIs have for example a larger score in \code{cond2_name}.
+ "UP"-regulated CCIs have a larger score in \code{cond2_name}.
 
  Parallel computing. If computer resources allows it, it is recommended to
  run this function in parallel in order to speed up the analysis for large
@@ -165,7 +165,7 @@ The primary use of this function (and of the package) is to perform
  it is assumed that \code{seurat_object} contains log1p-transformed
  normalized data in the slot "data" of its assay "RNA". If \code{log_scale}
  is \code{FALSE} (as recommended), the data are \code{expm1()} transformed
- in order to recover normalized values but not in log scale.
+ in order to recover normalized values not in log scale.
 
  Modifying filtering parameters (differential analysis only). As long as
  the slot \code{cci_table_raw} of
