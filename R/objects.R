@@ -45,7 +45,7 @@ setClass(
 #' @slot cci_table_detected Data.table with only the detected CCIs.
 #' @slot ora_table List of data.tables with the results of the
 #'  over-representation analysis.
-#' @slot distributions List of matrices with the null distributions of each
+#' @slot distributions List of matrices with the null distributions for each
 #' CCI.
 #'
 #' @name scDiffCom-class
@@ -672,12 +672,6 @@ setMethod(
       bh_p_value_threshold = bh_p_value_threshold
     )
   }
-)
-
-paste0(
-  "No abbreviation will be used:",
-  " `abbreviation table` must be a 2-colum data.frame or data.table",
-  "with names ORIGINAL_CELLTYPE and ABBR_CELLTYPE"
 )
 
 #' Display 'cell type to cell type' interactive networks
