@@ -28,7 +28,7 @@ that must satisfy some conditions:
 * Cells should have been previously annotated with cell-types (such as
 explained for example
 [here](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html)).
-* The `meta.data` of the `Seurat` object should contain a column that
+* `meta.data` of the `Seurat` object should contain a column that
 indicates to which of two groups each cell belongs to. Note that although the 
 main aim of `scDiffCom` is to perform differential analysis, it is also possible
 to only perform a detection analysis (see below).
