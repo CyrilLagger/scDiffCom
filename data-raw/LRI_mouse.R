@@ -1,4 +1,4 @@
-## code to prepare `LRI_mouse` dataset
+## code to prepare the `LRI_mouse` dataset
 
 #LRI_mouse <- build_LRI(species = "mouse")
 

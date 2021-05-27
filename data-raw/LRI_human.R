@@ -1,4 +1,4 @@
-## code to prepare `LRI_human` dataset
+## code to prepare the `LRI_human` dataset
 
 #LRI_human <- build_LRI(species = "human")
 
