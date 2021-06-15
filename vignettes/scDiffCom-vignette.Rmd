@@ -40,8 +40,7 @@ part of `scDiffCom`. It corresponds to the liver scRNA-seq dataset from
 [Tabula Muris Senis](https://tabula-muris-senis.ds.czbiohub.org/). Note that
 after normalization and pre-processing, the object has been down-sampled 
 (both genes and cells) to keep it light. **As such, all results below are not
-intended to convey any meaningful biology.** For a real biological analysis
-using `scDiffCom` please see our scAgeCom analysis (article in prep.)
+intended to convey any meaningful biology.** 
 
 ```{r setup}
 library(scDiffCom)
@@ -69,7 +68,7 @@ that have been retrieved and processed from eight public resources.
 
 As shown below, `scDiffCom` uses these databases internally and the user
 do not need to call them explicitly to perform any interaction analysis. They
-are nevertheless accessible directly from the package.
+are nevertheless accessible directly from the package as follows:
 
 
 ```{r}
@@ -78,7 +77,7 @@ are nevertheless accessible directly from the package.
 data(LRI_mouse)
 
 # actual data.table with the interactions
-head(LRI_mouse$LRI_curated[, 1:7])
+head(LRI_mouse$LRI_curated)
 
 # GO term annotation
 head(LRI_mouse$LRI_curated_GO)
@@ -92,10 +91,8 @@ head(LRI_mouse$LRI_curated_KEGG)
 
 ### Run a standard differential analysis 
 
-All differential intercellular communication results can be obtained from a 
-single call to the function `run_interaction_analysis`. For a more advanced
-usage and control of all parameters, please see the relevant section below
-and look at `?run_interation_analysis`.
+All differential intercellular communication results can be obtained from a single call to the function `run_interaction_analysis`. For a more advanced
+usage and control of all parameters, please see the relevant section below and look at `?run_interation_analysis`.
 
 In standard mode, it will perform the following steps:
 <details>
@@ -121,9 +118,7 @@ In standard mode, it will perform the following steps:
 By default `run_interaction_analysis` performs 1000 iterations for the
 permutation tests. In such as case, the analysis should only take a couple of
 minutes when done sequentially on the Seurat object considered here. For a real
-scenario with a bigger object and potentially more iterations (e.g. 10'0000), we 
-recommend to run the analysis in parallel by loading the `future` package and
-setting the `plan` accordingly.
+scenario with a bigger object and more iterations (we recommend 10'000),the analysis can be run in parallel by loading the `future` package and setting the `plan` accordingly.
 
 
 ```{r}
