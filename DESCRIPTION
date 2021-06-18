@@ -4,7 +4,9 @@ Title: Differential Analysis of Intercellular Communication from scRNA-seq Data
 Version: 0.0.0.9000
 Authors@R: c(
     person("Cyril", "Lagger", email = "lagger.cyril@gmail.com",
-    role = c("aut", "cre")),
+    role = c("aut", "cre"),
+    comment = c(ORCID = "0000-0003-1701-6896")
+    ),
     person("Eugen", "Ursu", email = "ursu_eugen@hotmail.com",
     role = c("aut")),
     person("Anais", "Equey", email = "anais.equey@gmail.com",
@@ -45,7 +47,8 @@ Suggests:
     rmarkdown,
     purrr,
     ggplot2,
-    pkgdown
+    pkgdown,
+    covr
 Imports: 
     data.table,
     DelayedArray,
