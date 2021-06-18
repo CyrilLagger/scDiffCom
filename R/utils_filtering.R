@@ -105,7 +105,7 @@ run_filtering_and_ora <- function(
           "RECEIVER_CELLTYPE",
           "GO_TERMS",
           "KEGG_PWS"
-          ),
+        ),
         extra_annotations = extra_annotations,
         overwrite = TRUE,
         stringent_or_default = "default",
@@ -175,92 +175,100 @@ process_cci_raw <- function(
         get(paste0("IS_CCI_EXPRESSED_", condition_inputs$cond2)) == TRUE
     ]
     if (permutation_analysis) {
-      dt[, c(
-        paste0("BH_P_VALUE_", condition_inputs$cond1),
-        paste0("BH_P_VALUE_", condition_inputs$cond2),
-        "BH_P_VALUE_DE"
-      ) := list(
-        stats::p.adjust(
-          get(paste0("P_VALUE_", condition_inputs$cond1)
+      dt[
+        ,
+        c(
+          paste0("BH_P_VALUE_", condition_inputs$cond1),
+          paste0("BH_P_VALUE_", condition_inputs$cond2),
+          "BH_P_VALUE_DE"
+        ) := list(
+          stats::p.adjust(
+            get(
+              paste0("P_VALUE_", condition_inputs$cond1)
+            ),
+            method = "BH"
           ),
-          method = "BH"),
-        stats::p.adjust(
-          get(paste0("P_VALUE_", condition_inputs$cond2)
+          stats::p.adjust(
+            get(
+              paste0("P_VALUE_", condition_inputs$cond2)
+            ),
+            method = "BH"
           ),
-          method = "BH"),
-        stats::p.adjust(P_VALUE_DE, method = "BH")
-      ),
-      by = temp_by
+          stats::p.adjust(P_VALUE_DE, method = "BH")
+        ),
+        by = temp_by
       ]
-      dt[, c(
-        paste0("IS_CCI_SCORE_", condition_inputs$cond1),
-        paste0("IS_CCI_SCORE_", condition_inputs$cond2),
-        paste0("IS_CCI_SPECIFIC_", condition_inputs$cond1),
-        paste0("IS_CCI_SPECIFIC_", condition_inputs$cond2),
-        "IS_DE_LOGFC",
-        "IS_DE_SIGNIFICANT",
-        "DE_DIRECTION",
-        paste0("IS_CCI_DETECTED_", condition_inputs$cond1),
-        paste0("IS_CCI_DETECTED_", condition_inputs$cond2),
-        "IS_CCI_DE"
-      ) := {
-        threshold_score_temp <- stats::quantile(
-          x = c(
-            .SD[get(paste0(
-              "IS_CCI_EXPRESSED_",
-              condition_inputs$cond1)) == TRUE][[paste0(
+      dt[
+        ,
+        c(
+          paste0("IS_CCI_SCORE_", condition_inputs$cond1),
+          paste0("IS_CCI_SCORE_", condition_inputs$cond2),
+          paste0("IS_CCI_SPECIFIC_", condition_inputs$cond1),
+          paste0("IS_CCI_SPECIFIC_", condition_inputs$cond2),
+          "IS_DE_LOGFC",
+          "IS_DE_SIGNIFICANT",
+          "DE_DIRECTION",
+          paste0("IS_CCI_DETECTED_", condition_inputs$cond1),
+          paste0("IS_CCI_DETECTED_", condition_inputs$cond2),
+          "IS_CCI_DE"
+        ) := {
+          threshold_score_temp <- stats::quantile(
+            x = c(
+              .SD[get(paste0(
+                "IS_CCI_EXPRESSED_",
+                condition_inputs$cond1)) == TRUE][[paste0(
+                  "CCI_SCORE_",
+                  condition_inputs$cond1
+                )]],
+              .SD[get(paste0(
+                "IS_CCI_EXPRESSED_",
+                condition_inputs$cond2)
+              ) == TRUE][[paste0(
                 "CCI_SCORE_",
-                condition_inputs$cond1
-              )]],
-            .SD[get(paste0(
-              "IS_CCI_EXPRESSED_",
-              condition_inputs$cond2)
-            ) == TRUE][[paste0(
-              "CCI_SCORE_",
-              condition_inputs$cond2
-            )]]
-          ),
-          probs = threshold_quantile_score
-        )
-        is_cci_score_1 <- (get(paste0(
-          "CCI_SCORE_",
-          condition_inputs$cond1
-        )) >= threshold_score_temp)
-        is_cci_score_2 <- (get(paste0(
-          "CCI_SCORE_",
-          condition_inputs$cond2
-        )) >= threshold_score_temp)
-        is_cci_specific_1 <- get(paste0(
-          "BH_P_VALUE_",
-          condition_inputs$cond1
-        )) <= threshold_p_value_specificity
-        is_cci_specific_2 <- get(paste0(
-          "BH_P_VALUE_",
-          condition_inputs$cond2
-        )) <= threshold_p_value_specificity
-        is_de_logfc <- LOGFC_ABS >= threshold_logfc
-        is_de_significant <- BH_P_VALUE_DE <= threshold_p_value_de
-        de_direction <- fifelse(LOGFC > 0, "UP", "DOWN")
-        is_cci_detected_1 <- (get(paste0(
-          "IS_CCI_EXPRESSED_",
-          condition_inputs$cond1
-        )) == TRUE) &
-          is_cci_score_1 & is_cci_specific_1
-        is_cci_detected_2 <- (get(paste0(
-          "IS_CCI_EXPRESSED_",
-          condition_inputs$cond2
-        )) == TRUE) &
-          is_cci_score_2 & is_cci_specific_2
-        is_cci_de <- is_de_logfc & is_de_significant
-        list(
-          is_cci_score_1, is_cci_score_2,
-          is_cci_specific_1, is_cci_specific_2,
-          is_de_logfc, is_de_significant, de_direction,
-          is_cci_detected_1, is_cci_detected_2,
-          is_cci_de
-        )
-      },
-      by = temp_by
+                condition_inputs$cond2
+              )]]
+            ),
+            probs = threshold_quantile_score
+          )
+          is_cci_score_1 <- (get(paste0(
+            "CCI_SCORE_",
+            condition_inputs$cond1
+          )) >= threshold_score_temp)
+          is_cci_score_2 <- (get(paste0(
+            "CCI_SCORE_",
+            condition_inputs$cond2
+          )) >= threshold_score_temp)
+          is_cci_specific_1 <- get(paste0(
+            "BH_P_VALUE_",
+            condition_inputs$cond1
+          )) <= threshold_p_value_specificity
+          is_cci_specific_2 <- get(paste0(
+            "BH_P_VALUE_",
+            condition_inputs$cond2
+          )) <= threshold_p_value_specificity
+          is_de_logfc <- LOGFC_ABS >= threshold_logfc
+          is_de_significant <- BH_P_VALUE_DE <= threshold_p_value_de
+          de_direction <- fifelse(LOGFC > 0, "UP", "DOWN")
+          is_cci_detected_1 <- (get(paste0(
+            "IS_CCI_EXPRESSED_",
+            condition_inputs$cond1
+          )) == TRUE) &
+            is_cci_score_1 & is_cci_specific_1
+          is_cci_detected_2 <- (get(paste0(
+            "IS_CCI_EXPRESSED_",
+            condition_inputs$cond2
+          )) == TRUE) &
+            is_cci_score_2 & is_cci_specific_2
+          is_cci_de <- is_de_logfc & is_de_significant
+          list(
+            is_cci_score_1, is_cci_score_2,
+            is_cci_specific_1, is_cci_specific_2,
+            is_de_logfc, is_de_significant, de_direction,
+            is_cci_detected_1, is_cci_detected_2,
+            is_cci_de
+          )
+        },
+        by = temp_by
       ]
       dt[
         ,
@@ -524,4 +532,3 @@ get_table_cci <- function(
   }
   table
 }
-
