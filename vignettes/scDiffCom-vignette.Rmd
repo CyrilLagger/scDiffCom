@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
+
 We show here how to use [scDiffCom](https://github.com/CyrilLagger/scDiffCom)
 to investigate changes in intercellular communication from scRNA-seq data.
 
@@ -29,7 +30,7 @@ that must satisfy some conditions:
 explained for example
 [here](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html)).
 * `meta.data` of the `Seurat` object should contain a column that
-indicates to which of two groups each cell belongs to. Note that although the 
+indicates to which of two groups each cell belongs to. Note that although the
 main aim of `scDiffCom` is to perform differential analysis, it is also possible
 to only perform a detection analysis (see below).
 * The slot `data` of the `Seurat` object should contain standard log-normalize
@@ -38,9 +39,9 @@ values.
 For the purpose of this vignette, we use a dummy Seurat object available as
 part of `scDiffCom`. It corresponds to the liver scRNA-seq dataset from
 [Tabula Muris Senis](https://tabula-muris-senis.ds.czbiohub.org/). Note that
-after normalization and pre-processing, the object has been down-sampled 
+after normalization and pre-processing, the object has been down-sampled
 (both genes and cells) to keep it light. **As such, all results below are not
-intended to convey any meaningful biology.** 
+intended to convey any meaningful biology.**
 
 ```{r setup}
 library(scDiffCom)
@@ -62,7 +63,7 @@ table(seurat_object$age_group)
 
 As in several other intercellular communication studies, `scDiffCom` infers
 cell type to cell type communication patterns based on the gene expression of
-ligands and receptors known to interact. The package provides both a human 
+ligands and receptors known to interact. The package provides both a human
 database and a mouse database of ligand-receptor interactions (LRIs)
 that have been retrieved and processed from eight public resources.
 
@@ -89,7 +90,7 @@ head(LRI_mouse$LRI_curated_KEGG)
 ```
 
 
-### Run a standard differential analysis 
+### Run a standard differential analysis
 
 All differential intercellular communication results can be obtained from a single call to the function `run_interaction_analysis`. For a more advanced
 usage and control of all parameters, please see the relevant section below and look at `?run_interation_analysis`.
@@ -105,16 +106,16 @@ In standard mode, it will perform the following steps:
  * Compute scores, detection rates,... for each CCI.
  * Perform two different permutation tests to infer both the
  specificity (as originally defined by
- [CellPhoneDB](https://www.cellphonedb.org/)) and significance of change of 
+ [CellPhoneDB](https://www.cellphonedb.org/)) and significance of change of
  each CCI.
  * Based on their computed attributes, CCIs are either filtered out or
- assigned to a regulation category: UP, DOWN, FLAT, NSC (non-significant 
+ assigned to a regulation category: UP, DOWN, FLAT, NSC (non-significant
  change).
- * Perform an over-representation analysis to infer dominant communication 
+ * Perform an over-representation analysis to infer dominant communication
  changes at the level of various categories (LRI, cell types, GO Terms,
  KEGG pathways,...).
  </details>&nbsp;
- 
+
 By default `run_interaction_analysis` performs 1000 iterations for the
 permutation tests. In such as case, the analysis should only take a couple of
 minutes when done sequentially on the Seurat object considered here. For a real
@@ -139,16 +140,15 @@ aging_example <- run_interaction_analysis(
     column_name = "age_group",
     cond1_name = "YOUNG",
     cond2_name = "OLD"
-  )
+  ),
+  iterations = 100
 )
 
 ```
 
 ### Explore the results
 
-The output of `run_interaction_analysis` is an S4 object of class
-`scDiffCom`. We recommend to access the slot of the object by using
-the provided accessors.
+The output of `run_interaction_analysis` is an S4 object of class `scDiffCom`. We recommend to access the slot of the object by using the provided accessors.
 
 ```{r}
 aging_example
@@ -209,7 +209,7 @@ PlotORA(
 
 ```
 
-The over-representation performed on emitter and receiver cell types allows us 
+The over-representation performed on emitter and receiver cell types allows us
 to build an interactive network of the dominant changes in the dataset.
 
 ```{r}

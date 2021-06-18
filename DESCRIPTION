@@ -56,7 +56,6 @@ Imports:
     utils,
     magrittr,
     Seurat (>= 4.0.0)
-VignetteBuilder: knitr
 Collate: 
     'data.R'
     'interaction_analysis.R'
