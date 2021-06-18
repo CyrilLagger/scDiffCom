@@ -12,6 +12,10 @@ GetDistributions(object)
 \arguments{
 \item{object}{\code{scDiffCom} object}
 }
+\value{
+List of matrices with the null distributions of each
+CCI.
+}
 \description{
 Return the slot \code{distributions} from a scDiffCom object
 }

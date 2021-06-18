@@ -40,14 +40,14 @@ or data.frames (see Details).}
 \item{overwrite}{If \code{TRUE} (default), previous results are overwritten
 in case they correspond to a category passed in \code{categories}.}
 
-\item{verbose}{If \code{TRUE} (default) progress messages are printed.}
+\item{verbose}{If \code{TRUE} (default), progress messages are printed.}
 }
 \value{
-A scDiffCom object with updated \code{ora_table}.
+A scDiffCom object with updated slot \code{ora_table}.
 }
 \description{
 Perform over-representation analysis (ORA) on a scDiffCom object, with
-the possibility to define custom categories in addition to the standard
+the possibility to define new categories in addition to the standard
 ones supported by default.
 }
 \details{
@@ -57,5 +57,5 @@ Additional user-defined ORA categories can be added via the
  values from a standard category (first column) to values of the new
  category (second column). As a typical example, this
  \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}
- shows how to perform ORA on cell type families attached to each cell types.
+ shows how to perform ORA on cell type families attached to each cell type.
 }

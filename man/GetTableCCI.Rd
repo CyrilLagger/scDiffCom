@@ -3,7 +3,8 @@
 \name{GetTableCCI}
 \alias{GetTableCCI}
 \alias{GetTableCCI,scDiffCom-method}
-\title{Return information from one of the scDiffCom CCI data.tables}
+\title{Return (a subset) of the slot \code{cci_table_raw} or
+ \code{cci_table_detected} from a scDiffCom object}
 \usage{
 GetTableCCI(object, type, simplified)
 
@@ -19,8 +20,9 @@ GetTableCCI(object, type, simplified)
 informative columns of the data.table are returned.}
 }
 \value{
-A data.table
+A data.table.
 }
 \description{
-Return information from one of the scDiffCom CCI data.tables
+Return (a subset) of the slot \code{cci_table_raw} or
+ \code{cci_table_detected} from a scDiffCom object
 }

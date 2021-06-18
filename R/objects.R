@@ -54,7 +54,7 @@ setClass(
 #' @slot ora_table List of data.tables with the results of the
 #'  over-representation analysis for each category. Results for additional
 #'  categories can be added with \code{\link{RunORA}}.
-#' @slot distributions List of matrices with the null distributions for each
+#' @slot distributions List of matrices with the null distributions of each
 #' CCI. \code{NULL} by default.
 #'
 #' @name scDiffCom-class
@@ -169,12 +169,12 @@ setValidity(
 #' Return the slot \code{parameters} from a scDiffCom object
 #'
 #' Return the parameters that have been passed to
-#'  \code{\link{run_interaction_analysis}} to compute
-#'  the scDiffCom object.
+#'  \code{\link{run_interaction_analysis}} as well as a few other
+#'  parameters computed alongside the analysis.
 #'
 #' @param object \code{scDiffCom} object
 #'
-#' @return A list of parameters
+#' @return A list of parameters.
 #'
 #' @export
 setGeneric(
@@ -189,7 +189,8 @@ setMethod(
   definition = function(object) object@parameters
 )
 
-#' Return information from one of the scDiffCom CCI data.tables
+#' Return (a subset) of the slot \code{cci_table_raw} or
+#'  \code{cci_table_detected} from a scDiffCom object
 #'
 #' @param object \code{scDiffCom} object
 #' @param type Table to extract information from. Can be either
@@ -197,7 +198,7 @@ setMethod(
 #' @param simplified If \code{TRUE} (default) only the most
 #'  informative columns of the data.table are returned.
 #'
-#' @return A data.table
+#' @return A data.table.
 #'
 #' @export
 setGeneric(
@@ -244,15 +245,16 @@ setMethod(
 #   }
 # )
 
-#' Return information from some of the scDiffCom ORA data.tables
+#' Return some or all ORA tables from the slot \code{ora_table}
+#' from a scDiffCom object
 #'
 #' @param object \code{scDiffCom} object
-#' @param categories Names of the categories to return. If \code{"all"}
+#' @param categories Names of the ORA categories to return. If \code{"all"}
 #' (default), returns all of them.
 #' @param simplified If \code{TRUE} (default) only the most
 #'  informative columns of the data.table are returned.
 #'
-#' @return A list of data.tables
+#' @return A list of data.tables.
 #'
 #' @export
 setGeneric(
@@ -298,6 +300,9 @@ setMethod(
 # )
 
 #' Return the slot \code{distributions} from a scDiffCom object
+#'
+#' @return List of matrices with the null distributions of each
+#' CCI.
 #'
 #' @param object \code{scDiffCom} object
 #'
@@ -391,11 +396,11 @@ setMethod(
   }
 )
 
-#' Create a copy of a scDiffCom object without the "raw" CCI table
+#' Create a copy of a scDiffCom object without \code{cci_table_raw}
 #'
-#' This function will replace \code{cci_table_raw} by an empty list. It may
-#' be useful to save space for large datasets. However, after this operation,
-#' no filtering and ORA can be re-run on the new object, meaning that obtaining
+#' This function will replace \code{cci_table_raw} by an empty list. Useful to
+#' save space for large datasets. However, after this operation,
+#' no filtering can be re-run on the new object, meaning that obtaining
 #' results for different filtering parameters will require the perform the full
 #' analysis from scratch.
 #'
@@ -425,11 +430,12 @@ setMethod(
 
 #' Filter a scDiffCom object with new filtering parameters
 #'
-#' Filtering (and ORA) is performed with new parameters.
-#'  \code{cci_table_detected} and \code{ora_table} are updated accordingly.
+#' Filtering (and ORA) is performed with new parameter on an existing
+#' \code{scDiffCom} object. The slots \code{cci_table_detected} and
+#' \code{ora_table} are updated accordingly.
 #'
 #' When \code{FilterCCI} is called with new parameters, both
-#'  \code{cci_table_detected} and \code{ora_table} need to be updated. For
+#'  \code{cci_table_detected} and \code{ora_table} are updated. For
 #'  ORA, a call to \code{RunORA} is automatically performed on all standard
 #'  categories. Additional user-defined ORA categories can be added via the
 #'  parameter \code{extra_annotations}. The data.frames or data.tables in this
@@ -437,7 +443,7 @@ setMethod(
 #'  values from a standard category (first column) to values of the new
 #'  category (second column). As a typical example, this
 #'  \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}
-#'  shows how to perform ORA on cell type families attached to each cell types.
+#'  shows how to perform ORA on cell type families attached to each cell type.
 #'
 #' @param object \code{scDiffCom} object
 #' @param new_threshold_quantile_score New threshold value to update
@@ -452,10 +458,10 @@ setMethod(
 #' @param new_threshold_logfc New threshold value to update
 #'  \code{threshold_logfc}. If \code{NULL} (default),
 #'  the value is not updated.
-#' @param skip_ora Default is \code{FALSE}. If \code{TRUE}, the ORA is not
+#' @param skip_ora Default is \code{FALSE}. If \code{TRUE}, ORA is not
 #' performed with the new parameters and \code{ora_table} is set to an
 #' empty list. May be useful if one wants to quickly test (loop-over) several
-#' values of parameters and by-passing the computing time of the ORA.
+#' values of parameters and by-passing the ORA computing time.
 #' @param extra_annotations Convenience parameter to perform ORA on user-defined
 #' non-standard categories. If \code{NULL} (default), ORA is
 #' performed on standard categories. Otherwise it must be a list of data.tables
@@ -512,7 +518,7 @@ setMethod(
 #' Run over-representation analysis
 #'
 #' Perform over-representation analysis (ORA) on a scDiffCom object, with
-#' the possibility to define custom categories in addition to the standard
+#' the possibility to define new categories in addition to the standard
 #' ones supported by default.
 #'
 #' Additional user-defined ORA categories can be added via the
@@ -521,7 +527,7 @@ setMethod(
 #'  values from a standard category (first column) to values of the new
 #'  category (second column). As a typical example, this
 #'  \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}
-#'  shows how to perform ORA on cell type families attached to each cell types.
+#'  shows how to perform ORA on cell type families attached to each cell type.
 #'
 #' @param object \code{scDiffCom} object
 #' @param categories Names of the standard categories on which to perform ORA.
@@ -535,9 +541,9 @@ setMethod(
 #' or data.frames (see Details).
 #' @param overwrite If \code{TRUE} (default), previous results are overwritten
 #' in case they correspond to a category passed in \code{categories}.
-#' @param verbose If \code{TRUE} (default) progress messages are printed.
+#' @param verbose If \code{TRUE} (default), progress messages are printed.
 #'
-#' @return A scDiffCom object with updated \code{ora_table}.
+#' @return A scDiffCom object with updated slot \code{ora_table}.
 #'
 #' @export
 setGeneric(
@@ -598,7 +604,7 @@ setMethod(
 )
 
 
-#' Display top over-represented keywords
+#' Display top over-represented keywords from a category of interest
 #'
 #' Plot a graph that shows the top over-represented terms of a given
 #' category for a given regulation. Terms are ordered by their ORA scores,
@@ -623,7 +629,7 @@ setMethod(
 #' this threshold (and always below 0.05) will be displayed. Default is
 #'  \code{0.05}.
 #'
-#' @return A ggplot object
+#' @return A ggplot object.
 #'
 #' @export
 setGeneric(
@@ -683,23 +689,23 @@ setMethod(
   }
 )
 
-#' Display 'cell type to cell type' interactive networks
+#' Display cell-type to cell-type interactive networks
 #'
-#' Create and plot interactive networks that convey various types of
-#' information regarding cell type to cell type communication.
+#' Create and plot an interactive network that summarize how
+#' cell-types and their interactions are over-represented.
 #'
 #' @param object \code{scDiffCom} object
-#' @param network_type Type of network to display. Currently, only the type
+#' @param network_type Type of network to display. Currently, only
 #' \code{ORA_network} (default) is supported.
 #' @param layout_type Layout of the network to display. Can either be
 #' \code{"bipartite"} (default) or \code{"conventional"}.
 #' @param abbreviation_table Table with abbreviations
 #' for the cell types present in the \code{object}. If \code{NULL} (default),
 #' full names of the cell-types are displayed. Otherwise, it must be a
-#' data.frame or data.table with exactly two columns of names
+#' data.frame or data.table with exactly two columns with names
 #' \code{ORIGINAL_CELLTYPE} and \code{ABBR_CELLTYPE}.
 #'
-#' @return A visNetwork object
+#' @return A visNetwork object.
 #'
 #' @export
 setGeneric(
@@ -756,8 +762,6 @@ setMethod(
     )
   }
 )
-
-
 
 ################ Not implemented generics/methods ################
 

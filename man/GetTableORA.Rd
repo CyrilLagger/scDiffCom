@@ -3,7 +3,8 @@
 \name{GetTableORA}
 \alias{GetTableORA}
 \alias{GetTableORA,scDiffCom-method}
-\title{Return information from some of the scDiffCom ORA data.tables}
+\title{Return some or all ORA tables from the slot \code{ora_table}
+from a scDiffCom object}
 \usage{
 GetTableORA(object, categories, simplified)
 
@@ -12,15 +13,16 @@ GetTableORA(object, categories, simplified)
 \arguments{
 \item{object}{\code{scDiffCom} object}
 
-\item{categories}{Names of the categories to return. If \code{"all"}
+\item{categories}{Names of the ORA categories to return. If \code{"all"}
 (default), returns all of them.}
 
 \item{simplified}{If \code{TRUE} (default) only the most
 informative columns of the data.table are returned.}
 }
 \value{
-A list of data.tables
+A list of data.tables.
 }
 \description{
-Return information from some of the scDiffCom ORA data.tables
+Return some or all ORA tables from the slot \code{ora_table}
+from a scDiffCom object
 }

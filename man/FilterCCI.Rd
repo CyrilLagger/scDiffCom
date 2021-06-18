@@ -46,10 +46,10 @@ the value is not updated.}
 \code{threshold_logfc}. If \code{NULL} (default),
 the value is not updated.}
 
-\item{skip_ora}{Default is \code{FALSE}. If \code{TRUE}, the ORA is not
+\item{skip_ora}{Default is \code{FALSE}. If \code{TRUE}, ORA is not
 performed with the new parameters and \code{ora_table} is set to an
 empty list. May be useful if one wants to quickly test (loop-over) several
-values of parameters and by-passing the computing time of the ORA.}
+values of parameters and by-passing the ORA computing time.}
 
 \item{extra_annotations}{Convenience parameter to perform ORA on user-defined
 non-standard categories. If \code{NULL} (default), ORA is
@@ -63,12 +63,13 @@ A scDiffCom object with updated results in \code{cci_table_detected}
 and \code{ora_table}.
 }
 \description{
-Filtering (and ORA) is performed with new parameters.
- \code{cci_table_detected} and \code{ora_table} are updated accordingly.
+Filtering (and ORA) is performed with new parameter on an existing
+\code{scDiffCom} object. The slots \code{cci_table_detected} and
+\code{ora_table} are updated accordingly.
 }
 \details{
 When \code{FilterCCI} is called with new parameters, both
- \code{cci_table_detected} and \code{ora_table} need to be updated. For
+ \code{cci_table_detected} and \code{ora_table} are updated. For
  ORA, a call to \code{RunORA} is automatically performed on all standard
  categories. Additional user-defined ORA categories can be added via the
  parameter \code{extra_annotations}. The data.frames or data.tables in this
@@ -76,5 +77,5 @@ When \code{FilterCCI} is called with new parameters, both
  values from a standard category (first column) to values of the new
  category (second column). As a typical example, this
  \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}
- shows how to perform ORA on cell type families attached to each cell types.
+ shows how to perform ORA on cell type families attached to each cell type.
 }

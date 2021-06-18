@@ -30,7 +30,7 @@ parameters without running the full permutation analysis (see
 over-representation analysis for each category. Results for additional
 categories can be added with \code{\link{RunORA}}.}
 
-\item{\code{distributions}}{List of matrices with the null distributions for each
+\item{\code{distributions}}{List of matrices with the null distributions of each
 CCI. \code{NULL} by default.}
 }}
 

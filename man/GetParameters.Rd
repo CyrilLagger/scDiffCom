@@ -13,10 +13,10 @@ GetParameters(object)
 \item{object}{\code{scDiffCom} object}
 }
 \value{
-A list of parameters
+A list of parameters.
 }
 \description{
 Return the parameters that have been passed to
- \code{\link{run_interaction_analysis}} to compute
- the scDiffCom object.
+ \code{\link{run_interaction_analysis}} as well as a few other
+ parameters computed alongside the analysis.
 }

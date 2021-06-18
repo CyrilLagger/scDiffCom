@@ -3,7 +3,7 @@
 \name{PlotORA}
 \alias{PlotORA}
 \alias{PlotORA,scDiffCom-method}
-\title{Display top over-represented keywords}
+\title{Display top over-represented keywords from a category of interest}
 \usage{
 PlotORA(
   object,
@@ -49,7 +49,7 @@ this threshold (and always below 0.05) will be displayed. Default is
  \code{0.05}.}
 }
 \value{
-A ggplot object
+A ggplot object.
 }
 \description{
 Plot a graph that shows the top over-represented terms of a given
