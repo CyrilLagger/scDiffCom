@@ -27,39 +27,39 @@ run_interaction_analysis(
 )
 }
 \arguments{
-\item{seurat_object}{\code{Seurat} object with normalized data. Must
-contain relevant \code{meta.data} columns (see below). Gene names must be
+\item{seurat_object}{Seurat object that must contain normalized
+data and relevant \code{meta.data} columns (see below). Gene names must be
  MGI (mouse) or HGNC (human) approved symbols.}
 
-\item{LRI_species}{Species corresponding to \code{seurat_object} and that
-indicates which internal LRI database to use. Can either be \code{"mouse"}
-or \code{"human"}.}
+\item{LRI_species}{Either \code{"mouse"} or \code{"human"}. Indicates which
+LRI database to use and corresponds to the species of the \code{seurat_object}.}
 
-\item{seurat_celltype_id}{Name of the \code{meta.data} column that contains
-the cell-type annotations (e.g.: \code{"CELL_TYPE"}).}
+\item{seurat_celltype_id}{Name of the \code{meta.data} column in
+\code{seurat_object} that contains cell-type annotations
+(e.g.: \code{"CELL_TYPE"}).}
 
 \item{seurat_condition_id}{List that contains information regarding the
-groups/conditions on which to perform differential analysis. Must contain
-three named items:
+two conditions on which to perform differential analysis. Must contain
+the following three named items:
 \enumerate{
-  \item \code{column_name}: name of the \code{meta.data} column
-   that indicates the group of each cell (e.g. \code{"AGE"})
-  \item cond1_name: name of the first condition (e.g. \code{"YOUNG"})
-  \item cond2_name: name of the second condition (e.g. \code{"OLD"})
+  \item \code{column_name}: name of the \code{meta.data} column in
+  \code{seurat_object} that indicates the condition on each cell (e.g. \code{"AGE"})
+  \item \code{cond1_name}: name of the first condition (e.g. \code{"YOUNG"})
+  \item \code{cond2_name}: name of the second condition (e.g. \code{"OLD"})
 }
 Can also be set to \code{NULL} to only perform a detection analysis
 (see Details).}
 
 \item{iterations}{Number of permutations to perform the statistical
-analysis. The default (\code{1000}) is a good compromise to obtain
-reasonably accurate p-values in a short time. If computing resources
-allows it, it is recommended to choose a higher value (e.g. \code{10000})
-and to run the analysis in parallel (see Details). Can also be set to
-\code{0} for debugging and quickly returning partial results without
+analysis. The default (\code{1000}) is a good compromise for an exploratory
+analysis and to obtain reasonably accurate p-values in a short time.
+Otherwise, we recommend using \code{10000} iterations and to run the
+analysis in parallel (see Details). Can also be set to \code{0} for
+debugging and quickly returning partial results without
 statistical significance.}
 
-\item{scdiffcom_object_name}{Name of the \code{scDiffCom} object that will
-be returned.}
+\item{scdiffcom_object_name}{Name of the \code{scDiffCom} S4 object that will
+be returned (\code{"scDiffCom_object"} by default).}
 
 \item{seurat_assay}{Assay of \code{seurat_object} from which to extract data.
 See Details for an explanation on how data are extracted based on the three
@@ -132,32 +132,31 @@ results.}
 An S4 object of class \code{\link{scDiffCom-class}}.
 }
 \description{
-Perform (differential) cell type to cell type interaction analysis from
- scRNA-seq data (in the form of a
- \href{https://satijalab.org/seurat/index.html}{Seurat object})
- based on a internal database of ligand-receptor interactions (LRIs). It
+Perform (differential) cell type to cell type communication analysis from a
+ \href{https://satijalab.org/seurat/index.html}{Seurat object},
+ using an internal database of ligand-receptor interactions (LRIs). It
  infers biologically relevant cell-cell interactions (CCIs) and how they
- change between two conditions of interest. An over-representation analysis
- is also directly conducted to determine dominant changing signals at the
+ change between two conditions of interest. Over-representation analysis
+ is automatically performed to determine dominant differential signals at the
  level of the genes, cell types, GO Terms and KEGG Pathways.
 }
 \details{
 The primary use of this function (and of the package) is to perform
- differential analysis of intercellular communication. However, it is also
+ differential intercellular communication analysis. However, it is also
  possible to only perform a detection analysis (by setting
- \code{seurat_condition_id} to \code{NULL}), for example if one wants to
- infer cell-cell interactions from a dataset without conditions on the cells.
+ \code{seurat_condition_id} to \code{NULL}), e.g. if one wants to
+ infer cell-cell interactions from a dataset without having conditions on the cells.
 
- By convention when performing differential analysis, LOGFC are computed as
+ By convention, when performing differential analysis, LOGFC are computed as
  \code{log(score(cond2_name)/score(cond1_name))}. In other words,
  "UP"-regulated CCIs have a larger score in \code{cond2_name}.
 
- Parallel computing. If computer resources allows it, it is recommended to
+ Parallel computing. If possible, it is recommended to
  run this function in parallel in order to speed up the analysis for large
  dataset and/or to obtain better accuracy on the p-values by setting a higher
  number of \code{iterations}. This is as simple as loading the
  \href{https://cran.r-project.org/web/packages/future}{future}
- package and setting an appropriate \code{plan} (see e.g. this
+ package and setting an appropriate \code{plan} (see also our
  \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}).
 
  Data extraction. The UMI or read counts matrix is extracted from
@@ -175,7 +174,8 @@ The primary use of this function (and of the package) is to perform
  analysis. This may be useful if one wants a fast way to analyze how the
  results behave in function of, say, different LOGFC thresholds. In practice,
  this can be done by calling the functions \code{\link{FilterCCI}} or
- \code{\link{RunORA}}.
+ \code{\link{RunORA}} (see also our
+ \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}).
 }
 \examples{
 \dontrun{

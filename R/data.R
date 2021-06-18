@@ -5,7 +5,7 @@
 #'  metadata.
 #'
 #' The dataset has been built internally in scDiffCom according to
-#'  scDiffCom:::build_LRI(species = "human"). The LRIs have been retrieved
+#'  \code{scDiffCom:::build_LRI(species = "human")}. The LRIs have been retrieved
 #'  from eight databases (see References). Note that only curated LRIs
 #'  have been kept.
 #'
@@ -15,16 +15,16 @@
 #'
 #' @format A list with the following items:
 #' \enumerate{
-#'   \item LRI_curated: a data.table of curated LRIs
-#'   \item LRI_curated_GO: a data.table with GO terms attached to
+#'   \item \code{LRI_curated}: a data.table of curated LRIs
+#'   \item \code{LRI_curated_GO}: a data.table with GO terms attached to
 #'    curated LRIs
-#'   \item LRI_curated_KEGG: a data.table with KEGG pathways attached to
+#'   \item \code{LRI_curated_KEGG}: a data.table with KEGG pathways attached to
 #'    curated LRIs
-#'   \item LRI_retrieved_dates: dates at which data have been retrieved
+#'   \item \code{LRI_retrieved_dates}: dates at which data have been retrieved
 #'    from the eight external databases
-#'   \item LRI_retrieved_from: paths or packages from where data have
+#'   \item \code{LRI_retrieved_from}: paths or packages from where data have
 #'    been retrieved
-#'   \item LRI_biomart_ensembl_version: version of ensembl used for
+#'   \item \code{LRI_biomart_ensembl_version}: version of ensembl used for
 #'    GO annotation
 #' }
 #'
@@ -50,7 +50,7 @@
 #'  metadata.
 #'
 #' The dataset has been built internally in scDiffCom according to
-#'  scDiffCom:::build_LRI(species = "mouse"). The LRIs have been retrieved
+#'  \code{scDiffCom:::build_LRI(species = "mouse")}. The LRIs have been retrieved
 #'  from eight databases (see References). Note that only curated LRIs
 #'  have been kept.
 #'
@@ -60,16 +60,16 @@
 #'
 #' @format A list with the following items:
 #' \enumerate{
-#'   \item LRI_curated: a data.table of curated LRIs
-#'   \item LRI_curated_GO: a data.table with GO terms attached to
+#'   \item \code{LRI_curated}: a data.table of curated LRIs
+#'   \item \code{LRI_curated_GO}: a data.table with GO terms attached to
 #'    curated LRI
-#'   \item LRI_curated_KEGG: a data.table with KEGG pathways attached to
+#'   \item \code{LRI_curated_KEGG}: a data.table with KEGG pathways attached to
 #'    curated LRIs
-#'    \item LRI_retrieved_dates: dates at which data have been retrieved
+#'    \item \code{LRI_retrieved_dates}: dates at which data have been retrieved
 #'    from the eight external databases
-#'   \item LRI_retrieved_from: paths or packages from where data have
+#'   \item \code{LRI_retrieved_from}: paths or packages from where data have
 #'    been retrieved
-#'   \item LRI_biomart_ensembl_version: version of ensembl used for
+#'   \item \code{LRI_biomart_ensembl_version}: version of ensembl used for
 #'    GO annotation and orthology conversion
 #' }
 #'

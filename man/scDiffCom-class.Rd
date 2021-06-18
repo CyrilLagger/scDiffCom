@@ -6,22 +6,31 @@
 \title{The scDiffCom Class}
 \description{
 An object of this class stores the intercellular communication results
-obtained by calling \code{run_interaction_analysis}.
+obtained when calling \code{\link{run_interaction_analysis}}.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{parameters}}{List of parameters used to build the object.}
+\item{\code{parameters}}{List of parameters passed to
+\code{\link{run_interaction_analysis}} and used to build the object.}
 
-\item{\code{cci_table_raw}}{Data.table with all potential CCIs induced from
-the original Seurat object and the internal LRI database.}
+\item{\code{cci_table_raw}}{Data.table with all hypothetic CCIs induced from
+the original Seurat object and the internal LRI database. Can be erased
+with \code{\link{EraseRawCCI}} to obtain a lighter object, but might be
+worth keeping if one intends to modify the filtering parameters
+(see also our
+ \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}).}
 
-\item{\code{cci_table_detected}}{Data.table with only the detected CCIs.}
+\item{\code{cci_table_detected}}{Data.table with only the detected CCIs. If
+\code{cci_table_raw} is not \code{NULL}, can be updated with new filtering
+parameters without running the full permutation analysis (see
+\code{\link{FilterCCI}})}
 
 \item{\code{ora_table}}{List of data.tables with the results of the
-over-representation analysis.}
+over-representation analysis for each category. Results for additional
+categories can be added with \code{\link{RunORA}}.}
 
 \item{\code{distributions}}{List of matrices with the null distributions for each
-CCI.}
+CCI. \code{NULL} by default.}
 }}
 
