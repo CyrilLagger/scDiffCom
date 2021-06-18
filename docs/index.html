@@ -41,7 +41,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">scDiffCom</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.0.9000</span>
       </span>
     </div>
 
@@ -83,8 +83,7 @@
 <a href="#scdiffcom" class="anchor" aria-hidden="true"></a>scDiffCom</h1></div>
 <!-- badges: start -->
 
-<p>The goal of scDiffCom is to provides tools to investigate changes in intercellular communication between two conditions of interest in scRNA-seq datasets.</p>
-It relies on a curated collection of ligand-receptor interactions (available for human and mouse) that have been retrieved and processed from eight public databases.
+<p>scDiffCom infers cell type to cell type communication signals from scRNA-seq (<a href="https://satijalab.org/seurat/" class="external-link">Seurat</a>) objects, and more particularly how these interactions change between two biological conditions. The package relies on a internal collection of ligand-receptor interactions (available for human and mouse) retrieved from eight public and curated databases.</p>
 <details><summary>
 Display LRI databases
 </summary><ul>
@@ -97,33 +96,41 @@ Display LRI databases
 <li><a href="http://www.bioconductor.org/packages/release/bioc/html/SingleCellSignalR.html" class="external-link">SingleCellSignalR</a></li>
 <li><a href="https://github.com/rikenbit/scTensor" class="external-link">scTensor</a></li>
 </ul></details><p> </p>
-<p>Using as input a <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> object that should contain cells annotated by cell-types and by two groups of interest (e.g. young/old), the package infers cell-cell interactions that potentially correspond to biological signals and significantly change between the two conditions. For implementation details regarding the statistical approach used in <code>scDiffCom</code> please see our (article in preparation).</p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor" aria-hidden="true"></a>Installation</h2>
-<p>You can install the released version of scDiffCom from <a href="https://CRAN.R-project.org" class="external-link">CRAN</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">#(not available yet)</span></code></pre></div>
-<p>And the development version from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># install.packages("devtools")</span>
+<code class="sourceCode R"><span class="co"># Install release version from CRAN</span>
+<span class="co">#(not available yet)</span>
+
+<span class="co"># Install development version from GitHub</span>
 <span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/remote-reexports.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"CyrilLagger/scDiffCom"</span><span class="op">)</span></code></pre></div>
 </div>
-<div id="typical-workflow" class="section level2">
+<div id="usage" class="section level2">
 <h2 class="hasAnchor">
-<a href="#typical-workflow" class="anchor" aria-hidden="true"></a>Typical workflow</h2>
-<p>For a usage example, please look at the vignette available <a href="https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html" class="external-link">here</a></p>
+<a href="#usage" class="anchor" aria-hidden="true"></a>Usage</h2>
+<p>Please look at the <a href="https://cyrillagger.github.io/scDiffCom">documentation</a> and this <a href="https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html">vignette</a>.</p>
 </div>
-<div id="reference" class="section level2">
+<div id="citation" class="section level2">
 <h2 class="hasAnchor">
-<a href="#reference" class="anchor" aria-hidden="true"></a>Reference</h2>
-<p>(manuscript in preparation)</p>
+<a href="#citation" class="anchor" aria-hidden="true"></a>Citation</h2>
+<p>When using scDiffCom, please consider citing our (manuscript in preparation).</p>
 </div>
 </div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
-    <div class="license">
+    <div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li>Browse source code at at <br><a href="https://github.com/CyrilLagger/scDiffCom">https://​github.com/​CyrilLagger/​scDiffCom</a>
+</li>
+<li>Report a bug at at <br><a href="https://github.com/CyrilLagger/scDiffCom/issues">https://​github.com/​CyrilLagger/​scDiffCom/​issues</a>
+</li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li>
@@ -136,7 +143,7 @@ Display LRI databases
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Cyril Lagger <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Cyril Lagger <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0003-1701-6896" target="orcid.widget" aria-label="ORCID"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
 <li>Eugen Ursu <br><small class="roles"> Author </small>  </li>
 <li><a href="authors.html">More on authors...</a></li>
 </ul>
@@ -146,6 +153,9 @@ Display LRI databases
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
+<li><a href="https://CRAN.R-project.org/package=scDiffCom" class="external-link"><img src="https://www.r-pkg.org/badges/version/scDiffCom" alt="CRAN status"></a></li>
+<li><a href="https://codecov.io/gh/CyrilLagger/scDiffCom?branch=master" class="external-link"><img src="https://codecov.io/gh/CyrilLagger/scDiffCom/branch/master/graph/badge.svg" alt="Codecov test coverage"></a></li>
+<li><a href="https://github.com/CyrilLagger/scDiffCom/actions" class="external-link"><img src="https://github.com/CyrilLagger/scDiffCom/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></li>
 </ul>
 </div>
 

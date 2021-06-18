@@ -1,0 +1,45 @@
+url: https://cyrillagger.github.io/scDiffCom
+
+development:
+  mode: auto
+
+home:
+  links:
+  - text: Browse source code at
+    href: https://github.com/CyrilLagger/scDiffCom
+  - text: Report a bug at
+    href: https://github.com/CyrilLagger/scDiffCom/issues
+
+reference:
+- title: Perform intercellular communication analysis
+  contents:
+  - run_interaction_analysis
+
+- title: Visualization
+  contents:
+  - BuildNetwork
+  - PlotORA
+  - show,scDiffCom-method
+
+- title: scDiffCom class
+  contents:
+  - scDiffCom-class
+
+- title: Accessors
+  contents:
+  - GetParameters
+  - GetTableCCI
+  - GetTableORA
+  - GetDistributions
+
+- title: Utilities
+  contents:
+  - RunORA
+  - FilterCCI
+  - EraseRawCCI
+
+- title: Data
+  contents:
+  - LRI_mouse
+  - LRI_human
+  - seurat_sample_tms_liver

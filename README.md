@@ -7,15 +7,20 @@
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/scDiffCom)](https://CRAN.R-project.org/package=scDiffCom)
+[![Codecov test
+coverage](https://codecov.io/gh/CyrilLagger/scDiffCom/branch/master/graph/badge.svg)](https://codecov.io/gh/CyrilLagger/scDiffCom?branch=master)
+[![R-CMD-check](https://github.com/CyrilLagger/scDiffCom/workflows/R-CMD-check/badge.svg)](https://github.com/CyrilLagger/scDiffCom/actions)
 <!-- badges: end -->
 
-The goal of scDiffCom is to provides tools to investigate changes in
-intercellular communication between two conditions of interest in
-scRNA-seq datasets.
+scDiffCom infers cell type to cell type communication signals from
+scRNA-seq [Seurat](https://satijalab.org/seurat/) objects, and more
+particularly investigates how these interactions change between two
+biological conditions. The package relies on a internal collection of
+ligand-receptor interactions (available for human and mouse) retrieved
+from eight public and curated databases.
 
-It relies on a curated collection of ligand-receptor interactions
-(available for human and mouse) that have been retrieved and processed
-from eight public databases.
 <details>
 <summary>
 Display LRI databases
@@ -34,35 +39,23 @@ Display LRI databases
 
  
 
-Using as input a [Seurat](https://satijalab.org/seurat/) object that
-should contain cells annotated by cell-types and by two groups of
-interest (e.g. young/old), the package infers cell-cell interactions
-that potentially correspond to biological signals and significantly
-change between the two conditions. For implementation details regarding
-the statistical approach used in `scDiffCom` please see our (article in
-preparation).
-
 ## Installation
 
-You can install the released version of scDiffCom from
-[CRAN](https://CRAN.R-project.org) with:
-
 ``` r
+# Install release version from CRAN
 #(not available yet)
-```
 
-And the development version from [GitHub](https://github.com/) with:
-
-``` r
-# install.packages("devtools")
+# Install development version from GitHub
 devtools::install_github("CyrilLagger/scDiffCom")
 ```
 
-## Typical workflow
+## Usage
 
-For a usage example, please look at the vignette available
-[here](https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html)
+Please look at the
+[documentation](https://cyrillagger.github.io/scDiffCom) and this
+[vignette](https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html).
 
-## Reference
+## Citation
 
-(manuscript in preparation)
+When using scDiffCom, please consider citing our (manuscript in
+preparation).
