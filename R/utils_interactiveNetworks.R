@@ -333,7 +333,7 @@ setup_graph_config <- function(
     ),
     VISNETWORK = list(
       WIDTH = "100%",
-      HEIGHT = NULL,
+      HEIGHT = "100vh",
       BACKGROUND = 	"#F5F5F5"
     )
   )
@@ -1236,12 +1236,12 @@ get_network_components <- function(
       layout = "layout.norm",
       layoutMatrix = layout
     ),
-    options = get_visnetwork_options(selectionByName=TRUE),
+    #options = get_visnetwork_options(selectionByName = TRUE),
     interactive = get_visnetwork_interactive(),
     configure = configure_component,
     legend = . %>% visNetwork::visLegend(
       enabled = TRUE,
-      main = paste(conds[[1]], "to", conds[[2]], "Regulation"),
+      main = paste(conds[[1]], "to", conds[[2]]),
       position = "right",
       addEdges = edges_legend(
         network_type = network_type,
@@ -1255,7 +1255,7 @@ get_network_components <- function(
       useGroups = FALSE,
       zoom = FALSE,
       ncol = 2,
-      width = 0.3
+      width = 0.2
     ),
     physics = . %>% visNetwork::visPhysics(
       enabled = FALSE,
@@ -1309,7 +1309,8 @@ get_visnetwork_options <- function(
 ) {
   if(selectionByName) {
     selectionOptions = list(
-      variable = "name", multiple = TRUE,
+      variable = "name",
+      multiple = TRUE,
       style = "width: 200px; height: 26px;
           background: #f8f8f8;
           color: darkblue;
