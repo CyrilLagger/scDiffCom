@@ -55,15 +55,6 @@ validate_parameters <- function(
       "'seurat_celltype_id' must be a character vector of length 1"
     )
   }
-  # if (!is.null(params$seurat_sample_id)) {
-  #   if (!is.character(params$seurat_sample_id) |
-  #       length(params$seurat_sample_id) != 1) {
-  #     res <- c(
-  #       res,
-  #       "'seurat_sample_id' must be a character vector of length 1"
-  #       )
-  #   }
-  # }
   if (!is.null(params$seurat_condition_id)) {
     if (
       !is.list(params$seurat_condition_id) ||

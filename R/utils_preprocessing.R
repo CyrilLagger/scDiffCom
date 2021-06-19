@@ -87,7 +87,7 @@ extract_seurat_inputs <- function(
         "slot ",
         slot,
         " of 'seurat_object' must be of class 'dgCMatrix'"
-        )
+      )
     )
   }
   if (slot == "data" & !log_scale) {
@@ -317,7 +317,7 @@ extract_LRI_inputs <- function(
         "There are no genes from 'LRI_table' in 'seurat_object'.",
         " Have you supplied 'seurat_object' with correctly formatted gene ",
         " symbols for your species (namely HGNC or MGI)? "
-        )
+      )
     )
   }
   if (n_ID <= 10) {
@@ -376,11 +376,7 @@ extract_LRI_inputs <- function(
     " interactions.\n",
     "Number of LRIs that match to genes present in the dataset: ",
     n_ID,
-    "."#,
-    #"\n",
-    #"Subsetting data (keeping ",
-    #nrow(data_keep),
-    #" genes)."
+    "."
   )
   if (verbose) message(mes)
   list(
@@ -409,7 +405,7 @@ extract_condition_inputs <- function(
         paste0(
           "'condition_column_id' is NULL but either 'cond1_name' or ",
           "'cond2_name' is not NULL."
-          )
+        )
       )
     }
   } else {
@@ -432,14 +428,16 @@ extract_condition_inputs <- function(
       cond_info$cond1 <- conds[[2]]
       cond_info$cond2 <- conds[[1]]
     } else {
-      stop(paste0(
-        "Either 'cond1_name' or 'cond2_name' does not match ",
-        "with the content of 'condition_column_id':",
-        conds[[1]],
-        " and ",
-        conds[[2]],
-        "."
-      ))
+      stop(
+        paste0(
+          "Either 'cond1_name' or 'cond2_name' does not match ",
+          "with the content of 'condition_column_id':",
+          conds[[1]],
+          " and ",
+          conds[[2]],
+          "."
+        )
+      )
     }
   }
   mes <- "Type of analysis to be performed:"
@@ -470,5 +468,5 @@ extract_condition_inputs <- function(
     }
   }
   if (verbose) message(mes)
-  return(cond_info)
+  cond_info
 }
