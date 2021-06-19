@@ -1,10 +1,9 @@
 
 ## We test key functions of the package ####
+# roughly in the order how they are called in a standard analysis after
+# calling run_interaction_analysis
 
-#the analysis can be performed in different modes according to the parameters,
-#namely with or without conditions and with or without statistical test
-
-## create a list of different parameters corresponding to each mode ####
+## Create a list of different parameters corresponding to each mode ####
 
 parameters_mode <- list(
   wrong = list(
@@ -120,7 +119,7 @@ parameters_mode <- list(
   )
 )
 
-## check parameter validation #####
+## Check input parameter validation #####
 
 parameters_mode_validated <- lapply(
   parameters_mode,
@@ -149,18 +148,25 @@ test_that(
       parameters_mode_validated_check[2:5],
       expect_null
     )
-    expect_equal(
-      length(parameters_mode_validated$wrong),
+    expect_length(
+      parameters_mode_validated$wrong,
       18
     )
   }
 )
 
-## load a light Seurat object for testing ####
+## Load a light Seurat object for testing ####
 
 seurat_test <- scDiffCom::seurat_sample_tms_liver
 
-## check data extraction and pre-processing ####
+test_that(
+  "sample object is of class Seurat",
+  {
+    expect_s4_class(seurat_test, "Seurat")
+  }
+)
+
+## Check data extraction and pre-processing ####
 
 inputs_test <- lapply(
   parameters_mode[2:5],
@@ -231,7 +237,32 @@ test_that(
   }
 )
 
-## check the first round of the analysis ####
+test_that(
+  "cell types are extracted correctly in each mode",
+  {
+    lapply(
+      inputs_test,
+      function(i) {
+        expect_identical(
+          i$cell_types,
+          sort(unique(seurat_test$cell_type))
+        )
+      }
+    )
+  }
+)
+
+test_that(
+  "condition is extracted correctly in the relevant mode",
+  {
+    expect_identical(
+      inputs_test$cond_stat$condition,
+      list(is_cond = TRUE, is_samp = FALSE, cond1 = "YOUNG", cond2 = "OLD")
+    )
+  }
+)
+
+## Check the first round of the analysis ####
 
 templates_test <- lapply(
   inputs_test,
@@ -241,9 +272,14 @@ templates_test <- lapply(
 test_that(
   "cci_template returns the correct number of CCIs",
   {
-    expect_equal(
-      nrow(templates_test$cond_stat),
-      30475
+    lapply(
+      templates_test,
+      function(i) {
+        expect_equal(
+          nrow(i),
+          30475
+        )
+      }
     )
   }
 )
@@ -270,7 +306,8 @@ example_cci_test <- lapply(
     copy(i)[
       EMITTER_CELLTYPE == "hepatocyte" &
         RECEIVER_CELLTYPE == "endothelial cell of hepatic sinusoid" &
-        LRI == "Adam15:Itga5"]
+        LRI == "Adam15:Itga5"
+    ]
   }
 )
 
@@ -279,21 +316,24 @@ example_data <- list(
     expm1(
       subset(
         seurat_test[c("Adam15"), ],
-        subset = cell_type == "hepatocyte")$RNA@data
+        subset = cell_type == "hepatocyte"
+      )$RNA@data
     )
   ),
   RnoCond = as.vector(
     expm1(
       subset(
         seurat_test[c("Itga5"), ],
-        subset = cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
+        subset = cell_type == "endothelial cell of hepatic sinusoid"
+      )$RNA@data
     )
   ),
   EY = as.vector(
     expm1(
       subset(
         seurat_test[c("Adam15"), ],
-        subset = age_group == "YOUNG" & cell_type == "hepatocyte")$RNA@data
+        subset = age_group == "YOUNG" & cell_type == "hepatocyte"
+      )$RNA@data
     )
   ),
   RY = as.vector(
@@ -301,7 +341,8 @@ example_data <- list(
       subset(
         seurat_test[c("Itga5"), ],
         subset = age_group == "YOUNG" &
-          cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
+          cell_type == "endothelial cell of hepatic sinusoid"
+      )$RNA@data
     )
   ),
   EO = as.vector(
@@ -309,7 +350,8 @@ example_data <- list(
       subset(
         seurat_test[c("Adam15"), ],
         subset = age_group == "OLD" &
-          cell_type == "hepatocyte")$RNA@data
+          cell_type == "hepatocyte"
+      )$RNA@data
     )
   ),
   RO = as.vector(
@@ -317,7 +359,8 @@ example_data <- list(
       subset(
         seurat_test[c("Itga5"), ],
         subset = age_group == "OLD" &
-          cell_type == "endothelial cell of hepatic sinusoid")$RNA@data
+          cell_type == "endothelial cell of hepatic sinusoid"
+      )$RNA@data
     )
   )
 )
@@ -427,7 +470,7 @@ test_that(
   }
 )
 
-## check overall permutation analysis ####
+## Check permutation analysis ####
 
 cci_permutation_test <- lapply(
   c(cond = 1, nocond = 3),
@@ -485,7 +528,8 @@ test_that(
       cci_dt_simple_test$nocond_stat[, 4:22],
       cci_permutation_test_with_distr$nocond$cci_raw[, 4:22]
     )
-  })
+  }
+)
 
 test_that(
   "permutation results are identical (using same seed) with or without returning the distributions", {
@@ -501,15 +545,10 @@ test_that(
       cci_permutation_test_with_distr$cond$cci_raw$P_VALUE_YOUNG,
       cci_permutation_test$cond$cci_raw$P_VALUE_YOUNG
     )
-  })
+  }
+)
 
-
-## benchmarking of permutation test and internal functions ####
-#library(profvis)
-#library(microbenchmark)
-#TODO
-
-## check object is returned correctly ####
+## Check object is returned correctly ####
 
 scdiffcom_objects <- lapply(
   parameters_mode_validated[2:5],
@@ -523,11 +562,17 @@ scdiffcom_objects <- lapply(
   }
 )
 
-test_that("scDiffCom raw object is returned properly", {
-  lapply(scdiffcom_objects,
-         function(object) {expect_s4_class(object, "scDiffCom")}
-  )
-})
+test_that(
+  "scDiffCom raw object is returned properly",
+  {
+    lapply(
+      scdiffcom_objects,
+      function(object) {
+        expect_s4_class(object, "scDiffCom")
+      }
+    )
+  }
+)
 
 ## Check internal filtering without ORA ####
 
@@ -547,12 +592,9 @@ scdiffcom_objects <- lapply(
   }
 )
 
-#test_that("todo", {
-#
-#})
+# nothing particular to test as long as the previous function runs
 
-
-## check internal ORA ####
+## Check internal ORA ####
 
 scdiffcom_objects <- lapply(
   scdiffcom_objects,
@@ -580,7 +622,7 @@ scdiffcom_objects <- lapply(
   }
 )
 
-# ORA on LRI
+# ORA double-check on LRIs
 
 contingency_table_test_LR_up <- matrix(
   c(
@@ -589,7 +631,8 @@ contingency_table_test_LR_up <- matrix(
     scdiffcom_objects$cond_stat@cci_table_detected[LRI != "Apoe:Ldlr" & REGULATION == "UP", .N],
     scdiffcom_objects$cond_stat@cci_table_detected[LRI != "Apoe:Ldlr" & REGULATION != "UP", .N]
   ),
-  2,2
+  2,
+  2
 )
 
 contingency_table_test_LR_down <- matrix(
@@ -599,7 +642,8 @@ contingency_table_test_LR_down <- matrix(
     scdiffcom_objects$cond_stat@cci_table_detected[LRI != "Csf2:Itgb1" & REGULATION == "DOWN", .N],
     scdiffcom_objects$cond_stat@cci_table_detected[LRI != "Csf2:Itgb1" & REGULATION != "DOWN", .N]
   ),
-  2,2
+  2,
+  2
 )
 
 contingency_table_test_LR_flat <- matrix(
@@ -609,13 +653,13 @@ contingency_table_test_LR_flat <- matrix(
     scdiffcom_objects$cond_stat@cci_table_detected[LRI != "Adam10:Axl" & REGULATION == "FLAT", .N],
     scdiffcom_objects$cond_stat@cci_table_detected[LRI != "Adam10:Axl" & REGULATION != "FLAT", .N]
   ),
-  2,2
+  2,
+  2
 )
 
 fisher_LR_up <- fisher.test(contingency_table_test_LR_up)
 fisher_LR_down <- fisher.test(contingency_table_test_LR_down)
 fisher_LR_flat <- fisher.test(contingency_table_test_LR_flat)
-
 
 test_that("fisher test is done correctly on LRIs", {
   expect_equivalent(
@@ -644,9 +688,10 @@ test_that("fisher test is done correctly on LRIs", {
   )
 })
 
-#ORA on GO terms
+# ORA double-check on GO terms
 
 genes_GO_UP <- LRI_mouse$LRI_curated_GO[GO_ID == "GO:0002376"]$LRI
+
 contingency_table_test_GO_up <- matrix(
   c(
     scdiffcom_objects$cond_stat@cci_table_detected[LRI %in% genes_GO_UP & REGULATION == "UP", .N],
@@ -654,7 +699,8 @@ contingency_table_test_GO_up <- matrix(
     scdiffcom_objects$cond_stat@cci_table_detected[!(LRI %in% genes_GO_UP) & REGULATION == "UP", .N],
     scdiffcom_objects$cond_stat@cci_table_detected[!(LRI %in% genes_GO_UP) & REGULATION != "UP", .N]
   ),
-  2,2
+  2,
+  2
 )
 fisher_GO_up <- fisher.test(contingency_table_test_GO_up)
 
@@ -666,7 +712,8 @@ contingency_table_test_GO_down <- matrix(
     scdiffcom_objects$cond_stat@cci_table_detected[!(LRI %in% genes_GO_DOWN) & REGULATION == "DOWN", .N],
     scdiffcom_objects$cond_stat@cci_table_detected[!(LRI %in% genes_GO_DOWN) & REGULATION != "DOWN", .N]
   ),
-  2,2
+  2,
+  2
 )
 fisher_GO_down <- fisher.test(contingency_table_test_GO_down)
 
@@ -678,41 +725,44 @@ contingency_table_test_GO_flat <- matrix(
     scdiffcom_objects$cond_stat@cci_table_detected[!(LRI %in% genes_GO_FLAT) & REGULATION == "FLAT", .N],
     scdiffcom_objects$cond_stat@cci_table_detected[!(LRI %in% genes_GO_FLAT) & REGULATION != "FLAT", .N]
   ),
-  2,2
+  2,
+  2
 )
 fisher_GO_flat <- fisher.test(contingency_table_test_GO_flat)
 
-test_that("fisher test is done correctly on GO terms", {
-  expect_equivalent(
-    scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0002376"]$OR_UP,
-    fisher_GO_up$estimate
-  )
-  expect_equivalent(
-    scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0002376"]$P_VALUE_UP,
-    fisher_GO_up$p.value
-  )
-  expect_equivalent(
-    scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0031625"]$OR_DOWN,
-    fisher_GO_down$estimate
-  )
-  expect_equivalent(
-    scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0031625"]$P_VALUE_DOWN,
-    fisher_GO_down$p.value
-  )
-  expect_equal(
-    scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0022406"]$OR_FLAT[[1]],
-    fisher_GO_flat$estimate[[1]],
-    tolerance = 0.01
-  )
-  expect_equivalent(
-    scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0022406"]$P_VALUE_FLAT,
-    fisher_GO_flat$p.value
-  )
-})
+test_that(
+  "fisher test is done correctly on GO terms",
+  {
+    expect_equivalent(
+      scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0002376"]$OR_UP,
+      fisher_GO_up$estimate
+    )
+    expect_equivalent(
+      scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0002376"]$P_VALUE_UP,
+      fisher_GO_up$p.value
+    )
+    expect_equivalent(
+      scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0031625"]$OR_DOWN,
+      fisher_GO_down$estimate
+    )
+    expect_equivalent(
+      scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0031625"]$P_VALUE_DOWN,
+      fisher_GO_down$p.value
+    )
+    expect_equivalent(
+      scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0022406"]$OR_FLAT,
+      fisher_GO_flat$estimate
+    )
+    expect_equivalent(
+      scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0022406"]$P_VALUE_FLAT,
+      fisher_GO_flat$p.value
+    )
+  }
+)
 
-## Check exported Filtering and ORA ####
+## Check exported FilterCCI ####
 
-FilterCCI(
+scdiffcom_object_new_filter <- FilterCCI(
   object = scdiffcom_objects$cond_stat,
   new_threshold_quantile_score = 0.25,
   new_threshold_p_value_specificity = 0.01,
@@ -721,7 +771,17 @@ FilterCCI(
   skip_ora = FALSE
 )
 
-## check adding extra annotations to ORA #####
+test_that(
+  "cci_table_raw is not modified by FilterCCI",
+  {
+    expect_identical(
+      scdiffcom_objects$cond_stat@cci_table_raw,
+      scdiffcom_object_new_filter@cci_table_raw
+    )
+  }
+)
+
+## Check exported RunORA and extra annotations #####
 
 cell_types <-  c(
   "B cell",
@@ -743,63 +803,31 @@ cell_families_dt <- data.table(
   EMITTER_CELLFAMILY = cell_families
 )
 
-RunORA(
+scdiffcom_object_new_ora <- RunORA(
   object = scdiffcom_objects$cond_stat,
-  categories = c("LRI"),
   extra_annotations = list(
     cell_families_dt
   ),
-  overwrite = TRUE
+  overwrite = FALSE
 )
 
-## Check building combined-objects
-
-# scdiffcom_objects_dup <- scdiffcom_objects
-#
-# scdiffcom_objects_dup <- lapply(
-#   scdiffcom_objects_dup,
-#   function(i) {
-#     i@parameters$object_name <- paste0(i@parameters$object_name, "_dup")
-#     return(i)
-#   }
-# )
-#
-# scdiffcom_combined_objects <- lapply(
-#   seq_along(scdiffcom_objects),
-#   function(i) {
-#     Combine_scDiffCom(
-#       l = list(scdiffcom_objects[[i]], scdiffcom_objects_dup[[i]]),
-#       object_name = paste0(scdiffcom_objects[[i]]@parameters$object_name, "_combined"),
-#       verbose = FALSE
-#     )
-#   }
-# )
-# names(scdiffcom_combined_objects) <- names(scdiffcom_objects)
-#
-# test_that("`Combine_scDiffCom` returns object of class `scDiffComCombined`", {
-#   expect_s4_class(scdiffcom_combined_objects$cond_stat, "scDiffComCombined")
-#   expect_s4_class(scdiffcom_combined_objects$cond_nostat, "scDiffComCombined")
-#   expect_s4_class(scdiffcom_combined_objects$nocond_stat, "scDiffComCombined")
-#   expect_s4_class(scdiffcom_combined_objects$nocond_nostat, "scDiffComCombined")
-# })
-
-## Check PlotORA ####
-
-PlotORA(
-  object = scdiffcom_objects$cond_stat,
-  category = "LRI",
-  regulation = "DOWN",
-  max_terms_show = 50,
-  GO_aspect = "biological_process"
+test_that(
+  "RunORA with extra annotations does not change previous CCI and ORA results",
+  {
+    expect_identical(
+      scdiffcom_objects$cond_stat@cci_table_detected,
+      scdiffcom_object_new_ora@cci_table_detected
+    )
+    expect_identical(
+      scdiffcom_objects$cond_stat@ora_table$LRI,
+      scdiffcom_object_new_ora@ora_table$LRI
+    )
+  }
 )
 
-PlotORA(
-  object = scdiffcom_objects$cond_stat,
-  category = "ER_CELLTYPES",
-  regulation = "DOWN",
-  max_terms_show = 20,
-  GO_aspect = "biological_process"
-)
+
+
+#############################################################################
 
 ## Check accessors ####
 
@@ -839,6 +867,24 @@ retrieved_ora_tables <- lapply(
       }
     )
   }
+)
+
+## Check PlotORA ####
+
+PlotORA(
+  object = scdiffcom_objects$cond_stat,
+  category = "LRI",
+  regulation = "DOWN",
+  max_terms_show = 50,
+  GO_aspect = "biological_process"
+)
+
+PlotORA(
+  object = scdiffcom_objects$cond_stat,
+  category = "ER_CELLTYPES",
+  regulation = "DOWN",
+  max_terms_show = 20,
+  GO_aspect = "biological_process"
 )
 
 ## check erase raw CCIs ####
