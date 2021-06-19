@@ -40,8 +40,9 @@
 
 
 <meta property="og:title" content="Filter a scDiffCom object with new filtering parameters — FilterCCI" />
-<meta property="og:description" content="Filtering (and ORA) is performed with new parameters.
- cci_table_detected and ora_table are updated accordingly." />
+<meta property="og:description" content="Filtering (and ORA) is performed with new parameter on an existing
+scDiffCom object. The slots cci_table_detected and
+ora_table are updated accordingly." />
 
 
 
@@ -98,7 +99,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/scDiffCom-vignette.html">scDiffCom: Investigating changes in intercellular communication</a>
+      <a href="../articles/scDiffCom-vignette.html">Introduction to scDiffCom</a>
     </li>
   </ul>
 </li>
@@ -127,8 +128,9 @@
     </div>
 
     <div class="ref-description">
-    <p>Filtering (and ORA) is performed with new parameters.
- <code>cci_table_detected</code> and <code>ora_table</code> are updated accordingly.</p>
+    <p>Filtering (and ORA) is performed with new parameter on an existing
+<code>scDiffCom</code> object. The slots <code>cci_table_detected</code> and
+<code>ora_table</code> are updated accordingly.</p>
     </div>
 
     <div class="ref-usage sourceCode"><pre class='sourceCode r'><code><span class='fu'>FilterCCI</span><span class='op'>(</span>
@@ -187,10 +189,10 @@ the value is not updated.</p></td>
     </tr>
     <tr>
       <th>skip_ora</th>
-      <td><p>Default is <code>FALSE</code>. If <code>TRUE</code>, the ORA is not
+      <td><p>Default is <code>FALSE</code>. If <code>TRUE</code>, ORA is not
 performed with the new parameters and <code>ora_table</code> is set to an
 empty list. May be useful if one wants to quickly test (loop-over) several
-values of parameters and by-passing the computing time of the ORA.</p></td>
+values of parameters and by-passing the ORA computing time.</p></td>
     </tr>
     <tr>
       <th>extra_annotations</th>
@@ -212,7 +214,7 @@ and <code>ora_table</code>.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>When <code>FilterCCI</code> is called with new parameters, both
- <code>cci_table_detected</code> and <code>ora_table</code> need to be updated. For
+ <code>cci_table_detected</code> and <code>ora_table</code> are updated. For
  ORA, a call to <code>RunORA</code> is automatically performed on all standard
  categories. Additional user-defined ORA categories can be added via the
  parameter <code>extra_annotations</code>. The data.frames or data.tables in this
@@ -220,7 +222,7 @@ and <code>ora_table</code>.</p>
  values from a standard category (first column) to values of the new
  category (second column). As a typical example, this
  <a href='https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html'>vignette</a>
- shows how to perform ORA on cell type families attached to each cell types.</p>
+ shows how to perform ORA on cell type families attached to each cell type.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

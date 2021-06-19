@@ -96,7 +96,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/scDiffCom-vignette.html">scDiffCom: Investigating changes in intercellular communication</a>
+      <a href="../articles/scDiffCom-vignette.html">Introduction to scDiffCom</a>
     </li>
   </ul>
 </li>
@@ -133,7 +133,7 @@
     <tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-perform-intercellular-communication-analysis" class="hasAnchor"><a href="#section-perform-intercellular-communication-analysis" class="anchor"></a>Perform intercellular communication analysis</h2>
+          <h2 id="section-intercellular-communication-analysis" class="hasAnchor"><a href="#section-intercellular-communication-analysis" class="anchor"></a>Intercellular communication analysis</h2>
           <p class="section-desc"></p>
         </th>
       </tr>
@@ -152,38 +152,7 @@
     </tbody><tbody>
       <tr>
         <th colspan="2">
-          <h2 id="section-visualization" class="hasAnchor"><a href="#section-visualization" class="anchor"></a>Visualization</h2>
-          <p class="section-desc"></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="BuildNetwork.html">BuildNetwork()</a></code> </p>
-        </td>
-        <td><p>Display 'cell type to cell type' interactive networks</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="PlotORA.html">PlotORA()</a></code> </p>
-        </td>
-        <td><p>Display top over-represented keywords</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="show-scDiffCom-method.html">show(<i>&lt;scDiffCom&gt;</i>)</a></code> </p>
-        </td>
-        <td><p>Display a scDiffCom object</p></td>
-      </tr>
-    </tbody><tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-scdiffcom-class" class="hasAnchor"><a href="#section-scdiffcom-class" class="anchor"></a>scDiffCom class</h2>
+          <h2 id="section-scdiffcom-s-class" class="hasAnchor"><a href="#section-scdiffcom-s-class" class="anchor"></a>scDiffCom S4 class</h2>
           <p class="section-desc"></p>
         </th>
       </tr>
@@ -198,6 +167,37 @@
           <p><code><a href="scDiffCom-class.html">scDiffCom-class</a></code> </p>
         </td>
         <td><p>The scDiffCom Class</p></td>
+      </tr>
+    </tbody><tbody>
+      <tr>
+        <th colspan="2">
+          <h2 id="section-visualization" class="hasAnchor"><a href="#section-visualization" class="anchor"></a>Visualization</h2>
+          <p class="section-desc"></p>
+        </th>
+      </tr>
+      
+      
+    </tbody><tbody>
+      
+      
+      <tr>
+        
+        <td>
+          <p><code><a href="BuildNetwork.html">BuildNetwork()</a></code> </p>
+        </td>
+        <td><p>Display cell-type to cell-type interactive networks</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="PlotORA.html">PlotORA()</a></code> </p>
+        </td>
+        <td><p>Display top over-represented keywords from a category of interest</p></td>
+      </tr><tr>
+        
+        <td>
+          <p><code><a href="show-scDiffCom-method.html">show(<i>&lt;scDiffCom&gt;</i>)</a></code> </p>
+        </td>
+        <td><p>Display a scDiffCom object</p></td>
       </tr>
     </tbody><tbody>
       <tr>
@@ -222,13 +222,15 @@
         <td>
           <p><code><a href="GetTableCCI.html">GetTableCCI()</a></code> </p>
         </td>
-        <td><p>Return information from one of the scDiffCom CCI data.tables</p></td>
+        <td><p>Return (a subset) of the slot <code>cci_table_raw</code> or
+ <code>cci_table_detected</code> from a scDiffCom object</p></td>
       </tr><tr>
         
         <td>
           <p><code><a href="GetTableORA.html">GetTableORA()</a></code> </p>
         </td>
-        <td><p>Return information from some of the scDiffCom ORA data.tables</p></td>
+        <td><p>Return some or all ORA tables from the slot <code>ora_table</code>
+from a scDiffCom object</p></td>
       </tr><tr>
         
         <td>
@@ -265,7 +267,7 @@
         <td>
           <p><code><a href="EraseRawCCI.html">EraseRawCCI()</a></code> </p>
         </td>
-        <td><p>Create a copy of a scDiffCom object without the "raw" CCI table</p></td>
+        <td><p>Create a copy of a scDiffCom object without <code>cci_table_raw</code></p></td>
       </tr>
     </tbody><tbody>
       <tr>

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create a copy of a scDiffCom object without the "raw" CCI table — EraseRawCCI • scDiffCom</title>
+<title>Create a copy of a scDiffCom object without cci_table_raw — EraseRawCCI • scDiffCom</title>
 
 
 <!-- jquery -->
@@ -39,10 +39,10 @@
 
 
 
-<meta property="og:title" content="Create a copy of a scDiffCom object without the "raw" CCI table — EraseRawCCI" />
-<meta property="og:description" content="This function will replace cci_table_raw by an empty list. It may
-be useful to save space for large datasets. However, after this operation,
-no filtering and ORA can be re-run on the new object, meaning that obtaining
+<meta property="og:title" content="Create a copy of a scDiffCom object without cci_table_raw — EraseRawCCI" />
+<meta property="og:description" content="This function will replace cci_table_raw by an empty list. Useful to
+save space for large datasets. However, after this operation,
+no filtering can be re-run on the new object, meaning that obtaining
 results for different filtering parameters will require the perform the full
 analysis from scratch." />
 
@@ -101,7 +101,7 @@ analysis from scratch." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/scDiffCom-vignette.html">scDiffCom: Investigating changes in intercellular communication</a>
+      <a href="../articles/scDiffCom-vignette.html">Introduction to scDiffCom</a>
     </li>
   </ul>
 </li>
@@ -124,15 +124,15 @@ analysis from scratch." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create a copy of a scDiffCom object without the "raw" CCI table</h1>
+    <h1>Create a copy of a scDiffCom object without <code>cci_table_raw</code></h1>
     
     <div class="hidden name"><code>EraseRawCCI.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This function will replace <code>cci_table_raw</code> by an empty list. It may
-be useful to save space for large datasets. However, after this operation,
-no filtering and ORA can be re-run on the new object, meaning that obtaining
+    <p>This function will replace <code>cci_table_raw</code> by an empty list. Useful to
+save space for large datasets. However, after this operation,
+no filtering can be re-run on the new object, meaning that obtaining
 results for different filtering parameters will require the perform the full
 analysis from scratch.</p>
     </div>

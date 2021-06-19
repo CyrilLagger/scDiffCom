@@ -5,25 +5,25 @@ development:
 
 home:
   links:
-  - text: Browse source code at
+  - text: Browse source code
     href: https://github.com/CyrilLagger/scDiffCom
-  - text: Report a bug at
+  - text: Report a bug
     href: https://github.com/CyrilLagger/scDiffCom/issues
 
 reference:
-- title: Perform intercellular communication analysis
+- title: Intercellular communication analysis
   contents:
   - run_interaction_analysis
+
+- title: scDiffCom S4 class
+  contents:
+  - scDiffCom-class
 
 - title: Visualization
   contents:
   - BuildNetwork
   - PlotORA
   - show,scDiffCom-method
-
-- title: scDiffCom class
-  contents:
-  - scDiffCom-class
 
 - title: Accessors
   contents:

@@ -40,13 +40,12 @@
 
 
 <meta property="og:title" content="Run (differential) intercellular communication analysis — run_interaction_analysis" />
-<meta property="og:description" content="Perform (differential) cell type to cell type interaction analysis from
- scRNA-seq data (in the form of a
- Seurat object)
- based on a internal database of ligand-receptor interactions (LRIs). It
+<meta property="og:description" content="Perform (differential) cell type to cell type communication analysis from a
+ Seurat object,
+ using an internal database of ligand-receptor interactions (LRIs). It
  infers biologically relevant cell-cell interactions (CCIs) and how they
- change between two conditions of interest. An over-representation analysis
- is also directly conducted to determine dominant changing signals at the
+ change between two conditions of interest. Over-representation analysis
+ is automatically performed to determine dominant differential signals at the
  level of the genes, cell types, GO Terms and KEGG Pathways." />
 
 
@@ -104,7 +103,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/scDiffCom-vignette.html">scDiffCom: Investigating changes in intercellular communication</a>
+      <a href="../articles/scDiffCom-vignette.html">Introduction to scDiffCom</a>
     </li>
   </ul>
 </li>
@@ -133,13 +132,12 @@
     </div>
 
     <div class="ref-description">
-    <p>Perform (differential) cell type to cell type interaction analysis from
- scRNA-seq data (in the form of a
- <a href='https://satijalab.org/seurat/index.html'>Seurat object</a>)
- based on a internal database of ligand-receptor interactions (LRIs). It
+    <p>Perform (differential) cell type to cell type communication analysis from a
+ <a href='https://satijalab.org/seurat/index.html'>Seurat object</a>,
+ using an internal database of ligand-receptor interactions (LRIs). It
  infers biologically relevant cell-cell interactions (CCIs) and how they
- change between two conditions of interest. An over-representation analysis
- is also directly conducted to determine dominant changing signals at the
+ change between two conditions of interest. Over-representation analysis
+ is automatically performed to determine dominant differential signals at the
  level of the genes, cell types, GO Terms and KEGG Pathways.</p>
     </div>
 
@@ -170,47 +168,47 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>seurat_object</th>
-      <td><p><code>Seurat</code> object with normalized data. Must
-contain relevant <code>meta.data</code> columns (see below). Gene names must be
+      <td><p>Seurat object that must contain normalized
+data and relevant <code>meta.data</code> columns (see below). Gene names must be
  MGI (mouse) or HGNC (human) approved symbols.</p></td>
     </tr>
     <tr>
       <th>LRI_species</th>
-      <td><p>Species corresponding to <code>seurat_object</code> and that
-indicates which internal LRI database to use. Can either be <code>"mouse"</code>
-or <code>"human"</code>.</p></td>
+      <td><p>Either <code>"mouse"</code> or <code>"human"</code>. Indicates which
+LRI database to use and corresponds to the species of the <code>seurat_object</code>.</p></td>
     </tr>
     <tr>
       <th>seurat_celltype_id</th>
-      <td><p>Name of the <code>meta.data</code> column that contains
-the cell-type annotations (e.g.: <code>"CELL_TYPE"</code>).</p></td>
+      <td><p>Name of the <code>meta.data</code> column in
+<code>seurat_object</code> that contains cell-type annotations
+(e.g.: <code>"CELL_TYPE"</code>).</p></td>
     </tr>
     <tr>
       <th>seurat_condition_id</th>
       <td><p>List that contains information regarding the
-groups/conditions on which to perform differential analysis. Must contain
-three named items:</p><ol>
-<li><p><code>column_name</code>: name of the <code>meta.data</code> column
-   that indicates the group of each cell (e.g. <code>"AGE"</code>)</p></li>
-<li><p>cond1_name: name of the first condition (e.g. <code>"YOUNG"</code>)</p></li>
-<li><p>cond2_name: name of the second condition (e.g. <code>"OLD"</code>)</p></li>
+two conditions on which to perform differential analysis. Must contain
+the following three named items:</p><ol>
+<li><p><code>column_name</code>: name of the <code>meta.data</code> column in
+  <code>seurat_object</code> that indicates the condition on each cell (e.g. <code>"AGE"</code>)</p></li>
+<li><p><code>cond1_name</code>: name of the first condition (e.g. <code>"YOUNG"</code>)</p></li>
+<li><p><code>cond2_name</code>: name of the second condition (e.g. <code>"OLD"</code>)</p></li>
 </ol><p>Can also be set to <code>NULL</code> to only perform a detection analysis
 (see Details).</p></td>
     </tr>
     <tr>
       <th>iterations</th>
       <td><p>Number of permutations to perform the statistical
-analysis. The default (<code>1000</code>) is a good compromise to obtain
-reasonably accurate p-values in a short time. If computing resources
-allows it, it is recommended to choose a higher value (e.g. <code>10000</code>)
-and to run the analysis in parallel (see Details). Can also be set to
-<code>0</code> for debugging and quickly returning partial results without
+analysis. The default (<code>1000</code>) is a good compromise for an exploratory
+analysis and to obtain reasonably accurate p-values in a short time.
+Otherwise, we recommend using <code>10000</code> iterations and to run the
+analysis in parallel (see Details). Can also be set to <code>0</code> for
+debugging and quickly returning partial results without
 statistical significance.</p></td>
     </tr>
     <tr>
       <th>scdiffcom_object_name</th>
-      <td><p>Name of the <code>scDiffCom</code> object that will
-be returned.</p></td>
+      <td><p>Name of the <code>scDiffCom</code> S4 object that will
+be returned (<code>"scDiffCom_object"</code> by default).</p></td>
     </tr>
     <tr>
       <th>seurat_assay</th>
@@ -313,19 +311,19 @@ results.</p></td>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>The primary use of this function (and of the package) is to perform
- differential analysis of intercellular communication. However, it is also
+ differential intercellular communication analysis. However, it is also
  possible to only perform a detection analysis (by setting
- <code>seurat_condition_id</code> to <code>NULL</code>), for example if one wants to
- infer cell-cell interactions from a dataset without conditions on the cells.</p>
-<p>By convention when performing differential analysis, LOGFC are computed as
+ <code>seurat_condition_id</code> to <code>NULL</code>), e.g. if one wants to
+ infer cell-cell interactions from a dataset without having conditions on the cells.</p>
+<p>By convention, when performing differential analysis, LOGFC are computed as
  <code>log(score(cond2_name)/score(cond1_name))</code>. In other words,
  "UP"-regulated CCIs have a larger score in <code>cond2_name</code>.</p>
-<p>Parallel computing. If computer resources allows it, it is recommended to
+<p>Parallel computing. If possible, it is recommended to
  run this function in parallel in order to speed up the analysis for large
  dataset and/or to obtain better accuracy on the p-values by setting a higher
  number of <code>iterations</code>. This is as simple as loading the
  <a href='https://cran.r-project.org/web/packages/future'>future</a>
- package and setting an appropriate <code>plan</code> (see e.g. this
+ package and setting an appropriate <code>plan</code> (see also our
  <a href='https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html'>vignette</a>).</p>
 <p>Data extraction. The UMI or read counts matrix is extracted from
  the assay <code>seurat_assay</code> and the slot <code>seurat_slot</code>. By default,
@@ -341,7 +339,8 @@ results.</p></td>
  analysis. This may be useful if one wants a fast way to analyze how the
  results behave in function of, say, different LOGFC thresholds. In practice,
  this can be done by calling the functions <code><a href='FilterCCI.html'>FilterCCI</a></code> or
- <code><a href='RunORA.html'>RunORA</a></code>.</p>
+ <code><a href='RunORA.html'>RunORA</a></code> (see also our
+ <a href='https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html'>vignette</a>).</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <div class="ref-examples sourceCode"><pre class='sourceCode r'><code><span class='r-in'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span></span>

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Display 'cell type to cell type' interactive networks — BuildNetwork • scDiffCom</title>
+<title>Display cell-type to cell-type interactive networks — BuildNetwork • scDiffCom</title>
 
 
 <!-- jquery -->
@@ -39,9 +39,9 @@
 
 
 
-<meta property="og:title" content="Display 'cell type to cell type' interactive networks — BuildNetwork" />
-<meta property="og:description" content="Create and plot interactive networks that convey various types of
-information regarding cell type to cell type communication." />
+<meta property="og:title" content="Display cell-type to cell-type interactive networks — BuildNetwork" />
+<meta property="og:description" content="Create and plot an interactive network that summarize how
+cell-types and their interactions are over-represented." />
 
 
 
@@ -98,7 +98,7 @@ information regarding cell type to cell type communication." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/scDiffCom-vignette.html">scDiffCom: Investigating changes in intercellular communication</a>
+      <a href="../articles/scDiffCom-vignette.html">Introduction to scDiffCom</a>
     </li>
   </ul>
 </li>
@@ -121,14 +121,14 @@ information regarding cell type to cell type communication." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Display 'cell type to cell type' interactive networks</h1>
+    <h1>Display cell-type to cell-type interactive networks</h1>
     
     <div class="hidden name"><code>BuildNetwork.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Create and plot interactive networks that convey various types of
-information regarding cell type to cell type communication.</p>
+    <p>Create and plot an interactive network that summarize how
+cell-types and their interactions are over-represented.</p>
     </div>
 
     <div class="ref-usage sourceCode"><pre class='sourceCode r'><code><span class='fu'>BuildNetwork</span><span class='op'>(</span>
@@ -155,7 +155,7 @@ information regarding cell type to cell type communication.</p>
     </tr>
     <tr>
       <th>network_type</th>
-      <td><p>Type of network to display. Currently, only the type
+      <td><p>Type of network to display. Currently, only
 <code>ORA_network</code> (default) is supported.</p></td>
     </tr>
     <tr>
@@ -168,14 +168,14 @@ information regarding cell type to cell type communication.</p>
       <td><p>Table with abbreviations
 for the cell types present in the <code>object</code>. If <code>NULL</code> (default),
 full names of the cell-types are displayed. Otherwise, it must be a
-data.frame or data.table with exactly two columns of names
+data.frame or data.table with exactly two columns with names
 <code>ORIGINAL_CELLTYPE</code> and <code>ABBR_CELLTYPE</code>.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A visNetwork object</p>
+    <p>A visNetwork object.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
