@@ -41,7 +41,7 @@
 
 <meta property="og:title" content="The scDiffCom Class — scDiffCom-class" />
 <meta property="og:description" content="An object of this class stores the intercellular communication results
-obtained by calling run_interaction_analysis." />
+obtained when calling run_interaction_analysis." />
 
 
 
@@ -73,7 +73,7 @@ obtained by calling run_interaction_analysis." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">scDiffCom</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.0.9000</span>
       </span>
     </div>
 
@@ -96,7 +96,7 @@ obtained by calling run_interaction_analysis." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/scDiffCom-vignette.html">scDiffCom: Investigating changes in intercellular communication</a>
+      <a href="../articles/scDiffCom-vignette.html">Introduction to scDiffCom</a>
     </li>
   </ul>
 </li>
@@ -126,7 +126,7 @@ obtained by calling run_interaction_analysis." />
 
     <div class="ref-description">
     <p>An object of this class stores the intercellular communication results
-obtained by calling <code>run_interaction_analysis</code>.</p>
+obtained when calling <code><a href='run_interaction_analysis.html'>run_interaction_analysis</a></code>.</p>
     </div>
 
 
@@ -136,18 +136,27 @@ obtained by calling <code>run_interaction_analysis</code>.</p>
     
 
 <dl>
-<dt><code>parameters</code></dt><dd><p>List of parameters used to build the object.</p></dd>
+<dt><code>parameters</code></dt><dd><p>List of parameters passed to
+<code><a href='run_interaction_analysis.html'>run_interaction_analysis</a></code> and used to build the object.</p></dd>
 
-<dt><code>cci_table_raw</code></dt><dd><p>Data.table with all potential CCIs induced from
-the original Seurat object and the internal LRI database.</p></dd>
+<dt><code>cci_table_raw</code></dt><dd><p>Data.table with all hypothetic CCIs induced from
+the original Seurat object and the internal LRI database. Can be erased
+with <code><a href='EraseRawCCI.html'>EraseRawCCI</a></code> to obtain a lighter object, but might be
+worth keeping if one intends to modify the filtering parameters
+(see also our
+ <a href='https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html'>vignette</a>).</p></dd>
 
-<dt><code>cci_table_detected</code></dt><dd><p>Data.table with only the detected CCIs.</p></dd>
+<dt><code>cci_table_detected</code></dt><dd><p>Data.table with only the detected CCIs. If
+<code>cci_table_raw</code> is not <code>NULL</code>, can be updated with new filtering
+parameters without running the full permutation analysis (see
+<code><a href='FilterCCI.html'>FilterCCI</a></code>)</p></dd>
 
 <dt><code>ora_table</code></dt><dd><p>List of data.tables with the results of the
-over-representation analysis.</p></dd>
+over-representation analysis for each category. Results for additional
+categories can be added with <code><a href='RunORA.html'>RunORA</a></code>.</p></dd>
 
-<dt><code>distributions</code></dt><dd><p>List of matrices with the null distributions for each
-CCI.</p></dd>
+<dt><code>distributions</code></dt><dd><p>List of matrices with the null distributions of each
+CCI. <code>NULL</code> by default.</p></dd>
 
 </dl>
 

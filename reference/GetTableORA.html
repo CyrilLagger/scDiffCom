@@ -6,7 +6,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Return information from some of the scDiffCom ORA data.tables — GetTableORA • scDiffCom</title>
+<title>Return some or all ORA tables from the slot ora_table
+from a scDiffCom object — GetTableORA • scDiffCom</title>
 
 
 <!-- jquery -->
@@ -39,8 +40,10 @@
 
 
 
-<meta property="og:title" content="Return information from some of the scDiffCom ORA data.tables — GetTableORA" />
-<meta property="og:description" content="Return information from some of the scDiffCom ORA data.tables" />
+<meta property="og:title" content="Return some or all ORA tables from the slot ora_table
+from a scDiffCom object — GetTableORA" />
+<meta property="og:description" content="Return some or all ORA tables from the slot ora_table
+from a scDiffCom object" />
 
 
 
@@ -72,7 +75,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">scDiffCom</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.0.9000</span>
       </span>
     </div>
 
@@ -95,7 +98,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/scDiffCom-vignette.html">scDiffCom: Investigating changes in intercellular communication</a>
+      <a href="../articles/scDiffCom-vignette.html">Introduction to scDiffCom</a>
     </li>
   </ul>
 </li>
@@ -118,13 +121,15 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Return information from some of the scDiffCom ORA data.tables</h1>
+    <h1>Return some or all ORA tables from the slot <code>ora_table</code>
+from a scDiffCom object</h1>
     
     <div class="hidden name"><code>GetTableORA.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Return information from some of the scDiffCom ORA data.tables</p>
+    <p>Return some or all ORA tables from the slot <code>ora_table</code>
+from a scDiffCom object</p>
     </div>
 
     <pre class="usage"><span class='fu'>GetTableORA</span><span class='op'>(</span><span class='va'>object</span>, <span class='va'>categories</span>, <span class='va'>simplified</span><span class='op'>)</span>
@@ -141,7 +146,7 @@
     </tr>
     <tr>
       <th>categories</th>
-      <td><p>Names of the categories to return. If <code>"all"</code>
+      <td><p>Names of the ORA categories to return. If <code>"all"</code>
 (default), returns all of them.</p></td>
     </tr>
     <tr>
@@ -153,7 +158,7 @@ informative columns of the data.table are returned.</p></td>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A list of data.tables</p>
+    <p>A list of data.tables.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

@@ -15,12 +15,12 @@
 <meta property="og:description" content="Analysis tools to investigate changes in intercellular
     communication from scRNA-seq data. Using a Seurat object as input,
     the package infers which cell-cell interactions are present in the dataset
-    and how these interactions changes between two conditions of interest
+    and how these interactions change between two conditions of interest
     (e.g. young vs old). It relies on an internal database of ligand-receptor
     interactions (available for both human and mouse) that have been gathered
-    from several published studies. The differential analysis relies on a 
-    permutation test. The package also contains several tools to analyze
-    and visualize the results.">
+    from several published studies. Detection and differential analyses
+    rely on permutation tests. The package also contains several tools
+    to perform over-representation analysis and visualize the results.">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -39,7 +39,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">scDiffCom</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.0.9000</span>
       </span>
     </div>
 
@@ -62,7 +62,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="articles/scDiffCom-vignette.html">scDiffCom: Investigating changes in intercellular communication</a>
+      <a href="articles/scDiffCom-vignette.html">Introduction to scDiffCom</a>
     </li>
   </ul>
 </li>
@@ -87,8 +87,7 @@
 <a href="#scdiffcom" class="anchor"></a>scDiffCom</h1></div>
 <!-- badges: start -->
 
-<p>The goal of scDiffCom is to provides tools to investigate changes in intercellular communication between two conditions of interest in scRNA-seq datasets.</p>
-It relies on a curated collection of ligand-receptor interactions (available for human and mouse) that have been retrieved and processed from eight public databases.
+<p>scDiffCom infers cell type to cell type communication signals from scRNA-seq <a href="https://satijalab.org/seurat/">Seurat</a> objects, and more particularly investigates how these interactions change between two biological conditions. The package relies on a internal collection of ligand-receptor interactions (available for human and mouse) retrieved from eight public and curated databases.</p>
 <details><p><summary> Display LRI databases </summary></p>
 <ul>
 <li><a href="http://www.cellchat.org/">CellChat</a></li>
@@ -100,33 +99,41 @@ It relies on a curated collection of ligand-receptor interactions (available for
 <li><a href="http://www.bioconductor.org/packages/release/bioc/html/SingleCellSignalR.html">SingleCellSignalR</a></li>
 <li><a href="https://github.com/rikenbit/scTensor">scTensor</a></li>
 </ul></details><p> </p>
-<p>Using as input a <a href="https://satijalab.org/seurat/">Seurat</a> object that should contain cells annotated by cell-types and by two groups of interest (e.g. young/old), the package infers cell-cell interactions that potentially correspond to biological signals and significantly change between the two conditions. For implementation details regarding the statistical approach used in <code>scDiffCom</code> please see our (article in preparation).</p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#installation" class="anchor"></a>Installation</h2>
-<p>You can install the released version of scDiffCom from <a href="https://CRAN.R-project.org">CRAN</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">#(not available yet)</span></code></pre></div>
-<p>And the development version from <a href="https://github.com/">GitHub</a> with:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># install.packages("devtools")</span>
+<code class="sourceCode R"><span class="co"># Install release version from CRAN</span>
+<span class="co">#(not available yet)</span>
+
+<span class="co"># Install development version from GitHub</span>
 <span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"CyrilLagger/scDiffCom"</span><span class="op">)</span></code></pre></div>
 </div>
-<div id="typical-workflow" class="section level2">
+<div id="usage" class="section level2">
 <h2 class="hasAnchor">
-<a href="#typical-workflow" class="anchor"></a>Typical workflow</h2>
-<p>For a usage example, please look at the vignette available <a href="https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html">here</a></p>
+<a href="#usage" class="anchor"></a>Usage</h2>
+<p>As an introduction, please look at the <a href="https://cyrillagger.github.io/scDiffCom">documentation</a> and this <a href="https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html">vignette</a>.</p>
+<p>For a concrete and large-scale project that used scDiffCom, please look at scAgeCom, our murine atlas of age-related changes in intercellular communication (in preparation).</p>
 </div>
-<div id="reference" class="section level2">
+<div id="citation" class="section level2">
 <h2 class="hasAnchor">
-<a href="#reference" class="anchor"></a>Reference</h2>
-<p>(manuscript in preparation)</p>
+<a href="#citation" class="anchor"></a>Citation</h2>
+<p>When using scDiffCom, please consider citing our (manuscript in preparation).</p>
 </div>
 </div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
-    <div class="license">
+    <div class="links">
+<h2>Links</h2>
+<ul class="list-unstyled">
+<li>Browse source code at <br><a href="https://github.com/CyrilLagger/scDiffCom">https://​github.com/​CyrilLagger/​scDiffCom</a>
+</li>
+<li>Report a bug at <br><a href="https://github.com/CyrilLagger/scDiffCom/issues">https://​github.com/​CyrilLagger/​scDiffCom/​issues</a>
+</li>
+</ul>
+</div>
+<div class="license">
 <h2>License</h2>
 <ul class="list-unstyled">
 <li>
@@ -137,7 +144,7 @@ It relies on a curated collection of ligand-receptor interactions (available for
 <div class="developers">
 <h2>Developers</h2>
 <ul class="list-unstyled">
-<li>Cyril Lagger <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Cyril Lagger <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0003-1701-6896" target="orcid.widget" aria-label="ORCID"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
 <li>Eugen Ursu <br><small class="roles"> Author </small>  </li>
 <li><a href="authors.html">All authors...</a></li>
 </ul>
@@ -147,6 +154,9 @@ It relies on a curated collection of ligand-receptor interactions (available for
 <h2>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
+<li><a href="https://CRAN.R-project.org/package=scDiffCom"><img src="https://www.r-pkg.org/badges/version/scDiffCom" alt="CRAN status"></a></li>
+<li><a href="https://codecov.io/gh/CyrilLagger/scDiffCom?branch=master"><img src="https://codecov.io/gh/CyrilLagger/scDiffCom/branch/master/graph/badge.svg" alt="Codecov test coverage"></a></li>
+<li><a href="https://github.com/CyrilLagger/scDiffCom/actions"><img src="https://github.com/CyrilLagger/scDiffCom/workflows/R-CMD-check/badge.svg" alt="R-CMD-check"></a></li>
 </ul>
 </div>
 </div>

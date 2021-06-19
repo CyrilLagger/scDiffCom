@@ -41,7 +41,7 @@
 
 <meta property="og:title" content="Run over-representation analysis — RunORA" />
 <meta property="og:description" content="Perform over-representation analysis (ORA) on a scDiffCom object, with
-the possibility to define custom categories in addition to the standard
+the possibility to define new categories in addition to the standard
 ones supported by default." />
 
 
@@ -74,7 +74,7 @@ ones supported by default." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">scDiffCom</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.0.9000</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="Unreleased version">0.0.0.9000</span>
       </span>
     </div>
 
@@ -97,7 +97,7 @@ ones supported by default." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/scDiffCom-vignette.html">scDiffCom: Investigating changes in intercellular communication</a>
+      <a href="../articles/scDiffCom-vignette.html">Introduction to scDiffCom</a>
     </li>
   </ul>
 </li>
@@ -127,7 +127,7 @@ ones supported by default." />
 
     <div class="ref-description">
     <p>Perform over-representation analysis (ORA) on a scDiffCom object, with
-the possibility to define custom categories in addition to the standard
+the possibility to define new categories in addition to the standard
 ones supported by default.</p>
     </div>
 
@@ -179,13 +179,13 @@ in case they correspond to a category passed in <code>categories</code>.</p></td
     </tr>
     <tr>
       <th>verbose</th>
-      <td><p>If <code>TRUE</code> (default) progress messages are printed.</p></td>
+      <td><p>If <code>TRUE</code> (default), progress messages are printed.</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A scDiffCom object with updated <code>ora_table</code>.</p>
+    <p>A scDiffCom object with updated slot <code>ora_table</code>.</p>
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>Additional user-defined ORA categories can be added via the
@@ -194,7 +194,7 @@ in case they correspond to a category passed in <code>categories</code>.</p></td
  values from a standard category (first column) to values of the new
  category (second column). As a typical example, this
  <a href='https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html'>vignette</a>
- shows how to perform ORA on cell type families attached to each cell types.</p>
+ shows how to perform ORA on cell type families attached to each cell type.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
