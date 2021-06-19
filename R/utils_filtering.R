@@ -10,6 +10,13 @@ run_filtering_and_ora <- function(
   class_signature
 ) {
   REGULATION_SIMPLE <- NULL
+  if (identical(object@cci_table_raw, list())) {
+    stop(
+      paste0(
+        "slot 'cci_table_raw' of 'object' is empty, impossible to filter "
+      )
+    )
+  }
   temp_param <- object@parameters
   if (!is.null(new_threshold_quantile_score)) {
     temp_param$threshold_quantile_score <-
