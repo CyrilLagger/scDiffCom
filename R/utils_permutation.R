@@ -26,14 +26,18 @@ run_stat_analysis <- function(
           )
         ) == TRUE
     ]
-    cci_score_cond1_actual <- sub_cci_template[[paste0(
-      "CCI_SCORE_",
-      analysis_inputs$condition$cond1
-    )]]
-    cci_score_cond2_actual <- sub_cci_template[[paste0(
-      "CCI_SCORE_",
-      analysis_inputs$condition$cond2
-    )]]
+    cci_score_cond1_actual <- sub_cci_template[[
+      paste0(
+        "CCI_SCORE_",
+        analysis_inputs$condition$cond1
+      )
+    ]]
+    cci_score_cond2_actual <- sub_cci_template[[
+      paste0(
+        "CCI_SCORE_",
+        analysis_inputs$condition$cond2
+      )
+    ]]
     cci_score_diff_actual <-  cci_score_cond2_actual - cci_score_cond1_actual
   }
   mes <- paste0(

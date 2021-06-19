@@ -31,10 +31,12 @@ run_filtering_and_ora <- function(
     from_inputs = FALSE
   )
   if (!is.null(check_parameters$check)) {
-    stop(paste0(
-      "Invalid parameters: ",
-      paste0(check_parameters$check, collapse = " and ")
-    ))
+    stop(
+      paste0(
+        "Invalid parameters: ",
+        paste0(check_parameters$check, collapse = " and ")
+      )
+    )
   } else {
     temp_param <- check_parameters$params
   }

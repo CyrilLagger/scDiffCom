@@ -235,42 +235,47 @@ run_simple_cci_analysis <- function(
   )
   if (analysis_inputs$condition$is_cond) {
     if (log_scale) {
-      dt[,
-         LOGFC := get(
-           paste0(
-             "CCI_SCORE_",
-             analysis_inputs$condition$cond2
-           )
-         ) -
-           get(
-             paste0(
-               "CCI_SCORE_",
-               analysis_inputs$condition$cond1
-             )
-           )
+      dt[
+        ,
+        LOGFC := get(
+          paste0(
+            "CCI_SCORE_",
+            analysis_inputs$condition$cond2
+          )
+        ) -
+          get(
+            paste0(
+              "CCI_SCORE_",
+              analysis_inputs$condition$cond1
+            )
+          )
       ]
     } else {
-      dt[,
-         LOGFC := log(
-           get(
-             paste0(
-               "CCI_SCORE_",
-               analysis_inputs$condition$cond2
-             )
-           ) /
-             get(
-               paste0(
-                 "CCI_SCORE_",
-                 analysis_inputs$condition$cond1
-               )
-             )
-         )
+      dt[
+        ,
+        LOGFC := log(
+          get(
+            paste0(
+              "CCI_SCORE_",
+              analysis_inputs$condition$cond2
+            )
+          ) /
+            get(
+              paste0(
+                "CCI_SCORE_",
+                analysis_inputs$condition$cond1
+              )
+            )
+        )
       ]
-      dt[, LOGFC := ifelse(
-        is.nan(LOGFC),
-        0,
-        LOGFC
-      )]
+      dt[
+        ,
+        LOGFC := ifelse(
+          is.nan(LOGFC),
+          0,
+          LOGFC
+        )
+      ]
     }
     dt[, LOGFC_ABS := abs(LOGFC)]
   }

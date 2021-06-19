@@ -541,8 +541,8 @@ extract_category_counts <- function(
       list(
         COUNTS_REGULATED - COUNTS_VALUE_REGULATED,
         COUNTS_NOTREGULATED - COUNTS_VALUE_NOTREGULATED
-      )]
-
+      )
+  ]
   return(dt_counts)
 }
 
