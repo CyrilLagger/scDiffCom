@@ -53,8 +53,13 @@ devtools::install_github("CyrilLagger/scDiffCom")
 
 ## Usage
 
-Please look at the
+As an introduction, please look at the
 [documentation](https://cyrillagger.github.io/scDiffCom) and this [vignette](https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html).
+
+For a concrete and large-scale project that used scDiffCom, please look at
+scAgeCom, our murine atlas of age-related changes in intercellular
+communication (in preparation).
+
 
 ## Citation
 
