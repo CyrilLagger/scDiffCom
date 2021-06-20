@@ -6,7 +6,7 @@
 #'
 #' The dataset has been built internally in scDiffCom according to
 #'  \code{scDiffCom:::build_LRI(species = "human")}. The LRIs have been retrieved
-#'  from eight databases (see References). Note that only curated LRIs
+#'  from seven databases (see References). Note that only curated LRIs
 #'  have been kept.
 #'
 #' @docType data
@@ -37,8 +37,7 @@
 #'  connectomeDB2020 (\href{https://pubmed.ncbi.nlm.nih.gov/33024107/}{PMID: 33024107}),
 #'  ICELLNET (\href{https://pubmed.ncbi.nlm.nih.gov/33597528/}{PMID: 33597528}),
 #'  NicheNet (\href{https://pubmed.ncbi.nlm.nih.gov/31819264/}{PMID: 31819264}),
-#'  SingleCellSignalR (\href{https://pubmed.ncbi.nlm.nih.gov/32196115/}{PMID: 32196115}),
-#'  scTensor (\href{https://www.biorxiv.org/content/10.1101/566182v1}{bioRxiv})
+#'  SingleCellSignalR (\href{https://pubmed.ncbi.nlm.nih.gov/32196115/}{PMID: 32196115})
 #'
 #'
 "LRI_human"
@@ -51,7 +50,7 @@
 #'
 #' The dataset has been built internally in scDiffCom according to
 #'  \code{scDiffCom:::build_LRI(species = "mouse")}. The LRIs have been retrieved
-#'  from eight databases (see References). Note that only curated LRIs
+#'  from seven databases (see References). Note that only curated LRIs
 #'  have been kept.
 #'
 #' @docType data
@@ -82,8 +81,7 @@
 #'  connectomeDB2020 (\href{https://pubmed.ncbi.nlm.nih.gov/33024107/}{PMID: 33024107}),
 #'  ICELLNET (\href{https://pubmed.ncbi.nlm.nih.gov/33597528/}{PMID: 33597528}),
 #'  NicheNet (\href{https://pubmed.ncbi.nlm.nih.gov/31819264/}{PMID: 31819264}),
-#'  SingleCellSignalR (\href{https://pubmed.ncbi.nlm.nih.gov/32196115/}{PMID: 32196115}),
-#'  scTensor (\href{https://www.biorxiv.org/content/10.1101/566182v1}{bioRxiv})
+#'  SingleCellSignalR (\href{https://pubmed.ncbi.nlm.nih.gov/32196115/}{PMID: 32196115})
 #'
 #'
 "LRI_mouse"

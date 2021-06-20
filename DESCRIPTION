@@ -1,6 +1,6 @@
 Package: scDiffCom
 Type: Package
-Title: Differential Analysis of Intercellular Communication from scRNA-seq Data
+Title: Differential Analysis of Intercellular Communication from scRNA-Seq Data
 Version: 0.0.0.9000
 Authors@R: c(
     person("Cyril", "Lagger", email = "lagger.cyril@gmail.com",
@@ -29,36 +29,32 @@ Depends:
 RoxygenNote: 7.1.1
 biocViews:
 Suggests: 
-    AnnotationDbi,
-    AnnotationHub,
     biomaRt,
-    LRBase.Mmu.eg.db,
-    LRBase.Hsa.eg.db,
-    SingleCellSignalR,
-    ontologyIndex,
-    ontoProc,
-    KEGGREST,
+    covr,
+    ggplot2,
     igraph,
     kableExtra,
-    RColorBrewer,
-    visNetwork,
-    testthat (>= 2.1.0),
+    KEGGREST,
     knitr,
-    rmarkdown,
-    purrr,
-    ggplot2,
+    ontologyIndex,
+    ontoProc,
     pkgdown,
-    covr
+    RColorBrewer,
+    rmarkdown,
+    SingleCellSignalR,
+    testthat (>= 2.1.0),
+    visNetwork,
+    purrr
 Imports: 
     data.table,
     DelayedArray,
     future,
     future.apply,
-    methods,
-    stats,
-    utils,
     magrittr,
-    Seurat (>= 4.0.0)
+    methods,
+    Seurat (>= 4.0.0),
+    stats,
+    utils
 Collate: 
     'data.R'
     'interaction_analysis.R'

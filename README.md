@@ -19,7 +19,7 @@ scRNA-seq [Seurat](https://satijalab.org/seurat/) objects, and more
 particularly investigates how these interactions change between two
 biological conditions. The package relies on a internal collection of
 ligand-receptor interactions (available for human and mouse) retrieved
-from eight public and curated databases.
+from seven public and curated databases.
 
 <details>
 <summary>
@@ -33,7 +33,6 @@ Display LRI databases
 -   [ICELLNET](https://github.com/soumelis-lab/ICELLNET)
 -   [NicheNet](https://github.com/saeyslab/nichenetr)
 -   [SingleCellSignalR](http://www.bioconductor.org/packages/release/bioc/html/SingleCellSignalR.html)
--   [scTensor](https://github.com/rikenbit/scTensor)
 
 </details>
 

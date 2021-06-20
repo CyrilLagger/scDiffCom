@@ -20,15 +20,17 @@ build_LRI <- function(
     species = species,
     LR_db = LRI_curated$LR_full
   )
-  return(list(
-    #LRI_not_curated = LRI_not_curated$LR_full,
-    LRI_curated = LRI_curated$LR_full,
-    LRI_curated_GO = LRI_GO,
-    LRI_curated_KEGG = LRI_KEGG,
-    LRI_retrieved_dates = LRI_curated$LR_retrieved_dates,
-    LRI_retrieved_from = LRI_curated$LR_retrieved_from,
-    LRI_biomart_ensembl_version = "https://nov2020.archive.ensembl.org"
-  ))
+  return(
+    list(
+      #LRI_not_curated = LRI_not_curated$LR_full,
+      LRI_curated = LRI_curated$LR_full,
+      LRI_curated_GO = LRI_GO,
+      LRI_curated_KEGG = LRI_KEGG,
+      LRI_retrieved_dates = LRI_curated$LR_retrieved_dates,
+      LRI_retrieved_from = LRI_curated$LR_retrieved_from,
+      LRI_biomart_ensembl_version = "https://nov2020.archive.ensembl.org"
+    )
+  )
 }
 
 combine_LR_db <- function(
@@ -70,13 +72,13 @@ combine_LR_db <- function(
     species = species,
     one2one = one2one
   )
-  LR_scTensor <- prepare_LR_scTensor(
-    species = species
-  )
+  # LR_scTensor <- prepare_LR_scTensor(
+  #   species = species
+  # )
   if (curated) {
     LR_SingleCellSignalR$LR <- LR_SingleCellSignalR$LR[SOURCE != "PPI"]
     LR_NicheNet$LR <- LR_NicheNet$LR[SOURCE != "PPI"]
-    LR_scTensor$LR <- LR_scTensor$LR[SOURCE != "PPI"]
+    # LR_scTensor$LR <- LR_scTensor$LR[SOURCE != "PPI"]
   }
   LR_retrieved_dates <- list(
     "CellChat" = LR_CellChat$retrieved_date,
@@ -85,8 +87,8 @@ combine_LR_db <- function(
     "connectomeDB2020" = LR_connectomeDB2020$retrieved_date,
     "ICELLNET" = LR_ICELLNET$retrieved_date,
     "NicheNet" = LR_NicheNet$retrieved_date,
-    "SingleCellSignalR" = LR_SingleCellSignalR$retrieved_date,
-    "scTensor" = LR_scTensor$retrieved_date
+    "SingleCellSignalR" = LR_SingleCellSignalR$retrieved_date#,
+    #"scTensor" = LR_scTensor$retrieved_date
   )
   LR_retrieved_from <- list(
     "CellChat" = LR_CellChat$retrieved_from,
@@ -95,14 +97,14 @@ combine_LR_db <- function(
     "connectomeDB2020" = LR_connectomeDB2020$retrieved_from,
     "ICELLNET" = LR_ICELLNET$retrieved_from,
     "NicheNet" = LR_NicheNet$retrieved_from,
-    "SingleCellSignalR" = LR_SingleCellSignalR$retrieved_from,
-    "scTensor" = LR_scTensor$retrieved_from
+    "SingleCellSignalR" = LR_SingleCellSignalR$retrieved_from#,
+    #"scTensor" = LR_scTensor$retrieved_from
   )
   LR_full <- rbindlist(
     list(
       "connectomeDB2020" = LR_connectomeDB2020$LR,
       "CellTalkDB" = LR_CellTalkDB$LR,
-      "scTensor" = LR_scTensor$LR,
+      #"scTensor" = LR_scTensor$LR,
       "SingleCellSignalR" = LR_SingleCellSignalR$LR,
       "NicheNet" = LR_NicheNet$LR,
       "CellPhoneDB" = LR_CellPhoneDB$LR,
@@ -116,30 +118,38 @@ combine_LR_db <- function(
   col_md <- colnames(LR_full)
   col_md <- col_md[col_md != "LR_SORTED"]
   db_names <- c(
-    "connectomeDB2020", "CellTalkDB", "CellChat",
-    "CellPhoneDB", "SingleCellSignalR",
-    "scTensor", "ICELLNET", "NicheNet")
+    "connectomeDB2020",
+    "CellTalkDB",
+    "CellChat",
+    "CellPhoneDB",
+    "SingleCellSignalR",
+    #"scTensor",
+    "ICELLNET",
+    "NicheNet"
+  )
   LR_full <- dcast.data.table(
     LR_full,
     formula = LR_SORTED ~ DATABASE,
     value.var = col_md
   )
-  LR_full[, paste0("LIGAND_", 1:2) := lapply(
-    1:2,
-    function(i) {
-      ifelse(
-        !is.na(get(paste0("LIGAND_", i, "_CellPhoneDB"))),
-        get(paste0("LIGAND_", i, "_CellPhoneDB")),
+  LR_full[
+    ,
+    paste0("LIGAND_", 1:2) := lapply(
+      1:2,
+      function(i) {
         ifelse(
-          !is.na(get(paste0("LIGAND_", i, "_ICELLNET"))),
-          get(paste0("LIGAND_", i, "_ICELLNET")),
+          !is.na(get(paste0("LIGAND_", i, "_CellPhoneDB"))),
+          get(paste0("LIGAND_", i, "_CellPhoneDB")),
           ifelse(
-            !is.na(get(paste0("LIGAND_", i, "_SingleCellSignalR"))),
-            get(paste0("LIGAND_", i, "_SingleCellSignalR")),
+            !is.na(get(paste0("LIGAND_", i, "_ICELLNET"))),
+            get(paste0("LIGAND_", i, "_ICELLNET")),
             ifelse(
-              !is.na(get(paste0("LIGAND_", i, "_scTensor"))),
-              get(paste0("LIGAND_", i, "_scTensor")),
+              !is.na(get(paste0("LIGAND_", i, "_SingleCellSignalR"))),
+              get(paste0("LIGAND_", i, "_SingleCellSignalR")),
               ifelse(
+                #!is.na(get(paste0("LIGAND_", i, "_scTensor"))),
+                #get(paste0("LIGAND_", i, "_scTensor")),
+                #ifelse(
                 !is.na(get(paste0("LIGAND_", i, "_NicheNet"))),
                 get(paste0("LIGAND_", i, "_NicheNet")),
                 ifelse(
@@ -151,29 +161,32 @@ combine_LR_db <- function(
                     get(paste0("LIGAND_", i, "_CellChat"))
                   )
                 )
+                #)
               )
             )
           )
         )
-      )
-    }
-  )]
-  LR_full[, paste0("RECEPTOR_", 1:3) := lapply(
-    1:3,
-    function(i) {
-      ifelse(
-        !is.na(get(paste0("RECEPTOR_", i, "_CellPhoneDB"))),
-        get(paste0("RECEPTOR_", i, "_CellPhoneDB")),
+      }
+    )
+  ]
+  LR_full[
+    ,
+    paste0("RECEPTOR_", 1:3) := lapply(
+      1:3,
+      function(i) {
         ifelse(
-          !is.na(get(paste0("RECEPTOR_", i, "_ICELLNET"))),
-          get(paste0("RECEPTOR_", i, "_ICELLNET")),
+          !is.na(get(paste0("RECEPTOR_", i, "_CellPhoneDB"))),
+          get(paste0("RECEPTOR_", i, "_CellPhoneDB")),
           ifelse(
-            !is.na(get(paste0("RECEPTOR_", i, "_SingleCellSignalR"))),
-            get(paste0("RECEPTOR_", i, "_SingleCellSignalR")),
+            !is.na(get(paste0("RECEPTOR_", i, "_ICELLNET"))),
+            get(paste0("RECEPTOR_", i, "_ICELLNET")),
             ifelse(
-              !is.na(get(paste0("RECEPTOR_", i, "_scTensor"))),
-              get(paste0("RECEPTOR_", i, "_scTensor")),
+              !is.na(get(paste0("RECEPTOR_", i, "_SingleCellSignalR"))),
+              get(paste0("RECEPTOR_", i, "_SingleCellSignalR")),
               ifelse(
+                #!is.na(get(paste0("RECEPTOR_", i, "_scTensor"))),
+                #get(paste0("RECEPTOR_", i, "_scTensor")),
+                #ifelse(
                 !is.na(get(paste0("RECEPTOR_", i, "_NicheNet"))),
                 get(paste0("RECEPTOR_", i, "_NicheNet")),
                 ifelse(
@@ -185,29 +198,35 @@ combine_LR_db <- function(
                     get(paste0("RECEPTOR_", i, "_CellChat"))
                   )
                 )
+                #)
               )
             )
           )
         )
-      )
-    }
-  )]
+      }
+    )
+  ]
   col_database <- paste0("DATABASE.1_", db_names)
   LR_full[
     ,
     c("DATABASE") := do.call(paste, c(.SD, sep = ";")),
-    .SDcols = col_database]
+    .SDcols = col_database
+  ]
   LR_full[, c("DATABASE") := gsub("NA|NA;|;NA", "", DATABASE)]
   LR_full[, c("N_DB") := rowSums(!is.na(.SD)), .SDcols = col_database]
   col_source <- paste0("SOURCE_", db_names)
   LR_full[
-    , c("SOURCE") := do.call(paste, c(.SD, sep = ";")),
-    .SDcols = col_source]
+    ,
+    c("SOURCE") := do.call(paste, c(.SD, sep = ";")),
+    .SDcols = col_source
+  ]
   LR_full[, c("SOURCE") := gsub("NA|NA;|;NA", "", SOURCE)]
   col_anno <- paste0("ANNOTATION_", db_names)
   LR_full[
-    , c("ANNOTATION") := do.call(paste, c(.SD, sep = ";")),
-    .SDcols = col_anno]
+    ,
+    c("ANNOTATION") := do.call(paste, c(.SD, sep = ";")),
+    .SDcols = col_anno
+  ]
   LR_full[, c("ANNOTATION") := gsub("NA|NA;|;NA", "", ANNOTATION)]
   col_fam <- paste0("FAMILY_", db_names)
   LR_full[, c("FAMILY") := do.call(paste, c(.SD, sep = ";")), .SDcols = col_fam]
@@ -243,26 +262,43 @@ combine_LR_db <- function(
           "provided",
           get(paste0(id_loop, "_TYPE")
           )
-        )]
+        )
+      ]
     }
   }
   if (curated) {
-    LR_full[, is_complex_temp := fifelse(
-      !is.na(LIGAND_2) | !is.na(RECEPTOR_2),
-      TRUE,
-      FALSE
-    )]
-    LR_full[, LR_vectorized_temp := list(sapply(1:nrow(.SD), function(i) {
-      temp <- c(
-        sapply(1:2, function(j) {
-          get(paste0("LIGAND_", j))[[i]]
-        }),
-        sapply(1:3, function(j) {
-          get(paste0("RECEPTOR_", j))[[i]]
-        })
+    LR_full[
+      ,
+      is_complex_temp := fifelse(
+        !is.na(LIGAND_2) | !is.na(RECEPTOR_2),
+        TRUE,
+        FALSE
       )
-      temp <- temp[!is.na(temp)]
-    }))]
+    ]
+    LR_full[
+      ,
+      LR_vectorized_temp := list(
+        sapply(
+          1:nrow(.SD),
+          function(i) {
+            temp <- c(
+              sapply(
+                1:2,
+                function(j) {
+                  get(paste0("LIGAND_", j))[[i]]
+                }
+              ),
+              sapply(
+                1:3, function(j) {
+                  get(paste0("RECEPTOR_", j))[[i]]
+                }
+              )
+            )
+            temp <- temp[!is.na(temp)]
+          }
+        )
+      )
+    ]
     LR_full_simple <- LR_full[is_complex_temp == FALSE]
     LR_full_complex <- LR_full[is_complex_temp == TRUE]
     LR_full_simple_list <- LR_full_simple$LR_vectorized_temp
@@ -285,20 +321,28 @@ combine_LR_db <- function(
     setnafill(LR_full, fill = 0, cols = "N_IS_SUBPART")
     LR_full[, keep_subLR := grepl("CellPhoneDB|CellChat|ICELLNET", DATABASE)]
     LR_full <- LR_full[N_IS_SUBPART == 0 | keep_subLR == TRUE]
-    LR_full <- LR_full[DATABASE != "scTensor"]
+    #LR_full <- LR_full[DATABASE != "scTensor"]
     cols_to_keep <- NULL
   } else {
     cols_to_keep <- NULL
   }
-  LR_full[, LRI := list(sapply(1:nrow(.SD), function(i) {
-    temp1 <- c(LIGAND_1[[i]], LIGAND_2[[i]])
-    temp1 <- temp1[!is.na(temp1)]
-    temp1 <- paste0(temp1, collapse = "_")
-    temp2 <- c(RECEPTOR_1[[i]], RECEPTOR_2[[i]], RECEPTOR_3[[i]])
-    temp2 <- temp2[!is.na(temp2)]
-    temp2 <- paste0(temp2, collapse = "_")
-    return(paste(temp1, temp2, sep = ":"))
-  }))]
+  LR_full[
+    ,
+    LRI := list(
+      sapply(
+        1:nrow(.SD),
+        function(i) {
+          temp1 <- c(LIGAND_1[[i]], LIGAND_2[[i]])
+          temp1 <- temp1[!is.na(temp1)]
+          temp1 <- paste0(temp1, collapse = "_")
+          temp2 <- c(RECEPTOR_1[[i]], RECEPTOR_2[[i]], RECEPTOR_3[[i]])
+          temp2 <- temp2[!is.na(temp2)]
+          temp2 <- paste0(temp2, collapse = "_")
+          return(paste(temp1, temp2, sep = ":"))
+        }
+      )
+    )
+  ]
   if (species == "mouse") {
     cols_to_keep <- c(
       cols_to_keep,
@@ -319,22 +363,29 @@ combine_LR_db <- function(
   }
   LR_full <- LR_full[, cols_to_keep, with = FALSE]
   #clean the columns DATABASE and SOURCE
-  LR_full[, DATABASE := sapply(
-    1:nrow(.SD),
-    function(i) {
-      temp <- unlist(strsplit(.SD[i,]$DATABASE, ";"))
-      paste0(sort(unique(temp)), collapse = ";")
-    }
-  )]
+  LR_full[
+    ,
+    DATABASE := sapply(
+      1:nrow(.SD),
+      function(i) {
+        temp <- unlist(strsplit(.SD[i,]$DATABASE, ";"))
+        paste0(sort(unique(temp)), collapse = ";")
+      }
+    )
+  ]
+  LR_full[, SOURCE := gsub("\u00a0", "", SOURCE)]
   LR_full[, SOURCE := gsub(")", "", SOURCE, fixed = TRUE)]
   LR_full[, SOURCE := gsub(";;", ";", SOURCE, fixed = TRUE)]
-  LR_full[, SOURCE := sapply(
-    1:nrow(.SD),
-    function(i) {
-      temp <- unlist(strsplit(.SD[i,]$SOURCE, ";"))
-      paste0(sort(unique(temp)), collapse = ";")
-    }
-  )]
+  LR_full[
+    ,
+    SOURCE := sapply(
+      1:nrow(.SD),
+      function(i) {
+        temp <- unlist(strsplit(.SD[i,]$SOURCE, ";"))
+        paste0(sort(unique(temp)), collapse = ";")
+      }
+    )
+  ]
   return(
     list(
       LR_full = LR_full,
@@ -1262,176 +1313,176 @@ prepare_LR_NicheNet <- function(
   )
 }
 
-prepare_LR_scTensor <- function(
-  species
-) {
-  SOURCE <- NULL
-  if (!requireNamespace("AnnotationDbi", quietly = TRUE)) {
-    stop(
-      paste0(
-        "Package \"AnnotationDbi\" needed for this function to work.",
-        "Please install it."
-      ),
-      call. = FALSE
-    )
-  }
-  if (!requireNamespace("LRBase.Mmu.eg.db", quietly = TRUE)) {
-    stop(
-      paste0(
-
-        "Package \"LRBase.Mmu.eg.db\" needed for this function to work.",
-        "Please install it."
-      ),
-      call. = FALSE
-    )
-  }
-  if (!requireNamespace("LRBase.Hsa.eg.db", quietly = TRUE)) {
-    stop(
-      paste0(
-        "Package \"LRBase.Hsa.eg.db\" needed for this function to work.",
-        "Please install it."
-      ),
-      call. = FALSE
-    )
-  }
-  if (!requireNamespace("AnnotationHub", quietly = TRUE)) {
-    stop(
-      paste0(
-        "Package \"AnnotationHub\" needed for this function to work.",
-        "Please install it."
-      ),
-      call. = FALSE
-    )
-  }
-  LR_SORTED <- LIGAND_1 <- RECEPTOR_1 <- NULL
-  retrieved_date <- as.Date("2021-03-22")
-  retrieved_from <- "LRBaseDbi"
-  if (species == "mouse") {
-    key <- AnnotationDbi::keys(
-      LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
-      keytype = "GENEID_L"
-    )
-    LR <- AnnotationDbi::select(
-      LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
-      keys = key,
-      columns = c("GENEID_L", "GENEID_R", "SOURCEDB"),
-      keytype = "GENEID_L"
-    )
-  }
-  if (species == "human"){
-    key <- AnnotationDbi::keys(
-      LRBase.Hsa.eg.db::LRBase.Hsa.eg.db,
-      keytype = "GENEID_L"
-    )
-    LR <- AnnotationDbi::select(
-      LRBase.Hsa.eg.db::LRBase.Hsa.eg.db,
-      keys = key,
-      columns = c("GENEID_L", "GENEID_R", "SOURCEDB"),
-      keytype = "GENEID_L"
-    )
-  }
-  LR <- unique(LR)
-  ah <- AnnotationHub::AnnotationHub()
-  if (species == "mouse") {
-    hs <- AnnotationHub::query(
-      ah,
-      c("OrgDb", "Mus musculus")
-    )[[1]]
-  }
-  if (species == "human") {
-    hs <- AnnotationHub::query(
-      ah,
-      c("OrgDb", "Homo sapiens")
-    )[[1]]
-  }
-  LR_L_match <- AnnotationDbi::select(
-    hs,
-    column = c("SYMBOL", "ENTREZID"),
-    keytype = "ENTREZID",
-    keys = as.character(LR$GENEID_L)
-  )
-  LR_R_match <- AnnotationDbi::select(
-    hs,
-    column = c("SYMBOL", "ENTREZID"),
-    keytype = "ENTREZID",
-    keys = as.character(LR$GENEID_R)
-  )
-  if (identical(LR_L_match$ENTREZID, as.character(LR$GENEID_L))) {
-    LR$LIGAND_1 <- LR_L_match$SYMBOL
-  } else {
-    stop("Matching not possible.")
-  }
-  if (identical(LR_R_match$ENTREZID, as.character(LR$GENEID_R))) {
-    LR$RECEPTOR_1 <- LR_R_match$SYMBOL
-  } else {
-    stop("Matching not possible.")
-  }
-  setDT(LR)
-  LR[, c("GENEID_L", "GENEID_R") := list(NULL, NULL)]
-  setnames(LR, old = "SOURCEDB", new = "SOURCE")
-  LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
-    temp <- c(LIGAND_1[[i]], RECEPTOR_1[[i]])
-    temp <- temp[!is.na(temp)]
-    temp <- sort(temp)
-    temp <- paste0(temp, collapse = "_")
-  }))]
-  LR <- LR[!duplicated(LR_SORTED)]
-  LR <- LR[!is.na(LIGAND_1) & !is.na(RECEPTOR_1)]
-  cols_to_keep <- c(
-    "LR_SORTED", "SOURCE",
-    "LIGAND_1", "RECEPTOR_1"
-  )
-  #remove genes that should be excluded according to our manual curation
-  if (species == "mouse") {
-    LR <- LR[
-      !(LIGAND_1 %in% GENES_to_remove_mouse$gene) &
-        !(RECEPTOR_1 %in% GENES_to_remove_mouse$gene)
-    ]
-  }
-  if (species == "human") {
-    LR <- LR[
-      !(LIGAND_1 %in% GENES_to_remove_human$gene) &
-        !(RECEPTOR_1 %in% GENES_to_remove_human$gene)
-    ]
-  }
-  if (species == "mouse") {
-    LR[, SOURCE := gsub("ENSEMBL_DLRP|NCBI_DLRP", "SCT:DLRP", SOURCE)]
-    LR[, SOURCE := gsub("ENSEMBL_IUPHAR|NCBI_IUPHAR", "IUPHAR", SOURCE)]
-    LR[, SOURCE := gsub("ENSEMBL_HPMR|NCBI_HPMR", "HPMR", SOURCE)]
-    LR[, SOURCE := gsub(
-      "ENSEMBL_CELLPHONEDB|NCBI_CELLPHONEDB",
-      "SCT:CellPhoneDB",
-      SOURCE
-    )]
-    LR[, SOURCE := gsub(
-      "ENSEMBL_SINGLECELLSIGNALR|NCBI_SINGLECELLSIGNALR",
-      "SCT:SingleCellSignalR",
-      SOURCE
-    )]
-    LR[, SOURCE := gsub("SWISSPROT_STRING", "PPI", SOURCE)]
-    LR[, SOURCE := gsub("TREMBL_STRING", "PPI", SOURCE)]
-  }
-  if (species == "human") {
-    LR[, SOURCE := gsub(
-      "SWISSPROT_STRING|TREMBL_STRING|BADERLAB",
-      "PPI",
-      SOURCE)]
-    LR[, SOURCE := gsub("SWISSPROT_HPRD|TREMBL_HPRD", "HPRD", SOURCE)]
-    LR[, SOURCE := gsub("IUPHAR", "IUPHAR", SOURCE)]
-    LR[, SOURCE := gsub("DLRP", "SCT:DLRP", SOURCE)]
-    LR[, SOURCE := gsub("HPMR", "HPMR", SOURCE)]
-    LR[, SOURCE := gsub("FANTOM5", "SCT:FANTOM5", SOURCE)]
-    LR[, SOURCE := gsub("CELLPHONEDB", "SCT:CellPhoneDB", SOURCE)]
-    LR[, SOURCE := gsub("SINGLECELLSIGNALR", "SCT:SingleCellSignalR", SOURCE)]
-  }
-  return(
-    list(
-      retrieved_date = retrieved_date,
-      retrieved_from = retrieved_from,
-      LR = LR[, cols_to_keep, with = FALSE]
-    )
-  )
-}
+# prepare_LR_scTensor <- function(
+#   species
+# ) {
+#   SOURCE <- NULL
+#   if (!requireNamespace("AnnotationDbi", quietly = TRUE)) {
+#     stop(
+#       paste0(
+#         "Package \"AnnotationDbi\" needed for this function to work.",
+#         "Please install it."
+#       ),
+#       call. = FALSE
+#     )
+#   }
+#   if (!requireNamespace("LRBase.Mmu.eg.db", quietly = TRUE)) {
+#     stop(
+#       paste0(
+#
+#         "Package \"LRBase.Mmu.eg.db\" needed for this function to work.",
+#         "Please install it."
+#       ),
+#       call. = FALSE
+#     )
+#   }
+#   if (!requireNamespace("LRBase.Hsa.eg.db", quietly = TRUE)) {
+#     stop(
+#       paste0(
+#         "Package \"LRBase.Hsa.eg.db\" needed for this function to work.",
+#         "Please install it."
+#       ),
+#       call. = FALSE
+#     )
+#   }
+#   if (!requireNamespace("AnnotationHub", quietly = TRUE)) {
+#     stop(
+#       paste0(
+#         "Package \"AnnotationHub\" needed for this function to work.",
+#         "Please install it."
+#       ),
+#       call. = FALSE
+#     )
+#   }
+#   LR_SORTED <- LIGAND_1 <- RECEPTOR_1 <- NULL
+#   retrieved_date <- as.Date("2021-03-22")
+#   retrieved_from <- "LRBaseDbi"
+#   if (species == "mouse") {
+#     key <- AnnotationDbi::keys(
+#       LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
+#       keytype = "GENEID_L"
+#     )
+#     LR <- AnnotationDbi::select(
+#       LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
+#       keys = key,
+#       columns = c("GENEID_L", "GENEID_R", "SOURCEDB"),
+#       keytype = "GENEID_L"
+#     )
+#   }
+#   if (species == "human"){
+#     key <- AnnotationDbi::keys(
+#       LRBase.Hsa.eg.db::LRBase.Hsa.eg.db,
+#       keytype = "GENEID_L"
+#     )
+#     LR <- AnnotationDbi::select(
+#       LRBase.Hsa.eg.db::LRBase.Hsa.eg.db,
+#       keys = key,
+#       columns = c("GENEID_L", "GENEID_R", "SOURCEDB"),
+#       keytype = "GENEID_L"
+#     )
+#   }
+#   LR <- unique(LR)
+#   ah <- AnnotationHub::AnnotationHub()
+#   if (species == "mouse") {
+#     hs <- AnnotationHub::query(
+#       ah,
+#       c("OrgDb", "Mus musculus")
+#     )[[1]]
+#   }
+#   if (species == "human") {
+#     hs <- AnnotationHub::query(
+#       ah,
+#       c("OrgDb", "Homo sapiens")
+#     )[[1]]
+#   }
+#   LR_L_match <- AnnotationDbi::select(
+#     hs,
+#     column = c("SYMBOL", "ENTREZID"),
+#     keytype = "ENTREZID",
+#     keys = as.character(LR$GENEID_L)
+#   )
+#   LR_R_match <- AnnotationDbi::select(
+#     hs,
+#     column = c("SYMBOL", "ENTREZID"),
+#     keytype = "ENTREZID",
+#     keys = as.character(LR$GENEID_R)
+#   )
+#   if (identical(LR_L_match$ENTREZID, as.character(LR$GENEID_L))) {
+#     LR$LIGAND_1 <- LR_L_match$SYMBOL
+#   } else {
+#     stop("Matching not possible.")
+#   }
+#   if (identical(LR_R_match$ENTREZID, as.character(LR$GENEID_R))) {
+#     LR$RECEPTOR_1 <- LR_R_match$SYMBOL
+#   } else {
+#     stop("Matching not possible.")
+#   }
+#   setDT(LR)
+#   LR[, c("GENEID_L", "GENEID_R") := list(NULL, NULL)]
+#   setnames(LR, old = "SOURCEDB", new = "SOURCE")
+#   LR[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
+#     temp <- c(LIGAND_1[[i]], RECEPTOR_1[[i]])
+#     temp <- temp[!is.na(temp)]
+#     temp <- sort(temp)
+#     temp <- paste0(temp, collapse = "_")
+#   }))]
+#   LR <- LR[!duplicated(LR_SORTED)]
+#   LR <- LR[!is.na(LIGAND_1) & !is.na(RECEPTOR_1)]
+#   cols_to_keep <- c(
+#     "LR_SORTED", "SOURCE",
+#     "LIGAND_1", "RECEPTOR_1"
+#   )
+#   #remove genes that should be excluded according to our manual curation
+#   if (species == "mouse") {
+#     LR <- LR[
+#       !(LIGAND_1 %in% GENES_to_remove_mouse$gene) &
+#         !(RECEPTOR_1 %in% GENES_to_remove_mouse$gene)
+#     ]
+#   }
+#   if (species == "human") {
+#     LR <- LR[
+#       !(LIGAND_1 %in% GENES_to_remove_human$gene) &
+#         !(RECEPTOR_1 %in% GENES_to_remove_human$gene)
+#     ]
+#   }
+#   if (species == "mouse") {
+#     LR[, SOURCE := gsub("ENSEMBL_DLRP|NCBI_DLRP", "SCT:DLRP", SOURCE)]
+#     LR[, SOURCE := gsub("ENSEMBL_IUPHAR|NCBI_IUPHAR", "SCT:IUPHAR", SOURCE)]
+#     LR[, SOURCE := gsub("ENSEMBL_HPMR|NCBI_HPMR", "SCT:HPMR", SOURCE)]
+#     LR[, SOURCE := gsub(
+#       "ENSEMBL_CELLPHONEDB|NCBI_CELLPHONEDB",
+#       "SCT:CellPhoneDB",
+#       SOURCE
+#     )]
+#     LR[, SOURCE := gsub(
+#       "ENSEMBL_SINGLECELLSIGNALR|NCBI_SINGLECELLSIGNALR",
+#       "SCT:SingleCellSignalR",
+#       SOURCE
+#     )]
+#     LR[, SOURCE := gsub("SWISSPROT_STRING", "PPI", SOURCE)]
+#     LR[, SOURCE := gsub("TREMBL_STRING", "PPI", SOURCE)]
+#   }
+#   if (species == "human") {
+#     LR[, SOURCE := gsub(
+#       "SWISSPROT_STRING|TREMBL_STRING|BADERLAB",
+#       "PPI",
+#       SOURCE)]
+#     LR[, SOURCE := gsub("SWISSPROT_HPRD|TREMBL_HPRD", "HPRD", SOURCE)]
+#     LR[, SOURCE := gsub("IUPHAR", "SCT:IUPHAR", SOURCE)]
+#     LR[, SOURCE := gsub("DLRP", "SCT:DLRP", SOURCE)]
+#     LR[, SOURCE := gsub("HPMR", "SCT:HPMR", SOURCE)]
+#     LR[, SOURCE := gsub("FANTOM5", "SCT:FANTOM5", SOURCE)]
+#     LR[, SOURCE := gsub("CELLPHONEDB", "SCT:CellPhoneDB", SOURCE)]
+#     LR[, SOURCE := gsub("SINGLECELLSIGNALR", "SCT:SingleCellSignalR", SOURCE)]
+#   }
+#   return(
+#     list(
+#       retrieved_date = retrieved_date,
+#       retrieved_from = retrieved_from,
+#       LR = LR[, cols_to_keep, with = FALSE]
+#     )
+#   )
+# }
 
 get_KEGG_PWS_interactions <- function(
   species,
