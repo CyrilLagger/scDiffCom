@@ -469,9 +469,11 @@ extract_edge_metadata <- function(
       paste0("NUM_LRIS_", conds[[2]]) := i.N
     ]
     edge_table[is.na(edge_table)] <- 0
-    edge_table[, "NUM_LRIS_REL_DIFF" :=
-                 get(paste0("NUM_LRIS_", conds[[2]])) -
-                 get(paste0("NUM_LRIS_", conds[[1]]))]
+    edge_table[
+      , "NUM_LRIS_REL_DIFF" :=
+        get(paste0("NUM_LRIS_", conds[[2]])) -
+        get(paste0("NUM_LRIS_", conds[[1]]))
+    ]
     edge_table[
       cci_table_detected[
         REGULATION == "UP",
@@ -530,7 +532,6 @@ extract_edge_metadata <- function(
       )
     ]
   }
-  # TODO: Enrich with other info: cell families, GOs, ORA on cell types.
   return(edge_table)
 }
 
@@ -607,7 +608,7 @@ add_edge_layout <- function(
       "color.color" := i.color
     ]
     lab <- "NUM_LRIS_TOTAL"
-    main_title <- "Over-represented cell types and pairs"
+    main_title <- "Cell-type centric over-representation"
   } else {
     if (network_type == "condition1_network") {
       if (is.null(conds)) {
@@ -660,21 +661,21 @@ add_edge_layout <- function(
   edge_table[, "smooth" := TRUE]
   edge_table[, "arrow.size" := config$EDGE_STYLE$ARROW_SIZE]
   edge_table <- edge_annotation_html(edge_table, network_type)
-  # num_interacts <- num_interactions_object(
-  #   cci_table_detected = cci_table_detected
-  #   )
   if (layout_type == "bipartite") {
     edge_table[, "from" := paste0(from, " (E)")]
     edge_table[, "to" := paste0(to, " (R)")]
   }
   if (layout_type == "conventional") {
-    edge_table[, "edge.loop.angle" := {
-      n <- sqrt(nrow(.SD))
-      res <- rep(0, times = n*n)
-      temp <- (1:n)*(n+1) - n
-      res[seq_along(res) %in% temp] <- rank(-temp)*2*pi/n
-      res
-    }]
+    edge_table[
+      ,
+      "edge.loop.angle" := {
+        n <- sqrt(nrow(.SD))
+        res <- rep(0, times = n*n)
+        temp <- (1:n)*(n+1) - n
+        res[seq_along(res) %in% temp] <- rank(-temp)*2*pi/n
+        res
+      }
+    ]
   }
   return(edge_table)
 }
@@ -810,11 +811,13 @@ extract_vertex_metadata <- function(
     ]
   }
   if (layout_type == "bipartite") {
-    vertex_table[, "name" := ifelse(
-      vertex_types,
-      paste0(name, " (E)"),
-      paste0(name, " (R)")
-    )]
+    vertex_table[
+      , "name" := ifelse(
+        vertex_types,
+        paste0(name, " (E)"),
+        paste0(name, " (R)")
+      )
+    ]
     if (network_type == "ORA_network") {
       cols_to_add <- c(
         "ORA_TYPE",
@@ -996,36 +999,26 @@ add_vertex_layout <- function(
       )
     ]
   }
-  if (is.null(conds)) {
-    if ("name_original" %in% colnames(vertex_table)) {
-      vertex_table[, "title" := paste0(
-        "<h3> ", name_original, " </h3><p> Number of Cells: ", num_cells, " </p>"
-      )]
-    } else {
-      vertex_table[, "title" := paste0(
-        "<h3> ", name, " </h3><p> Number of Cells: ", num_cells, " </p>"
-      )]
-    }
-  } else {
-    if ("name_original" %in% colnames(vertex_table)) {
-      vertex_table[, "title" := paste0(
-        "<h3> ", name_original, " </h3><p> Avg. Number of Cells: ", num_cells, " </p>"
-      )]
-    } else {
-      vertex_table[, "title" := paste0(
-        "<h3> ", name, " </h3><p> Avg. Number of Cells: ", num_cells, " </p>"
-      )]
-    }
-  }
+  vertex_table <- vertex_annotation_html(
+    vertex_table,
+    network_type,
+    layout_type,
+    conds
+  )
   if (layout_type == "bipartite") {
-    vertex_table[, c("group", "level") := list(
-      vertex_types,
-      ifelse(vertex_types == TRUE, 1, 2)
-    )]
-    vertex_table[, "vertex_order" := sort_bipartite_vertices(
-      vertex_table = .SD,
-      edge_table = edge_table,
-      network_type = network_type)]
+    vertex_table[
+      ,
+      c("group", "level") := list(
+        vertex_types,
+        ifelse(vertex_types == TRUE, 1, 2)
+      )
+    ]
+    vertex_table[
+      , "vertex_order" := sort_bipartite_vertices(
+        vertex_table = .SD,
+        edge_table = edge_table,
+        network_type = network_type)
+    ]
   }
   return(vertex_table)
 }
@@ -1211,6 +1204,11 @@ get_network_components <- function(
   } else {
     configure_component <- NULL
   }
+  if (layout_type == "bipartite") {
+    ncol_legend = 2
+  } else {
+    ncol_legend =1
+  }
   network_components <- list(
     network_skeleton =  visNetwork::visNetwork(
       nodes = nodes,
@@ -1254,7 +1252,7 @@ get_network_components <- function(
       ),
       useGroups = FALSE,
       zoom = FALSE,
-      ncol = 2,
+      ncol = ncol_legend,
       width = 0.2
     ),
     physics = . %>% visNetwork::visPhysics(
@@ -1433,6 +1431,153 @@ edges_legend <- function(
   }
 }
 
+vertex_annotation_html <- function(
+  vertex_table,
+  network_type,
+  layout_type,
+  conds
+) {
+  name_original <- num_cells <- name <-
+    ORA_TYPE <- OR_UP <- BH_P_VALUE_UP <-
+    OR_DOWN <- BH_P_VALUE_DOWN <-
+    OR_FLAT <- BH_P_VALUE_FLAT <- NULL
+ if (network_type != "ORA_network" | layout_type != "bipartite") {
+    if (is.null(conds)) {
+      if ("name_original" %in% colnames(vertex_table)) {
+        vertex_table[
+          ,
+          "title" := paste0(
+            "<h3> ", name_original, " </h3><p> Number of Cells: ", num_cells, " </p>"
+          )
+        ]
+      } else {
+        vertex_table[
+          ,
+          "title" := paste0(
+            "<h3> ", name, " </h3><p> Number of Cells: ", num_cells, " </p>"
+          )
+        ]
+      }
+    } else {
+      if ("name_original" %in% colnames(vertex_table)) {
+        vertex_table[
+          ,
+          "title" := paste0(
+            "<h3> ", name_original, " </h3><p> Avg. Number of Cells: ", num_cells, " </p>"
+          )
+        ]
+      } else {
+        vertex_table[
+          ,
+          "title" := paste0(
+            "<h3> ", name, " </h3><p> Avg. Number of Cells: ", num_cells, " </p>"
+          )
+        ]
+      }
+    }
+  } else {
+    vertex_table[
+      ,
+      "title" := lapply(
+        1:nrow(.SD),
+        function(i) {
+          if ("name_original" %in% colnames(vertex_table)) {
+            h1 <- paste0(
+              "<h4> ",
+              name_original[[i]],
+              "</h4>"
+            )
+          } else {
+            h1 <- paste0(
+              "<h4> ",
+              name[[i]],
+              "</h4>"
+            )
+          }
+          if (ORA_TYPE[[i]] == "UP") {
+            ora_results <- as.character(
+              kableExtra::kbl(
+                matrix(
+                  c(
+                    "Odds Ratio UP:", OR_UP[[i]],
+                    "Adj. p-value UP:", BH_P_VALUE_UP[[i]]
+                  ),
+                  nrow = 2,
+                  byrow = TRUE
+                )
+              )
+            )
+          } else if (ORA_TYPE[[i]] == "DOWN") {
+            ora_results <- as.character(
+              kableExtra::kbl(
+                matrix(
+                  c(
+                    "Odds Ratio DOWN:", OR_DOWN[[i]],
+                    "Adj. p-value DOWN:", BH_P_VALUE_DOWN[[i]]
+                  ),
+                  nrow = 2,
+                  byrow = TRUE
+                )
+              )
+            )
+          } else if (ORA_TYPE[[i]] == "FLAT") {
+            ora_results <- as.character(
+              kableExtra::kbl(
+                matrix(
+                  c(
+                    "Odds Ratio FLAT:", OR_FLAT[[i]],
+                    "Adj. p-value FLAT:", BH_P_VALUE_FLAT[[i]]
+                  ),
+                  nrow = 2,
+                  byrow = TRUE
+                )
+              )
+            )
+          } else if (ORA_TYPE[[i]] == "DIFF") {
+            ora_results <- as.character(
+              kableExtra::kbl(
+                matrix(
+                  c(
+                    "Odds Ratio UP:", OR_UP[[i]],
+                    "Adj. p-value UP:", BH_P_VALUE_UP[[i]],
+                    "Odds Ratio DOWN:", OR_DOWN[[i]],
+                    "Adj. p-value DOWN:", BH_P_VALUE_DOWN[[i]]
+                  ),
+                  nrow = 4,
+                  byrow = TRUE
+                )
+              )
+            )
+          } else {
+            ora_results <- NULL
+          }
+          # n_inter <- as.character(
+          #   kableExtra::kbl(
+          #     matrix(
+          #       c(
+          #         "TOTAL:", NUM_CCIS_TOTAL[[i]],
+          #         "UP:", NUM_CCIS_UP[[i]],
+          #         "DOWN:", NUM_CCIS_DOWN[[i]],
+          #         "FLAT:", NUM_CCIS_FLAT[[i]]
+          #       ),
+          #       nrow = 4,
+          #       byrow = TRUE
+          #     )
+          #   )
+          # )
+          paste0(
+            h1,
+            ora_results#,
+            #"<br> Number of CCIs: <br>",
+            #n_inter
+          )
+        }
+      )
+    ]
+  }
+  return(vertex_table)
+}
+
 edge_annotation_html <- function(
   edge_table,
   network_type
@@ -1441,7 +1586,8 @@ edge_annotation_html <- function(
     OR_DOWN <- BH_P_VALUE_DOWN <-
     OR_FLAT <- BH_P_VALUE_FLAT <-
     NUM_LRIS_TOTAL <- NUM_LRIS_UP <-
-    NUM_LRIS_DOWN <- NUM_LRIS_FLAT <- NULL
+    NUM_LRIS_DOWN <- NUM_LRIS_FLAT <- from <-
+    to <- NULL
   if (network_type != "ORA_network") {
     edge_table[, "title" := ""]
   } else {
@@ -1450,7 +1596,13 @@ edge_annotation_html <- function(
       "title" := lapply(
         1:nrow(.SD),
         function(i) {
-          h1 <- "<h4> ORA results: </h4>"
+          h1 <- paste0(
+            "<h4> ",
+            from[[i]],
+            " to ",
+            to[[i]],
+            "</h4>"
+          )
           if (ORA_TYPE[[i]] == "UP") {
             ora_results <- as.character(
               kableExtra::kbl(
@@ -1521,9 +1673,9 @@ edge_annotation_html <- function(
             )
           )
           paste0(
-            #h1,
+            h1,
             ora_results,
-            "<br> Number of interactions: <br>",
+            "<br> Number of LRIs: <br>",
             n_inter
           )
         }
@@ -1532,106 +1684,3 @@ edge_annotation_html <- function(
   }
   return(edge_table)
 }
-
-# get_cci_change_graph <- function(cci_table_detected) {
-#   LOGFC <- value <- label <- color <- REGULATION <-
-#     EMITTER_CELLTYPE <- RECEIVER_CELLTYPE <- LRI <- NULL
-#   dt_edge = cci_table_detected[REGULATION %in% c('UP', 'DOWN'),
-#                          list(
-#                            EMITTER_CELLTYPE, RECEIVER_CELLTYPE,
-#                            LRI, LOGFC,
-#                            REGULATION
-#                          )
-#   ][,
-#     value := abs(LOGFC)][
-#       ,
-#       label := format(round(LOGFC, 2), nsmall=2)][
-#         ,
-#         color := ifelse(REGULATION == 'UP', 'red', 'blue')
-#       ]
-#   cci_change_graph = igraph::graph_from_data_frame(dt_edge, directed = TRUE, vertices = NULL)
-#   return(cci_change_graph)
-# }
-#
-# get_cci_change_subgraph_list <- function(cci_table_detected, LRIs = NULL) {
-#   LRI <- NULL
-#   if(is.null(LRIs)) {
-#     lris = unique(cci_table_detected[, LRI])
-#   } else {
-#     lris = LRIs
-#   }
-#   subgraphs = purrr::map(
-#     lris,
-#     ~ get_cci_change_subgraph(cci_table_detected, .x)
-#   )
-#   if(length(lris)==1) {
-#     return(subgraphs[[1]])
-#   } else {
-#     return(subgraphs)
-#   }
-# }
-#
-# LRI_subgraph_metrics <- function(cci_table_detected, LRIs=NULL) {
-#   subgraphs = get_cci_change_subgraph_list(cci_table_detected, LRIs)
-#
-#   subg_metrics_l = purrr::map(
-#     subgraphs,
-#     function(subg) {
-#
-#       metrics = list(
-#         LRI = subg$LRI,
-#         num_edges = length(igraph::E(subg)),
-#         num_loops = sum(igraph::which_loop(subg)),
-#         num_reciprocal = sum(igraph::which_mutual(subg)) - sum(igraph::which_loop(subg)),
-#         motifs_3_total = igraph::count_motifs(subg, size=3)
-#       )
-#       motifs_3 = as.list(igraph::motifs(subg, size = 3))
-#       names(motifs_3) = paste0('Motifs_3_id_', 0:15)
-#
-#       return(c(metrics, motifs_3))
-#
-#     }
-#   )
-#
-#   subg_metrics_dt = data.table::rbindlist(subg_metrics_l)
-#   return(subg_metrics_dt)
-# }
-#
-# get_cci_change_subgraph <- function(
-#   cci_table_detected,
-#   LRIs
-# ) {
-#   SUBG_LIMIT <- 5
-#   if(length(LRIs) > SUBG_LIMIT) {
-#     stop(paste0("The number of LRIs must be less than ", SUBG_LIMIT))
-#   }
-#   dt_edge = cci_table_detected[
-#     (REGULATION %in% c('UP', 'DOWN'))
-#     & (LRI %in% LRIs),
-#     c(
-#       "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE",
-#       "LRI", "LOGFC_ABS",
-#       "REGULATION"
-#     )
-#   ][,
-#     value := LOGFC_ABS][
-#       ,
-#       # label := format(round(LOGFC, 2), nsmall=2)][
-#       label := LRI][
-#         ,
-#         color := ifelse(REGULATION == 'UP', 'red', 'blue')
-#       ]
-#   if(nrow(dt_edge) == 0) {
-#     return(igraph::make_empty_graph())
-#   } else {
-#     g = igraph::graph_from_data_frame(dt_edge, directed = TRUE, vertices = NULL)
-#     g$LRI = LRIs
-#     return(g)
-#   }
-# }
-
-
-
-
-
-
