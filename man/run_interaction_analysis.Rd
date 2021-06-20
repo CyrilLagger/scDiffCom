@@ -155,7 +155,7 @@ The primary use of this function (and of the package) is to perform
  run this function in parallel in order to speed up the analysis for large
  dataset and/or to obtain better accuracy on the p-values by setting a higher
  number of \code{iterations}. This is as simple as loading the
- \href{https://cran.r-project.org/web/packages/future}{future}
+ \href{https://CRAN.R-project.org/package=future}{future}
  package and setting an appropriate \code{plan} (see also our
  \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}).
 
