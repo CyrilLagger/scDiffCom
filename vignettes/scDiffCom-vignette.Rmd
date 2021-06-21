@@ -29,7 +29,7 @@ form `Apoe:Ldlr` (simple) or `Col3a1:Itgb1_Itga2` (complex/heteromeric)
 the ligand `Apoe` and `T cell` is the receiver cell type expressing the receptor
 `Ldlr`.
 
-**Note: all the results below do not convey any meaningful biology.**
+**Note: all the toy-model results below do not convey any meaningful biology.**
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -69,11 +69,10 @@ table(seurat_sample_tms_liver[["age_group"]])
 scDiffcom infers cell type to cell type communication patterns from the
 expression of genes known to be involved in ligand-receptor interactions
 (LRIs). The package contains it own internal databases of curated LRIs (for
-humand and mouse), retrieved from eight previous studies.
+humand and mouse), retrieved from previous studies.
 
-
-Although the call to the LRI databases is made internally, you can still 
-access and explore them as follows:
+You do not need to call the LRI databases explicitly when performing an
+analysis. However, you can still access and explore them as follows:
 ```{r}
 # Load, e.g., the mouse database
 data(LRI_mouse)
@@ -87,7 +86,7 @@ LRI_mouse$LRI_curated_GO[, c("LRI", "GO_NAME")]
 
 ### Run default differential analysis
 
-All results can be obtained by simply calling `run_interaction_analysis`. The
+All results are obtained by simply calling `run_interaction_analysis`. The
 detection and differential analyses rely on permutation tests. By default,
 1000 iterations are performed as this is sufficient for a quick explanatory
 analysis. In general, we would recommend using 10'000 permutations. Parallel
@@ -141,7 +140,7 @@ table(CCI_detected$REGULATION)
 Detected CCIs can be explored either one by one by looking at the data.table,
 more globally based on our over-representation analysis (see below) or from 
 graphs such as this volcano plot:
-```{r}
+```{r,out.width="100%"}
 ggplot(
   CCI_detected,
   aes(
@@ -164,7 +163,7 @@ ggplot(
 
 The slot `ora_table` contains a list of data.tables giving the results
 of the over-representation analysis performed on predefined categories:
-```{r}
+```{r,, out.width="100%"}
 # Retrieve the ORA results
 ORA_results <- GetTableORA(scdiffcom_object, categories = "all", simplified = TRUE)
 
@@ -174,7 +173,7 @@ names(ORA_results)
 # Explore, e.g., the top 10 LRIs up-regulated based on their ORA score
 ORA_results$LRI[, c("VALUE", "ORA_SCORE_UP", "OR_UP", "BH_P_VALUE_UP")][order(-ORA_SCORE_UP)][1:10]
 
-# Plot, e.g., the top LRIs down-regulated
+# Plot the most over-represented up-regulated LRIs
 # note that PlotORA returns a ggplot object that you can further optimize (e.g. here to place the legend)
 PlotORA(
   object = scdiffcom_object,
@@ -197,7 +196,7 @@ BuildNetwork(
 
 ## Additional functionalities
 
-### Modyfing default parameters
+### Modifying default parameters
 
 `run_interaction_analysis` depends on several parameters that can be modified.
 We encourage to carefully read the documentation (`?run_interaction_analysis`).
