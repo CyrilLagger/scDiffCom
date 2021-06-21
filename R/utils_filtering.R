@@ -167,7 +167,7 @@ process_cci_raw <- function(
   max_nR,
   class_signature
 ) {
-  BH_P_VALUE_DE <- P_VALUE_DE <- BH_P_VALUE <- P_VALUE <-
+  BH_P_VALUE_DE <- P_VALUE_DE <- BH_P_VALUE <- P_VALUE <- IS_CCI_DETECTED <-
     IS_CCI_EXPRESSED <- ER_CELLTYPES <- EMITTER_CELLTYPE <-
     RECEIVER_CELLTYPE <- LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <-
     RECEPTOR_3 <- LOGFC <- LOGFC_ABS <- REGULATION <- IS_DE_LOGFC <-
@@ -340,8 +340,8 @@ process_cci_raw <- function(
       },
       by = temp_by
       ]
+      dt <- dt[IS_CCI_DETECTED == TRUE]
     }
-    dt <- dt[IS_CCI_DETECTED == TRUE]
   }
   dt[
     ,
