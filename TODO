@@ -1,8 +1,8 @@
 Features to add/consider:
- - finish/improve vignette
- - see if additional tests are needed
+ - finishing testing/codecov
+ - improve visnetwork layout/legend
+ - add more content in the vignette (e.g. returning distributions)
  - implement validations for cci_table_raw and cci_table_detected in utils_validation.R
  - allow users to pass their own config in BuildNetwork()
  - implement more types of networks in BuildNetwork()
- - remove purrr dependency
- - evalutate if the class scDiffComCombined might be useful in the future
+ - evalutate if a class scDiffComCombined might be useful in the future

@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Differential Analysis of Intercellular Communication from scRNA-seq Data • scDiffCom</title>
+<title>Differential Analysis of Intercellular Communication from scRNA-Seq Data • scDiffCom</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="bootstrap-toc.css">
 <script src="bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
-<script src="pkgdown.js"></script><meta property="og:title" content="Differential Analysis of Intercellular Communication from scRNA-seq Data">
+<script src="pkgdown.js"></script><meta property="og:title" content="Differential Analysis of Intercellular Communication from scRNA-Seq Data">
 <meta property="og:description" content="Analysis tools to investigate changes in intercellular
     communication from scRNA-seq data. Using a Seurat object as input,
     the package infers which cell-cell interactions are present in the dataset
@@ -83,7 +83,7 @@
 <a href="#scdiffcom" class="anchor" aria-hidden="true"></a>scDiffCom</h1></div>
 <!-- badges: start -->
 
-<p>scDiffCom infers cell type to cell type communication signals from scRNA-seq <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> objects, and more particularly investigates how these interactions change between two biological conditions. The package relies on a internal collection of ligand-receptor interactions (available for human and mouse) retrieved from eight public and curated databases.</p>
+<p>scDiffCom infers cell type to cell type communication signals from scRNA-seq <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> objects, and more particularly investigates how these interactions change between two biological conditions. The package relies on a internal collection of ligand-receptor interactions (available for human and mouse) retrieved from seven public and curated databases.</p>
 <details><summary>
 Display LRI databases
 </summary><ul>
@@ -94,7 +94,6 @@ Display LRI databases
 <li><a href="https://github.com/soumelis-lab/ICELLNET" class="external-link">ICELLNET</a></li>
 <li><a href="https://github.com/saeyslab/nichenetr" class="external-link">NicheNet</a></li>
 <li><a href="http://www.bioconductor.org/packages/release/bioc/html/SingleCellSignalR.html" class="external-link">SingleCellSignalR</a></li>
-<li><a href="https://github.com/rikenbit/scTensor" class="external-link">scTensor</a></li>
 </ul></details><p> </p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
@@ -110,7 +109,7 @@ Display LRI databases
 <h2 class="hasAnchor">
 <a href="#usage" class="anchor" aria-hidden="true"></a>Usage</h2>
 <p>As an introduction, please look at the <a href="https://cyrillagger.github.io/scDiffCom">documentation</a> and this <a href="https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html">vignette</a>.</p>
-<p>For a concrete and large-scale project that used scDiffCom, please look at scAgeCom, our Murine atlas of age-related changes in intercellular communication (in preparation).</p>
+<p>For a concrete and large-scale project that used scDiffCom, please look at scAgeCom, our murine atlas of age-related changes in intercellular communication (in preparation).</p>
 </div>
 <div id="citation" class="section level2">
 <h2 class="hasAnchor">
