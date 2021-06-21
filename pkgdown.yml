@@ -3,7 +3,7 @@ pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
   scDiffCom-vignette: scDiffCom-vignette.html
-last_built: 2021-06-21T08:09Z
+last_built: 2021-06-21T09:18Z
 urls:
   reference: https://cyrillagger.github.io/scDiffCom/reference
   article: https://cyrillagger.github.io/scDiffCom/articles
