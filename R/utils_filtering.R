@@ -316,8 +316,11 @@ process_cci_raw <- function(
       dt[
         ,
         BH_P_VALUE := stats::p.adjust(P_VALUE, method = "BH"),
-        by = temp_by]
-      dt[, c(
+        by = temp_by
+        ]
+      dt[
+        ,
+        c(
         "IS_CCI_SCORE",
         "IS_CCI_SPECIFIC",
         "IS_CCI_DETECTED"
@@ -338,11 +341,16 @@ process_cci_raw <- function(
       by = temp_by
       ]
     }
+    dt <- dt[IS_CCI_DETECTED == TRUE]
   }
-  dt[, ER_CELLTYPES := paste(
+  dt[
+    ,
+    ER_CELLTYPES := paste(
     EMITTER_CELLTYPE,
     RECEIVER_CELLTYPE,
-    sep = "_")]
+    sep = "_"
+    )
+    ]
   dt[, CCI := paste(ER_CELLTYPES, LRI, sep = "_")]
   return(dt)
 }
