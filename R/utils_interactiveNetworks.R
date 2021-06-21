@@ -332,7 +332,7 @@ setup_graph_config <- function(
       NCOL = 2
     ),
     VISNETWORK = list(
-      WIDTH = "100vw",
+      WIDTH = "100%",
       HEIGHT = "100vh",
       BACKGROUND = 	"#F5F5F5"
     )
