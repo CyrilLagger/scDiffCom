@@ -43,8 +43,7 @@ Suggests:
     rmarkdown,
     SingleCellSignalR,
     testthat (>= 2.1.0),
-    visNetwork,
-    purrr
+    visNetwork
 Imports: 
     data.table,
     DelayedArray,

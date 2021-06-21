@@ -44,15 +44,15 @@ build_interactive_network <- function(
       call. = FALSE
     )
   }
-  if (!requireNamespace("purrr", quietly = TRUE)) {
-    stop(
-      paste0(
-        "Package \"igraph\" needed for this function to work.",
-        "Please install it."
-      ),
-      call. = FALSE
-    )
-  }
+  # if (!requireNamespace("purrr", quietly = TRUE)) {
+  #   stop(
+  #     paste0(
+  #       "Package \"igraph\" needed for this function to work.",
+  #       "Please install it."
+  #     ),
+  #     call. = FALSE
+  #   )
+  # }
   if (!object@parameters$permutation_analysis) {
     stop(
       paste0(
@@ -332,7 +332,7 @@ setup_graph_config <- function(
       NCOL = 2
     ),
     VISNETWORK = list(
-      WIDTH = "100%",
+      WIDTH = "100vw",
       HEIGHT = "100vh",
       BACKGROUND = 	"#F5F5F5"
     )
@@ -1205,9 +1205,9 @@ get_network_components <- function(
     configure_component <- NULL
   }
   if (layout_type == "bipartite") {
-    ncol_legend = 2
+    ncol_legend = 1
   } else {
-    ncol_legend =1
+    ncol_legend = 1
   }
   network_components <- list(
     network_skeleton =  visNetwork::visNetwork(
@@ -1216,6 +1216,7 @@ get_network_components <- function(
       width = config$VISNETWORK$WIDTH,
       height = config$VISNETWORK$HEIGHT,
       main = edges$main_title[[1]],
+      submain = paste(conds[[1]], "vs", conds[[2]]),
       #submain = sprintf("%s", object_name),
       #footer = sprintf("Network type: %s", layout_type),
       background = config$VISNETWORK$BACKGROUND
@@ -1239,8 +1240,8 @@ get_network_components <- function(
     configure = configure_component,
     legend = . %>% visNetwork::visLegend(
       enabled = TRUE,
-      main = paste(conds[[1]], "to", conds[[2]]),
-      position = "right",
+      #main = paste(conds[[1]], "vs", conds[[2]]),
+      position = "left",
       addEdges = edges_legend(
         network_type = network_type,
         config = config
@@ -1252,8 +1253,7 @@ get_network_components <- function(
       ),
       useGroups = FALSE,
       zoom = FALSE,
-      ncol = ncol_legend,
-      width = 0.2
+      ncol = ncol_legend
     ),
     physics = . %>% visNetwork::visPhysics(
       enabled = FALSE,
@@ -1287,7 +1287,16 @@ apply_visnetwork <- function(
     physics = physics
   )
   # For NULL arguments, use the identity as pipeline step
-  vis_funcs <- purrr::map_if(vis_funcs, is.null, ~ . %>% identity())
+  vis_funcs <- lapply(
+    vis_funcs,
+    function(i) {
+      if (is.null(i)) {
+        return(function(x) identity(x))
+      } else
+        i
+    }
+  )
+  #vis_funcs <- purrr::map_if(vis_funcs, is.null, ~ . %>% identity())
   return(
     network_skeleton %>%
       (vis_funcs$nodes_global) %>%
@@ -1392,7 +1401,8 @@ edges_legend <- function(
           config$EDGE_COLORING$ORA_COLOR_DIFF
         ),
         label = c("UP", "DOWN", "FLAT", "UP&DOWN"),
-        arrows = c("to", "to", "to", "to")
+        arrows = c("to", "to", "to", "to"),
+        font.align = c("top")
       )
     )
   } else if (network_type %in% c(
