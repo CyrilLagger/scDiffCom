@@ -1235,7 +1235,7 @@ get_network_components <- function(
       layout = "layout.norm",
       layoutMatrix = layout
     ),
-    #options = get_visnetwork_options(selectionByName = TRUE),
+    options = get_visnetwork_options(selectionByName = FALSE),
     interactive = get_visnetwork_interactive(),
     configure = configure_component,
     legend = . %>% visNetwork::visLegend(
@@ -1311,8 +1311,7 @@ apply_visnetwork <- function(
 }
 
 get_visnetwork_options <- function(
-  selectionByName = FALSE,
-  highlightNearestDegree = 1
+  selectionByName = FALSE
 ) {
   if(selectionByName) {
     selectionOptions = list(
@@ -1329,19 +1328,16 @@ get_visnetwork_options <- function(
   }
   return(
     . %>% visNetwork::visOptions(
-      height = NULL, #"1000px",
-      width = NULL, #"100%",
       highlightNearest = list(
         enabled = TRUE,
-        #degree = highlightNearestDegree,
         degree = list(from = 1, to = 1),
         hover = TRUE,
         algorithm = "hierarchical"
       ),
       autoResize = TRUE,
       selectedBy = selectionOptions,
-      collapse = TRUE,
-      manipulation = TRUE
+      collapse = FALSE,
+      manipulation = FALSE
     )
   )
 }
