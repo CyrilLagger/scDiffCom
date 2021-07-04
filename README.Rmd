@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 # scDiffCom
 
 <!-- badges: start -->
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![CRAN status](https://www.r-pkg.org/badges/version/scDiffCom)](https://CRAN.R-project.org/package=scDiffCom)
 [![Codecov test coverage](https://codecov.io/gh/CyrilLagger/scDiffCom/branch/master/graph/badge.svg)](https://codecov.io/gh/CyrilLagger/scDiffCom?branch=master)
 [![R-CMD-check](https://github.com/CyrilLagger/scDiffCom/workflows/R-CMD-check/badge.svg)](https://github.com/CyrilLagger/scDiffCom/actions)
@@ -53,7 +53,7 @@ devtools::install_github("CyrilLagger/scDiffCom")
 ## Usage
 
 As an introduction, please look at the
-[documentation](https://cyrillagger.github.io/scDiffCom) and this [vignette](https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html).
+[documentation](https://cyrillagger.github.io/scDiffCom/) and this [vignette](https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html).
 
 For a concrete and large-scale project that used scDiffCom, please look at
 [scAgeCom](https://github.com/CyrilLagger/scAgeCom), our murine atlas of

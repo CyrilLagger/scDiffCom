@@ -6,7 +6,7 @@
 <!-- badges: start -->
 
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/scDiffCom)](https://CRAN.R-project.org/package=scDiffCom)
 [![Codecov test
@@ -51,7 +51,7 @@ devtools::install_github("CyrilLagger/scDiffCom")
 ## Usage
 
 As an introduction, please look at the
-[documentation](https://cyrillagger.github.io/scDiffCom) and this
+[documentation](https://cyrillagger.github.io/scDiffCom/) and this
 [vignette](https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html).
 
 For a concrete and large-scale project that used scDiffCom, please look
