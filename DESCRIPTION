@@ -41,6 +41,7 @@ Suggests:
     pkgdown,
     RColorBrewer,
     rmarkdown,
+    spelling,
     SingleCellSignalR,
     testthat (>= 2.1.0),
     visNetwork
@@ -66,4 +67,5 @@ Collate:
     'utils_permutation.R'
     'utils_preprocessing.R'
     'utils_validation.R'
-URL: https://cyrillagger.github.io/scDiffCom
+URL: https://cyrillagger.github.io/scDiffCom/
+Language: en-US
