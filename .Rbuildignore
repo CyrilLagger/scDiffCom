@@ -13,3 +13,4 @@
 ^data-raw$
 ^vignettes$
 ^codecov\.yml$
+^cran-comments\.md$
