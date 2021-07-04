@@ -42,7 +42,7 @@ Display LRI databases
 
 ``` r
 # Install release version from CRAN
-#(not available yet)
+#not available yet
 
 # Install development version from GitHub
 devtools::install_github("CyrilLagger/scDiffCom")
@@ -55,8 +55,8 @@ As an introduction, please look at the
 [vignette](https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html).
 
 For a concrete and large-scale project that used scDiffCom, please look
-at scAgeCom, our murine atlas of age-related changes in intercellular
-communication (in preparation).
+at [scAgeCom](https://github.com/CyrilLagger/scAgeCom), our murine atlas
+of age-related changes in intercellular communication.
 
 ## Citation
 
