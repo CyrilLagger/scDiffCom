@@ -218,13 +218,15 @@ test_that(
       inputs_test$cond_stat$metadata$cell_id,
       colnames(seurat_test)
     )
-    expect_equivalent(
+    expect_equal(
       inputs_test$cond_stat$metadata$cell_type,
-      seurat_test$cell_type
+      seurat_test$cell_type,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       inputs_test$cond_stat$metadata$condition,
-      seurat_test$age_group
+      seurat_test$age_group,
+      ignore_attr = TRUE
     )
     expect_identical(
       inputs_test$cond_stat$metadata,
@@ -244,7 +246,7 @@ test_that(
       inputs_test,
       function(i) {
         expect_identical(
-          i$cell_types,
+          sort(i$cell_types),
           sort(unique(seurat_test$cell_type))
         )
       }
@@ -368,96 +370,116 @@ example_data <- list(
 test_that(
   "`simple` data.table is returned correctly",
   {
-    expect_equivalent(
+    expect_equal(
       mean(
         example_data$EnoCond > 0
       ),
-      example_cci_test$nocond_stat$L1_DETECTION_RATE
+      example_cci_test$nocond_stat$L1_DETECTION_RATE,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       mean(
         example_data$RnoCond > 0
       ),
-      example_cci_test$nocond_stat$R1_DETECTION_RATE
+      example_cci_test$nocond_stat$R1_DETECTION_RATE,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       mean(
         example_data$EY > 0
       ),
-      example_cci_test$cond_stat$L1_DETECTION_RATE_YOUNG
+      example_cci_test$cond_stat$L1_DETECTION_RATE_YOUNG,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       mean(
         example_data$RY > 0
       ),
-      example_cci_test$cond_stat$R1_DETECTION_RATE_YOUNG
+      example_cci_test$cond_stat$R1_DETECTION_RATE_YOUNG,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       mean(
         example_data$EO > 0
       ),
-      example_cci_test$cond_stat$L1_DETECTION_RATE_OLD
+      example_cci_test$cond_stat$L1_DETECTION_RATE_OLD,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       mean(
         example_data$RO > 0
       ),
-      example_cci_test$cond_stat$R1_DETECTION_RATE_OLD
+      example_cci_test$cond_stat$R1_DETECTION_RATE_OLD,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       mean(
         example_data$EnoCond
       ),
-      example_cci_test$nocond_stat$L1_EXPRESSION
+      example_cci_test$nocond_stat$L1_EXPRESSION,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       mean(
-        example_data$RnoCond), example_cci_test$nocond_stat$R1_EXPRESSION
+        example_data$RnoCond
+        ),
+      example_cci_test$nocond_stat$R1_EXPRESSION,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       mean(
         example_data$EY
       ),
-      example_cci_test$cond_stat$L1_EXPRESSION_YOUNG
+      example_cci_test$cond_stat$L1_EXPRESSION_YOUNG,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       mean(
         example_data$RY
       ),
-      example_cci_test$cond_stat$R1_EXPRESSION_YOUNG
+      example_cci_test$cond_stat$R1_EXPRESSION_YOUNG,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       mean(
-        example_data$EO), example_cci_test$cond_stat$L1_EXPRESSION_OLD)
-    expect_equivalent(
+        example_data$EO
+        ), example_cci_test$cond_stat$L1_EXPRESSION_OLD,
+      ignore_attr = TRUE
+      )
+    expect_equal(
       mean(
         example_data$RO
       ),
-      example_cci_test$cond_stat$R1_EXPRESSION_OLD
+      example_cci_test$cond_stat$R1_EXPRESSION_OLD,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       sqrt(
         mean(example_data$EnoCond)*mean(example_data$RnoCond)
       ),
-      example_cci_test$nocond_stat$CCI_SCORE
+      example_cci_test$nocond_stat$CCI_SCORE,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       sqrt(
         mean(example_data$EnoCond)*mean(example_data$RnoCond)
       ),
-      example_cci_test$nocond_nostat$CCI_SCORE
+      example_cci_test$nocond_nostat$CCI_SCORE,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       sqrt(
         mean(example_data$EY)*mean(example_data$RY)
       ),
-      example_cci_test$cond_stat$CCI_SCORE_YOUNG
+      example_cci_test$cond_stat$CCI_SCORE_YOUNG,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       sqrt(
         mean(example_data$EO)*mean(example_data$RO)
       ),
-      example_cci_test$cond_stat$CCI_SCORE_OLD
+      example_cci_test$cond_stat$CCI_SCORE_OLD,
+      ignore_attr = TRUE
     )
     expect_identical(
       cci_dt_simple_test$cond_stat,
@@ -662,29 +684,35 @@ fisher_LR_down <- fisher.test(contingency_table_test_LR_down)
 fisher_LR_flat <- fisher.test(contingency_table_test_LR_flat)
 
 test_that("fisher test is done correctly on LRIs", {
-  expect_equivalent(
+  expect_equal(
     scdiffcom_objects$cond_stat@ora_table$LRI[VALUE == "Apoe:Ldlr"]$OR_UP,
-    fisher_LR_up$estimate
+    fisher_LR_up$estimate,
+    ignore_attr = TRUE
   )
-  expect_equivalent(
+  expect_equal(
     scdiffcom_objects$cond_stat@ora_table$LRI[VALUE == "Apoe:Ldlr"]$P_VALUE_UP,
-    fisher_LR_up$p.value
+    fisher_LR_up$p.value,
+    ignore_attr = TRUE
   )
-  expect_equivalent(
+  expect_equal(
     scdiffcom_objects$cond_stat@ora_table$LRI[VALUE == "Csf2:Itgb1"]$OR_DOWN,
-    fisher_LR_down$estimate
+    fisher_LR_down$estimate,
+    ignore_attr = TRUE
   )
-  expect_equivalent(
+  expect_equal(
     scdiffcom_objects$cond_stat@ora_table$LRI[VALUE == "Csf2:Itgb1"]$P_VALUE_DOWN,
-    fisher_LR_down$p.value
+    fisher_LR_down$p.value,
+    ignore_attr = TRUE
   )
-  expect_equivalent(
+  expect_equal(
     scdiffcom_objects$cond_stat@ora_table$LRI[VALUE == "Adam10:Axl"]$OR_FLAT,
-    fisher_LR_flat$estimate
+    fisher_LR_flat$estimate,
+    ignore_attr = TRUE
   )
-  expect_equivalent(
+  expect_equal(
     scdiffcom_objects$cond_stat@ora_table$LRI[VALUE == "Adam10:Axl"]$P_VALUE_FLAT,
-    fisher_LR_flat$p.value
+    fisher_LR_flat$p.value,
+    ignore_attr = TRUE
   )
 })
 
@@ -733,29 +761,35 @@ fisher_GO_flat <- fisher.test(contingency_table_test_GO_flat)
 test_that(
   "fisher test is done correctly on GO terms",
   {
-    expect_equivalent(
+    expect_equal(
       scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0002376"]$OR_UP,
-      fisher_GO_up$estimate
+      fisher_GO_up$estimate,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0002376"]$P_VALUE_UP,
-      fisher_GO_up$p.value
+      fisher_GO_up$p.value,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0031625"]$OR_DOWN,
-      fisher_GO_down$estimate
+      fisher_GO_down$estimate,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0031625"]$P_VALUE_DOWN,
-      fisher_GO_down$p.value
+      fisher_GO_down$p.value,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0022406"]$OR_FLAT,
-      fisher_GO_flat$estimate
+      fisher_GO_flat$estimate,
+      ignore_attr = TRUE
     )
-    expect_equivalent(
+    expect_equal(
       scdiffcom_objects$cond_stat@ora_table$GO_TERMS[VALUE_BIS == "GO:0022406"]$P_VALUE_FLAT,
-      fisher_GO_flat$p.value
+      fisher_GO_flat$p.value,
+      ignore_attr = TRUE
     )
   }
 )

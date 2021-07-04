@@ -43,7 +43,7 @@ Suggests:
     rmarkdown,
     spelling,
     SingleCellSignalR,
-    testthat (>= 2.1.0),
+    testthat (>= 3.0.0),
     visNetwork
 Imports: 
     data.table,
@@ -69,3 +69,4 @@ Collate:
     'utils_validation.R'
 URL: https://cyrillagger.github.io/scDiffCom/
 Language: en-US
+Config/testthat/edition: 3
