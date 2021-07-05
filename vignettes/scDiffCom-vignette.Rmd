@@ -51,7 +51,6 @@ performed.
 library(Seurat)
 library(scDiffCom)
 library(data.table)
-library(ggplot2)
 
 # Load the toy-model object
 seurat_object <- scDiffCom::seurat_sample_tms_liver
@@ -141,6 +140,9 @@ Detected CCIs can be explored either one by one by looking at the data.table,
 more globally based on our over-representation analysis (see below) or from 
 graphs such as this volcano plot:
 ```{r,out.width="100%"}
+if (!require("ggplot2")) install.packages("ggplot2")
+library(ggplot2)
+
 ggplot(
   CCI_detected,
   aes(
@@ -189,6 +191,15 @@ A summary of the changes in intercellular communication is given by
 the following graph that displays the over-represented cell types and cell-type
 pairs:
 ```{r}
+if (!require("visNetwork")) install.packages("visNetwork")
+if (!require("igraph")) install.packages("igraph")
+if (!require("kableExtra")) install.packages("kableExtra")
+if (!require("RColorBrewer")) install.packages("RColorBrewer")
+library(visNetwork)
+library(igraph)
+library(kableExtra)
+library(RColorBrewer)
+
 BuildNetwork(
   object = scdiffcom_object
 )
