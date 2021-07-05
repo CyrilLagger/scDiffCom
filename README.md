@@ -42,7 +42,7 @@ Display LRI databases
 
 ``` r
 # Install release version from CRAN
-install.package("scDiffCom")
+#not available yet
 
 # Install development version from GitHub
 devtools::install_github("CyrilLagger/scDiffCom")
