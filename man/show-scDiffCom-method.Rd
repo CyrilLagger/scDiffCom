@@ -9,6 +9,9 @@
 \arguments{
 \item{object}{\code{scDiffCom} object}
 }
+\value{
+Print summary to the console, no return value.
+}
 \description{
 Display a scDiffCom object
 }

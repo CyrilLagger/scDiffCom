@@ -324,6 +324,9 @@ setMethod(
 #' Display a scDiffCom object
 #'
 #' @param object \code{scDiffCom} object
+#'
+#' @return Print summary to the console, no return value.
+#'
 setMethod(
   "show",
   signature = "scDiffCom",
