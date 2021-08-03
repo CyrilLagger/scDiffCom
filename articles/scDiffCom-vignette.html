@@ -111,7 +111,6 @@
 <span class="co">## Attaching SeuratObject</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://cyrillagger.github.io/scDiffCom/">scDiffCom</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com">data.table</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span>
 
 <span class="co"># Load the toy-model object</span>
 <span class="va">seurat_object</span> <span class="op">&lt;-</span> <span class="fu">scDiffCom</span><span class="fu">::</span><span class="va"><a href="../reference/seurat_sample_tms_liver.html">seurat_sample_tms_liver</a></span>
@@ -247,7 +246,11 @@
 <span class="co">##  120  973  858   35</span></code></pre></div>
 <p>Detected CCIs can be explored either one by one by looking at the data.table, more globally based on our over-representation analysis (see below) or from graphs such as this volcano plot:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span>
+<code class="sourceCode R"><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">require</a></span><span class="op">(</span><span class="st"><a href="https://ggplot2.tidyverse.org">"ggplot2"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"ggplot2"</span><span class="op">)</span>
+<span class="co">## Loading required package: ggplot2</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span>
+
+<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span>
   <span class="va">CCI_detected</span>,
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>
      x <span class="op">=</span> <span class="va">LOGFC</span>,
@@ -305,7 +308,31 @@
 <p><img src="scDiffCom-vignette_files/figure-html/unnamed-chunk-7-1.png" width="100%"></p>
 <p>A summary of the changes in intercellular communication is given by the following graph that displays the over-represented cell types and cell-type pairs:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="../reference/BuildNetwork.html">BuildNetwork</a></span><span class="op">(</span>
+<code class="sourceCode R"><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">require</a></span><span class="op">(</span><span class="st"><a href="http://datastorm-open.github.io/visNetwork/">"visNetwork"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"visNetwork"</span><span class="op">)</span>
+<span class="co">## Loading required package: visNetwork</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">require</a></span><span class="op">(</span><span class="st"><a href="https://igraph.org">"igraph"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"igraph"</span><span class="op">)</span>
+<span class="co">## Loading required package: igraph</span>
+<span class="co">## </span>
+<span class="co">## Attaching package: 'igraph'</span>
+<span class="co">## The following objects are masked from 'package:future':</span>
+<span class="co">## </span>
+<span class="co">##     %-&gt;%, %&lt;-%</span>
+<span class="co">## The following objects are masked from 'package:stats':</span>
+<span class="co">## </span>
+<span class="co">##     decompose, spectrum</span>
+<span class="co">## The following object is masked from 'package:base':</span>
+<span class="co">## </span>
+<span class="co">##     union</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">require</a></span><span class="op">(</span><span class="st"><a href="http://haozhu233.github.io/kableExtra/">"kableExtra"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"kableExtra"</span><span class="op">)</span>
+<span class="co">## Loading required package: kableExtra</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">require</a></span><span class="op">(</span><span class="st">"RColorBrewer"</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"RColorBrewer"</span><span class="op">)</span>
+<span class="co">## Loading required package: RColorBrewer</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://datastorm-open.github.io/visNetwork/">visNetwork</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://igraph.org">igraph</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://haozhu233.github.io/kableExtra/">kableExtra</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">RColorBrewer</span><span class="op">)</span>
+
+<span class="fu"><a href="../reference/BuildNetwork.html">BuildNetwork</a></span><span class="op">(</span>
   object <span class="op">=</span> <span class="va">scdiffcom_object</span>
 <span class="op">)</span></code></pre></div>
 <div id="htmlwidget-409849e39179307f2e17" style="width:100%;height:100vh;" class="visNetwork html-widget"></div>
