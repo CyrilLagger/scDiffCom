@@ -41,8 +41,8 @@ Display LRI databases
 ## Installation
 
 ``` r
-# Install release version from CRAN
-install.packages("scDiffCom")
+# Install release version from CRAN (not yet available)
+## install.packages("scDiffCom")
 
 # Install development version from GitHub
 devtools::install_github("CyrilLagger/scDiffCom")
