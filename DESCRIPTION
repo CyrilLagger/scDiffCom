@@ -20,7 +20,9 @@ Description: Analysis tools to investigate changes in intercellular
     interactions (available for both human and mouse) that have been gathered
     from several published studies. Detection and differential analyses
     rely on permutation tests. The package also contains several tools
-    to perform over-representation analysis and visualize the results.
+    to perform over-representation analysis and visualize the results. See
+    Lagger, C. et al. (2021) <doi:10.1101/2021.08.13.456238> for a full 
+    description of the methodology.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
