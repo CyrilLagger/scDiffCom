@@ -13,7 +13,7 @@ A list with the following items:
   \item \code{LRI_curated_KEGG}: a data.table with KEGG pathways attached to
    curated LRIs
   \item \code{LRI_retrieved_dates}: dates at which data have been retrieved
-   from the eight external databases
+   from the seven external databases
   \item \code{LRI_retrieved_from}: paths or packages from where data have
    been retrieved
   \item \code{LRI_biomart_ensembl_version}: version of ensembl used for
