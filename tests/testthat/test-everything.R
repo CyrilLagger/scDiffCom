@@ -7,7 +7,7 @@
 
 parameters_mode <- list(
   wrong = list(
-    LRI_species = "rat",
+    LRI_species = "cat",
     seurat_celltype_id = c("cell_type", "cell_types"),
     seurat_condition_id = list(
       column_name = "age_group",
