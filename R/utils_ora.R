@@ -384,6 +384,12 @@ build_ora_dt <- function(
               c("LRI", "GO_ID", "GO_NAME")
             ]
           }
+          if (species == "rat") {
+            new_intersection_dt <- scDiffCom::LRI_rat$LRI_curated_GO[
+              ,
+              c("LRI", "GO_ID", "GO_NAME")
+            ]
+          }
           base_category <- "LRI"
           new_id <- "GO_ID"
           new_name <- "GO_NAME"
@@ -395,6 +401,9 @@ build_ora_dt <- function(
           }
           if (species == "human") {
             new_intersection_dt <- scDiffCom::LRI_human$LRI_curated_KEGG
+          }
+          if (species == "rat") {
+            new_intersection_dt <- scDiffCom::LRI_rat$LRI_curated_KEGG
           }
           base_category <- "LRI"
           new_id <- "KEGG_ID"
@@ -453,6 +462,9 @@ build_ora_dt <- function(
     }
     if (species == "human") {
       go_info <- scDiffCom::LRI_human$LRI_curated_GO
+    }
+    if (species == "rat") {
+      go_info <- scDiffCom::LRI_rat$LRI_curated_GO
     }
     ora_full[
       unique(go_info[, c("GO_ID", "LEVEL", "ASPECT")]),
