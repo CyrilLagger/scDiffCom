@@ -1775,27 +1775,10 @@ get_GO_interactions <- function(
     on = "GO_ID==ID",
     GO_NAME := i.GO_name
   ]
-  all_bp_desc <- ontologyIndex::get_descendants(onto_go_terms, "GO:0008150")
-  all_mf_desc <- ontologyIndex::get_descendants(onto_go_terms, "GO:0003674")
-  all_cc_desc <- ontologyIndex::get_descendants(onto_go_terms, "GO:0005575")
-  LR_interactions_go_intersection[, ASPECT := ifelse(
-    GO_ID %in% all_bp_desc,
-    "biological_process",
-    ifelse(
-      GO_ID %in% all_mf_desc,
-      "molecular_function",
-      ifelse(
-        GO_ID %in% all_cc_desc,
-        "cellular_component",
-        "other"
-      )
-    )
-  )]
-  #GO_LEVEL_table <- get_GO_LEVELS() #saved internally
   LR_interactions_go_intersection[
     GO_LEVEL_table,
     on = "GO_ID==ID",
-    LEVEL := i.LEVEL
+    `:=`(LEVEL = i.LEVEL, ASPECT = i.ASPECT)
   ]
   return(LR_interactions_go_intersection)
 }
@@ -2066,6 +2049,15 @@ get_GO_LEVELS <- function(
       call. = FALSE
     )
   }
+  if (!requireNamespace("ontologyIndex", quietly = TRUE)) {
+    stop(
+      paste0(
+        "Package \"ontologyIndex\" needed for this function to work.",
+        "Please install it."
+      ),
+      call. = FALSE
+    )
+  }
   ontoGO <- ontoProc::getGeneOnto()
   GO_summary <- data.table(
     ID = ontoGO$id,
@@ -2135,5 +2127,21 @@ get_GO_LEVELS <- function(
     )]
     i <- i + 1
   }
+  all_bp_desc <- ontologyIndex::get_descendants(ontoGO, "GO:0008150")
+  all_mf_desc <- ontologyIndex::get_descendants(ontoGO, "GO:0003674")
+  all_cc_desc <- ontologyIndex::get_descendants(ontoGO, "GO:0005575")
+  GO_summary[, ASPECT := ifelse(
+    ID %in% all_bp_desc,
+    "biological_process",
+    ifelse(
+      ID %in% all_mf_desc,
+      "molecular_function",
+      ifelse(
+        ID %in% all_cc_desc,
+        "cellular_component",
+        "other"
+      )
+    )
+  )]
   return(GO_summary)
 }

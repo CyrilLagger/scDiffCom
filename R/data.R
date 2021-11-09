@@ -151,3 +151,25 @@
 #' (\href{https://pubmed.ncbi.nlm.nih.gov/32669714/}{PMID: 32669714})
 #'
 "seurat_sample_tms_liver"
+
+#' All gene ontology terms annotated with their levels
+#'
+#' This data.table contains all GO terms retrieved from the package
+#' ontoProc. Each term is annotated with its number of ancestors,
+#' parents and children, as well as with its level (i.e. depth) in
+#' the gene ontology graph. Levels are computed by scDiffCom according to
+#' \code{scDiffCom:::get_GO_LEVELS()}.
+#'
+#' @docType data
+#'
+#' @usage data(gene_ontology_level)
+#'
+#' @format A data.table
+#'
+#' @keywords datasets
+#'
+#' @references \href{https://doi.org/doi:10.18129/B9.bioc.ontoProc}{ontoProc}
+#'
+"gene_ontology_level"
+
+
