@@ -1,4 +1,13 @@
 
+# scDiffCom 0.1.0.9000
+
+09-11-2021
+
+* A rat LRI database (LRI_rat) has been added (based on orthology conversion)
+* `run_interaction_analysis()` accepts `rat` as species parameter
+* LRI datasets have a reduced size
+* Dataset `gene_ontology_level` is now available as data (instead of internal data)
+
 # scDiffCom 0.1
 
 04-07-2021

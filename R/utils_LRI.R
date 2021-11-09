@@ -24,7 +24,7 @@ build_LRI <- function(
     list(
       #LRI_not_curated = LRI_not_curated$LR_full,
       LRI_curated = LRI_curated$LR_full,
-      LRI_curated_GO = LRI_GO,
+      LRI_curated_GO = LRI_GO[, c("LRI", "GO_ID")],
       LRI_curated_KEGG = LRI_KEGG,
       LRI_retrieved_dates = LRI_curated$LR_retrieved_dates,
       LRI_retrieved_from = LRI_curated$LR_retrieved_from,
@@ -1775,25 +1775,20 @@ get_GO_interactions <- function(
     on = "GO_ID==ID",
     GO_NAME := i.GO_name
   ]
-  LR_interactions_go_intersection[
-    GO_LEVEL_table,
-    on = "GO_ID==ID",
-    `:=`(LEVEL = i.LEVEL, ASPECT = i.ASPECT)
-  ]
   return(LR_interactions_go_intersection)
 }
 
 get_ECM_genes <- function(
   species
 ) {
-  go_id <- mgi_symbol <- NULL
+  GO_ID <- mgi_symbol <- NULL
   LRI_curated = scDiffCom::LRI_mouse$LRI_curated
   GO_interactions = get_GO_interactions(
     species,
     LRI_curated,
     only_genes_annotations = TRUE
   )
-  GO_interactions = GO_interactions[go_id != ""]
+  GO_interactions = GO_interactions[GO_ID != ""]
 
   get_ECM_GOs <- function() {
     return(
@@ -1807,7 +1802,7 @@ get_ECM_genes <- function(
     )
   }
   ECM_GOs = get_ECM_GOs()
-  ecm_genes = GO_interactions[go_id %in% ECM_GOs, mgi_symbol]
+  ecm_genes = GO_interactions[GO_ID %in% ECM_GOs, mgi_symbol]
   return(ecm_genes)
 }
 
@@ -2039,7 +2034,7 @@ get_orthologs <- function(
 
 get_GO_LEVELS <- function(
 ) {
-  LEVEL <- N_ANCESTORS <- ID <- NULL
+  LEVEL <- N_ANCESTORS <- ID <- ASPECT <- NULL
   if (!requireNamespace("ontoProc", quietly = TRUE)) {
     stop(
       paste0(
