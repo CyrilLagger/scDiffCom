@@ -48,7 +48,7 @@
 #' @param seurat_object Seurat object that must contain normalized
 #'  data and relevant \code{meta.data} columns (see below). Gene names must be
 #'   MGI (mouse) or HGNC (human) approved symbols.
-#' @param LRI_species Either \code{"mouse"} or \code{"human"}. Indicates which
+#' @param LRI_species Either \code{"mouse"}, \code{"human"} or \code{"rat"}. Indicates which
 #'  LRI database to use and corresponds to the species of the \code{seurat_object}.
 #' @param seurat_celltype_id Name of the \code{meta.data} column in
 #'  \code{seurat_object} that contains cell-type annotations
@@ -208,6 +208,9 @@ run_interaction_analysis <- function(
   }
   if (LRI_species == "mouse") {
     LRI_table <- copy(scDiffCom::LRI_mouse$LRI_curated)
+  }
+  if (LRI_species == "rat") {
+    LRI_table <- copy(scDiffCom::LRI_rat$LRI_curated)
   }
   set.seed(seed)
   object <- run_internal_raw_analysis(

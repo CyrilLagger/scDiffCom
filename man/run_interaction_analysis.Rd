@@ -31,7 +31,7 @@ run_interaction_analysis(
 data and relevant \code{meta.data} columns (see below). Gene names must be
  MGI (mouse) or HGNC (human) approved symbols.}
 
-\item{LRI_species}{Either \code{"mouse"} or \code{"human"}. Indicates which
+\item{LRI_species}{Either \code{"mouse"}, \code{"human"} or \code{"rat"}. Indicates which
 LRI database to use and corresponds to the species of the \code{seurat_object}.}
 
 \item{seurat_celltype_id}{Name of the \code{meta.data} column in
