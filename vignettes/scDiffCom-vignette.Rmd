@@ -68,7 +68,7 @@ table(seurat_sample_tms_liver[["age_group"]])
 scDiffcom infers cell type to cell type communication patterns from the
 expression of genes known to be involved in ligand-receptor interactions
 (LRIs). The package contains it own internal databases of curated LRIs (for
-human and mouse), retrieved from previous studies.
+human, mouse and rat), retrieved from previous studies.
 
 You do not need to call the LRI databases explicitly when performing an
 analysis. However, you can still access and explore them as follows:
@@ -79,8 +79,13 @@ data(LRI_mouse)
 # Display the data.table of LRIs (more information available in other columns)
 LRI_mouse$LRI_curated[, c("LRI")]
 
-# Display the data.table of GO Terms attached to each LRI (more information available in other columns)
-LRI_mouse$LRI_curated_GO[, c("LRI", "GO_NAME")]
+# Display the data.table of GO Terms attached to each LRI
+LRI_mouse$LRI_curated_GO
+
+# Information about GO terms (more information available in other columns)
+data(gene_ontology_level)
+gene_ontology_level[, c("NAME", "LEVEL")]
+
 ```
 
 ### Run default differential analysis

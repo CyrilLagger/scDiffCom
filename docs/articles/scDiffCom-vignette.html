@@ -69,7 +69,7 @@
 
       
 
-      </header><script src="scDiffCom-vignette_files/header-attrs-2.10/header-attrs.js"></script><script src="scDiffCom-vignette_files/htmlwidgets-1.5.3/htmlwidgets.js"></script><link href="scDiffCom-vignette_files/vis-4.20.1/vis.css" rel="stylesheet">
+      </header><script src="scDiffCom-vignette_files/header-attrs-2.11/header-attrs.js"></script><script src="scDiffCom-vignette_files/htmlwidgets-1.5.4/htmlwidgets.js"></script><link href="scDiffCom-vignette_files/vis-4.20.1/vis.css" rel="stylesheet">
 <script src="scDiffCom-vignette_files/vis-4.20.1/vis.min.js"></script><script src="scDiffCom-vignette_files/visNetwork-binding-2.0.9/visNetwork.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
@@ -104,6 +104,7 @@
 <p>scDiffCom uses a scRNA-seq <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> object as input. Here, we use a toy-model object (available as part of our package) that has been down-sampled. It contains cells divided in 5 cell types as well as two age groups (“young” and “old”) on which differential analysis will be performed.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://satijalab.org/seurat" class="external-link">Seurat</a></span><span class="op">)</span>
+<span class="co">## Warning: package 'Seurat' was built under R version 4.1.1</span>
 <span class="co">## Attaching SeuratObject</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cyrillagger.github.io/scDiffCom/">scDiffCom</a></span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span>
@@ -114,7 +115,6 @@
 <span class="co">## An object of class Seurat </span>
 <span class="co">## 726 features across 468 samples within 1 assay </span>
 <span class="co">## Active assay: RNA (726 features, 0 variable features)</span>
-
 <span class="co"># Cell-type annotations must be present beforehand in the object meta.data</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">seurat_object</span><span class="op">[[</span><span class="st">"cell_type"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
 <span class="co">##                                                                  cell_type</span>
@@ -124,7 +124,6 @@
 <span class="co">## A22_B001247_B009941_S22.mm10-plus-4-0                               B cell</span>
 <span class="co">## A2_D045313_B009942_S2.mm10-plus-4-0                             hepatocyte</span>
 <span class="co">## A5_B001247_B009941_S5.mm10-plus-4-0                                 T cell</span>
-
 <span class="co"># The two conditions of interest must also be specified in the object meta.data</span>
 <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">seurat_sample_tms_liver</span><span class="op">[[</span><span class="st">"age_group"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
 <span class="co">## </span>
@@ -134,7 +133,7 @@
 <div id="optional-investigate-the-ligand-receptor-interactions" class="section level3">
 <h3 class="hasAnchor">
 <a href="#optional-investigate-the-ligand-receptor-interactions" class="anchor" aria-hidden="true"></a>(Optional) Investigate the ligand-receptor interactions</h3>
-<p>scDiffcom infers cell type to cell type communication patterns from the expression of genes known to be involved in ligand-receptor interactions (LRIs). The package contains it own internal databases of curated LRIs (for human and mouse), retrieved from previous studies.</p>
+<p>scDiffcom infers cell type to cell type communication patterns from the expression of genes known to be involved in ligand-receptor interactions (LRIs). The package contains it own internal databases of curated LRIs (for human, mouse and rat), retrieved from previous studies.</p>
 <p>You do not need to call the LRI databases explicitly when performing an analysis. However, you can still access and explore them as follows:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Load, e.g., the mouse database</span>
@@ -154,21 +153,35 @@
 <span class="co">## 4739:               a:Mc3r</span>
 <span class="co">## 4740:               a:Mc4r</span>
 <span class="co">## 4741:               a:Mc5r</span>
-
-<span class="co"># Display the data.table of GO Terms attached to each LRI (more information available in other columns)</span>
-<span class="va">LRI_mouse</span><span class="op">$</span><span class="va">LRI_curated_GO</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"LRI"</span>, <span class="st">"GO_NAME"</span><span class="op">)</span><span class="op">]</span>
-<span class="co">##                          LRI                          GO_NAME</span>
-<span class="co">##      1: 1700013F07Rik:Plscr4               cellular_component</span>
-<span class="co">##      2: 1700013F07Rik:Plscr4                        cell part</span>
-<span class="co">##      3: 1700013F07Rik:Plscr4               molecular_function</span>
-<span class="co">##      4: 1700013F07Rik:Plscr4                          binding</span>
-<span class="co">##      5: 1700013F07Rik:Plscr4               biological_process</span>
-<span class="co">##     ---                                                      </span>
-<span class="co">## 267431:               a:Mc5r            biological regulation</span>
-<span class="co">## 267432:               a:Mc5r regulation of biological process</span>
-<span class="co">## 267433:               a:Mc5r   regulation of cellular process</span>
-<span class="co">## 267434:               a:Mc5r              signal transduction</span>
-<span class="co">## 267435:               a:Mc5r  regulation of metabolic process</span></code></pre></div>
+<span class="co"># Display the data.table of GO Terms attached to each LRI</span>
+<span class="va">LRI_mouse</span><span class="op">$</span><span class="va">LRI_curated_GO</span>
+<span class="co">##                          LRI      GO_ID</span>
+<span class="co">##      1: 1700013F07Rik:Plscr4 GO:0005575</span>
+<span class="co">##      2: 1700013F07Rik:Plscr4 GO:0044464</span>
+<span class="co">##      3: 1700013F07Rik:Plscr4 GO:0003674</span>
+<span class="co">##      4: 1700013F07Rik:Plscr4 GO:0005488</span>
+<span class="co">##      5: 1700013F07Rik:Plscr4 GO:0008150</span>
+<span class="co">##     ---                                </span>
+<span class="co">## 267431:               a:Mc5r GO:0065007</span>
+<span class="co">## 267432:               a:Mc5r GO:0050789</span>
+<span class="co">## 267433:               a:Mc5r GO:0050794</span>
+<span class="co">## 267434:               a:Mc5r GO:0007165</span>
+<span class="co">## 267435:               a:Mc5r GO:0019222</span>
+<span class="co"># Information about GO terms (more information available in other columns)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">gene_ontology_level</span><span class="op">)</span>
+<span class="va">gene_ontology_level</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NAME"</span>, <span class="st">"LEVEL"</span><span class="op">)</span><span class="op">]</span>
+<span class="co">##                                                         NAME LEVEL</span>
+<span class="co">##     1:                             mitochondrion inheritance     7</span>
+<span class="co">##     2:                      mitochondrial genome maintenance     6</span>
+<span class="co">##     3:                                          reproduction     2</span>
+<span class="co">##     4:                 obsolete ribosomal chaperone activity     1</span>
+<span class="co">##     5: high-affinity zinc transmembrane transporter activity    10</span>
+<span class="co">##    ---                                                            </span>
+<span class="co">## 47119:                                             occurs in     1</span>
+<span class="co">## 47120:                                               part of     1</span>
+<span class="co">## 47121:                                  positively regulates     2</span>
+<span class="co">## 47122:                                             regulates     1</span>
+<span class="co">## 47123:                                         starts_during     1</span></code></pre></div>
 </div>
 <div id="run-default-differential-analysis" class="section level3">
 <h3 class="hasAnchor">
@@ -176,8 +189,9 @@
 <p>All results are obtained by simply calling <code>run_interaction_analysis</code>. The detection and differential analyses rely on permutation tests. By default, 1000 iterations are performed as this is sufficient for a quick explanatory analysis. In general, we would recommend using 10’000 permutations. Parallel computing can be easily enabled by loading the <code>future</code> package and setting the <code>plan</code> accordingly.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Load the future package (optional)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/HenrikBengtsson/future" class="external-link">future</a></span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/pkg/future/man/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">sequential</span><span class="op">)</span> <span class="co"># sequentially in the current R process, equivalent to do nothing</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://future.futureverse.org" class="external-link">future</a></span><span class="op">)</span>
+<span class="co">## Warning: package 'future' was built under R version 4.1.1</span>
+<span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">sequential</span><span class="op">)</span> <span class="co"># sequentially in the current R process, equivalent to do nothing</span>
 <span class="co">#plan(multisession, workers = 4) # background R sessions</span>
 <span class="co">#plan(multicore, workers = 4) # forked R processes, not Windows/not RStudio</span>
 
@@ -234,7 +248,6 @@
 <span class="co">## 1984: myeloid leukocyte_myeloid leukocyte_Vcam1:Itgb1_Itga9       FLAT</span>
 <span class="co">## 1985: myeloid leukocyte_myeloid leukocyte_Vcam1:Itgb7_Itga4       FLAT</span>
 <span class="co">## 1986:         myeloid leukocyte_myeloid leukocyte_Vcam1:Msn       FLAT</span>
-
 <span class="co"># Number of CCIs per regulation type</span>
 <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">CCI_detected</span><span class="op">$</span><span class="va">REGULATION</span><span class="op">)</span>
 <span class="co">## </span>
@@ -276,7 +289,6 @@
 <span class="co">## [1] "LRI"               "LIGAND_COMPLEX"    "RECEPTOR_COMPLEX" </span>
 <span class="co">## [4] "ER_CELLTYPES"      "EMITTER_CELLTYPE"  "RECEIVER_CELLTYPE"</span>
 <span class="co">## [7] "GO_TERMS"          "KEGG_PWS"</span>
-
 <span class="co"># Explore, e.g., the top 10 LRIs up-regulated based on their ORA score</span>
 <span class="va">ORA_results</span><span class="op">$</span><span class="va">LRI</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"VALUE"</span>, <span class="st">"ORA_SCORE_UP"</span>, <span class="st">"OR_UP"</span>, <span class="st">"BH_P_VALUE_UP"</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/setorder.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">ORA_SCORE_UP</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span>
 <span class="co">##              VALUE ORA_SCORE_UP     OR_UP BH_P_VALUE_UP</span>
@@ -290,7 +302,6 @@
 <span class="co">##  8:     H2-K1:Cd8a     14.36497  58.14560  3.542486e-03</span>
 <span class="co">##  9:   H2-T22:Cd8b1     14.36497  58.14560  3.542486e-03</span>
 <span class="co">## 10:   Ltb:Tnfrsf1a     14.36497  58.14560  3.542486e-03</span>
-
 <span class="co"># Plot the most over-represented up-regulated LRIs</span>
 <span class="co"># note that PlotORA returns a ggplot object that you can further optimize (e.g. here to place the legend)</span>
 <span class="fu"><a href="../reference/PlotORA.html">PlotORA</a></span><span class="op">(</span>
@@ -364,7 +375,6 @@
 <span class="co">## Returning 1986 detected CCIs.</span>
 <span class="co">## Performing over-representation analysis on the categories: LRI, LIGAND_COMPLEX, RECEPTOR_COMPLEX, ER_CELLTYPES, EMITTER_CELLTYPE, RECEIVER_CELLTYPE, GO_TERMS, KEGG_PWS.</span>
 <span class="co">## Erasing all previous ORA results: LRI, LIGAND_COMPLEX, RECEPTOR_COMPLEX, ER_CELLTYPES, EMITTER_CELLTYPE, RECEIVER_CELLTYPE, GO_TERMS, KEGG_PWS.</span>
-
 <span class="co"># create a copy of the original object, but without the heavy intermediate table</span>
 <span class="va">scdiffcom_object_light</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/EraseRawCCI.html">EraseRawCCI</a></span><span class="op">(</span><span class="va">scdiffcom_object</span><span class="op">)</span>
 

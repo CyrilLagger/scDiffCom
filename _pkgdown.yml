@@ -40,6 +40,8 @@ reference:
 
 - title: Data
   contents:
-  - LRI_mouse
   - LRI_human
+  - LRI_mouse
+  - LRI_rat
+  - gene_ontology_level
   - seurat_sample_tms_liver

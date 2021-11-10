@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Changelog • scDiffCom</title>
+<title>A collection of rat ligand-receptor interactions. — LRI_rat • scDiffCom</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,10 @@
 
 
 
-<meta property="og:title" content="Changelog" />
+<meta property="og:title" content="A collection of rat ligand-receptor interactions. — LRI_rat" />
+<meta property="og:description" content="This dataset contains a data.table of curated rat ligand-receptor
+ interactions as well as related annotations (GO Terms, KEGG Pathways) and
+ metadata." />
 
 
 
@@ -66,7 +69,7 @@
   <body data-spy="scroll" data-target="#toc">
     
 
-    <div class="container template-news">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -119,45 +122,58 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-      <h1 data-toc-skip>Changelog <small></small></h1>
-      
+    <h1>A collection of rat ligand-receptor interactions.</h1>
+    
+    <div class="hidden name"><code>LRI_rat.Rd</code></div>
     </div>
 
-    <div id="scdiffcom-0109000" class="section level1">
-<h1 class="page-header" data-toc-text="0.1.0.9000">
-<a href="#scdiffcom-0109000" class="anchor" aria-hidden="true"></a>scDiffCom 0.1.0.9000<small> Unreleased </small></h1>
-<p>09-11-2021</p>
-<ul><li>A rat LRI database (LRI_rat) has been added (based on orthology conversion)</li>
-<li>
-<code><a href="../reference/run_interaction_analysis.html">run_interaction_analysis()</a></code> accepts <code>rat</code> as species parameter</li>
-<li>LRI datasets have a reduced size</li>
-<li>Dataset <code>gene_ontology_level</code> is now available as data (instead of internal data)</li>
-</ul></div>
-    <div id="scdiffcom-01" class="section level1">
-<h1 class="page-header" data-toc-text="0.1">
-<a href="#scdiffcom-01" class="anchor" aria-hidden="true"></a>scDiffCom 0.1<small> Unreleased </small></h1>
-<p>04-07-2021</p>
-<ul><li>All steps of <code>run_interaction_analysis</code> have been tested</li>
-<li>All exported functions have been tested</li>
-<li>LRI databases have been curated</li>
-<li>Complete roxygen-based documentation</li>
-<li>Vignette contains the main functionalities</li>
-</ul></div>
-    <div id="scdiffcom-0009000" class="section level1">
-<h1 class="page-header" data-toc-text="0.0.0.9000">
-<a href="#scdiffcom-0009000" class="anchor" aria-hidden="true"></a>scDiffCom 0.0.0.9000<small> Unreleased </small></h1>
-<ul><li>Added a <code>NEWS.md</code> file to track changes to the package.</li>
-<li>Added the first proper documentation</li>
-<li>Added the first version of the vignette</li>
-</ul></div>
-  </div>
+    <div class="ref-description">
+    <p>This dataset contains a data.table of curated rat ligand-receptor
+ interactions as well as related annotations (GO Terms, KEGG Pathways) and
+ metadata.</p>
+    </div>
 
+    <div class="ref-usage sourceCode"><pre class='sourceCode r'><code><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='va'>LRI_rat</span><span class='op'>)</span></code></pre></div>
+
+
+    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
+
+    <p>A list with the following items:</p><ol>
+<li><p><code>LRI_curated</code>: a data.table of curated LRIs</p></li>
+<li><p><code>LRI_curated_GO</code>: a data.table with GO terms attached to
+   curated LRI</p></li>
+<li><p><code>LRI_curated_KEGG</code>: a data.table with KEGG pathways attached to
+   curated LRIs</p></li>
+<li><p><code>LRI_retrieved_dates</code>: dates at which data have been retrieved
+   from the seven external databases</p></li>
+<li><p><code>LRI_retrieved_from</code>: paths or packages from where data have
+   been retrieved</p></li>
+<li><p><code>LRI_biomart_ensembl_version</code>: version of ensembl used for
+   GO annotation and orthology conversion</p></li>
+</ol>
+
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The dataset has been built internally in scDiffCom according to
+ <code>scDiffCom:::build_LRI(species = "rat")</code>. The LRIs have been retrieved
+ from seven databases (see References). Note that only curated LRIs
+ have been kept.</p>
+    <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
+
+    <p>CellChat (<a href='https://pubmed.ncbi.nlm.nih.gov/33597522/'>PMID: 33597522</a>),
+ CellPhoneDB (<a href='https://pubmed.ncbi.nlm.nih.gov/32103204/'>PMID: 32103204</a>),
+ CellTalkDB (<a href='https://pubmed.ncbi.nlm.nih.gov/33147626/'>PMID: 33147626</a>),
+ connectomeDB2020 (<a href='https://pubmed.ncbi.nlm.nih.gov/33024107/'>PMID: 33024107</a>),
+ ICELLNET (<a href='https://pubmed.ncbi.nlm.nih.gov/33597528/'>PMID: 33597528</a>),
+ NicheNet (<a href='https://pubmed.ncbi.nlm.nih.gov/31819264/'>PMID: 31819264</a>),
+ SingleCellSignalR (<a href='https://pubmed.ncbi.nlm.nih.gov/32196115/'>PMID: 32196115</a>)</p>
+
+  </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
       <h2 data-toc-skip>Contents</h2>
     </nav>
   </div>
-
 </div>
 
 

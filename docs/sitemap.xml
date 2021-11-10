@@ -34,6 +34,9 @@
     <loc>https://cyrillagger.github.io/scDiffCom/reference/FilterCCI.html</loc>
   </url>
   <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/reference/gene_ontology_level.html</loc>
+  </url>
+  <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/GetDistributions.html</loc>
   </url>
   <url>
@@ -53,6 +56,9 @@
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/LRI_mouse.html</loc>
+  </url>
+  <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/reference/LRI_rat.html</loc>
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/PlotORA.html</loc>
