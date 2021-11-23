@@ -1,7 +1,7 @@
 Package: scDiffCom
 Type: Package
 Title: Differential Analysis of Intercellular Communication from scRNA-Seq Data
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: c(
     person("Cyril", "Lagger", email = "lagger.cyril@gmail.com",
     role = c("aut", "cre"),
@@ -17,7 +17,7 @@ Description: Analysis tools to investigate changes in intercellular
     the package infers which cell-cell interactions are present in the dataset
     and how these interactions change between two conditions of interest
     (e.g. young vs old). It relies on an internal database of ligand-receptor
-    interactions (available for both human and mouse) that have been gathered
+    interactions (available for human, mouse and rat) that have been gathered
     from several published studies. Detection and differential analyses
     rely on permutation tests. The package also contains several tools
     to perform over-representation analysis and visualize the results. See
@@ -33,7 +33,9 @@ biocViews:
 Suggests: 
     biomaRt,
     covr,
+    DT,
     ggplot2,
+    GOSemSim,
     igraph,
     kableExtra,
     KEGGREST,
@@ -41,9 +43,13 @@ Suggests:
     ontologyIndex,
     ontoProc,
     pkgdown,
+    plotly,
     RColorBrewer,
     rmarkdown,
+    rrvgo,
     spelling,
+    shiny,
+    shinythemes,
     SingleCellSignalR,
     testthat (>= 3.0.0),
     visNetwork
@@ -69,6 +75,7 @@ Collate:
     'utils_permutation.R'
     'utils_preprocessing.R'
     'utils_validation.R'
+    'utils_shiny.R'
 URL: https://cyrillagger.github.io/scDiffCom/
 Language: en-US
 Config/testthat/edition: 3
