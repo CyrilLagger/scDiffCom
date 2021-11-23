@@ -1,0 +1,97 @@
+reduce_go_terms <- function(
+  object = object
+) {
+  ASPECT <- OR_UP <- BH_P_VALUE_UP <-
+    OR_DOWN <- BH_P_VALUE_DOWN <- OR_FLAT <- BH_P_VALUE_FLAT <- NULL
+  message(
+   "Reducing GO terms based on semantic similarity"
+  )
+  if (object@parameters$LRI_species == "human") {
+    orgdb <- "org.Hs.eg.db"
+  } else  if (object@parameters$LRI_species == "mouse") {
+    orgdb <- "org.Mm.eg.db"
+  } else  if (object@parameters$LRI_species == "rat") {
+    orgdb <- "org.Rn.eg.db"
+  } else {
+    stop(
+      "Species must be 'human', 'mouse' or 'rat'"
+    )
+  }
+  if (!("GO_TERMS" %in% names(object@ora_table))) {
+    stop(
+      "Table 'GO_TERMS' must be present in slot 'ora_table'"
+    )
+  }
+  dt <- copy(object@ora_table$GO_TERMS)
+  rbindlist(
+    l = lapply(
+      stats::setNames(
+        sort(unique(dt$ASPECT)),
+        sort(unique(dt$ASPECT))
+      ),
+      function(aspect) {
+        rbindlist(
+          l = lapply(
+            list(UP = "UP", DOWN = "DOWN", FLAT = "FLAT"),
+            function(regulation) {
+              dt_intern <- dt[ASPECT == aspect]
+              if (regulation == "UP") {
+                dt_intern <- dt_intern[OR_UP >= 1 & BH_P_VALUE_UP <= 0.05]
+                OR_intern <- dt_intern$OR_UP
+                BH_intern <- dt_intern$BH_P_VALUE_UP
+              } else if (regulation == "DOWN") {
+                dt_intern <- dt_intern[OR_DOWN >= 1 & BH_P_VALUE_DOWN <= 0.05]
+                OR_intern <- dt_intern$OR_DOWN
+                BH_intern <- dt_intern$BH_P_VALUE_DOWN
+              } else if (regulation == "FLAT") {
+                dt_intern <- dt_intern[OR_FLAT >= 1 & BH_P_VALUE_FLAT <= 0.05]
+                OR_intern <- dt_intern$OR_FLAT
+                BH_intern <- dt_intern$BH_P_VALUE_FLAT
+              }
+              if (nrow(dt_intern) == 0) return(NULL)
+              if (any(is.infinite(OR_intern))) {
+                if (all(is.infinite(OR_intern))) {
+                  OR_intern <- rep(2, length(OR_intern))
+
+                } else {
+                  max_finite <- max(OR_intern[is.finite(OR_intern)])
+                  OR_intern[is.infinite(OR_intern)] <- max_finite
+                }
+              }
+              scores_intern <- -log10(BH_intern) * log2(OR_intern)
+              scores_intern <- stats::setNames(
+                scores_intern,
+                dt_intern$VALUE_BIS
+              )
+              if (aspect == "biological_process") {
+                ont_intern <- "BP"
+              } else if (aspect == "molecular_function") {
+                ont_intern <- "MF"
+              } else if (aspect == "cellular_component") {
+                ont_intern <- "CC"
+              }
+              simMatrix <- rrvgo::calculateSimMatrix(
+                x = dt_intern$VALUE_BIS,
+                orgdb = orgdb,
+                ont = ont_intern,
+                method = "Rel"
+              )
+              if (is.null(dim(simMatrix))) return(NULL)
+              reducedTerms <- rrvgo::reduceSimMatrix(
+                simMatrix = simMatrix,
+                scores = scores_intern,
+                threshold = 0.7,
+                orgdb = orgdb
+              )
+              if (nrow(reducedTerms) == 0) return(NULL)
+              setDT(reducedTerms)
+              reducedTerms
+            }
+          ),
+          idcol = "REGULATION"
+        )
+      }
+    ),
+    idcol = "ASPECT"
+  )
+}
