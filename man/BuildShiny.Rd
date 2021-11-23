@@ -21,5 +21,5 @@ similarity and allows shiny to plot GO Treemaps.}
 Launch a shiny app
 }
 \description{
-Launch as shiny app to explore scDiffCom results
+Launch a shiny app to explore scDiffCom results
 }
