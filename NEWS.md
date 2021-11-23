@@ -1,6 +1,11 @@
 
 # scDiffCom 0.1.0.9000
 
+23-11-2021
+
+* New function `BuildShiny()` that creates a shiny app from the results
+* New internal function to reduce GO terms by semantic similarity
+
 09-11-2021
 
 * A rat LRI database (LRI_rat) has been added (based on orthology conversion)
