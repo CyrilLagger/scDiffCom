@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create a copy of a scDiffCom object without cci_table_raw — EraseRawCCI • scDiffCom</title>
+<title>A shiny app to display scDiffCom results — BuildShiny • scDiffCom</title>
 
 
 <!-- jquery -->
@@ -39,12 +39,8 @@
 
 
 
-<meta property="og:title" content="Create a copy of a scDiffCom object without cci_table_raw — EraseRawCCI" />
-<meta property="og:description" content="This function will replace cci_table_raw by an empty list. Useful to
-save space for large datasets. However, after this operation,
-no filtering can be re-run on the new object, meaning that obtaining
-results for different filtering parameters will require the perform the full
-analysis from scratch." />
+<meta property="og:title" content="A shiny app to display scDiffCom results — BuildShiny" />
+<meta property="og:description" content="Launch a shiny app to explore scDiffCom results" />
 
 
 
@@ -124,23 +120,19 @@ analysis from scratch." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Create a copy of a scDiffCom object without <code>cci_table_raw</code></h1>
+    <h1>A shiny app to display scDiffCom results</h1>
     
-    <div class="hidden name"><code>EraseRawCCI.Rd</code></div>
+    <div class="hidden name"><code>BuildShiny.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This function will replace <code>cci_table_raw</code> by an empty list. Useful to
-save space for large datasets. However, after this operation,
-no filtering can be re-run on the new object, meaning that obtaining
-results for different filtering parameters will require the perform the full
-analysis from scratch.</p>
+    <p>Launch a shiny app to explore scDiffCom results</p>
     </div>
 
-    <div class="ref-usage sourceCode"><pre class='sourceCode r'><code><span class='fu'>EraseRawCCI</span><span class='op'>(</span><span class='va'>object</span><span class='op'>)</span>
+    <div class="ref-usage sourceCode"><pre class='sourceCode r'><code><span class='fu'>BuildShiny</span><span class='op'>(</span><span class='va'>object</span>, reduce_go <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S4 method for scDiffCom</span>
-<span class='fu'>EraseRawCCI</span><span class='op'>(</span><span class='va'>object</span><span class='op'>)</span></code></pre></div>
+<span class='fu'>BuildShiny</span><span class='op'>(</span><span class='va'>object</span>, reduce_go <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span></code></pre></div>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -149,11 +141,20 @@ analysis from scratch.</p>
       <th>object</th>
       <td><p><code>scDiffCom</code> object</p></td>
     </tr>
+    <tr>
+      <th>reduce_go</th>
+      <td><p>If <code>TRUE</code> (default), reduce go terms by semantic
+similarity and allows shiny to plot GO Treemaps.</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Additional parameters to <code><a href='https://rdrr.io/pkg/shiny/man/runApp.html'>shiny::runApp</a></code></p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A scDiffCom object with an empty list for <code>cci_table_raw</code>.</p>
+    <p>Launch a shiny app</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
