@@ -132,7 +132,7 @@ accessors.
 To facilitate results exploration, we recommend launching the provided Shiny
 report that allows to interactively visualize both the detected interactions
 and the results from the over-representation analysis. As an option, it is
-possible to first reduce over-represented GO terms by semantic similarity.
+possible to reduce over-represented GO terms by semantic similarity.
 
 Running this function also require to install several packages.
 
