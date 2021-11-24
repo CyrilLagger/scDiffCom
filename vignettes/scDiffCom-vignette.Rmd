@@ -302,3 +302,6 @@ scdiffcom_detection_only <- run_interaction_analysis(
   seurat_condition_id = NULL
 )
 ```
+
+More downstream analysis tools to explore and visualize such data will be
+released in the future.
