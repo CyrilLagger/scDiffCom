@@ -1,10 +1,12 @@
 
-# scDiffCom 0.1.0.9000
+# scDiffCom 0.2
 
-23-11-2021
+24-11-2021
 
 * New function `BuildShiny()` that creates a shiny app from the results
 * New internal function to reduce GO terms by semantic similarity
+
+# scDiffCom 0.1.0.9000
 
 09-11-2021
 
