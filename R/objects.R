@@ -23,7 +23,7 @@ setClass(
     cci_table_raw = "list_or_data.table",
     cci_table_detected = "list_or_data.table",
     ora_table = "list_or_data.table"#,
-   #ora_stringent = "list_or_data.table"
+    #ora_stringent = "list_or_data.table"
   ),
   prototype = list(
     parameters = list(),
@@ -271,7 +271,7 @@ setMethod(
     object,
     categories = "all",
     simplified = TRUE
-    ) {
+  ) {
     get_tables_ora(
       object = object,
       categories = categories,
@@ -486,7 +486,7 @@ setGeneric(
     skip_ora = FALSE,
     extra_annotations = NULL,
     verbose = TRUE
-    ) standardGeneric("FilterCCI"),
+  ) standardGeneric("FilterCCI"),
   signature = "object"
 )
 
@@ -646,7 +646,7 @@ setGeneric(
       "biological_process",
       "molecular_function",
       "cellular_component"
-      ),
+    ),
     OR_threshold = 1,
     bh_p_value_threshold = 0.05
   ) standardGeneric("PlotORA"),
@@ -765,6 +765,141 @@ setMethod(
     )
   }
 )
+
+#' A shiny app to display scDiffCom results
+#'
+#' Launch a shiny app to explore scDiffCom results
+#'
+#' @param object \code{scDiffCom} object
+#' @param reduce_go If \code{TRUE} (default), reduce go terms by semantic
+#'  similarity and allows shiny to plot GO Treemaps.
+#' @param ... Additional parameters to \code{shiny::runApp}
+#'
+#' @return Launch a shiny app
+#'
+#' @export
+setGeneric(
+  name = "BuildShiny",
+  def = function(
+    object,
+    reduce_go = TRUE,
+    ...
+  ) standardGeneric("BuildShiny"),
+  signature = "object"
+)
+
+#' @rdname BuildShiny
+setMethod(
+  f = "BuildShiny",
+  signature = "scDiffCom",
+  definition = function(
+    object,
+    reduce_go = TRUE,
+    ...
+  ) {
+    ui <- server <- NULL
+    if (object@parameters$iterations < 1000) {
+      stop(
+        "Shiny report not available for current scDiffCom object ",
+        "(at least 1000 iterations required, current has ",
+        object@parameters$iterations,
+        " )"
+      )
+    }
+    if (!object@parameters$permutation_analysis) {
+      stop(
+        "Shiny report not available for current scDiffCom object ",
+        "(permutation analysis has not been performed)"
+      )
+    }
+    if (!object@parameters$conditional_analysis) {
+      stop(
+        "Shiny report not available for current scDiffCom object ",
+        "(differential analysis has not been performed)"
+      )
+    }
+    if (!requireNamespace("shiny", quietly = TRUE)) {
+      stop(
+        paste0(
+          "Package \"shiny\" needed for this function to work.",
+          "Please install it."
+        ),
+        call. = FALSE
+      )
+    }
+    if (!requireNamespace("shinythemes", quietly = TRUE)) {
+      stop(
+        paste0(
+          "Package \"shinythemes\" needed for this function to work.",
+          "Please install it."
+        ),
+        call. = FALSE
+      )
+    }
+    if (!requireNamespace("DT", quietly = TRUE)) {
+      stop(
+        paste0(
+          "Package \"DT\" needed for this function to work.",
+          "Please install it."
+        ),
+        call. = FALSE
+      )
+    }
+    if (!requireNamespace("plotly", quietly = TRUE)) {
+      stop(
+        paste0(
+          "Package \"plotly\" needed for this function to work.",
+          "Please install it."
+        ),
+        call. = FALSE
+      )
+    }
+    if (!requireNamespace("visNetwork", quietly = TRUE)) {
+      stop(
+        paste0(
+          "Package \"visNetwork\" needed for this function to work.",
+          "Please install it."
+        ),
+        call. = FALSE
+      )
+    }
+    file_path <- system.file(
+      "appdir",
+      "app.R",
+      package = "scDiffCom"
+    )
+    if (!nzchar(file_path)) stop("Shiny app not found")
+    source(file_path, local = TRUE, chdir = TRUE)
+    server_env <- environment(server)
+    server_env$.object_ <- object
+    server_env$.reduce_go_ <- reduce_go
+    if (reduce_go) {
+      if (!requireNamespace("GOSemSim", quietly = TRUE)) {
+        stop(
+          paste0(
+            "Package \"GOSemSim\" needed for this function to work.",
+            "Please install it or set 'reduced_GO_TERMS' to FALSE."
+          ),
+          call. = FALSE
+        )
+      }
+      if (!requireNamespace("rrvgo", quietly = TRUE)) {
+        stop(
+          paste0(
+            "Package \"rrvgo\" needed for this function to work.",
+            "Please install it or set 'reduced_GO_TERMS' to FALSE."
+          ),
+          call. = FALSE
+        )
+      }
+      reduced_go_table <- reduce_go_terms(object)
+      server_env$.reduced_go_table_ <- reduced_go_table
+    }
+    app <- shiny::shinyApp(ui, server)
+    shiny::runApp(app, ...)
+  }
+)
+
 
 ################ Not implemented generics/methods ################
 

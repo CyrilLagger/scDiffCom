@@ -18,9 +18,10 @@ in scRNA-seq data change between two biological conditions. You can also
 simply use it in "detection-mode" if you are not interested in comparing 
 conditions.
 
-In addition to this vignette, we also recommend reading our (manuscript
-in preparation) that explains the details of the statistical methods used 
-by the package. Some important terminology includes:
+In addition to this vignette, we also recommend reading our manuscript
+([doi:10.1101/2021.08.13.456238](https://www.biorxiv.org/content/10.1101/2021.08.13.456238v1))
+that explains the details of the statistical
+methods used by the package. Some important terminology includes:
 
 * LRI: a known ligand-receptor interaction of the
 form `Apoe:Ldlr` (simple) or `Col3a1:Itgb1_Itga2` (complex/heteromeric)
@@ -125,6 +126,18 @@ scdiffcom_object
 
 Note: we recommend accessing the slots of the object with the provided
 accessors.
+
+### Launch a Shiny App to explore the results
+
+To facilitate results exploration, we recommend launching the provided Shiny
+report that allows to interactively visualize both the detected interactions
+and the results from the over-representation analysis. As an option, it is
+possible to first reduce over-represented GO terms by semantic similarity.
+
+Running this function also require to install several packages.
+
+You can call the Shiny app as follows: 
+`BuildShiny(scdiffcom_object, reduce_go = TRUE)`.
 
 ### Explore the detected CCIs
 
