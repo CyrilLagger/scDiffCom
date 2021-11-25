@@ -50,6 +50,7 @@ Suggests:
     spelling,
     shiny,
     shinythemes,
+    shinyWidgets,
     SingleCellSignalR,
     testthat (>= 3.0.0),
     visNetwork

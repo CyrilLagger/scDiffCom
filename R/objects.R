@@ -827,6 +827,15 @@ setMethod(
         call. = FALSE
       )
     }
+    if (!requireNamespace("shinyWidgets", quietly = TRUE)) {
+      stop(
+        paste0(
+          "Package \"shinyWidgets\" needed for this function to work.",
+          "Please install it."
+        ),
+        call. = FALSE
+      )
+    }
     if (!requireNamespace("shinythemes", quietly = TRUE)) {
       stop(
         paste0(
@@ -899,7 +908,6 @@ setMethod(
     shiny::runApp(app, ...)
   }
 )
-
 
 ################ Not implemented generics/methods ################
 
