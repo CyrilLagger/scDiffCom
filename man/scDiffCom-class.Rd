@@ -24,7 +24,7 @@ worth keeping if one intends to modify the filtering parameters
 \item{\code{cci_table_detected}}{Data.table with only the detected CCIs. If
 \code{cci_table_raw} is not \code{NULL}, can be updated with new filtering
 parameters without running the full permutation analysis (see
-\code{\link{FilterCCI}})}
+\code{\link{FilterCCI}}).}
 
 \item{\code{ora_table}}{List of data.tables with the results of the
 over-representation analysis for each category. Results for additional

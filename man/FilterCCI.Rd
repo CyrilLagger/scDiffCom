@@ -49,7 +49,7 @@ the value is not updated.}
 \item{skip_ora}{Default is \code{FALSE}. If \code{TRUE}, ORA is not
 performed with the new parameters and \code{ora_table} is set to an
 empty list. May be useful if one wants to quickly test (loop-over) several
-values of parameters and by-passing the ORA computing time.}
+values of parameters and by-pass the ORA computing time.}
 
 \item{extra_annotations}{Convenience parameter to perform ORA on user-defined
 non-standard categories. If \code{NULL} (default), ORA is
