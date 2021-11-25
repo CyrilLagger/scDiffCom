@@ -50,7 +50,7 @@ setClass(
 #' @slot cci_table_detected Data.table with only the detected CCIs. If
 #'  \code{cci_table_raw} is not \code{NULL}, can be updated with new filtering
 #'  parameters without running the full permutation analysis (see
-#'  \code{\link{FilterCCI}})
+#'  \code{\link{FilterCCI}}).
 #' @slot ora_table List of data.tables with the results of the
 #'  over-representation analysis for each category. Results for additional
 #'  categories can be added with \code{\link{RunORA}}.
@@ -464,7 +464,7 @@ setMethod(
 #' @param skip_ora Default is \code{FALSE}. If \code{TRUE}, ORA is not
 #' performed with the new parameters and \code{ora_table} is set to an
 #' empty list. May be useful if one wants to quickly test (loop-over) several
-#' values of parameters and by-passing the ORA computing time.
+#' values of parameters and by-pass the ORA computing time.
 #' @param extra_annotations Convenience parameter to perform ORA on user-defined
 #' non-standard categories. If \code{NULL} (default), ORA is
 #' performed on standard categories. Otherwise it must be a list of data.tables
