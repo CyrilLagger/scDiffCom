@@ -904,6 +904,7 @@ setMethod(
       reduced_go_table <- reduce_go_terms(object)
       server_env$.reduced_go_table_ <- reduced_go_table
     }
+    options(DT.TOJSON_ARGS = list(na = "string"))
     app <- shiny::shinyApp(ui, server)
     shiny::runApp(app, ...)
   }
