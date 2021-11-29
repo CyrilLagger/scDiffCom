@@ -69,8 +69,8 @@
 
       
 
-      </header><script src="scDiffCom-vignette_files/header-attrs-2.11/header-attrs.js"></script><script src="scDiffCom-vignette_files/htmlwidgets-1.5.4/htmlwidgets.js"></script><link href="scDiffCom-vignette_files/vis-4.20.1/vis.css" rel="stylesheet">
-<script src="scDiffCom-vignette_files/vis-4.20.1/vis.min.js"></script><script src="scDiffCom-vignette_files/visNetwork-binding-2.0.9/visNetwork.js"></script><div class="row">
+      </header><script src="scDiffCom-vignette_files/header-attrs-2.11/header-attrs.js"></script><script src="scDiffCom-vignette_files/htmlwidgets-1.5.4/htmlwidgets.js"></script><link href="scDiffCom-vignette_files/vis-9.1.0/vis-network.min.css" rel="stylesheet">
+<script src="scDiffCom-vignette_files/vis-9.1.0/vis-network.min.js"></script><script src="scDiffCom-vignette_files/visNetwork-binding-2.1.0/visNetwork.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Introduction to scDiffCom</h1>
@@ -87,115 +87,67 @@
 <div id="overview-and-terminology" class="section level2">
 <h2 class="hasAnchor">
 <a href="#overview-and-terminology" class="anchor" aria-hidden="true"></a>Overview and terminology</h2>
-<p>The goal of scDiffCom is to investigate how cell-cell interactions detected in scRNA-seq data change between two biological conditions. You can also simply use it in “detection-mode” if you are not interested in comparing conditions.</p>
-<p>In addition to this vignette, we also recommend reading our manuscript (<a href="https://www.biorxiv.org/content/10.1101/2021.08.13.456238v1" class="external-link">doi:10.1101/2021.08.13.456238</a>) that explains the details of the statistical methods used by the package. Some important terminology includes:</p>
+<p>scDiffCom infers how intercellular communication changes between two conditions of interest from scRNA-seq data. The package can also be used without performing differential analysis if one is not interested in comparing conditions but only in investigating detected cell-cell interactions.</p>
+<p>In addition to this vignette, we also recommend reading our manuscript (<a href="https://www.biorxiv.org/content/10.1101/2021.08.13.456238v1" class="external-link">doi:10.1101/2021.08.13.456238</a>) for more information about the statistical methods used by the package.</p>
+<p>Important terminology:</p>
 <ul>
-<li>LRI: a known ligand-receptor interaction of the form <code>Apoe:Ldlr</code> (simple) or <code>Col3a1:Itgb1_Itga2</code> (complex/heteromeric)</li>
+<li>LRI (ligand-receptor interaction): as set of genes whose proteins are known to interact during extracellular signalling. The package distinguishes simple LRIs (e.g. <code>Apoe:Ldlr</code>) and complex/heteromeric LRIs (e.g. <code>Col3a1:Itgb1_Itga2</code>).</li>
 <li>CCI (cell-cell interaction): a communication signal of the form <code>(B cell, T cell; Apoe:Ldlr)</code> where <code>B cell</code> is the emitter cell type expressing the ligand <code>Apoe</code> and <code>T cell</code> is the receiver cell type expressing the receptor <code>Ldlr</code>.</li>
 </ul>
-<p><strong>Note: all the toy-model results below do not convey any meaningful biology.</strong></p>
+<p><strong>Note: the toy-model results below do not convey any meaningful biology.</strong></p>
 </div>
 <div id="standard-differential-analysis" class="section level2">
 <h2 class="hasAnchor">
 <a href="#standard-differential-analysis" class="anchor" aria-hidden="true"></a>Standard differential analysis</h2>
-<div id="setup-a-seurat-object" class="section level3">
+<div id="load-essential-libraries" class="section level3">
 <h3 class="hasAnchor">
-<a href="#setup-a-seurat-object" class="anchor" aria-hidden="true"></a>Setup a Seurat object</h3>
-<p>scDiffCom uses a scRNA-seq <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> object as input. Here, we use a toy-model object (available as part of our package) that has been down-sampled. It contains cells divided in 5 cell types as well as two age groups (“young” and “old”) on which differential analysis will be performed.</p>
+<a href="#load-essential-libraries" class="anchor" aria-hidden="true"></a>Load essential libraries</h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://satijalab.org/seurat" class="external-link">Seurat</a></span><span class="op">)</span>
-<span class="co">## Warning: package 'Seurat' was built under R version 4.1.1</span>
-<span class="co">## Attaching SeuratObject</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://cyrillagger.github.io/scDiffCom/">scDiffCom</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span>
-
-<span class="co"># Load the toy-model object</span>
-<span class="va">seurat_object</span> <span class="op">&lt;-</span> <span class="fu">scDiffCom</span><span class="fu">::</span><span class="va"><a href="../reference/seurat_sample_tms_liver.html">seurat_sample_tms_liver</a></span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></code></pre></div>
+</div>
+<div id="prepare-a-seurat-object" class="section level3">
+<h3 class="hasAnchor">
+<a href="#prepare-a-seurat-object" class="anchor" aria-hidden="true"></a>Prepare a Seurat object</h3>
+<p>The input of <code>scDiffCom</code> must be a <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> object with cells annotated by cell types. A pairwise condition on the cells is also necessary for the differential analysis.</p>
+<p>As a toy-model example, we use a down-sampled Seurat object containing mouse liver cells from Tabula Muris Senis. This object is part of the package:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">seurat_object</span> <span class="op">&lt;-</span> <span class="fu">scDiffCom</span><span class="fu">::</span><span class="va"><a href="../reference/seurat_sample_tms_liver.html">seurat_sample_tms_liver</a></span>
 <span class="va">seurat_object</span>
 <span class="co">## An object of class Seurat </span>
 <span class="co">## 726 features across 468 samples within 1 assay </span>
 <span class="co">## Active assay: RNA (726 features, 0 variable features)</span>
-<span class="co"># Cell-type annotations must be present beforehand in the object meta.data</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">seurat_object</span><span class="op">[[</span><span class="st">"cell_type"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
-<span class="co">##                                                                  cell_type</span>
-<span class="co">## A16_B000767_B009945_S16.mm10-plus-4-0                               T cell</span>
-<span class="co">## A16_D045313_B009942_S16.mm10-plus-4-0 endothelial cell of hepatic sinusoid</span>
-<span class="co">## A21_B001247_B009941_S21.mm10-plus-4-0                               B cell</span>
-<span class="co">## A22_B001247_B009941_S22.mm10-plus-4-0                               B cell</span>
-<span class="co">## A2_D045313_B009942_S2.mm10-plus-4-0                             hepatocyte</span>
-<span class="co">## A5_B001247_B009941_S5.mm10-plus-4-0                                 T cell</span>
-<span class="co"># The two conditions of interest must also be specified in the object meta.data</span>
-<span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">seurat_sample_tms_liver</span><span class="op">[[</span><span class="st">"age_group"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
+
+<span class="co"># The object already contains a column "cell_type" in its meta.data</span>
+<span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">seurat_object</span><span class="op">[[</span><span class="st">"cell_type"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
+<span class="co">## </span>
+<span class="co">##                               B cell endothelial cell of hepatic sinusoid </span>
+<span class="co">##                                   84                                  100 </span>
+<span class="co">##                           hepatocyte                    myeloid leukocyte </span>
+<span class="co">##                                  100                                  100 </span>
+<span class="co">##                               T cell </span>
+<span class="co">##                                   84</span>
+
+<span class="co"># Cells can be grouped based on mice age</span>
+<span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">seurat_object</span><span class="op">[[</span><span class="st">"age_group"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
 <span class="co">## </span>
 <span class="co">##   OLD YOUNG </span>
 <span class="co">##   250   218</span></code></pre></div>
 </div>
-<div id="optional-investigate-the-ligand-receptor-interactions" class="section level3">
+<div id="run-default-analysis" class="section level3">
 <h3 class="hasAnchor">
-<a href="#optional-investigate-the-ligand-receptor-interactions" class="anchor" aria-hidden="true"></a>(Optional) Investigate the ligand-receptor interactions</h3>
-<p>scDiffcom infers cell type to cell type communication patterns from the expression of genes known to be involved in ligand-receptor interactions (LRIs). The package contains it own internal databases of curated LRIs (for human, mouse and rat), retrieved from previous studies.</p>
-<p>You do not need to call the LRI databases explicitly when performing an analysis. However, you can still access and explore them as follows:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># Load, e.g., the mouse database</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">LRI_mouse</span><span class="op">)</span>
-
-<span class="co"># Display the data.table of LRIs (more information available in other columns)</span>
-<span class="va">LRI_mouse</span><span class="op">$</span><span class="va">LRI_curated</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"LRI"</span><span class="op">)</span><span class="op">]</span>
-<span class="co">##                        LRI</span>
-<span class="co">##    1: 1700013F07Rik:Plscr4</span>
-<span class="co">##    2:   2300002M23Rik:Ddr1</span>
-<span class="co">##    3:  9530003J23Rik:Itgal</span>
-<span class="co">##    4:             A2m:Lrp1</span>
-<span class="co">##    5:         Aanat:Mtnr1a</span>
-<span class="co">##   ---                     </span>
-<span class="co">## 4737:               a:Mc1r</span>
-<span class="co">## 4738:               a:Mc2r</span>
-<span class="co">## 4739:               a:Mc3r</span>
-<span class="co">## 4740:               a:Mc4r</span>
-<span class="co">## 4741:               a:Mc5r</span>
-<span class="co"># Display the data.table of GO Terms attached to each LRI</span>
-<span class="va">LRI_mouse</span><span class="op">$</span><span class="va">LRI_curated_GO</span>
-<span class="co">##                          LRI      GO_ID</span>
-<span class="co">##      1: 1700013F07Rik:Plscr4 GO:0005575</span>
-<span class="co">##      2: 1700013F07Rik:Plscr4 GO:0044464</span>
-<span class="co">##      3: 1700013F07Rik:Plscr4 GO:0003674</span>
-<span class="co">##      4: 1700013F07Rik:Plscr4 GO:0005488</span>
-<span class="co">##      5: 1700013F07Rik:Plscr4 GO:0008150</span>
-<span class="co">##     ---                                </span>
-<span class="co">## 267431:               a:Mc5r GO:0065007</span>
-<span class="co">## 267432:               a:Mc5r GO:0050789</span>
-<span class="co">## 267433:               a:Mc5r GO:0050794</span>
-<span class="co">## 267434:               a:Mc5r GO:0007165</span>
-<span class="co">## 267435:               a:Mc5r GO:0019222</span>
-<span class="co"># Information about GO terms (more information available in other columns)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">gene_ontology_level</span><span class="op">)</span>
-<span class="va">gene_ontology_level</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NAME"</span>, <span class="st">"LEVEL"</span><span class="op">)</span><span class="op">]</span>
-<span class="co">##                                                         NAME LEVEL</span>
-<span class="co">##     1:                             mitochondrion inheritance     7</span>
-<span class="co">##     2:                      mitochondrial genome maintenance     6</span>
-<span class="co">##     3:                                          reproduction     2</span>
-<span class="co">##     4:                 obsolete ribosomal chaperone activity     1</span>
-<span class="co">##     5: high-affinity zinc transmembrane transporter activity    10</span>
-<span class="co">##    ---                                                            </span>
-<span class="co">## 47119:                                             occurs in     1</span>
-<span class="co">## 47120:                                               part of     1</span>
-<span class="co">## 47121:                                  positively regulates     2</span>
-<span class="co">## 47122:                                             regulates     1</span>
-<span class="co">## 47123:                                         starts_during     1</span></code></pre></div>
-</div>
-<div id="run-default-differential-analysis" class="section level3">
-<h3 class="hasAnchor">
-<a href="#run-default-differential-analysis" class="anchor" aria-hidden="true"></a>Run default differential analysis</h3>
-<p>All results are obtained by simply calling <code>run_interaction_analysis</code>. The detection and differential analyses rely on permutation tests. By default, 1000 iterations are performed as this is sufficient for a quick explanatory analysis. In general, we would recommend using 10’000 permutations. Parallel computing can be easily enabled by loading the <code>future</code> package and setting the <code>plan</code> accordingly.</p>
+<a href="#run-default-analysis" class="anchor" aria-hidden="true"></a>Run default analysis</h3>
+<p>The full detection and differential analysis is performed by the function <code>run_interaction_analysis</code>. Several permutation tests are performed to assess the significance of both the specificity and the differential expression of each potential cell-cell interaction (CCI). 1000 permutations are done by default as this is fast and sufficient for a preliminary exploratory analysis. Otherwise, we recommend 10’000 permutations. Parallel computing can be easily enabled by loading the <a href="https://cran.r-project.org/package=future" class="external-link">future</a> package and setting the <code>plan</code> accordingly:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># Load the future package (optional)</span>
+<code class="sourceCode R"><span class="co"># Load future (optional)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://future.futureverse.org" class="external-link">future</a></span><span class="op">)</span>
-<span class="co">## Warning: package 'future' was built under R version 4.1.1</span>
 <span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">sequential</span><span class="op">)</span> <span class="co"># sequentially in the current R process, equivalent to do nothing</span>
 <span class="co">#plan(multisession, workers = 4) # background R sessions</span>
-<span class="co">#plan(multicore, workers = 4) # forked R processes, not Windows/not RStudio</span>
-
-<span class="co"># Run differential analysis with default parameters</span>
+<span class="co">#plan(multicore, workers = 4) # forked R processes, not Windows/not RStudio</span></code></pre></div>
+<p>Running the analysis only requires to specify the species, the names of the columns where the cell-type annotation and pairwise condition are stored and the explicit names of the two conditions:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Run differential analysis with default parameters</span>
 <span class="va">scdiffcom_object</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_interaction_analysis.html">run_interaction_analysis</a></span><span class="op">(</span>
   seurat_object <span class="op">=</span> <span class="va">seurat_object</span>,
   LRI_species <span class="op">=</span> <span class="st">"mouse"</span>,
@@ -220,50 +172,72 @@
 <span class="co">## Performing over-representation analysis on the categories: LRI, LIGAND_COMPLEX, RECEPTOR_COMPLEX, ER_CELLTYPES, EMITTER_CELLTYPE, RECEIVER_CELLTYPE, GO_TERMS, KEGG_PWS.</span>
 <span class="co">## Successfully returning final scDiffCom object.</span></code></pre></div>
 <p>The output of <code>run_interaction_analysis</code> is an S4 object of class <code>scDiffCom</code>:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">scdiffcom_object</span>
 <span class="co">## An object of class scDiffCom with name scDiffCom_object</span>
 <span class="co">## Analysis performed: differential analysis between YOUNG and OLD cells</span>
 <span class="co">## 1986 detected CCIs across 5 cell types</span>
 <span class="co">## Over-representation results for LRI, LIGAND_COMPLEX, RECEPTOR_COMPLEX, ER_CELLTYPES, EMITTER_CELLTYPE, RECEIVER_CELLTYPE, GO_TERMS, KEGG_PWS</span></code></pre></div>
-<p>Note: we recommend accessing the slots of the object with the provided accessors.</p>
 </div>
-<div id="launch-a-shiny-app-to-explore-the-results" class="section level3">
+<div id="explore-the-results-from-the-shiny-app" class="section level3">
 <h3 class="hasAnchor">
-<a href="#launch-a-shiny-app-to-explore-the-results" class="anchor" aria-hidden="true"></a>Launch a Shiny App to explore the results</h3>
-<p>To facilitate results exploration, we recommend launching the provided Shiny report that allows to interactively visualize both the detected interactions and the results from the over-representation analysis. As an option, it is possible to reduce over-represented GO terms by semantic similarity.</p>
-<p>Running this function also require to install several packages.</p>
-<p>You can call the Shiny app as follows: <code>BuildShiny(scdiffcom_object, reduce_go = TRUE)</code>.</p>
+<a href="#explore-the-results-from-the-shiny-app" class="anchor" aria-hidden="true"></a>Explore the results from the Shiny app</h3>
+<p>A Shiny app can be launched from each <code>scDiffCom</code> object to interactively visualize the detected CCIs and how they are differentially expressed. Over-representation results are also directly available from the app. As an option, it is possible to first reduce over-represented GO terms by semantic similarity such that they will be displayed as a treemap. Also note that you might be prompted to install several packages.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://shiny.rstudio.com/" class="external-link">"shiny"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"shiny"</span><span class="op">)</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://github.com/dreamRs/shinyWidgets" class="external-link">"shinyWidgets"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"shinyWidgets"</span><span class="op">)</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://rstudio.github.io/shinythemes/" class="external-link">"shinythemes"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"shinythemes"</span><span class="op">)</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://github.com/rstudio/DT" class="external-link">"DT"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"DT"</span><span class="op">)</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="http://haozhu233.github.io/kableExtra/" class="external-link">"kableExtra"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"kableExtra"</span><span class="op">)</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st">"RColorBrewer"</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"RColorBrewer"</span><span class="op">)</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://igraph.org" class="external-link">"igraph"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"igraph"</span><span class="op">)</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="http://datastorm-open.github.io/visNetwork/" class="external-link">"visNetwork"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"visNetwork"</span><span class="op">)</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://plotly-r.com" class="external-link">"plotly"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"plotly"</span><span class="op">)</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://yulab-smu.top/biomedical-knowledge-mining-book/" class="external-link">"GOSemSim"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"GOSemSim"</span><span class="op">)</span>
+<span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://www.bioconductor.org/packages/rrvgo" class="external-link">"rrvgo"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"rrvgo"</span><span class="op">)</span>
+
+<span class="va">reduced_go_terms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ReduceGO.html">ReduceGO</a></span><span class="op">(</span><span class="va">scdiffcom_object</span><span class="op">)</span> <span class="co"># optional</span>
+
+<span class="fu"><a href="../reference/BuildShiny.html">BuildShiny</a></span><span class="op">(</span>
+  <span class="va">scdiffcom_object</span>,
+  reduced_go_table <span class="op">=</span> <span class="va">reduced_go_terms</span> <span class="co"># NULL by default</span>
+<span class="op">)</span></code></pre></div>
 </div>
-<div id="explore-the-detected-ccis" class="section level3">
+<div id="explore-the-results-manually" class="section level3">
 <h3 class="hasAnchor">
-<a href="#explore-the-detected-ccis" class="anchor" aria-hidden="true"></a>Explore the detected CCIs</h3>
-<p>The slot <code>cci_table_detected</code> is a data.table that contains all biologically relevant CCIs (one per row) with columns providing useful information such as how they are regulated between the two conditions (here <code>young</code> and <code>old</code>):</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<a href="#explore-the-results-manually" class="anchor" aria-hidden="true"></a>Explore the results manually</h3>
+<p>Instead of using the Shiny app, the results can also be extracted directly from the <code>scDiffCom</code> object with the provided accessors:</p>
+<ul>
+<li>
+<code><a href="../reference/GetParameters.html">GetParameters()</a></code> returns the list of parameters used by <code><a href="../reference/run_interaction_analysis.html">run_interaction_analysis()</a></code>
+</li>
+<li>
+<code><a href="../reference/GetTableCCI.html">GetTableCCI()</a></code> returns a (complete or simplified) data.table either of the detected CCIs or of all the hypothetical CCIs.</li>
+<li>
+<code><a href="../reference/GetTableORA.html">GetTableORA()</a></code> returns a list of (complete or simplified) data.tables with over-representation results.</li>
+</ul>
+<p>From there, results can be analysed and visualised from either custom or <code>scDiffCom</code> functions.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Retrieve and display all detected CCIs</span>
-<span class="va">CCI_detected</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GetTableCCI.html">GetTableCCI</a></span><span class="op">(</span><span class="va">scdiffcom_object</span>, <span class="st">"detected"</span>, simplified <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-<span class="va">CCI_detected</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CCI"</span>, <span class="st">"REGULATION"</span><span class="op">)</span><span class="op">]</span>
-<span class="co">##                                                         CCI REGULATION</span>
-<span class="co">##    1:                           B cell_B cell_Adam10:Fcer2a       FLAT</span>
-<span class="co">##    2:                              B cell_B cell_Btla:Cd79a        NSC</span>
-<span class="co">##    3:                                B cell_B cell_Cd48:Cd2        NSC</span>
-<span class="co">##    4:                             B cell_B cell_Cd72:Sema4d        NSC</span>
-<span class="co">##    5:                               B cell_B cell_Copa:Cd74       FLAT</span>
-<span class="co">##   ---                                                                 </span>
-<span class="co">## 1982:        myeloid leukocyte_myeloid leukocyte_Vasp:Itga4       FLAT</span>
-<span class="co">## 1983: myeloid leukocyte_myeloid leukocyte_Vcam1:Itgb1_Itga4       FLAT</span>
-<span class="co">## 1984: myeloid leukocyte_myeloid leukocyte_Vcam1:Itgb1_Itga9       FLAT</span>
-<span class="co">## 1985: myeloid leukocyte_myeloid leukocyte_Vcam1:Itgb7_Itga4       FLAT</span>
-<span class="co">## 1986:         myeloid leukocyte_myeloid leukocyte_Vcam1:Msn       FLAT</span>
-<span class="co"># Number of CCIs per regulation type</span>
+<span class="va">CCI_detected</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GetTableCCI.html">GetTableCCI</a></span><span class="op">(</span><span class="va">scdiffcom_object</span>, type <span class="op">=</span> <span class="st">"detected"</span>, simplified <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+
+<span class="co"># Number of CCIs per regulation type (here with age)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">CCI_detected</span><span class="op">$</span><span class="va">REGULATION</span><span class="op">)</span>
 <span class="co">## </span>
 <span class="co">## DOWN FLAT  NSC   UP </span>
-<span class="co">##  120  973  858   35</span></code></pre></div>
-<p>Detected CCIs can be explored either one by one by looking at the data.table, more globally based on our over-representation analysis (see below) or from graphs such as this volcano plot:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<span class="co">##  120  973  858   35</span>
+
+<span class="co"># Retrieve the ORA results</span>
+<span class="va">ORA_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GetTableORA.html">GetTableORA</a></span><span class="op">(</span><span class="va">scdiffcom_object</span>, categories <span class="op">=</span> <span class="st">"all"</span>, simplified <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+
+<span class="co"># Categories available</span>
+<span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">ORA_results</span><span class="op">)</span>
+<span class="co">## [1] "LRI"               "LIGAND_COMPLEX"    "RECEPTOR_COMPLEX" </span>
+<span class="co">## [4] "ER_CELLTYPES"      "EMITTER_CELLTYPE"  "RECEIVER_CELLTYPE"</span>
+<span class="co">## [7] "GO_TERMS"          "KEGG_PWS"</span></code></pre></div>
+<p>Custom volcano plot of CCIs:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://ggplot2.tidyverse.org" class="external-link">"ggplot2"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"ggplot2"</span><span class="op">)</span>
-<span class="co">## Loading required package: ggplot2</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>
 
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>
@@ -281,36 +255,11 @@
 <span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span>
   <span class="st">"-log10(Adj. p-value)"</span>
 <span class="op">)</span></code></pre></div>
-<p><img src="scDiffCom-vignette_files/figure-html/unnamed-chunk-6-1.png" width="100%"></p>
-</div>
-<div id="explore-ora-results" class="section level3">
-<h3 class="hasAnchor">
-<a href="#explore-ora-results" class="anchor" aria-hidden="true"></a>Explore ORA results</h3>
-<p>The slot <code>ora_table</code> contains a list of data.tables giving the results of the over-representation analysis performed on predefined categories:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># Retrieve the ORA results</span>
-<span class="va">ORA_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/GetTableORA.html">GetTableORA</a></span><span class="op">(</span><span class="va">scdiffcom_object</span>, categories <span class="op">=</span> <span class="st">"all"</span>, simplified <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
-
-<span class="co"># Categories available</span>
-<span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">ORA_results</span><span class="op">)</span>
-<span class="co">## [1] "LRI"               "LIGAND_COMPLEX"    "RECEPTOR_COMPLEX" </span>
-<span class="co">## [4] "ER_CELLTYPES"      "EMITTER_CELLTYPE"  "RECEIVER_CELLTYPE"</span>
-<span class="co">## [7] "GO_TERMS"          "KEGG_PWS"</span>
-<span class="co"># Explore, e.g., the top 10 LRIs up-regulated based on their ORA score</span>
-<span class="va">ORA_results</span><span class="op">$</span><span class="va">LRI</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"VALUE"</span>, <span class="st">"ORA_SCORE_UP"</span>, <span class="st">"OR_UP"</span>, <span class="st">"BH_P_VALUE_UP"</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/setorder.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">ORA_SCORE_UP</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span>
-<span class="co">##              VALUE ORA_SCORE_UP     OR_UP BH_P_VALUE_UP</span>
-<span class="co">##  1:    H2-D1:Cd8b1          Inf       Inf  7.292044e-07</span>
-<span class="co">##  2:    H2-K1:Cd8b1          Inf       Inf  7.292044e-07</span>
-<span class="co">##  3:    H2-Q6:Cd8b1          Inf       Inf  3.012525e-05</span>
-<span class="co">##  4: Lck:Cd8a_Cd8b1          Inf       Inf  2.883823e-02</span>
-<span class="co">##  5:   H2-T23:Cd8b1     30.28268 178.35580  8.928196e-05</span>
-<span class="co">##  6:  Lgals1:Lgals1     20.42120  59.95999  3.485409e-04</span>
-<span class="co">##  7:     H2-D1:Cd8a     14.36497  58.14560  3.542486e-03</span>
-<span class="co">##  8:     H2-K1:Cd8a     14.36497  58.14560  3.542486e-03</span>
-<span class="co">##  9:   H2-T22:Cd8b1     14.36497  58.14560  3.542486e-03</span>
-<span class="co">## 10:   Ltb:Tnfrsf1a     14.36497  58.14560  3.542486e-03</span>
-<span class="co"># Plot the most over-represented up-regulated LRIs</span>
-<span class="co"># note that PlotORA returns a ggplot object that you can further optimize (e.g. here to place the legend)</span>
+<p><img src="scDiffCom-vignette_files/figure-html/unnamed-chunk-8-1.png" width="100%"></p>
+<p>Dot plots of over-represented terms:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Plot the most over-represented up-regulated LRIs</span>
+<span class="co"># PlotORA returns a ggplot object that you can further optimize (e.g. here to place the legend)</span>
 <span class="fu"><a href="../reference/PlotORA.html">PlotORA</a></span><span class="op">(</span>
   object <span class="op">=</span> <span class="va">scdiffcom_object</span>,
   category <span class="op">=</span> <span class="st">"LRI"</span>,
@@ -319,39 +268,102 @@
   legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.85</span>, <span class="fl">0.4</span><span class="op">)</span>,
   legend.key.size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="st">"cm"</span><span class="op">)</span>
 <span class="op">)</span></code></pre></div>
-<p><img src="scDiffCom-vignette_files/figure-html/unnamed-chunk-7-1.png" width="100%"></p>
-<p>A summary of the changes in intercellular communication is given by the following graph that displays the over-represented cell types and cell-type pairs:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<p><img src="scDiffCom-vignette_files/figure-html/unnamed-chunk-9-1.png" width="100%"></p>
+<p>A network of over-represented cell types and cell-type to cell-type interactions:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="http://datastorm-open.github.io/visNetwork/" class="external-link">"visNetwork"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"visNetwork"</span><span class="op">)</span>
-<span class="co">## Loading required package: visNetwork</span>
 <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://igraph.org" class="external-link">"igraph"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"igraph"</span><span class="op">)</span>
-<span class="co">## Loading required package: igraph</span>
-<span class="co">## </span>
-<span class="co">## Attaching package: 'igraph'</span>
-<span class="co">## The following objects are masked from 'package:future':</span>
-<span class="co">## </span>
-<span class="co">##     %-&gt;%, %&lt;-%</span>
-<span class="co">## The following objects are masked from 'package:stats':</span>
-<span class="co">## </span>
-<span class="co">##     decompose, spectrum</span>
-<span class="co">## The following object is masked from 'package:base':</span>
-<span class="co">## </span>
-<span class="co">##     union</span>
 <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="http://haozhu233.github.io/kableExtra/" class="external-link">"kableExtra"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"kableExtra"</span><span class="op">)</span>
-<span class="co">## Loading required package: kableExtra</span>
 <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st">"RColorBrewer"</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"RColorBrewer"</span><span class="op">)</span>
-<span class="co">## Loading required package: RColorBrewer</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://datastorm-open.github.io/visNetwork/" class="external-link">visNetwork</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://igraph.org" class="external-link">igraph</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://haozhu233.github.io/kableExtra/" class="external-link">kableExtra</a></span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">RColorBrewer</span><span class="op">)</span>
 
 <span class="fu"><a href="../reference/BuildNetwork.html">BuildNetwork</a></span><span class="op">(</span>
   object <span class="op">=</span> <span class="va">scdiffcom_object</span>
 <span class="op">)</span></code></pre></div>
 <div id="htmlwidget-409849e39179307f2e17" style="width:100%;height:100vh;" class="visNetwork html-widget"></div>
-<script type="application/json" data-for="htmlwidget-409849e39179307f2e17">{"x":{"nodes":{"name":["B cell (E)","T cell (E)","endothelial cell of hepatic sinusoid (E)","hepatocyte (E)","myeloid leukocyte (E)","B cell (R)","T cell (R)","endothelial cell of hepatic sinusoid (R)","hepatocyte (R)","myeloid leukocyte (R)"],"vertex_types":[true,true,true,true,true,false,false,false,false,false],"num_cells":[42,42,50,50,50,42,42,50,50,50],"ORA_TYPE":["UP","UP","NONE","FLAT","NONE","FLAT","DIFF","DOWN","FLAT","FLAT"],"OR_UP":[4.89,2.85,0.38,0.195,0.677,0,30.3,0.0729,0,0.227],"OR_DOWN":[1.14,0.791,1.42,1.5,0.349,0.275,1.9,1.96,1.53,0.142],"OR_FLAT":[0.601,0.708,0.954,1.5,1.12,1.67,0.52,0.876,1.37,1.32],"BH_P_VALUE_UP":[0.00068,0.0186,0.0509,0.0186,0.544,null,5.91e-17,0.000292,null,0.00724],"BH_P_VALUE_DOWN":[0.623,0.623,0.135,0.135,0.001,0.00668,0.00317,0.00185,0.125,6.53e-10],"BH_P_VALUE_FLAT":[0.00407,0.0138,0.66,0.00082,0.361,0.00118,2.28e-08,0.195,0.0434,0.00921],"vertex.size":[5,5,5,5,5,5,5,5,5,5],"id":["B cell (E)","T cell (E)","endothelial cell of hepatic sinusoid (E)","hepatocyte (E)","myeloid leukocyte (E)","B cell (R)","T cell (R)","endothelial cell of hepatic sinusoid (R)","hepatocyte (R)","myeloid leukocyte (R)"],"label":["B cell (E)","T cell (E)","endothelial cell of hepatic sinusoid (E)","hepatocyte (E)","myeloid leukocyte (E)","B cell (R)","T cell (R)","endothelial cell of hepatic sinusoid (R)","hepatocyte (R)","myeloid leukocyte (R)"],"value":[5,5,5,5,5,5,5,5,5,5],"color.background":["#F94144","#F94144","#a6a6a6","#90BE6D","#a6a6a6","#90BE6D","#F9C74F","#277DA1","#90BE6D","#90BE6D"],"color.border":["#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590"],"color.highlight.background":["#F94144","#F94144","#a6a6a6","#90BE6D","#a6a6a6","#90BE6D","#F9C74F","#277DA1","#90BE6D","#90BE6D"],"color.highlight.border":["#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590"],"color.hover.background":["#F94144","#F94144","#a6a6a6","#90BE6D","#a6a6a6","#90BE6D","#F9C74F","#277DA1","#90BE6D","#90BE6D"],"color.hover.border":["#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590"],"shadow":[true,true,true,true,true,true,true,true,true,true],"title":["<h4> B cell (E)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio UP: <\/td>\n   <td style=\"text-align:left;\"> 4.89 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value UP: <\/td>\n   <td style=\"text-align:left;\"> 0.00068 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> T cell (E)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio UP: <\/td>\n   <td style=\"text-align:left;\"> 2.85 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value UP: <\/td>\n   <td style=\"text-align:left;\"> 0.0186 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> endothelial cell of hepatic sinusoid (E)<\/h4>","<h4> hepatocyte (E)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 1.5 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00082 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> myeloid leukocyte (E)<\/h4>","<h4> B cell (R)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 1.67 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00118 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> T cell (R)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio UP: <\/td>\n   <td style=\"text-align:left;\"> 30.3 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value UP: <\/td>\n   <td style=\"text-align:left;\"> 5.91e-17 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 1.9 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.00317 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> endothelial cell of hepatic sinusoid (R)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 1.96 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.00185 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte (R)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 1.37 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.0434 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> myeloid leukocyte (R)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 1.32 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00921 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>"],"group":[true,true,true,true,true,false,false,false,false,false],"level":[1,1,1,1,1,2,2,2,2,2],"vertex_order":[2,1,4,5,3,6,7,10,9,8],"x":[-1,-1,-1,-1,-1,1,1,1,1,1],"y":[-0.5,-1,0.5,1,0,-1,-0.5,1,0.5,0]},"edges":{"from":["B cell (E)","B cell (E)","T cell (E)","endothelial cell of hepatic sinusoid (E)","endothelial cell of hepatic sinusoid (E)","hepatocyte (E)","hepatocyte (E)","hepatocyte (E)","hepatocyte (E)","hepatocyte (E)"],"to":["T cell (R)","endothelial cell of hepatic sinusoid (R)","T cell (R)","T cell (R)","hepatocyte (R)","B cell (R)","T cell (R)","endothelial cell of hepatic sinusoid (R)","hepatocyte (R)","myeloid leukocyte (R)"],"NUM_LRIS_TOTAL":[61,40,80,118,62,54,65,119,74,152],"NUM_LRIS_YOUNG":[41,35,62,107,59,48,63,116,74,150],"NUM_LRIS_OLD":[59,32,72,95,57,47,44,102,67,149],"NUM_LRIS_REL_DIFF":[18,-3,10,-12,-2,-1,-19,-14,-7,-1],"NUM_LRIS_UP":[10,0,9,5,0,0,2,0,0,0],"NUM_LRIS_DOWN":[2,7,5,14,10,1,14,15,5,2],"NUM_LRIS_FLAT":[17,15,31,42,33,38,23,55,51,96],"NUM_LRIS_NSC":[32,18,35,57,19,15,26,49,18,54],"NUM_LRIS_DIFF":[12,7,14,19,10,1,16,15,5,2],"ORA_TYPE":["UP","DOWN","UP","DOWN","DOWN","FLAT","DOWN","DOWN","FLAT","FLAT"],"OR_UP":[14.8,0,9.14,2.71,0,0,1.82,0,0,0],"OR_DOWN":[0.519,3.44,1.04,2.24,3.17,0.288,4.69,2.42,1.13,0.194],"OR_FLAT":[0.392,0.619,0.648,0.556,1.19,2.53,0.56,0.888,2.38,1.87],"BH_P_VALUE_UP":[3.19e-07,null,2.41e-05,0.119,null,null,0.574,null,null,null],"BH_P_VALUE_DOWN":[0.763,0.026,0.873,0.0376,0.0196,0.445,0.000376,0.0196,0.873,0.0242],"BH_P_VALUE_FLAT":[0.00824,0.319,0.188,0.0156,0.724,0.00891,0.11,0.751,0.00652,0.00652],"color.color":["#F94144","#277DA1","#F94144","#277DA1","#277DA1","#90BE6D","#277DA1","#277DA1","#90BE6D","#90BE6D"],"main_title":["Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation"],"width":[3.24717025853816,2.17358208694943,4.06663413566471,5.45298127506597,3.29324302382187,2.91347980295444,3.42927560520688,5.48617225236043,3.81953763845025,6.51237230317938],"color.highlight":["#F94144","#277DA1","#F94144","#277DA1","#277DA1","#90BE6D","#277DA1","#277DA1","#90BE6D","#90BE6D"],"color.hover":["#F94144","#277DA1","#F94144","#277DA1","#277DA1","#90BE6D","#277DA1","#277DA1","#90BE6D","#90BE6D"],"smooth":[true,true,true,true,true,true,true,true,true,true],"arrow.size":[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],"title":["<h4> B cell to T cell<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio UP: <\/td>\n   <td style=\"text-align:left;\"> 14.8 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value UP: <\/td>\n   <td style=\"text-align:left;\"> 3.19e-07 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 61 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 10 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 2 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 17 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> B cell to endothelial cell of hepatic sinusoid<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 3.44 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.026 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 40 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 7 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 15 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> T cell to T cell<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio UP: <\/td>\n   <td style=\"text-align:left;\"> 9.14 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value UP: <\/td>\n   <td style=\"text-align:left;\"> 2.41e-05 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 80 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 9 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 5 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 31 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> endothelial cell of hepatic sinusoid to T cell<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 2.24 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.0376 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 118 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 5 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 14 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 42 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> endothelial cell of hepatic sinusoid to hepatocyte<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 3.17 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.0196 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 62 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 10 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 33 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte to B cell<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 2.53 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00891 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 54 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 1 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 38 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte to T cell<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 4.69 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.000376 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 65 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 2 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 14 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 23 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte to endothelial cell of hepatic sinusoid<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 2.42 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.0196 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 119 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 15 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 55 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte to hepatocyte<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 2.38 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00652 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 74 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 5 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 51 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte to myeloid leukocyte<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 1.87 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00652 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 152 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 2 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 96 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>"]},"nodesToDataframe":true,"edgesToDataframe":true,"options":{"width":"100%","height":"100%","nodes":{"shape":"dot","font":{"size":18,"align":"left"},"physics":false},"manipulation":{"enabled":false},"edges":{"arrows":"middle","shadow":true,"smooth":false},"physics":{"maxVelocity":10,"timestep":0.5,"enabled":false,"repulsion":{"damping":0.5}},"interaction":{"hover":true,"keyboard":{"enabled":true},"multiselect":true,"navigationButtons":false},"autoResize":true},"groups":["TRUE","FALSE"],"width":"100%","height":"100vh","idselection":{"enabled":false,"style":"width: 150px; height: 26px","useLabels":true,"main":"Select by id"},"byselection":{"enabled":false,"style":"width: 150px; height: 26px","multiple":false,"hideColor":"rgba(200,200,200,0.5)","highlight":false},"main":{"text":"Cell-type centric over-representation","style":"font-family:Georgia, Times New Roman, Times, serif;font-weight:bold;font-size:20px;text-align:center;"},"submain":{"text":"YOUNG vs OLD","style":"font-family:Georgia, Times New Roman, Times, serif;font-size:12px;text-align:center;"},"footer":null,"background":"#F5F5F5","igraphlayout":{"type":"square"},"legend":{"width":0.2,"useGroups":false,"position":"left","ncol":1,"stepX":100,"stepY":100,"zoom":false,"edges":{"color":["#F94144","#277DA1","#90BE6D","#F9C74F"],"label":["UP","DOWN","FLAT","UP&DOWN"],"arrows":["to","to","to","to"],"font.align":["top","top","top","top"]},"edgesToDataframe":true,"nodes":{"color":["#F94144","#277DA1","#90BE6D","#F9C74F"],"label":["UP","DOWN","FLAT","UP&DOWN"],"shape":["dot","dot","dot","dot"]},"nodesToDataframe":true},"datacss":"table.legend_table {\n  font-size: 11px;\n  border-width:1px;\n  border-color:#d3d3d3;\n  border-style:solid;\n}\ntable.legend_table td {\n  border-width:1px;\n  border-color:#d3d3d3;\n  border-style:solid;\n  padding: 2px;\n}\ndiv.table_content {\n  width:80px;\n  text-align:center;\n}\ndiv.table_description {\n  width:100px;\n}\n\n#operation {\n  font-size:28px;\n}\n#network-popUp {\n  display:none;\n  z-index:299;\n  width:250px;\n  height:150px;\n  background-color: #f9f9f9;\n  border-style:solid;\n  border-width:3px;\n  border-color: #5394ed;\n  padding:10px;\n  text-align: center;\n  position:fixed;\n  top:50%;  \n  left:50%;  \n  margin:-100px 0 0 -100px;  \n\n}","highlight":{"enabled":true,"hoverNearest":true,"degree":{"from":1,"to":1},"algorithm":"hierarchical","hideColor":"rgba(200,200,200,0.5)","labelOnly":true},"collapse":{"enabled":false,"fit":false,"resetHighlight":true,"clusterOptions":null,"keepCoord":true,"labelSuffix":"(cluster)"},"tooltipStay":300,"tooltipStyle":"position: fixed;visibility:hidden;padding: 5px;white-space: nowrap;font-family: verdana;font-size:14px;font-color:#000000;background-color: #f5f4ed;-moz-border-radius: 3px;-webkit-border-radius: 3px;border-radius: 3px;border: 1px solid #808074;box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);"},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-409849e39179307f2e17">{"x":{"nodes":{"name":["B cell (E)","T cell (E)","endothelial cell of hepatic sinusoid (E)","hepatocyte (E)","myeloid leukocyte (E)","B cell (R)","T cell (R)","endothelial cell of hepatic sinusoid (R)","hepatocyte (R)","myeloid leukocyte (R)"],"vertex_types":[true,true,true,true,true,false,false,false,false,false],"num_cells":[42,42,50,50,50,42,42,50,50,50],"ORA_TYPE":["UP","UP","NONE","FLAT","NONE","FLAT","DIFF","DOWN","FLAT","FLAT"],"OR_UP":[4.89,2.85,0.38,0.195,0.677,0,30.3,0.0729,0,0.227],"OR_DOWN":[1.14,0.791,1.42,1.5,0.349,0.275,1.9,1.96,1.53,0.142],"OR_FLAT":[0.601,0.708,0.954,1.5,1.12,1.67,0.52,0.876,1.37,1.32],"BH_P_VALUE_UP":[0.00068,0.0186,0.0509,0.0186,0.544,null,5.91e-17,0.000292,null,0.00724],"BH_P_VALUE_DOWN":[0.623,0.623,0.135,0.135,0.001,0.00668,0.00317,0.00185,0.125,6.53e-10],"BH_P_VALUE_FLAT":[0.00407,0.0138,0.66,0.00082,0.361,0.00118,2.28e-08,0.195,0.0434,0.00921],"vertex.size":[5,5,5,5,5,5,5,5,5,5],"id":["B cell (E)","T cell (E)","endothelial cell of hepatic sinusoid (E)","hepatocyte (E)","myeloid leukocyte (E)","B cell (R)","T cell (R)","endothelial cell of hepatic sinusoid (R)","hepatocyte (R)","myeloid leukocyte (R)"],"label":["B cell (E)","T cell (E)","endothelial cell of hepatic sinusoid (E)","hepatocyte (E)","myeloid leukocyte (E)","B cell (R)","T cell (R)","endothelial cell of hepatic sinusoid (R)","hepatocyte (R)","myeloid leukocyte (R)"],"value":[5,5,5,5,5,5,5,5,5,5],"color.background":["#F94144","#F94144","#a6a6a6","#90BE6D","#a6a6a6","#90BE6D","#F9C74F","#277DA1","#90BE6D","#90BE6D"],"color.border":["#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590"],"color.highlight.background":["#F94144","#F94144","#a6a6a6","#90BE6D","#a6a6a6","#90BE6D","#F9C74F","#277DA1","#90BE6D","#90BE6D"],"color.highlight.border":["#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590"],"color.hover.background":["#F94144","#F94144","#a6a6a6","#90BE6D","#a6a6a6","#90BE6D","#F9C74F","#277DA1","#90BE6D","#90BE6D"],"color.hover.border":["#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590","#577590"],"shadow":[true,true,true,true,true,true,true,true,true,true],"title":["<h4> B cell (E)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio UP: <\/td>\n   <td style=\"text-align:left;\"> 4.89 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value UP: <\/td>\n   <td style=\"text-align:left;\"> 0.00068 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> T cell (E)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio UP: <\/td>\n   <td style=\"text-align:left;\"> 2.85 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value UP: <\/td>\n   <td style=\"text-align:left;\"> 0.0186 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> endothelial cell of hepatic sinusoid (E)<\/h4>","<h4> hepatocyte (E)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 1.5 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00082 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> myeloid leukocyte (E)<\/h4>","<h4> B cell (R)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 1.67 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00118 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> T cell (R)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio UP: <\/td>\n   <td style=\"text-align:left;\"> 30.3 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value UP: <\/td>\n   <td style=\"text-align:left;\"> 5.91e-17 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 1.9 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.00317 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> endothelial cell of hepatic sinusoid (R)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 1.96 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.00185 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte (R)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 1.37 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.0434 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> myeloid leukocyte (R)<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 1.32 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00921 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>"],"group":[true,true,true,true,true,false,false,false,false,false],"level":[1,1,1,1,1,2,2,2,2,2],"vertex_order":[2,1,4,5,3,6,7,10,9,8],"x":[-1,-1,-1,-1,-1,1,1,1,1,1],"y":[-0.5,-1,0.5,1,0,-1,-0.5,1,0.5,0]},"edges":{"from":["B cell (E)","B cell (E)","T cell (E)","endothelial cell of hepatic sinusoid (E)","endothelial cell of hepatic sinusoid (E)","hepatocyte (E)","hepatocyte (E)","hepatocyte (E)","hepatocyte (E)","hepatocyte (E)"],"to":["T cell (R)","endothelial cell of hepatic sinusoid (R)","T cell (R)","T cell (R)","hepatocyte (R)","B cell (R)","T cell (R)","endothelial cell of hepatic sinusoid (R)","hepatocyte (R)","myeloid leukocyte (R)"],"NUM_LRIS_TOTAL":[61,40,80,118,62,54,65,119,74,152],"NUM_LRIS_YOUNG":[41,35,62,107,59,48,63,116,74,150],"NUM_LRIS_OLD":[59,32,72,95,57,47,44,102,67,149],"NUM_LRIS_REL_DIFF":[18,-3,10,-12,-2,-1,-19,-14,-7,-1],"NUM_LRIS_UP":[10,0,9,5,0,0,2,0,0,0],"NUM_LRIS_DOWN":[2,7,5,14,10,1,14,15,5,2],"NUM_LRIS_FLAT":[17,15,31,42,33,38,23,55,51,96],"NUM_LRIS_NSC":[32,18,35,57,19,15,26,49,18,54],"NUM_LRIS_DIFF":[12,7,14,19,10,1,16,15,5,2],"ORA_TYPE":["UP","DOWN","UP","DOWN","DOWN","FLAT","DOWN","DOWN","FLAT","FLAT"],"OR_UP":[14.8,0,9.14,2.71,0,0,1.82,0,0,0],"OR_DOWN":[0.519,3.44,1.04,2.24,3.17,0.288,4.69,2.42,1.13,0.194],"OR_FLAT":[0.392,0.619,0.648,0.556,1.19,2.53,0.56,0.888,2.38,1.87],"BH_P_VALUE_UP":[3.19e-07,null,2.41e-05,0.119,null,null,0.574,null,null,null],"BH_P_VALUE_DOWN":[0.763,0.026,0.873,0.0376,0.0196,0.445,0.000376,0.0196,0.873,0.0242],"BH_P_VALUE_FLAT":[0.00824,0.319,0.188,0.0156,0.724,0.00891,0.11,0.751,0.00652,0.00652],"color.color":["#F94144","#277DA1","#F94144","#277DA1","#277DA1","#90BE6D","#277DA1","#277DA1","#90BE6D","#90BE6D"],"main_title":["Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation","Cell-type centric over-representation"],"width":[3.24717025853816,2.17358208694943,4.06663413566471,5.45298127506597,3.29324302382187,2.91347980295444,3.42927560520688,5.48617225236043,3.81953763845025,6.51237230317938],"color.highlight":["#F94144","#277DA1","#F94144","#277DA1","#277DA1","#90BE6D","#277DA1","#277DA1","#90BE6D","#90BE6D"],"color.hover":["#F94144","#277DA1","#F94144","#277DA1","#277DA1","#90BE6D","#277DA1","#277DA1","#90BE6D","#90BE6D"],"smooth":[true,true,true,true,true,true,true,true,true,true],"arrow.size":[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5],"title":["<h4> B cell to T cell<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio UP: <\/td>\n   <td style=\"text-align:left;\"> 14.8 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value UP: <\/td>\n   <td style=\"text-align:left;\"> 3.19e-07 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 61 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 10 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 2 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 17 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> B cell to endothelial cell of hepatic sinusoid<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 3.44 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.026 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 40 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 7 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 15 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> T cell to T cell<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio UP: <\/td>\n   <td style=\"text-align:left;\"> 9.14 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value UP: <\/td>\n   <td style=\"text-align:left;\"> 2.41e-05 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 80 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 9 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 5 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 31 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> endothelial cell of hepatic sinusoid to T cell<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 2.24 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.0376 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 118 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 5 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 14 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 42 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> endothelial cell of hepatic sinusoid to hepatocyte<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 3.17 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.0196 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 62 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 10 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 33 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte to B cell<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 2.53 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00891 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 54 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 1 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 38 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte to T cell<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 4.69 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.000376 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 65 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 2 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 14 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 23 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte to endothelial cell of hepatic sinusoid<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio DOWN: <\/td>\n   <td style=\"text-align:left;\"> 2.42 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value DOWN: <\/td>\n   <td style=\"text-align:left;\"> 0.0196 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 119 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 15 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 55 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte to hepatocyte<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 2.38 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00652 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 74 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 5 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 51 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>","<h4> hepatocyte to myeloid leukocyte<\/h4><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> Odds Ratio FLAT: <\/td>\n   <td style=\"text-align:left;\"> 1.87 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> Adj. p-value FLAT: <\/td>\n   <td style=\"text-align:left;\"> 0.00652 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table><br> Number of LRIs: <br><table>\n<tbody>\n  <tr>\n   <td style=\"text-align:left;\"> TOTAL: <\/td>\n   <td style=\"text-align:left;\"> 152 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> UP: <\/td>\n   <td style=\"text-align:left;\"> 0 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> DOWN: <\/td>\n   <td style=\"text-align:left;\"> 2 <\/td>\n  <\/tr>\n  <tr>\n   <td style=\"text-align:left;\"> FLAT: <\/td>\n   <td style=\"text-align:left;\"> 96 <\/td>\n  <\/tr>\n<\/tbody>\n<\/table>"]},"nodesToDataframe":true,"edgesToDataframe":true,"options":{"width":"100%","height":"100%","nodes":{"shape":"dot","font":{"size":18,"align":"left"},"physics":false},"manipulation":{"enabled":false},"edges":{"arrows":"middle","shadow":true,"smooth":false},"physics":{"maxVelocity":10,"timestep":0.5,"enabled":false,"repulsion":{"damping":0.5}},"interaction":{"hover":true,"keyboard":{"enabled":true},"multiselect":true,"navigationButtons":false,"zoomSpeed":1},"autoResize":true},"groups":["TRUE","FALSE"],"width":"100%","height":"100vh","idselection":{"enabled":false,"style":"width: 150px; height: 26px","useLabels":true,"main":"Select by id"},"byselection":{"enabled":false,"style":"width: 150px; height: 26px","multiple":false,"hideColor":"rgba(200,200,200,0.5)","highlight":false},"main":{"text":"Cell-type centric over-representation","style":"font-family:Georgia, Times New Roman, Times, serif;font-weight:bold;font-size:20px;text-align:center;"},"submain":{"text":"YOUNG vs OLD","style":"font-family:Georgia, Times New Roman, Times, serif;font-size:12px;text-align:center;"},"footer":null,"background":"#F5F5F5","igraphlayout":{"type":"square"},"legend":{"width":0.2,"useGroups":false,"position":"left","ncol":1,"stepX":100,"stepY":100,"zoom":false,"edges":{"color":["#F94144","#277DA1","#90BE6D","#F9C74F"],"label":["UP","DOWN","FLAT","UP&DOWN"],"arrows":["to","to","to","to"],"font.align":["top","top","top","top"]},"edgesToDataframe":true,"nodes":{"color":["#F94144","#277DA1","#90BE6D","#F9C74F"],"label":["UP","DOWN","FLAT","UP&DOWN"],"shape":["dot","dot","dot","dot"]},"nodesToDataframe":true},"opts_manipulation":{"datacss":"table.legend_table {\n  font-size: 11px;\n  border-width:1px;\n  border-color:#d3d3d3;\n  border-style:solid;\n}\ntable.legend_table td {\n  border-width:1px;\n  border-color:#d3d3d3;\n  border-style:solid;\n  padding: 2px;\n}\ndiv.table_content {\n  width:80px;\n  text-align:center;\n}\ndiv.table_description {\n  width:100px;\n}\n\n.operation {\n  font-size:20px;\n}\n\n.network-popUp {\n  display:none;\n  z-index:299;\n  width:250px;\n  /*height:150px;*/\n  background-color: #f9f9f9;\n  border-style:solid;\n  border-width:1px;\n  border-color: #0d0d0d;\n  padding:10px;\n  text-align: center;\n  position:fixed;\n  top:50%;  \n  left:50%;  \n  margin:-100px 0 0 -100px;  \n\n}","addNodeCols":["id","label"],"editNodeCols":["id","label"],"tab_add_node":"<span id=\"addnode-operation\" class = \"operation\">node<\/span> <br><table style=\"margin:auto;\"><tr><td>id<\/td><td><input id=\"addnode-id\"  type= \"text\" value=\"new value\"><\/td><\/tr><tr><td>label<\/td><td><input id=\"addnode-label\"  type= \"text\" value=\"new value\"><\/td><\/tr><\/table><input type=\"button\" value=\"save\" id=\"addnode-saveButton\"><\/button><input type=\"button\" value=\"cancel\" id=\"addnode-cancelButton\"><\/button>","tab_edit_node":"<span id=\"editnode-operation\" class = \"operation\">node<\/span> <br><table style=\"margin:auto;\"><tr><td>id<\/td><td><input id=\"editnode-id\"  type= \"text\" value=\"new value\"><\/td><\/tr><tr><td>label<\/td><td><input id=\"editnode-label\"  type= \"text\" value=\"new value\"><\/td><\/tr><\/table><input type=\"button\" value=\"save\" id=\"editnode-saveButton\"><\/button><input type=\"button\" value=\"cancel\" id=\"editnode-cancelButton\"><\/button>"},"highlight":{"enabled":true,"hoverNearest":true,"degree":{"from":1,"to":1},"algorithm":"hierarchical","hideColor":"rgba(200,200,200,0.5)","labelOnly":true},"collapse":{"enabled":false,"fit":false,"resetHighlight":true,"clusterOptions":null,"keepCoord":true,"labelSuffix":"(cluster)"},"tooltipStay":300,"tooltipStyle":"position: fixed;visibility:hidden;padding: 5px;white-space: nowrap;font-family: verdana;font-size:14px;font-color:#000000;background-color: #f5f4ed;-moz-border-radius: 3px;-webkit-border-radius: 3px;border-radius: 3px;border: 1px solid #808074;box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);"},"evals":[],"jsHooks":[]}</script>
 </div>
+</div>
+<div id="detection-only-analysis" class="section level2">
+<h2 class="hasAnchor">
+<a href="#detection-only-analysis" class="anchor" aria-hidden="true"></a>Detection-only analysis</h2>
+<p>If one has no condition to compare, <code>scDiffCom</code> can still be used to return detected CCIs only:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">scdiffcom_detection_only</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_interaction_analysis.html">run_interaction_analysis</a></span><span class="op">(</span>
+  seurat_object <span class="op">=</span> <span class="va">seurat_object</span>,
+  LRI_species <span class="op">=</span> <span class="st">"mouse"</span>,
+  seurat_celltype_id <span class="op">=</span> <span class="st">"cell_type"</span>,
+  seurat_condition_id <span class="op">=</span> <span class="cn">NULL</span>
+<span class="op">)</span>
+<span class="co">## Extracting data from assay 'RNA' and slot 'data' (assuming normalized log1p-transformed data).</span>
+<span class="co">## Converting normalized data from log1p-transformed to non-log1p-transformed.</span>
+<span class="co">## Input data: 726 genes, 468 cells and 5 cell-types.</span>
+<span class="co">## Input ligand-receptor database: 4741 mouse interactions.</span>
+<span class="co">## Number of LRIs that match to genes present in the dataset: 1219.</span>
+<span class="co">## Type of analysis to be performed: detection analysis without conditions.</span>
+<span class="co">## Total number of potential cell-cell interactions (CCIs): 30475 (5 * 5 * 1219).</span>
+<span class="co">## Performing permutation analysis (1000 iterations by batches of 1000) on 7669 potential CCIs.</span>
+<span class="co">## Performing batch 1 of 1.</span>
+<span class="co">## Filtering and cleaning 'raw' CCIs.</span>
+<span class="co">## Returning 2047 detected CCIs.</span>
+<span class="co">## No over-representation analysis available for the selected parameters.</span>
+<span class="co">## Successfully returning final scDiffCom object.</span></code></pre></div>
+<p>Although it is currently not possible to explore such results with a Shiny app, such functionality should be added in a future release of the package ( as well as with other downstream analysis tools).</p>
+</div>
+<div id="database-of-ligand-receptor-interactions" class="section level2">
+<h2 class="hasAnchor">
+<a href="#database-of-ligand-receptor-interactions" class="anchor" aria-hidden="true"></a>Database of ligand-receptor interactions</h2>
+<p><code>scDiffcom</code> infers cell type to cell type communication patterns from the expression of genes known to be involved in ligand-receptor interactions (LRIs). The package contains it own internal databases of curated LRIs (for human, mouse and rat), retrieved from previous studies.</p>
+<p>As shown above, there is no need to call the LRI databases explicitly when performing an analysis. However, they can be accessed and explored as follows:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Load, e.g., the mouse database</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">LRI_mouse</span><span class="op">)</span>
+
+<span class="co"># Display the data.table of LRIs (more information available in other columns)</span>
+<span class="va">LRI_mouse</span><span class="op">$</span><span class="va">LRI_curated</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"LRI"</span><span class="op">)</span><span class="op">]</span>
+<span class="co">##                        LRI</span>
+<span class="co">##    1: 1700013F07Rik:Plscr4</span>
+<span class="co">##    2:   2300002M23Rik:Ddr1</span>
+<span class="co">##    3:  9530003J23Rik:Itgal</span>
+<span class="co">##    4:             A2m:Lrp1</span>
+<span class="co">##    5:         Aanat:Mtnr1a</span>
+<span class="co">##   ---                     </span>
+<span class="co">## 4737:               a:Mc1r</span>
+<span class="co">## 4738:               a:Mc2r</span>
+<span class="co">## 4739:               a:Mc3r</span>
+<span class="co">## 4740:               a:Mc4r</span>
+<span class="co">## 4741:               a:Mc5r</span>
+
+<span class="co"># Display the data.table of GO Terms attached to each LRI</span>
+<span class="va">LRI_mouse</span><span class="op">$</span><span class="va">LRI_curated_GO</span>
+<span class="co">##                          LRI      GO_ID</span>
+<span class="co">##      1: 1700013F07Rik:Plscr4 GO:0005575</span>
+<span class="co">##      2: 1700013F07Rik:Plscr4 GO:0044464</span>
+<span class="co">##      3: 1700013F07Rik:Plscr4 GO:0003674</span>
+<span class="co">##      4: 1700013F07Rik:Plscr4 GO:0005488</span>
+<span class="co">##      5: 1700013F07Rik:Plscr4 GO:0008150</span>
+<span class="co">##     ---                                </span>
+<span class="co">## 267431:               a:Mc5r GO:0065007</span>
+<span class="co">## 267432:               a:Mc5r GO:0050789</span>
+<span class="co">## 267433:               a:Mc5r GO:0050794</span>
+<span class="co">## 267434:               a:Mc5r GO:0007165</span>
+<span class="co">## 267435:               a:Mc5r GO:0019222</span>
+
+<span class="co"># Information about GO terms (more information available in other columns)</span>
+<span class="co"># LEVEL corresponds to the depth of the GO term in the GO graph</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">gene_ontology_level</span><span class="op">)</span>
+<span class="va">gene_ontology_level</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"NAME"</span>, <span class="st">"LEVEL"</span><span class="op">)</span><span class="op">]</span>
+<span class="co">##                                                         NAME LEVEL</span>
+<span class="co">##     1:                             mitochondrion inheritance     7</span>
+<span class="co">##     2:                      mitochondrial genome maintenance     6</span>
+<span class="co">##     3:                                          reproduction     2</span>
+<span class="co">##     4:                 obsolete ribosomal chaperone activity     1</span>
+<span class="co">##     5: high-affinity zinc transmembrane transporter activity    10</span>
+<span class="co">##    ---                                                            </span>
+<span class="co">## 47119:                                             occurs in     1</span>
+<span class="co">## 47120:                                               part of     1</span>
+<span class="co">## 47121:                                  positively regulates     2</span>
+<span class="co">## 47122:                                             regulates     1</span>
+<span class="co">## 47123:                                         starts_during     1</span></code></pre></div>
 </div>
 <div id="additional-functionalities" class="section level2">
 <h2 class="hasAnchor">
@@ -360,7 +372,7 @@
 <h3 class="hasAnchor">
 <a href="#modifying-default-parameters" class="anchor" aria-hidden="true"></a>Modifying default parameters</h3>
 <p><code>run_interaction_analysis</code> depends on several parameters that can be modified. We encourage to carefully read the documentation (<code><a href="../reference/run_interaction_analysis.html">?run_interaction_analysis</a></code>). For convenience, the input parameters are stored in the returned object in the slot <code>parameters</code>:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># display the first three parameters</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/GetParameters.html">GetParameters</a></span><span class="op">(</span><span class="va">scdiffcom_object</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>
 <span class="co">## $object_name</span>
@@ -372,7 +384,7 @@
 <span class="co">## $seurat_celltype_id</span>
 <span class="co">## [1] "cell_type"</span></code></pre></div>
 <p>Among those parameters are four filtering thresholds that can be modified to recompute the results without having to perform the time-consuming permutation analyses again. This works because we store an intermediate table of all hypothetic CCIs in the slot <code>cci_table_raw</code>. The disadvantage is that storing this data.table can make the object heavy depending on the dataset. You can either decide to keep this table allowing you to quickly update your results in case you want to modify some filtering parameters or to erase this table to save space.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># create a new object with a different log fold change threshold</span>
 <span class="va">scdiffcom_object_stringent_logfc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterCCI.html">FilterCCI</a></span><span class="op">(</span>
   object <span class="op">=</span> <span class="va">scdiffcom_object</span>,
@@ -382,6 +394,7 @@
 <span class="co">## Returning 1986 detected CCIs.</span>
 <span class="co">## Performing over-representation analysis on the categories: LRI, LIGAND_COMPLEX, RECEPTOR_COMPLEX, ER_CELLTYPES, EMITTER_CELLTYPE, RECEIVER_CELLTYPE, GO_TERMS, KEGG_PWS.</span>
 <span class="co">## Erasing all previous ORA results: LRI, LIGAND_COMPLEX, RECEPTOR_COMPLEX, ER_CELLTYPES, EMITTER_CELLTYPE, RECEIVER_CELLTYPE, GO_TERMS, KEGG_PWS.</span>
+
 <span class="co"># create a copy of the original object, but without the heavy intermediate table</span>
 <span class="va">scdiffcom_object_light</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/EraseRawCCI.html">EraseRawCCI</a></span><span class="op">(</span><span class="va">scdiffcom_object</span><span class="op">)</span>
 
@@ -395,8 +408,8 @@
 <div id="performing-ora-on-custom-categories" class="section level3">
 <h3 class="hasAnchor">
 <a href="#performing-ora-on-custom-categories" class="anchor" aria-hidden="true"></a>Performing ORA on custom categories</h3>
-<p>By default, ORA is performed on a set of categories that are always present for any dataset analyzed (LRI, GO Terms, etc). However, you might want to find over-represented results for a category only relevant to your dataset. This is possible to achieve as long as you are able to build a relationship between the terms of your new category and those of a default category. As an example, we show here how we can perform ORA on cell-type families:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<p>By default, ORA is performed on a set of categories that are always present for any dataset analysed (LRI, GO Terms, etc). However, you might want to find over-represented results for a category only relevant to your dataset. This is possible to achieve as long as you are able to build a relationship between the terms of your new category and those of a default category. As an example, we show here how we can perform ORA on cell-type families:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Create a data.table that associates cell-type families to cell types</span>
 <span class="co"># Here we use the default category EMITTER_CELLTYPE (RECEIVER_CELLTYPE would also work)</span>
 <span class="va">cell_families_relation</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/data.table.html" class="external-link">data.table</a></span><span class="op">(</span>
@@ -426,33 +439,7 @@
 <span class="op">)</span>
 <span class="co">## Performing over-representation analysis on the categories: EMITTER_CELLFAMILY.</span>
 <span class="co">## Keeping previous ORA results: LRI, LIGAND_COMPLEX, RECEPTOR_COMPLEX, ER_CELLTYPES, EMITTER_CELLTYPE, RECEIVER_CELLTYPE, GO_TERMS, KEGG_PWS.</span></code></pre></div>
-</div>
-<div id="running-a-detection-analysis-without-differential-analysis" class="section level3">
-<h3 class="hasAnchor">
-<a href="#running-a-detection-analysis-without-differential-analysis" class="anchor" aria-hidden="true"></a>Running a detection analysis without differential analysis</h3>
-<p>If you are not interested in comparing how CCIs change between two conditions, you can also use scDiffCom in “detection-mode” only:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># not specifying the conditions to compare will perform a detection-only analysis</span>
-<span class="va">scdiffcom_detection_only</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/run_interaction_analysis.html">run_interaction_analysis</a></span><span class="op">(</span>
-  seurat_object <span class="op">=</span> <span class="va">seurat_object</span>,
-  LRI_species <span class="op">=</span> <span class="st">"mouse"</span>,
-  seurat_celltype_id <span class="op">=</span> <span class="st">"cell_type"</span>,
-  seurat_condition_id <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span>
-<span class="co">## Extracting data from assay 'RNA' and slot 'data' (assuming normalized log1p-transformed data).</span>
-<span class="co">## Converting normalized data from log1p-transformed to non-log1p-transformed.</span>
-<span class="co">## Input data: 726 genes, 468 cells and 5 cell-types.</span>
-<span class="co">## Input ligand-receptor database: 4741 mouse interactions.</span>
-<span class="co">## Number of LRIs that match to genes present in the dataset: 1219.</span>
-<span class="co">## Type of analysis to be performed: detection analysis without conditions.</span>
-<span class="co">## Total number of potential cell-cell interactions (CCIs): 30475 (5 * 5 * 1219).</span>
-<span class="co">## Performing permutation analysis (1000 iterations by batches of 1000) on 7669 potential CCIs.</span>
-<span class="co">## Performing batch 1 of 1.</span>
-<span class="co">## Filtering and cleaning 'raw' CCIs.</span>
-<span class="co">## Returning 2047 detected CCIs.</span>
-<span class="co">## No over-representation analysis available for the selected parameters.</span>
-<span class="co">## Successfully returning final scDiffCom object.</span></code></pre></div>
-<p>More downstream analysis tools to explore and visualize such data will be released in the future.</p>
+<p>The object now contains a new table in its slot <code>ora_table</code>.</p>
 </div>
 </div>
   </div>

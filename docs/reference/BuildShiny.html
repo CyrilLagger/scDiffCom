@@ -129,10 +129,10 @@
     <p>Launch a shiny app to explore scDiffCom results</p>
     </div>
 
-    <div class="ref-usage sourceCode"><pre class='sourceCode r'><code><span class='fu'>BuildShiny</span><span class='op'>(</span><span class='va'>object</span>, reduce_go <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span>
+    <div class="ref-usage sourceCode"><pre class='sourceCode r'><code><span class='fu'>BuildShiny</span><span class='op'>(</span><span class='va'>object</span>, reduced_go_table <span class='op'>=</span> <span class='cn'>NULL</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S4 method for scDiffCom</span>
-<span class='fu'>BuildShiny</span><span class='op'>(</span><span class='va'>object</span>, reduce_go <span class='op'>=</span> <span class='cn'>TRUE</span>, <span class='va'>...</span><span class='op'>)</span></code></pre></div>
+<span class='fu'>BuildShiny</span><span class='op'>(</span><span class='va'>object</span>, reduced_go_table <span class='op'>=</span> <span class='cn'>NULL</span>, <span class='va'>...</span><span class='op'>)</span></code></pre></div>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -142,9 +142,11 @@
       <td><p><code>scDiffCom</code> object</p></td>
     </tr>
     <tr>
-      <th>reduce_go</th>
-      <td><p>If <code>TRUE</code> (default), reduce go terms by semantic
-similarity and allows shiny to plot GO Treemaps.</p></td>
+      <th>reduced_go_table</th>
+      <td><p>If <code>NULL</code> (default), over-represented GO terms
+are displayed as dot plots. If the output of
+ <code>scDiffCom::ReduceGO(object)</code>, GO terms are displayed on a on treemap
+ based on their semantic similarity and over-representation score</p></td>
     </tr>
     <tr>
       <th>...</th>
