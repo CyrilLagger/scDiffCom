@@ -98,10 +98,30 @@ mod_results_cci_ui <- function(id){
         h4("Filtering Options"),
         uiOutput(ns("RESULTS_EMITTER_CHOICE")),
         uiOutput(ns("RESULTS_RECEIVER_CHOICE")),
-        uiOutput(ns("RESULTS_LRI_CHOICE")),
-        uiOutput(ns("RESULTS_GENE_CHOICE")),
-        uiOutput(ns("RESULTS_GO_CHOICE")),
-        uiOutput(ns("RESULTS_KEGG_CHOICE")),
+        selectizeInput(
+          ns("RESULTS_LRI_CHOICE"),
+          choices = NULL,
+          label = "Ligand-Receptor Interactions",
+          multiple = TRUE
+        ),
+        selectizeInput(
+          ns("RESULTS_GENE_CHOICE"),
+          choices = NULL,
+          label = "Individual Genes",
+          multiple = TRUE
+        ),
+        selectizeInput(
+          ns("RESULTS_GO_CHOICE"),
+          choices = NULL,
+          label = "GO Terms",
+          multiple = TRUE
+        ),
+        selectizeInput(
+          ns("RESULTS_KEGG_CHOICE"),
+          choices = NULL,
+          label = "KEGG Pathways",
+          multiple = TRUE
+        ),
         actionButton(
           inputId = ns("RESULTS_FILTER_BUTTON"),
           label = "Filter"

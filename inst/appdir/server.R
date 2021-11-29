@@ -15,7 +15,6 @@ mod_parameters_server <- function(id) {
       output,
       session
     ) {
-      ns <- session$ns
 
       output$PARAMETERS_DT <- DT::renderDT({
         display_parameters_table(.object_@parameters)
@@ -32,7 +31,6 @@ mod_results_server <- function(id) {
       output,
       session
     ) {
-      ns <- session$ns
 
       output$RESULTS_TITLE <- renderUI({
         tags$div(
@@ -118,31 +116,30 @@ mod_results_cci_server <- function(id, rv_hidden) {
         )
       })
 
-      output$RESULTS_LRI_CHOICE <- renderUI({
-        ALL_LRI_LABEL <- "All LRIs"
-        choices <-
-          c(
-            ALL_LRI_LABEL,
+      updateSelectizeInput(
+        session = session,
+        "RESULTS_LRI_CHOICE",
+        choices = c(
+          "All LRIs",
+          sort(unique(.object_@cci_table_detected$LRI))
+        ),
+        selected = "All LRIs",
+        options = list(
+          allowEmptyOption = TRUE,
+          placeholder = "Type LRIs",
+          maxOptions = length(c(
+            "All LRIs",
             sort(unique(.object_@cci_table_detected$LRI))
-          )
-        selectizeInput(
-          inputId = ns("RESULTS_LRI_CHOICE"),
-          label = "Ligand-Receptor Interactions",
-          choices = choices,
-          selected = ALL_LRI_LABEL,
-          multiple = TRUE,
-          options = list(
-            allowEmptyOption = TRUE,
-            placeholder = 'Type LRIs',
-            maxOptions = length(choices)
-          )
-        )
-      })
+          ))
+        ),
+        server = TRUE
+      )
 
-      output$RESULTS_GENE_CHOICE <- renderUI({
-        ALL_GENE_LABEL <- "All Genes"
-        choices <- c(
-          ALL_GENE_LABEL,
+      updateSelectizeInput(
+        session = session,
+        "RESULTS_GENE_CHOICE",
+        choices = c(
+          "All Genes",
           sort(
             unique(
               c(
@@ -161,60 +158,73 @@ mod_results_cci_server <- function(id, rv_hidden) {
               )
             )
           )
-        )
-        selectizeInput(
-          inputId = ns("RESULTS_GENE_CHOICE"),
-          label = "Individual Genes",
-          choices = choices,
-          selected = ALL_GENE_LABEL,
-          multiple = TRUE,
-          options = list(
-            allowEmptyOption = TRUE,
-            placeholder = 'Type Genes',
-            maxOptions = length(choices)
-          )
-        )
-      })
+        ),
+        selected = "All Genes",
+        options = list(
+          allowEmptyOption = TRUE,
+          placeholder = "Type Genes",
+          maxOptions = length(c(
+            "All Genes",
+            sort(
+              unique(
+                c(
+                  sapply(
+                    seq_along(.object_@parameters$max_nL),
+                    function(i) {
+                      .object_@cci_table_detected[[paste0("LIGAND_", i)]]
+                    }
+                  ),
+                  sapply(
+                    seq_along(.object_@parameters$max_nR),
+                    function(i) {
+                      .object_@cci_table_detected[[paste0("RECEPTOR_", i)]]
+                    }
+                  )
+                )
+              )
+            )
+          ))
+        ),
+        server = TRUE
+      )
 
-      output$RESULTS_GO_CHOICE <- renderUI({
-        ALL_GO_LABEL <- "All GO Terms"
-        choices_go <- c(
-          ALL_GO_LABEL,
+      updateSelectizeInput(
+        session = session,
+        "RESULTS_GO_CHOICE",
+        choices = c(
+          "All GO Terms",
           sort(unique(.object_@ora_table$GO_TERMS$VALUE))
-        )
-        selectizeInput(
-          inputId = ns("RESULTS_GO_CHOICE"),
-          label = "GO Terms",
-          choices = choices_go,
-          selected = ALL_GO_LABEL,
-          multiple = TRUE,
-          options = list(
-            allowEmptyOption = TRUE,
-            placeholder = "Type GO Terms",
-            maxOptions = length(choices_go)
-          )
-        )
-      })
+        ),
+        selected = "All GO Terms",
+        options = list(
+          allowEmptyOption = TRUE,
+          placeholder = "Type GO Terms",
+          maxOptions = length(c(
+            "All GO Terms",
+            sort(unique(.object_@ora_table$GO_TERMS$VALUE))
+          ))
+        ),
+        server = TRUE
+      )
 
-      output$RESULTS_KEGG_CHOICE <- renderUI({
-        ALL_KEGG_LABEL = 'All KEGG Pathways'
-        choices <- c(
-          ALL_KEGG_LABEL,
+      updateSelectizeInput(
+        session = session,
+        "RESULTS_KEGG_CHOICE",
+        choices = c(
+          "All KEGG Pathways",
           sort(unique(.object_@ora_table$KEGG_PWS$VALUE))
-        )
-        selectizeInput(
-          inputId = ns("RESULTS_KEGG_CHOICE"),
-          label = "KEGG Pathways",
-          choices = choices,
-          selected = ALL_KEGG_LABEL,
-          multiple = TRUE,
-          options = list(
-            allowEmptyOption = TRUE,
-            placeholder = 'Type KEGG Pathways',
-            maxOptions = length(choices)
-          )
-        )
-      })
+        ),
+        selected = "All KEGG Pathways",
+        options = list(
+          allowEmptyOption = TRUE,
+          placeholder = "Type KEGG Pathway",
+          maxOptions = length(c(
+            "All KEGG Pathways",
+            sort(unique(.object_@ora_table$KEGG_PWS$VALUE))
+          ))
+        ),
+        server = TRUE
+      )
 
       output$RESULTS_CCI_TITLE <- renderUI({
         fluidPage(
