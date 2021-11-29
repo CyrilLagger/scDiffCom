@@ -362,13 +362,13 @@ mod_results_cci_server <- function(id, rv_hidden) {
           )
           shinyWidgets::updatePickerInput(
             session = session,
-            inputId = ns("RESULTS_EMITTER_CHOICE"),
+            inputId = "RESULTS_EMITTER_CHOICE",
             choices = choices_cts,
             selected = choices_cts
           )
           shinyWidgets::updatePickerInput(
             session = session,
-            inputId = ns("RESULTS_RECEIVER_CHOICE"),
+            inputId = "RESULTS_RECEIVER_CHOICE",
             choices = choices_cts,
             selected = choices_cts
           )
@@ -460,7 +460,6 @@ mod_results_cci_server <- function(id, rv_hidden) {
           )
         }
       )
-
     })
 }
 
