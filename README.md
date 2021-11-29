@@ -18,8 +18,8 @@ scDiffCom infers cell type to cell type communication signals from
 scRNA-seq [Seurat](https://satijalab.org/seurat/) objects, and more
 particularly investigates how these interactions change between two
 biological conditions. The package relies on a internal collection of
-ligand-receptor interactions (available for human and mouse) retrieved
-from seven public and curated databases.
+ligand-receptor interactions (available for human, mouse and rat)
+retrieved from seven public and curated databases.
 
 <details>
 <summary>

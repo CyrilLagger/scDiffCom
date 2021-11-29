@@ -13,24 +13,28 @@ vignette: >
 
 ## Overview and terminology
 
-The goal of scDiffCom is to investigate how cell-cell interactions detected
-in scRNA-seq data change between two biological conditions. You can also
-simply use it in "detection-mode" if you are not interested in comparing 
-conditions.
+scDiffCom infers how intercellular communication changes between two conditions
+of interest from scRNA-seq data. The package can also be used without
+performing differential analysis if one is not interested in comparing
+conditions but only in investigating detected cell-cell interactions.
 
 In addition to this vignette, we also recommend reading our manuscript
 ([doi:10.1101/2021.08.13.456238](https://www.biorxiv.org/content/10.1101/2021.08.13.456238v1))
-that explains the details of the statistical
-methods used by the package. Some important terminology includes:
+for more information about the statistical
+methods used by the package.
 
-* LRI: a known ligand-receptor interaction of the
-form `Apoe:Ldlr` (simple) or `Col3a1:Itgb1_Itga2` (complex/heteromeric)
+Important terminology:
+
+* LRI (ligand-receptor interaction): as set of genes whose proteins are known
+to interact during extracellular signalling. The package distinguishes simple
+LRIs (e.g. `Apoe:Ldlr`) and complex/heteromeric LRIs (e.g.
+`Col3a1:Itgb1_Itga2`).
 * CCI (cell-cell interaction): a communication signal of the form
 `(B cell, T cell; Apoe:Ldlr)` where `B cell` is the emitter cell type expressing
 the ligand `Apoe` and `T cell` is the receiver cell type expressing the receptor
 `Ldlr`.
 
-**Note: all the toy-model results below do not convey any meaningful biology.**
+**Note: the toy-model results below do not convey any meaningful biology.**
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -40,71 +44,58 @@ knitr::opts_chunk$set(
 
 ## Standard differential analysis
 
-### Setup a Seurat object
+### Load essential libraries
 
-scDiffCom uses a scRNA-seq [Seurat](https://satijalab.org/seurat/) object as
-input. Here, we use a toy-model object (available as part of our package) that
-has been down-sampled. It contains cells divided in 5 cell types as well as two
-age groups ("young" and "old") on which differential analysis will be
-performed.
-
-```{r setup}
+```{r setup, warning = FALSE, message = FALSE}
 library(Seurat)
 library(scDiffCom)
 library(data.table)
+```
 
-# Load the toy-model object
+### Prepare a Seurat object
+
+The input of `scDiffCom` must be a [Seurat](https://satijalab.org/seurat/)
+object with cells annotated by cell types. A pairwise condition on the cells is
+also necessary for the differential analysis.
+
+As a toy-model example, we use a down-sampled Seurat object containing mouse
+liver cells from Tabula Muris Senis. This object is part of the package:
+
+```{r}
 seurat_object <- scDiffCom::seurat_sample_tms_liver
 seurat_object
 
-# Cell-type annotations must be present beforehand in the object meta.data
-head(seurat_object[["cell_type"]])
+# The object already contains a column "cell_type" in its meta.data
+table(seurat_object[["cell_type"]])
 
-# The two conditions of interest must also be specified in the object meta.data
-table(seurat_sample_tms_liver[["age_group"]])
+# Cells can be grouped based on mice age
+table(seurat_object[["age_group"]])
 ```
 
-### (Optional) Investigate the ligand-receptor interactions
+### Run default analysis
 
-scDiffcom infers cell type to cell type communication patterns from the
-expression of genes known to be involved in ligand-receptor interactions
-(LRIs). The package contains it own internal databases of curated LRIs (for
-human, mouse and rat), retrieved from previous studies.
+The full detection and differential analysis is performed by the function
+`run_interaction_analysis`. Several permutation tests are performed to assess
+the significance of both the specificity and the differential expression of each
+potential cell-cell interaction (CCI). 1000 permutations are done by default
+as this is fast and sufficient for a preliminary exploratory analysis.
+Otherwise, we recommend 10'000 permutations. Parallel computing can be easily
+enabled by loading the
+[future](https://cran.r-project.org/package=future) package and setting the
+`plan` accordingly:
 
-You do not need to call the LRI databases explicitly when performing an
-analysis. However, you can still access and explore them as follows:
-```{r}
-# Load, e.g., the mouse database
-data(LRI_mouse)
-
-# Display the data.table of LRIs (more information available in other columns)
-LRI_mouse$LRI_curated[, c("LRI")]
-
-# Display the data.table of GO Terms attached to each LRI
-LRI_mouse$LRI_curated_GO
-
-# Information about GO terms (more information available in other columns)
-data(gene_ontology_level)
-gene_ontology_level[, c("NAME", "LEVEL")]
-
-```
-
-### Run default differential analysis
-
-All results are obtained by simply calling `run_interaction_analysis`. The
-detection and differential analyses rely on permutation tests. By default,
-1000 iterations are performed as this is sufficient for a quick explanatory
-analysis. In general, we would recommend using 10'000 permutations. Parallel
-computing can be easily enabled by loading the `future` package and setting the
-`plan` accordingly.
-
-```{r}
-# Load the future package (optional)
+```{r, message = FALSE, warning = FALSE}
+# Load future (optional)
 library(future)
 plan(sequential) # sequentially in the current R process, equivalent to do nothing
 #plan(multisession, workers = 4) # background R sessions
 #plan(multicore, workers = 4) # forked R processes, not Windows/not RStudio
+```
 
+Running the analysis only requires to specify the species, the names of 
+the columns where the cell-type annotation and pairwise condition are stored
+and the explicit names of the two conditions:
+```{r}
 # Run differential analysis with default parameters
 scdiffcom_object <- run_interaction_analysis(
   seurat_object = seurat_object,
@@ -114,7 +105,8 @@ scdiffcom_object <- run_interaction_analysis(
     column_name = "age_group",
     cond1_name = "YOUNG",
     cond2_name = "OLD"
-  )
+  ),
+  iterations = 1000
 )
 ```
 
@@ -124,40 +116,67 @@ The output of `run_interaction_analysis` is an S4 object of class
 scdiffcom_object
 ```
 
-Note: we recommend accessing the slots of the object with the provided
-accessors.
+## Explore the results from the Shiny app
 
-### Launch a Shiny App to explore the results
+A Shiny app can be launched from each `scDiffCom` object to interactively
+visualize the detected CCIs and how they are differentially expressed. 
+Over-representation results are also directly available from the app. As an
+option it is possible to first reduce over-represented GO terms by semantic
+similarity such that they will be displayed as a treemap. Also note that you
+might be prompted to install several packages.
 
-To facilitate results exploration, we recommend launching the provided Shiny
-report that allows to interactively visualize both the detected interactions
-and the results from the over-representation analysis. As an option, it is
-possible to reduce over-represented GO terms by semantic similarity.
+```{r, eval = FALSE}
+if (!require("shiny")) install.packages("shiny")
+if (!require("shinyWidgets")) install.packages("shinyWidgets")
+if (!require("shinythemes")) install.packages("shinythemes")
+if (!require("DT")) install.packages("DT")
+if (!require("kableExtra")) install.packages("kableExtra")
+if (!require("RColorBrewer")) install.packages("RColorBrewer")
+if (!require("igraph")) install.packages("igraph")
+if (!require("visNetwork")) install.packages("visNetwork")
+if (!require("plotly")) install.packages("plotly")
+if (!require("GOSemSim")) install.packages("GOSemSim")
+if (!require("rrvgo")) install.packages("rrvgo")
 
-Running this function also require to install several packages.
+reduced_go_terms <- ReduceGO(scdiffcom_object) # optional
 
-You can call the Shiny app as follows: 
-`BuildShiny(scdiffcom_object, reduce_go = TRUE)`.
-
-### Explore the detected CCIs
-
-The slot `cci_table_detected` is a data.table that contains
-all biologically relevant CCIs (one per row) with columns providing useful
-information such as how they are regulated between the two conditions
-(here `young` and `old`):
-```{r}
-# Retrieve and display all detected CCIs
-CCI_detected <- GetTableCCI(scdiffcom_object, "detected", simplified = TRUE)
-CCI_detected[, c("CCI", "REGULATION")]
-
-# Number of CCIs per regulation type
-table(CCI_detected$REGULATION)
+BuildShiny(
+  scdiffcom_object,
+  reduced_go_table = reduced_go_terms # NULL by default
+)
 ```
 
-Detected CCIs can be explored either one by one by looking at the data.table,
-more globally based on our over-representation analysis (see below) or from 
-graphs such as this volcano plot:
-```{r,out.width="100%"}
+## Explore the results manually
+
+Instead of using the Shiny app, the results can also be extracted directly
+from the `scDiffCom` object with the provided accessors:
+
+* `GetParameters()` returns the list of parameters used by 
+`run_interaction_analysis()`
+* `GetTableCCI()` returns a (complete or simplified) data.table either of
+the detected CCIs or of all the hypothetical CCIs. 
+* `GetTableORA()` returns a list of (complete or simplified) data.tables
+with over-representation results.
+
+From there, results can be analysed and visualised from either custom
+or `scDiffCom` functions. 
+
+```{r}
+# Retrieve and display all detected CCIs
+CCI_detected <- GetTableCCI(scdiffcom_object, type = "detected", simplified = TRUE)
+
+# Number of CCIs per regulation type (here with age)
+table(CCI_detected$REGULATION)
+
+# Retrieve the ORA results
+ORA_results <- GetTableORA(scdiffcom_object, categories = "all", simplified = TRUE)
+
+# Categories available
+names(ORA_results)
+```
+
+Custom volcano plot of CCIs:
+```{r,out.width="100%", warning = FALSE, message = FALSE}
 if (!require("ggplot2")) install.packages("ggplot2")
 library(ggplot2)
 
@@ -179,22 +198,10 @@ ggplot(
 ```
 
 
-### Explore ORA results
-
-The slot `ora_table` contains a list of data.tables giving the results
-of the over-representation analysis performed on predefined categories:
-```{r,, out.width="100%"}
-# Retrieve the ORA results
-ORA_results <- GetTableORA(scdiffcom_object, categories = "all", simplified = TRUE)
-
-# Categories available
-names(ORA_results)
-
-# Explore, e.g., the top 10 LRIs up-regulated based on their ORA score
-ORA_results$LRI[, c("VALUE", "ORA_SCORE_UP", "OR_UP", "BH_P_VALUE_UP")][order(-ORA_SCORE_UP)][1:10]
-
+Dot plots of over-represented terms:
+```{r, out.width="100%"}
 # Plot the most over-represented up-regulated LRIs
-# note that PlotORA returns a ggplot object that you can further optimize (e.g. here to place the legend)
+# PlotORA returns a ggplot object that you can further optimize (e.g. here to place the legend)
 PlotORA(
   object = scdiffcom_object,
   category = "LRI",
@@ -205,22 +212,60 @@ PlotORA(
 )
 ```
 
-A summary of the changes in intercellular communication is given by
-the following graph that displays the over-represented cell types and cell-type
-pairs:
-```{r}
+A network of over-represented cell types
+```{r, warning = FALSE, message = FALSE}
 if (!require("visNetwork")) install.packages("visNetwork")
 if (!require("igraph")) install.packages("igraph")
 if (!require("kableExtra")) install.packages("kableExtra")
 if (!require("RColorBrewer")) install.packages("RColorBrewer")
-library(visNetwork)
-library(igraph)
-library(kableExtra)
-library(RColorBrewer)
 
 BuildNetwork(
   object = scdiffcom_object
 )
+```
+
+
+## Detection-only analysis
+
+If one has no condition to compare, `scDiffCom` can still be used to return
+detected CCIs only:
+```{r}
+scdiffcom_detection_only <- run_interaction_analysis(
+  seurat_object = seurat_object,
+  LRI_species = "mouse",
+  seurat_celltype_id = "cell_type",
+  seurat_condition_id = NULL
+)
+```
+
+Although it is currently not possible to explore such results with a Shiny app,
+such functionality should be added in a future release of the package (
+as well as with other downstream analysis tools).
+
+## Database of ligand-receptor interactions
+
+`scDiffcom` infers cell type to cell type communication patterns from the
+expression of genes known to be involved in ligand-receptor interactions
+(LRIs). The package contains it own internal databases of curated LRIs (for
+human, mouse and rat), retrieved from previous studies.
+
+As shown above, there is no need to call the LRI databases explicitly when
+performing an analysis. However, they can be accessed and explored as follows:
+```{r}
+# Load, e.g., the mouse database
+data(LRI_mouse)
+
+# Display the data.table of LRIs (more information available in other columns)
+LRI_mouse$LRI_curated[, c("LRI")]
+
+# Display the data.table of GO Terms attached to each LRI
+LRI_mouse$LRI_curated_GO
+
+# Information about GO terms (more information available in other columns)
+# LEVEL corresponds to the depth of the GO term in the GO graph
+data(gene_ontology_level)
+gene_ontology_level[, c("NAME", "LEVEL")]
+
 ```
 
 ## Additional functionalities
@@ -245,7 +290,6 @@ dataset. You can either decide to keep this table allowing you to quickly update
 your results in case you want to modify some filtering parameters or to erase
 this table to save space.
 
-
 ```{r, error=TRUE}
 # create a new object with a different log fold change threshold
 scdiffcom_object_stringent_logfc <- FilterCCI(
@@ -266,7 +310,7 @@ FilterCCI(
 ### Performing ORA on custom categories
 
 By default, ORA is performed on a set of categories that are always present for
-any dataset analyzed (LRI, GO Terms, etc). However, you might want to find
+any dataset analysed (LRI, GO Terms, etc). However, you might want to find
 over-represented results for a category only relevant to your dataset. This is 
 possible to achieve as long as you are able to build a relationship between
 the terms of your new category and those of a default category. As an example,
@@ -302,19 +346,4 @@ scdiffcom_object <- RunORA(
 )
 ```
 
-### Running a detection analysis without differential analysis
-
-If you are not interested in comparing how CCIs change between two conditions,
-you can also use scDiffCom in "detection-mode" only:
-```{r}
-# not specifying the conditions to compare will perform a detection-only analysis
-scdiffcom_detection_only <- run_interaction_analysis(
-  seurat_object = seurat_object,
-  LRI_species = "mouse",
-  seurat_celltype_id = "cell_type",
-  seurat_condition_id = NULL
-)
-```
-
-More downstream analysis tools to explore and visualize such data will be
-released in the future.
+The object now contains a new table in its slot `ora_table`.
