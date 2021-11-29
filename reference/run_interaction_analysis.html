@@ -253,7 +253,7 @@ expressed in the corresponding cell type. Set to  <code>0.1</code> by default.</
     <tr>
       <th>threshold_quantile_score</th>
       <td><p>Threshold value used in conjunction with
-<code>threshold_p_value_specificity</code> to establish if a CCI is considered as
+<code>threshold_p_value_specificity</code> to establish if a CCI is considered
 "detected". The default (<code>0.2</code>) indicates that CCIs with a score
 in the 20% lowest-scores are not considered detected. Can be modified
 without the need to re-perform the permutation analysis (see Details).</p></td>
@@ -261,19 +261,20 @@ without the need to re-perform the permutation analysis (see Details).</p></td>
     <tr>
       <th>threshold_p_value_specificity</th>
       <td><p>Threshold value used in conjunction
-with <code>threshold_quantile_score</code> to establish if a CCI is considered as
-"detected". CCIs with a specificity p-value above the threshold (<code>0.05</code>
-by default) are not considered detected. Can be modified
-without the need to re-perform the permutation analysis (see Details).</p></td>
+with <code>threshold_quantile_score</code> to establish if a CCI is considered
+"detected". CCIs with a (BH-adjusted) specificity p-value above the
+threshold (<code>0.05</code> by default) are not considered detected. Can be
+modified without the need to re-perform the permutation analysis
+(see Details).</p></td>
     </tr>
     <tr>
       <th>threshold_p_value_de</th>
       <td><p>Threshold value used in conjunction
 with <code>threshold_logfc</code> to establish how CCIs are differentially
 expressed between <code>cond1_name</code> and <code>cond2_name</code>. CCIs with a
-differential p-value above the threshold (<code>0.05</code> by default) are not
-considered to change significantly. Can be modified without the need to
-re-perform the permutation analysis (see Details).</p></td>
+(BH-adjusted) differential p-value above the threshold (<code>0.05</code> by
+default) are not considered to change significantly. Can be modified
+without the need to re-perform the permutation analysis (see Details).</p></td>
     </tr>
     <tr>
       <th>threshold_logfc</th>
