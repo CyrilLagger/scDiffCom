@@ -105,8 +105,7 @@ scdiffcom_object <- run_interaction_analysis(
     column_name = "age_group",
     cond1_name = "YOUNG",
     cond2_name = "OLD"
-  ),
-  iterations = 1000
+  )
 )
 ```
 
@@ -116,12 +115,12 @@ The output of `run_interaction_analysis` is an S4 object of class
 scdiffcom_object
 ```
 
-## Explore the results from the Shiny app
+### Explore the results from the Shiny app
 
 A Shiny app can be launched from each `scDiffCom` object to interactively
 visualize the detected CCIs and how they are differentially expressed. 
 Over-representation results are also directly available from the app. As an
-option it is possible to first reduce over-represented GO terms by semantic
+option, it is possible to first reduce over-represented GO terms by semantic
 similarity such that they will be displayed as a treemap. Also note that you
 might be prompted to install several packages.
 
@@ -146,7 +145,7 @@ BuildShiny(
 )
 ```
 
-## Explore the results manually
+### Explore the results manually
 
 Instead of using the Shiny app, the results can also be extracted directly
 from the `scDiffCom` object with the provided accessors:
@@ -212,7 +211,8 @@ PlotORA(
 )
 ```
 
-A network of over-represented cell types
+A network of over-represented cell types and cell-type to cell-type
+interactions:
 ```{r, warning = FALSE, message = FALSE}
 if (!require("visNetwork")) install.packages("visNetwork")
 if (!require("igraph")) install.packages("igraph")
