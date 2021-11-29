@@ -4,7 +4,7 @@
 24-11-2021
 
 * New function `BuildShiny()` that creates a shiny app from the results
-* New internal function to reduce GO terms by semantic similarity
+* New function `ReduceGO()` to reduce GO terms by semantic similarity
 
 # scDiffCom 0.1.0.9000
 

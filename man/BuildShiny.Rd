@@ -5,15 +5,17 @@
 \alias{BuildShiny,scDiffCom-method}
 \title{A shiny app to display scDiffCom results}
 \usage{
-BuildShiny(object, reduce_go = TRUE, ...)
+BuildShiny(object, reduced_go_table = NULL, ...)
 
-\S4method{BuildShiny}{scDiffCom}(object, reduce_go = TRUE, ...)
+\S4method{BuildShiny}{scDiffCom}(object, reduced_go_table = NULL, ...)
 }
 \arguments{
 \item{object}{\code{scDiffCom} object}
 
-\item{reduce_go}{If \code{TRUE} (default), reduce go terms by semantic
-similarity and allows shiny to plot GO Treemaps.}
+\item{reduced_go_table}{If \code{NULL} (default), over-represented GO terms
+are displayed as dot plots. If the output of
+ \code{scDiffCom::ReduceGO(object)}, GO terms are displayed on a on treemap
+ based on their semantic similarity and over-representation score}
 
 \item{...}{Additional parameters to \code{shiny::runApp}}
 }

@@ -766,13 +766,77 @@ setMethod(
   }
 )
 
+#' Reduce scDiffCom GO Terms
+#'
+#' Perform semantic similarity analysis and reduction of the
+#'  overrepresented GO terms of an scDiffCom object.
+#'
+#' This function is basically a wrapper around \code{rrvgo::calculateSimMatrix}
+#'  and \code{rrvgo::reduceSimMatrix}.
+#'
+#' @param object \code{scDiffCom} object
+#' @param method A distance method supported by rrvgo and GOSemSim:
+#'  c("Rel", "Resnik", "Lin", "Jiang", "Wang")
+#' @param threshold Similarity threshold used by \code{rrvgo::reduceSimMatrix}
+#'
+#' @return A data.table of GO terms with their reduction
+#'
+#' @export
+setGeneric(
+  name = "ReduceGO",
+  def = function(
+    object,
+    method = c("Rel", "Resnik", "Lin", "Jiang", "Wang"),
+    threshold = 0.7
+  ) standardGeneric("ReduceGO"),
+  signature = "object"
+)
+
+#' @rdname ReduceGO
+setMethod(
+  f = "ReduceGO",
+  signature = "scDiffCom",
+  definition = function(
+    object,
+    method = c("Rel", "Resnik", "Lin", "Jiang", "Wang"),
+    threshold = 0.7
+  ) {
+    if (!requireNamespace("GOSemSim", quietly = TRUE)) {
+      stop(
+        paste0(
+          "Package \"GOSemSim\" needed for this function to work.",
+          "Please install it."
+        ),
+        call. = FALSE
+      )
+    }
+    if (!requireNamespace("rrvgo", quietly = TRUE)) {
+      stop(
+        paste0(
+          "Package \"rrvgo\" needed for this function to work.",
+          "Please install it or set 'reduced_GO_TERMS' to FALSE."
+        ),
+        call. = FALSE
+      )
+    }
+    method <- match.arg(method)
+    reduce_go_terms(
+      object = object,
+      method = method,
+      threshold = threshold
+    )
+  }
+)
+
 #' A shiny app to display scDiffCom results
 #'
 #' Launch a shiny app to explore scDiffCom results
 #'
 #' @param object \code{scDiffCom} object
-#' @param reduce_go If \code{TRUE} (default), reduce go terms by semantic
-#'  similarity and allows shiny to plot GO Treemaps.
+#' @param reduced_go_table If \code{NULL} (default), over-represented GO terms
+#'  are displayed as dot plots. If the output of
+#'   \code{scDiffCom::ReduceGO(object)}, GO terms are displayed on a on treemap
+#'   based on their semantic similarity and over-representation score
 #' @param ... Additional parameters to \code{shiny::runApp}
 #'
 #' @return Launch a shiny app
@@ -782,7 +846,7 @@ setGeneric(
   name = "BuildShiny",
   def = function(
     object,
-    reduce_go = TRUE,
+    reduced_go_table = NULL,
     ...
   ) standardGeneric("BuildShiny"),
   signature = "object"
@@ -794,7 +858,7 @@ setMethod(
   signature = "scDiffCom",
   definition = function(
     object,
-    reduce_go = TRUE,
+    reduced_go_table = NULL,
     ...
   ) {
     ui <- server <- NULL
@@ -881,28 +945,22 @@ setMethod(
     source(file_path, local = TRUE, chdir = TRUE)
     server_env <- environment(server)
     server_env$.object_ <- object
-    server_env$.reduce_go_ <- reduce_go
-    if (reduce_go) {
-      if (!requireNamespace("GOSemSim", quietly = TRUE)) {
+    if (is.null(reduced_go_table)) {
+      server_env$.reduce_go_ <- FALSE
+    } else {
+      is_table_valid <- validate_reduced_go_table(
+        object = object,
+        reduced_go_table = reduced_go_table
+      )
+      if (is_table_valid) {
+        server_env$.reduce_go_ <- TRUE
+        server_env$.reduced_go_table_ <- reduced_go_table
+      } else {
         stop(
-          paste0(
-            "Package \"GOSemSim\" needed for this function to work.",
-            "Please install it or set 'reduced_GO_TERMS' to FALSE."
-          ),
-          call. = FALSE
+          "'reduced_go_table' is not valid. Please set to Null or ",
+          "run 'ReduceGO(object)' on your scDiffCom object"
         )
       }
-      if (!requireNamespace("rrvgo", quietly = TRUE)) {
-        stop(
-          paste0(
-            "Package \"rrvgo\" needed for this function to work.",
-            "Please install it or set 'reduced_GO_TERMS' to FALSE."
-          ),
-          call. = FALSE
-        )
-      }
-      reduced_go_table <- reduce_go_terms(object)
-      server_env$.reduced_go_table_ <- reduced_go_table
     }
     options(DT.TOJSON_ARGS = list(na = "string"))
     app <- shiny::shinyApp(ui, server)
