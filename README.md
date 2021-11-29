@@ -17,7 +17,7 @@ coverage](https://codecov.io/gh/CyrilLagger/scDiffCom/branch/master/graph/badge.
 scDiffCom infers cell type to cell type communication signals from
 scRNA-seq [Seurat](https://satijalab.org/seurat/) objects, and more
 particularly investigates how these interactions change between two
-biological conditions. The package relies on a internal collection of
+biological conditions. The package relies on an internal collection of
 ligand-receptor interactions (available for human, mouse and rat)
 retrieved from seven public and curated databases.
 
