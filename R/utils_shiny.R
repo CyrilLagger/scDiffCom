@@ -73,7 +73,6 @@ reduce_go_terms <- function(
               if (any(is.infinite(OR_intern))) {
                 if (all(is.infinite(OR_intern))) {
                   OR_intern <- rep(2, length(OR_intern))
-
                 } else {
                   max_finite <- max(OR_intern[is.finite(OR_intern)])
                   OR_intern[is.infinite(OR_intern)] <- max_finite
@@ -125,75 +124,63 @@ validate_reduced_go_table <- function(
   object,
   reduced_go_table
 ) {
-  REGULATION <- VALUE_BIS <- OR_UP <- BH_P_VALUE_UP <-
+  ASPECT <- REGULATION <- VALUE_BIS <- OR_UP <- BH_P_VALUE_UP <-
     OR_DOWN <- BH_P_VALUE_DOWN <- OR_FLAT <- BH_P_VALUE_FLAT <- NULL
   orig_go_dt <- copy(object@ora_table$GO_TERMS)
   check_1 <- all(reduced_go_table[REGULATION == "UP"]$go %in%
-                   orig_go_dt[OR_UP >=1 & BH_P_VALUE_UP <= 0.05]$VALUE_BIS) &
+                   orig_go_dt[OR_UP >= 1 & BH_P_VALUE_UP <= 0.05]$VALUE_BIS) &
     all(reduced_go_table[REGULATION == "DOWN"]$go %in%
-          orig_go_dt[OR_DOWN >=1 & BH_P_VALUE_DOWN <= 0.05]$VALUE_BIS) &
+          orig_go_dt[OR_DOWN >= 1 & BH_P_VALUE_DOWN <= 0.05]$VALUE_BIS) &
     all(reduced_go_table[REGULATION == "FLAT"]$go %in%
-          orig_go_dt[OR_FLAT >=1 & BH_P_VALUE_FLAT <= 0.05]$VALUE_BIS)
+          orig_go_dt[OR_FLAT >= 1 & BH_P_VALUE_FLAT <= 0.05]$VALUE_BIS)
   if(!check_1) {
     return(FALSE)
   }
-  dt_UP <- orig_go_dt[
-    OR_UP >= 1 &
-      BH_P_VALUE_UP <= 0.05 &
-      VALUE_BIS %in% reduced_go_table[REGULATION == "UP"]$go
-  ]
-  OR_UP_intern <- dt_UP$OR_UP
-  dt_DOWN <- orig_go_dt[
-    OR_DOWN >=1 &
-      BH_P_VALUE_DOWN <= 0.05 &
-      VALUE_BIS %in% reduced_go_table[REGULATION == "DOWN"]$go
-  ]
-  OR_DOWN_intern <- dt_DOWN$OR_DOWN
-  dt_FLAT <- orig_go_dt[
-    OR_FLAT >= 1 &
-      BH_P_VALUE_FLAT <= 0.05 &
-      VALUE_BIS %in% reduced_go_table[REGULATION == "FLAT"]$go
-  ]
-  OR_FLAT_intern <- dt_FLAT$OR_FLAT
-  if (any(is.infinite(OR_UP_intern))) {
-    if (all(is.infinite(OR_UP_intern))) {
-      OR_UP_intern <- rep(2, length(OR_UP_intern))
-    } else {
-      max_finite <- max(OR_UP_intern[is.finite(OR_UP_intern)])
-      OR_UP_intern[is.infinite(OR_UP_intern)] <- max_finite
+  orig_go_dt <- orig_go_dt[VALUE_BIS %in% reduced_go_table$go]
+  check2 <- lapply(
+    sort(unique(orig_go_dt$ASPECT)),
+    function(aspect) {
+      lapply(
+        list(UP = "UP", DOWN = "DOWN", FLAT = "FLAT"),
+        function(regulation) {
+          dt_intern <- orig_go_dt[ASPECT == aspect]
+          if (regulation == "UP") {
+            dt_intern <- dt_intern[OR_UP >= 1 & BH_P_VALUE_UP <= 0.05]
+            OR_intern <- dt_intern$OR_UP
+            BH_intern <- dt_intern$BH_P_VALUE_UP
+          } else if (regulation == "DOWN") {
+            dt_intern <- dt_intern[OR_DOWN >= 1 & BH_P_VALUE_DOWN <= 0.05]
+            OR_intern <- dt_intern$OR_DOWN
+            BH_intern <- dt_intern$BH_P_VALUE_DOWN
+          } else if (regulation == "FLAT") {
+            dt_intern <- dt_intern[OR_FLAT >= 1 & BH_P_VALUE_FLAT <= 0.05]
+            OR_intern <- dt_intern$OR_FLAT
+            BH_intern <- dt_intern$BH_P_VALUE_FLAT
+          }
+          if (any(is.infinite(OR_intern))) {
+            if (all(is.infinite(OR_intern))) {
+              OR_intern <- rep(2, length(OR_intern))
+            } else {
+              max_finite <- max(OR_intern[is.finite(OR_intern)])
+              OR_intern[is.infinite(OR_intern)] <- max_finite
+            }
+          }
+          s1 <- sort(
+            reduced_go_table[
+              REGULATION == regulation & ASPECT == aspect
+            ]$score
+          )
+          if (identical(s1, numeric(0))) return(TRUE)
+          identical(
+            sort(-log10(BH_intern) * log2(OR_intern)),
+            s1
+          )
+        }
+      )
     }
-  }
-  if (any(is.infinite(OR_DOWN_intern))) {
-    if (all(is.infinite(OR_DOWN_intern))) {
-      OR_DOWN_intern <- rep(2, length(OR_DOWN_intern))
-    } else {
-      max_finite <- max(OR_DOWN_intern[is.finite(OR_DOWN_intern)])
-      OR_DOWN_intern[is.infinite(OR_DOWN_intern)] <- max_finite
-    }
-  }
-  if (any(is.infinite(OR_FLAT_intern))) {
-    if (all(is.infinite(OR_FLAT_intern))) {
-      OR_FLAT_intern <- rep(2, length(OR_FLAT_intern))
-    } else {
-      max_finite <- max(OR_FLAT_intern[is.finite(OR_FLAT_intern)])
-      OR_FLAT_intern[is.infinite(OR_FLAT_intern)] <- max_finite
-    }
-  }
-  check_2_UP <- identical(
-    sort(-log2(OR_UP_intern)*log10(dt_UP$BH_P_VALUE_UP)),
-    sort(reduced_go_table[REGULATION == "UP"]$score)
   )
-  check_2_DOWN <- identical(
-    sort(-log2(OR_DOWN_intern)*log10(dt_DOWN$BH_P_VALUE_DOWN)),
-    sort(reduced_go_table[REGULATION == "DOWN"]$score)
-  )
-  check_2_FLAT <- identical(
-    sort(-log2(OR_FLAT_intern)*log10(dt_FLAT$BH_P_VALUE_FLAT)),
-    sort(reduced_go_table[REGULATION == "FLAT"]$score)
-  )
-  if (!all(check_2_UP, check_2_DOWN, check_2_FLAT)) {
-    return(FALSE)
-  }
+  check2 <- all(unlist(check2))
+  if (!check2) return(FALSE)
   TRUE
 }
 
