@@ -125,6 +125,9 @@ similarity such that they will be displayed as a treemap. Also note that you
 might be prompted to install several packages.
 
 ```{r, eval = FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
 if (!require("shiny")) install.packages("shiny")
 if (!require("shinyWidgets")) install.packages("shinyWidgets")
 if (!require("shinythemes")) install.packages("shinythemes")
@@ -134,8 +137,9 @@ if (!require("RColorBrewer")) install.packages("RColorBrewer")
 if (!require("igraph")) install.packages("igraph")
 if (!require("visNetwork")) install.packages("visNetwork")
 if (!require("plotly")) install.packages("plotly")
-if (!require("GOSemSim")) install.packages("GOSemSim")
-if (!require("rrvgo")) install.packages("rrvgo")
+if (!require("GOSemSim")) BiocManager::install("GoSemSim")
+if (!require("rrvgo")) BiocManager::install("rrvgo")
+if (!require("org.Mm.eg.db")) BiocManager::install("org.Mm.eg.db")
 
 reduced_go_terms <- ReduceGO(scdiffcom_object) # optional
 
