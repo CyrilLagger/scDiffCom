@@ -1,3 +1,8 @@
+# scDiffCom 0.2.1
+
+20-01-2022
+
+* Fix a bug that appeared when 'seurat_object[[]]' contained a column named 'cell_id'
 
 # scDiffCom 0.2.0
 

@@ -109,11 +109,16 @@ extract_seurat_inputs <- function(
     }
     temp_data <- log1p(temp_data)
   }
-  temp_md <- copy(x = seurat_object[[]])
-  temp_md <- setDT(
-    x = temp_md,
-    keep.rownames = "cell_id"
+  if (
+    !identical(
+      rownames(seurat_object[[]]),
+      colnames(seurat_object)
+    )
+  ) stop(
+    "Column names of 'seurat_object' must be identical to ",
+    "row names of 'seurat_object[[]]'"
   )
+  temp_md <- copy(x = seurat_object[[]])
   if (!(celltype_column_id %in% names(temp_md))) {
     stop(
       paste0(
@@ -121,6 +126,10 @@ extract_seurat_inputs <- function(
         celltype_column_id,
         "' in the meta.data of 'seurat_object'")
     )
+  }
+  if (celltype_column_id == "cell_id") {
+    colnames(temp_md)[colnames(temp_md) == "cell_id"] <- "cell_type"
+    celltype_column_id <- "cell_type"
   }
   if (!is.null(sample_column_id)) {
     if (!(sample_column_id %in% names(temp_md))) {
@@ -145,12 +154,15 @@ extract_seurat_inputs <- function(
     }
   }
   cols_to_keep <- c(
-    "cell_id",
     celltype_column_id,
     sample_column_id,
     condition_column_id
   )
-  temp_md <- temp_md[, cols_to_keep, with = FALSE]
+  temp_md <- temp_md[, cols_to_keep, drop = FALSE]
+  temp_md <- setDT(
+    x = temp_md,
+    keep.rownames = "cell_id"
+  )
   temp_md[, names(temp_md) := lapply(.SD, as.character)]
   if (!is.null(condition_column_id)) {
     temp_cond <- unique(temp_md[[condition_column_id]])
@@ -202,7 +214,7 @@ extract_seurat_inputs <- function(
   }
   setnames(
     x = temp_md,
-    old = cols_to_keep,
+    old = c("cell_id", cols_to_keep),
     new = new_colnames
   )
   if(any(grepl("_", temp_md[["cell_type"]], fixed = TRUE))) {
