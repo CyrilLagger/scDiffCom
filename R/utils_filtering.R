@@ -171,12 +171,17 @@ process_cci_raw <- function(
     IS_CCI_EXPRESSED <- ER_CELLTYPES <- EMITTER_CELLTYPE <-
     RECEIVER_CELLTYPE <- LIGAND_1 <- LIGAND_2 <- RECEPTOR_1 <- RECEPTOR_2 <-
     RECEPTOR_3 <- LOGFC <- LOGFC_ABS <- REGULATION <- IS_DE_LOGFC <-
-    IS_DE_SIGNIFICANT <- DE_DIRECTION <- CCI_SCORE <- CCI <- LRI <- NULL
+    IS_DE_SIGNIFICANT <- DE_DIRECTION <- CCI_SCORE <-
+    CCI <- LRI <- i.BH_P_VALUE_DE <- NULL
   if (class_signature == "scDiffCom") {
     temp_by <- NULL
+    temp_ligand_bh <- c("EMITTER_CELLTYPE")
+    temp_receptor_bh <- c("RECEIVER_CELLTYPE")
   }
   if (class_signature == "scDiffComCombined") {
     temp_by <- "ID"
+    temp_ligand_bh <- c("ID", "EMITTER_CELLTYPE")
+    temp_receptor_bh <- c("ID", "RECEIVER_CELLTYPE")
   }
   if (condition_inputs$is_cond) {
     dt <- cci_dt[
@@ -207,6 +212,88 @@ process_cci_raw <- function(
         ),
         by = temp_by
       ]
+      dt_ligand_de <- unique(
+        rbindlist(
+          lapply(
+            1:max_nL,
+            function(i) {
+              temp_bh <- stats::na.omit(
+                unique(
+                  dt[
+                    ,
+                    c(
+                      temp_ligand_bh,
+                      paste0("LIGAND_", i),
+                      paste0("L", i, "_P_VALUE_DE")
+                    ),
+                    with = FALSE
+                  ]
+                )
+              )
+              setnames(
+                temp_bh,
+                old = colnames(temp_bh),
+                new = c(temp_ligand_bh, "LIGAND", "P_VALUE_DE")
+              )
+            }
+          )
+        )
+      )
+      dt_ligand_de[
+        ,
+        BH_P_VALUE_DE := stats::p.adjust(
+          P_VALUE_DE,
+          method = "BH"
+        )
+      ]
+      dt_receptor_de <- unique(
+        rbindlist(
+          lapply(
+            1:max_nR,
+            function(i) {
+              temp_bh <- stats::na.omit(
+                unique(
+                  dt[
+                    ,
+                    c(
+                      temp_receptor_bh,
+                      paste0("RECEPTOR_", i),
+                      paste0("R", i, "_P_VALUE_DE")
+                    ),
+                    with = FALSE
+                  ]
+                )
+              )
+              setnames(
+                temp_bh,
+                old = colnames(temp_bh),
+                new = c(temp_receptor_bh, "RECEPTOR", "P_VALUE_DE")
+              )
+            }
+          )
+        )
+      )
+      dt_receptor_de[
+        ,
+        BH_P_VALUE_DE := stats::p.adjust(
+          P_VALUE_DE,
+          method = "BH"
+        )
+      ]
+      for (i in 1:max_nL) {
+        dt[
+          dt_ligand_de,
+          on = c(temp_ligand_bh, paste0("LIGAND_", i, "==LIGAND")),
+          paste0("L", i, "_BH_P_VALUE_DE") := i.BH_P_VALUE_DE
+        ]
+      }
+      for (i in 1:max_nR) {
+        dt[
+          dt_receptor_de,
+          on = c(temp_receptor_bh, paste0("RECEPTOR_", i, "==RECEPTOR")),
+          paste0("R", i, "_BH_P_VALUE_DE") := i.BH_P_VALUE_DE
+        ]
+      }
       dt[
         ,
         c(
@@ -317,28 +404,28 @@ process_cci_raw <- function(
         ,
         BH_P_VALUE := stats::p.adjust(P_VALUE, method = "BH"),
         by = temp_by
-        ]
+      ]
       dt[
         ,
         c(
-        "IS_CCI_SCORE",
-        "IS_CCI_SPECIFIC",
-        "IS_CCI_DETECTED"
-      ) := {
-        threshold_score_temp <- stats::quantile(
-          x = .SD[["CCI_SCORE"]],
-          probs = threshold_quantile_score
-        )
-        is_cci_score <- CCI_SCORE >= threshold_score_temp
-        is_cci_specific <- BH_P_VALUE <= threshold_p_value_specificity
-        is_cci_detected <- IS_CCI_EXPRESSED & is_cci_score & is_cci_specific
-        list(
-          is_cci_score,
-          is_cci_specific,
-          is_cci_detected
-        )
-      },
-      by = temp_by
+          "IS_CCI_SCORE",
+          "IS_CCI_SPECIFIC",
+          "IS_CCI_DETECTED"
+        ) := {
+          threshold_score_temp <- stats::quantile(
+            x = .SD[["CCI_SCORE"]],
+            probs = threshold_quantile_score
+          )
+          is_cci_score <- CCI_SCORE >= threshold_score_temp
+          is_cci_specific <- BH_P_VALUE <= threshold_p_value_specificity
+          is_cci_detected <- IS_CCI_EXPRESSED & is_cci_score & is_cci_specific
+          list(
+            is_cci_score,
+            is_cci_specific,
+            is_cci_detected
+          )
+        },
+        by = temp_by
       ]
       dt <- dt[IS_CCI_DETECTED == TRUE]
     }
@@ -346,11 +433,11 @@ process_cci_raw <- function(
   dt[
     ,
     ER_CELLTYPES := paste(
-    EMITTER_CELLTYPE,
-    RECEIVER_CELLTYPE,
-    sep = "_"
+      EMITTER_CELLTYPE,
+      RECEIVER_CELLTYPE,
+      sep = "_"
     )
-    ]
+  ]
   dt[, CCI := paste(ER_CELLTYPES, LRI, sep = "_")]
   return(dt)
 }
@@ -449,7 +536,27 @@ clean_colnames <- function(
         "IS_DE_SIGNIFICANT",
         "IS_CCI_DE",
         "DE_DIRECTION",
-        "REGULATION"
+        "REGULATION",
+        as.vector(sapply(
+          1:max_nL,
+          function(i) {
+            c(
+              paste0("L", i, "_P_VALUE_DE"),
+              paste0("L", i, "_BH_P_VALUE_DE"),
+              paste0("L", i, "_LOGFC")
+            )
+          }
+        )),
+        as.vector(sapply(
+          1:max_nR,
+          function(i) {
+            c(
+              paste0("R", i, "_P_VALUE_DE"),
+              paste0("R", i, "_BH_P_VALUE_DE"),
+              paste0("R", i, "_LOGFC")
+            )
+          }
+        ))
       )
     }
   }
