@@ -39,6 +39,28 @@ run_stat_analysis <- function(
       )
     ]]
     cci_score_diff_actual <-  cci_score_cond2_actual - cci_score_cond1_actual
+    ligand_score_diff_actual <- lapply(
+      1:analysis_inputs$max_nL,
+      function(i) {
+        sub_cci_template[[
+          paste0("L", i, "_EXPRESSION_", analysis_inputs$condition$cond2)
+        ]] -
+          sub_cci_template[[
+            paste0("L", i, "_EXPRESSION_", analysis_inputs$condition$cond1)
+          ]]
+      }
+    )
+    receptor_score_diff_actual <- lapply(
+      1:analysis_inputs$max_nR,
+      function(i) {
+        sub_cci_template[[
+          paste0("R", i, "_EXPRESSION_", analysis_inputs$condition$cond2)
+        ]] -
+          sub_cci_template[[
+            paste0("R", i, "_EXPRESSION_", analysis_inputs$condition$cond1)
+          ]]
+      }
+    )
   }
   mes <- paste0(
     "Performing permutation analysis (",
@@ -61,6 +83,20 @@ run_stat_analysis <- function(
   ]
   analysis_inputs$data_tr <- sub_data_tr
   cols_keep <- c("LRI", "EMITTER_CELLTYPE", "RECEIVER_CELLTYPE", LR_COLNAMES)
+  lr_pvalue_names <- c(
+    sapply(
+      1:analysis_inputs$max_nL,
+      function(i) {
+        paste0("L", i, "_P_VALUE_DE")
+      }
+    ),
+    sapply(
+      1:analysis_inputs$max_nR,
+      function(i) {
+        paste0("R", i, "_P_VALUE_DE")
+      }
+    )
+  )
   if (iterations <= internal_iter) {
     n_broad_iter <- 1
   } else {
@@ -110,7 +146,22 @@ run_stat_analysis <- function(
           temp_distr_diff <- cbind(cci_perm[, 1, ], cci_score_diff_actual)
           temp_distr_cond1 <- cbind(cci_perm[, 2, ], cci_score_cond1_actual)
           temp_distr_cond2 <- cbind(cci_perm[, 3, ], cci_score_cond2_actual)
-          temp_counts_diff <- rowSums(
+          temp_distr_ligand <- lapply(
+            1:analysis_inputs$max_nL,
+            function(i) {
+              cbind(cci_perm[, 3 + i, ], ligand_score_diff_actual[[i]])
+            }
+          )
+          temp_distr_receptor <- lapply(
+            1:analysis_inputs$max_nR,
+            function(i) {
+              cbind(
+                cci_perm[, 3 + analysis_inputs$max_nL + i, ],
+                receptor_score_diff_actual[[i]]
+              )
+            }
+          )
+          temp_counts_cci_diff <- rowSums(
             abs(
               temp_distr_diff[, 1:n_temp_iter]
             ) >= abs(
@@ -123,11 +174,40 @@ run_stat_analysis <- function(
           temp_counts_cond2 <- rowSums(
             temp_distr_cond2[, 1:n_temp_iter] >=
               temp_distr_cond2[, (n_temp_iter + 1)])
-          return(cbind(
-            temp_counts_diff,
-            temp_counts_cond1,
-            temp_counts_cond2
-          ))
+          temp_counts_ligand_diff <- lapply(
+            1:analysis_inputs$max_nL,
+            function(i) {
+              rowSums(
+                abs(
+                  temp_distr_ligand[[i]][, 1:n_temp_iter]
+                ) >= abs(
+                  temp_distr_ligand[[i]][, (n_temp_iter + 1)]
+                )
+              )
+            }
+          )
+          temp_counts_receptor_diff <- lapply(
+            1:analysis_inputs$max_nR,
+            function(i) {
+              rowSums(
+                abs(
+                  temp_distr_receptor[[i]][, 1:n_temp_iter]
+                ) >= abs(
+                  temp_distr_receptor[[i]][, (n_temp_iter + 1)]
+                )
+              )
+            }
+          )
+          temp_counts_list <- c(
+            list(
+              temp_counts_cci_diff,
+              temp_counts_cond1,
+              temp_counts_cond2
+            ),
+            temp_counts_ligand_diff,
+            temp_counts_receptor_diff
+          )
+          return(do.call(cbind, temp_counts_list))
         }
       },
       simplify = "array"
@@ -144,13 +224,38 @@ run_stat_analysis <- function(
       sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
     } else {
       if (n_broad_iter == 1) {
-        pvals_diff <- array_counts[, 1, ] / iterations
+        pvals_cci_diff <- array_counts[, 1, ] / iterations
         pvals_cond1 <-  array_counts[, 2, ] / iterations
         pvals_cond2 <-  array_counts[, 3, ] / iterations
+        pvals_ligand_diff <- lapply(
+          1:analysis_inputs$max_nL,
+          function(i) {
+            array_counts[, 3 + i, ] / iterations
+          }
+        )
+        pvals_receptor_diff <- lapply(
+          1:analysis_inputs$max_nR,
+          function(i) {
+            array_counts[, 3 + analysis_inputs$max_nL + i, ] / iterations
+          }
+        )
       } else {
-        pvals_diff <- rowSums(array_counts[, 1, ]) / iterations
+        pvals_cci_diff <- rowSums(array_counts[, 1, ]) / iterations
         pvals_cond1 <-  rowSums(array_counts[, 2, ]) / iterations
         pvals_cond2 <-  rowSums(array_counts[, 3, ]) / iterations
+        pvals_ligand_diff <- lapply(
+          1:analysis_inputs$max_nL,
+          function(i) {
+            rowSums(array_counts[, 3 + i, ]) / iterations
+          }
+        )
+        pvals_receptor_diff <- lapply(
+          1:analysis_inputs$max_nR,
+          function(i) {
+            rowSums(array_counts[, 3 + analysis_inputs$max_nL + i, ]) /
+              iterations
+          }
+        )
       }
       sub_cci_template[
         ,
@@ -162,7 +267,25 @@ run_stat_analysis <- function(
           )
         ) := list(pvals_cond1, pvals_cond2)
       ]
-      sub_cci_template[, P_VALUE_DE := pvals_diff]
+      sub_cci_template[, P_VALUE_DE := pvals_cci_diff]
+      sub_cci_template[
+        ,
+        c(lr_pvalue_names) :=
+          c(
+            lapply(
+              1:analysis_inputs$max_nL,
+              function(i) {
+                pvals_ligand_diff[[i]]
+              }
+            ),
+            lapply(
+              1:analysis_inputs$max_nR,
+              function(i) {
+                pvals_receptor_diff[[i]]
+              }
+            )
+          )
+      ]
       cols_new <- c(
         paste0(
           "P_VALUE_",
@@ -172,7 +295,8 @@ run_stat_analysis <- function(
           "P_VALUE_",
           analysis_inputs$condition$cond2
         ),
-        "P_VALUE_DE"
+        "P_VALUE_DE",
+        lr_pvalue_names
       )
       cols_keep2 <- c(cols_keep, cols_new)
       sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
@@ -207,7 +331,22 @@ run_stat_analysis <- function(
       distr_diff <- cbind(cci_perm[, 1, ], cci_score_diff_actual)
       distr_cond1 <- cbind(cci_perm[, 2, ], cci_score_cond1_actual)
       distr_cond2 <- cbind(cci_perm[, 3, ], cci_score_cond2_actual)
-      pvals_diff <- rowSums(
+      distr_ligand <- lapply(
+        1:analysis_inputs$max_nL,
+        function(i) {
+          cbind(cci_perm[, 3 + i, ], ligand_score_diff_actual[[i]])
+        }
+      )
+      distr_receptor <- lapply(
+        1:analysis_inputs$max_nR,
+        function(i) {
+          cbind(
+            cci_perm[, 3 + analysis_inputs$max_nL + i, ],
+            receptor_score_diff_actual[[i]]
+          )
+        }
+      )
+      pvals_cci_diff <- rowSums(
         abs(distr_diff[, 1:iterations]) >= abs(distr_diff[, (iterations + 1)])
       ) / iterations
       pvals_cond1 <- rowSums(
@@ -216,6 +355,24 @@ run_stat_analysis <- function(
       pvals_cond2 <- rowSums(
         distr_cond2[, 1:iterations] >= distr_cond2[, (iterations + 1)]
       ) / iterations
+      pvals_ligand_diff <- lapply(
+        1:analysis_inputs$max_nL,
+        function(i) {
+          rowSums(
+            abs(distr_ligand[[i]][, 1:iterations]) >=
+              abs(distr_ligand[[i]][, (iterations + 1)])
+          ) / iterations
+        }
+      )
+      pvals_receptor_diff <- lapply(
+        1:analysis_inputs$max_nR,
+        function(i) {
+          rowSums(
+            abs(distr_receptor[[i]][, 1:iterations]) >=
+              abs(distr_receptor[[i]][, (iterations + 1)])
+          ) / iterations
+        }
+      )
       sub_cci_template[
         , paste0(
           "P_VALUE_",
@@ -225,7 +382,25 @@ run_stat_analysis <- function(
           )
         ) := list(pvals_cond1, pvals_cond2)
       ]
-      sub_cci_template[, P_VALUE_DE := pvals_diff]
+      sub_cci_template[, P_VALUE_DE := pvals_cci_diff]
+      sub_cci_template[
+        ,
+        c(lr_pvalue_names) :=
+          c(
+            lapply(
+              1:analysis_inputs$max_nL,
+              function(i) {
+                pvals_ligand_diff[[i]]
+              }
+            ),
+            lapply(
+              1:analysis_inputs$max_nR,
+              function(i) {
+                pvals_receptor_diff[[i]]
+              }
+            )
+          )
+      ]
       cols_new <- c(
         paste0(
           "P_VALUE_",
@@ -235,7 +410,8 @@ run_stat_analysis <- function(
           "P_VALUE_",
           analysis_inputs$condition$cond2
         ),
-        "P_VALUE_DE"
+        "P_VALUE_DE",
+        lr_pvalue_names
       )
       cols_keep2 <- c(cols_keep, cols_new)
       sub_cci_template <- sub_cci_template[, cols_keep2, with = FALSE]
@@ -262,6 +438,34 @@ run_stat_analysis <- function(
       j = j,
       value = 1
     )
+  }
+  if (analysis_inputs$condition$is_cond) {
+    cci_dt[
+      ,
+      c(lr_pvalue_names) :=
+        c(
+          lapply(
+            1:analysis_inputs$max_nL,
+            function(i) {
+              ifelse(
+                is.na(get(paste0("LIGAND_", i))),
+                NA,
+                get(paste0("L", i, "_P_VALUE_DE"))
+              )
+            }
+          ),
+          lapply(
+            1:analysis_inputs$max_nR,
+            function(i) {
+              ifelse(
+                is.na(get(paste0("RECEPTOR_", i))),
+                NA,
+                get(paste0("R", i, "_P_VALUE_DE"))
+              )
+            }
+          )
+        )
+    ]
   }
   if (!return_distributions) {
     return(list(
@@ -373,6 +577,27 @@ run_stat_iteration <- function(
       compute_fast = TRUE
     )
     permcond_dt_diff <- permcond_dt$cond2 - permcond_dt$cond1
-    return(cbind(permcond_dt_diff, permct_dt$cond1, permct_dt$cond2))
+    res_list <- c(
+      list(
+        permcond_dt_diff,
+        permct_dt$cond1,
+        permct_dt$cond2
+      ),
+      lapply(
+        1:analysis_inputs$max_nL,
+        function(i) {
+          permcond_dt[[paste0("L", i, "_DIFF_EXPR")]]
+        }
+      ),
+      lapply(
+        1:analysis_inputs$max_nR,
+        function(i) {
+          permcond_dt[[paste0("R", i, "_DIFF_EXPR")]]
+        }
+      )
+    )
+    return(
+      do.call(cbind, res_list)
+    )
   }
 }
