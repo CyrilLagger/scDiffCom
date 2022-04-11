@@ -100,25 +100,6 @@ run_stat_analysis <- function(
           simplify = "array",
           future.seed = TRUE
         )
-        # progressr::with_progress({
-        #   prog <- progressr::progressor(steps = n_temp_iter)
-        #   cci_perm <- future.apply::future_sapply(
-        #     X = integer(n_temp_iter),
-        #     FUN = function(iter) {
-        #       if (iter %% 20 == 0) prog(sprintf("iter=%g", iter))
-        #       run_stat_iteration(
-        #         analysis_inputs = analysis_inputs,
-        #         cci_template = sub_cci_template_iter,
-        #         score_type = score_type
-        #       )
-        #     },
-        #     simplify = "array",
-        #     future.seed = TRUE,
-        #     future.label = "future_replicate-%d"
-        #   )
-        # },
-        # enable = verbose
-        # )
         if (!analysis_inputs$condition$is_cond) {
           temp_distr <- cbind(cci_perm, cci_score_actual)
           temp_counts <- rowSums(
