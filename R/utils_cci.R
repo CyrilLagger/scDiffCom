@@ -198,7 +198,7 @@ run_simple_cci_analysis <- function(
     if (!analysis_inputs$condition$is_cond) {
       return(cci_dt[["CCI_SCORE"]])
     } else {
-      return(list(
+      res_cci <- list(
         cond1 = cci_dt[[paste0(
           "CCI_SCORE_",
           analysis_inputs$condition$cond1
@@ -208,7 +208,55 @@ run_simple_cci_analysis <- function(
           "CCI_SCORE_",
           analysis_inputs$condition$cond2
         )]]
-      ))
+      )
+      res_diff_lri <- c(
+        lapply(
+          1:analysis_inputs$max_nL,
+          function(i) {
+            cci_dt[[paste0(
+              "L", i, "_EXPRESSION_",
+              analysis_inputs$condition$cond2
+            )]] -
+              cci_dt[[paste0(
+                "L", i, "_EXPRESSION_",
+                analysis_inputs$condition$cond1
+              )]]
+          }
+        ),
+        lapply(
+          1:analysis_inputs$max_nR,
+          function(i) {
+            cci_dt[[paste0(
+              "R", i, "_EXPRESSION_",
+              analysis_inputs$condition$cond2
+            )]] -
+              cci_dt[[paste0(
+                "R", i, "_EXPRESSION_",
+                analysis_inputs$condition$cond1
+              )]]
+          }
+        )
+      )
+      names(res_diff_lri) <- c(
+        sapply(
+          1:analysis_inputs$max_nL,
+          function(i) {
+            paste0("L", i, "_DIFF_EXPR")
+          }
+        ),
+        sapply(
+          1:analysis_inputs$max_nR,
+          function(i) {
+            paste0("R", i, "_DIFF_EXPR")
+          }
+        )
+      )
+      return(
+        c(
+          res_cci,
+          res_diff_lri
+        )
+      )
     }
   }
   detection_rate <- aggregate_cells(
@@ -234,20 +282,20 @@ run_simple_cci_analysis <- function(
     sort = FALSE
   )
   if (analysis_inputs$condition$is_cond) {
-    # logfc_names <- c(
-    #   sapply(
-    #     1:analysis_inputs$max_nL,
-    #     function(i) {
-    #       paste0("L", i, "_LOGFC")
-    #     }
-    #   ),
-    #   sapply(
-    #     1:analysis_inputs$max_nR,
-    #     function(i) {
-    #       paste0("R", i, "_LOGFC")
-    #     }
-    #   )
-    # )
+    logfc_names <- c(
+      sapply(
+        1:analysis_inputs$max_nL,
+        function(i) {
+          paste0("L", i, "_LOGFC")
+        }
+      ),
+      sapply(
+        1:analysis_inputs$max_nR,
+        function(i) {
+          paste0("R", i, "_LOGFC")
+        }
+      )
+    )
     if (log_scale) {
       dt[
         ,
@@ -264,46 +312,46 @@ run_simple_cci_analysis <- function(
             )
           )
       ]
-      # dt[
-      #   ,
-      #   c(logfc_names) :=
-      #     c(
-      #       lapply(
-      #         1:analysis_inputs$max_nL,
-      #         function(i) {
-      #           get(
-      #             paste0(
-      #               "L", i, "_EXPRESSION_",
-      #               analysis_inputs$condition$cond2
-      #             )
-      #           ) -
-      #             get(
-      #               paste0(
-      #                 "L", i, "_EXPRESSION_",
-      #                 analysis_inputs$condition$cond1
-      #               )
-      #             )
-      #         }
-      #       ),
-      #       lapply(
-      #         1:analysis_inputs$max_nR,
-      #         function(i) {
-      #           get(
-      #             paste0(
-      #               "R", i, "_EXPRESSION_",
-      #               analysis_inputs$condition$cond2
-      #             )
-      #           ) -
-      #             get(
-      #               paste0(
-      #                 "R", i, "_EXPRESSION_",
-      #                 analysis_inputs$condition$cond1
-      #               )
-      #             )
-      #         }
-      #       )
-      #     )
-      # ]
+      dt[
+        ,
+        c(logfc_names) :=
+          c(
+            lapply(
+              1:analysis_inputs$max_nL,
+              function(i) {
+                get(
+                  paste0(
+                    "L", i, "_EXPRESSION_",
+                    analysis_inputs$condition$cond2
+                  )
+                ) -
+                  get(
+                    paste0(
+                      "L", i, "_EXPRESSION_",
+                      analysis_inputs$condition$cond1
+                    )
+                  )
+              }
+            ),
+            lapply(
+              1:analysis_inputs$max_nR,
+              function(i) {
+                get(
+                  paste0(
+                    "R", i, "_EXPRESSION_",
+                    analysis_inputs$condition$cond2
+                  )
+                ) -
+                  get(
+                    paste0(
+                      "R", i, "_EXPRESSION_",
+                      analysis_inputs$condition$cond1
+                    )
+                  )
+              }
+            )
+          )
+      ]
     } else {
       dt[
         ,
@@ -330,60 +378,60 @@ run_simple_cci_analysis <- function(
           LOGFC
         )
       ]
-      # dt[
-      #   ,
-      #   c(logfc_names) :=
-      #     c(
-      #       lapply(
-      #         1:analysis_inputs$max_nL,
-      #         function(i) {
-      #           temp <- log(
-      #             get(
-      #               paste0(
-      #                 "L", i, "_EXPRESSION_",
-      #                 analysis_inputs$condition$cond2
-      #               )
-      #             ) /
-      #               get(
-      #                 paste0(
-      #                   "L", i, "_EXPRESSION_",
-      #                   analysis_inputs$condition$cond1
-      #                 )
-      #               )
-      #           )
-      #           ifelse(
-      #             is.nan(temp),
-      #             0,
-      #             temp
-      #           )
-      #         }
-      #       ),
-      #       lapply(
-      #         1:analysis_inputs$max_nR,
-      #         function(i) {
-      #           temp <- log(
-      #             get(
-      #               paste0(
-      #                 "R", i, "_EXPRESSION_",
-      #                 analysis_inputs$condition$cond2
-      #               )
-      #             ) /
-      #               get(
-      #                 paste0(
-      #                   "R", i, "_EXPRESSION_",
-      #                   analysis_inputs$condition$cond1
-      #                 )
-      #               )
-      #           )
-      #           ifelse(
-      #             is.nan(temp),
-      #             0,
-      #             temp
-      #           )
-      #         }
-      #       )
-      #     )
-      # ]
+      dt[
+        ,
+        c(logfc_names) :=
+          c(
+            lapply(
+              1:analysis_inputs$max_nL,
+              function(i) {
+                temp <- log(
+                  get(
+                    paste0(
+                      "L", i, "_EXPRESSION_",
+                      analysis_inputs$condition$cond2
+                    )
+                  ) /
+                    get(
+                      paste0(
+                        "L", i, "_EXPRESSION_",
+                        analysis_inputs$condition$cond1
+                      )
+                    )
+                )
+                ifelse(
+                  is.nan(temp),
+                  0,
+                  temp
+                )
+              }
+            ),
+            lapply(
+              1:analysis_inputs$max_nR,
+              function(i) {
+                temp <- log(
+                  get(
+                    paste0(
+                      "R", i, "_EXPRESSION_",
+                      analysis_inputs$condition$cond2
+                    )
+                  ) /
+                    get(
+                      paste0(
+                        "R", i, "_EXPRESSION_",
+                        analysis_inputs$condition$cond1
+                      )
+                    )
+                )
+                ifelse(
+                  is.nan(temp),
+                  0,
+                  temp
+                )
+              }
+            )
+          )
+      ]
     }
     dt[, LOGFC_ABS := abs(LOGFC)]
   }
