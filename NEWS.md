@@ -1,3 +1,9 @@
+# scDiffCom 0.2.2
+
+11-04-2022
+
+* Compute (permutation-based) p-values and logFC for each ligand and receptor gene independently
+
 # scDiffCom 0.2.1
 
 20-01-2022
