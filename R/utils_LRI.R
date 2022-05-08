@@ -41,7 +41,8 @@ combine_LR_db <- function(
   DATABASE <- SOURCE <- ANNOTATION <- FAMILY <- SUBFAMILY <- keep_subLR <-
     SOURCE_CLEAN <- SOURCE_no_digit <- is_complex_temp <- LIGAND_2 <-
     RECEPTOR_2 <- LR_vectorized_temp <- N_IS_SUBPART <- i.N_IS_SUBPART <-
-    LRI <- LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_3 <- NULL
+    LRI <- LIGAND_1 <- RECEPTOR_1 <- RECEPTOR_3 <- LIGAND_1_CONF <-
+    LIGAND_2_CONF <- RECEPTOR_1_CONF <- RECEPTOR_2_CONF <- RECEPTOR_3_CONF <- NULL
   # fully curated
   LR_connectomeDB2020 <- prepare_LR_connectomeDB2020(
     species = species,
@@ -238,7 +239,7 @@ combine_LR_db <- function(
     , c("SUBFAMILY") := do.call(paste, c(.SD, sep = ";")),
     .SDcols = col_subfam]
   LR_full[, c("SUBFAMILY") := gsub("NA|NA;|;NA", "", SUBFAMILY)]
-  if(species == "mouse") {
+  if(species %in% c("mouse", "rat")) {
     for (id_loop in c(paste0("LIGAND_", 1:2), paste0("RECEPTOR_", 1:3))) {
       cols_conf <- paste0(id_loop, "_CONF_", db_names)
       LR_full[
@@ -346,6 +347,41 @@ combine_LR_db <- function(
     )
   ]
   if (species %in% c("mouse", "rat")) {
+    if (curated) {
+      # remove LRI with 0 orthology confidence
+      # if not provided by another database
+      genes_conf <- unique(
+        c(
+          LR_full[LIGAND_1_CONF == 1]$LIGAND_1,
+          LR_full[LIGAND_2_CONF == 1]$LIGAND_2,
+          LR_full[RECEPTOR_1_CONF == 1]$RECEPTOR_1,
+          LR_full[RECEPTOR_2_CONF == 1]$RECEPTOR_2,
+          LR_full[RECEPTOR_3_CONF == 1]$RECEPTOR_3
+        )
+      )
+      cols_conf <- c(
+        "LIGAND_1", "LIGAND_2",
+        "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3"
+      )
+      LR_full[
+        ,
+        paste0(cols_conf, "_CONF") := lapply(
+          cols_conf,
+          function(i) {
+            ifelse(
+              get(i) %in% genes_conf, 1, get(paste0(i, "_CONF"))
+            )
+          }
+        )
+      ]
+      LR_full <- LR_full[
+        LIGAND_1_CONF == 1 &
+          (LIGAND_2_CONF == 1 | is.na(LIGAND_2_CONF)) &
+          RECEPTOR_1_CONF == 1 &
+          (RECEPTOR_2_CONF == 1 | is.na (RECEPTOR_2_CONF)) &
+          (RECEPTOR_3_CONF == 1 | is.na (RECEPTOR_3_CONF))
+      ]
+    }
     cols_to_keep <- c(
       cols_to_keep,
       "LRI",
@@ -735,7 +771,7 @@ prepare_LR_CellChat <- function(
   LR[, LIGAND_1 := sub(" - .*", "", interaction_name_2)]
   LR[, temp := sub(".* - ", "", interaction_name_2)]
   LR[, RECEPTOR_1 := ifelse(grepl("+", temp, fixed = TRUE),
-                          gsub(".*\\((.+)\\+.*", "\\1", temp), temp)]
+                            gsub(".*\\((.+)\\+.*", "\\1", temp), temp)]
   LR[, RECEPTOR_2 := ifelse(grepl("+", temp, fixed = TRUE),
                             gsub(".*\\+(.+)\\).*", "\\1", temp), NA)]
   LR[, temp := NULL]
@@ -1429,7 +1465,7 @@ prepare_LR_NicheNet <- function(
 #   LR_SORTED <- LIGAND_1 <- RECEPTOR_1 <- NULL
 #   retrieved_date <- as.Date("2021-03-22")
 #   retrieved_from <- "LRBaseDbi"
-#   if (species == "mouse") {
+#   if (species %in% c("mouse", "rat")) {
 #     key <- AnnotationDbi::keys(
 #       LRBase.Mmu.eg.db::LRBase.Mmu.eg.db,
 #       keytype = "GENEID_L"

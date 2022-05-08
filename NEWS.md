@@ -1,3 +1,11 @@
+# scDiffCom 0.2.3
+
+08-05-2022
+
+* Remove mouse and rat LRIs with "homolog_orthology_confidence" of 0, but only
+if they are not already provided directly by one of the "source database"
+* Remove some miss-curated LRIs
+
 # scDiffCom 0.2.2
 
 11-04-2022
