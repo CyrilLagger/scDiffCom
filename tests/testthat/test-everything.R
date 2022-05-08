@@ -279,7 +279,7 @@ test_that(
       function(i) {
         expect_equal(
           nrow(i),
-          30475
+          29325
         )
       }
     )
