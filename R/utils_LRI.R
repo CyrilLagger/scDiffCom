@@ -546,6 +546,12 @@ prepare_LR_CellTalkDB <- function(
       !(LIGAND_1 %in% GENES_to_remove_mouse$gene) &
         !(RECEPTOR_1 %in% GENES_to_remove_mouse$gene)
     ]
+    if (species == "mouse") {
+      #there are genes that are not MGI approved symbol, we change them
+      LR[LR == "Il1f8"] <- "Il36b"
+      LR[LR == "Il1f6"] <- "Il36a"
+      LR[LR == "Il1f5"] <- "Il36rn"
+    }
     cols_to_keep <- c(
       "LR_SORTED", "SOURCE",
       "LIGAND_1", "RECEPTOR_1"
@@ -1907,6 +1913,13 @@ merge_LR_orthologs <- function(
   })]
   LR_temp <- LR_temp[to_keep == TRUE]
   LR_temp[, to_keep := NULL]
+  if (output_species == "mouse") {
+    #there are genes that are not MGI approved symbol, we change them
+    LR_temp[LR_temp == "Oit1"] <- "Fam3d"
+    LR_temp[LR_temp == "Il1f5"] <- "Il36rn"
+    LR_temp[LR_temp == "Il1f6"] <- "Il36a"
+    LR_temp[LR_temp == "Il1f8"] <- "Il36b"
+  }
   LR_temp[, LR_SORTED := list(sapply(1:nrow(.SD), function(i) {
     temp <- c(
       sapply(1:nL, function(j) {
