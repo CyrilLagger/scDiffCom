@@ -1614,7 +1614,7 @@ get_KEGG_PWS_interactions <- function(
   }
   if (species == "mouse") {
     organism <- "mmu"
-    string_to_remove <- " - Mus musculus (mouse)"
+    string_to_remove <- " - Mus musculus (house mouse)"
   }
   if (species == "human") {
     organism <- "hsa"
