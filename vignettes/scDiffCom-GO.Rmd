@@ -1,0 +1,45 @@
+---
+title: "scDiffCom: GO Annotation"
+description: >
+  Check GO term annotation strategies and evaluate within scDiffCom.
+author: "Cyril Lagger, Eugen Ursu"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{GO Annotation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+The objective of this vignette is to:
+
+1. showcase how the GO Term annotation takes place in scDiffCom.
+2. parameter for choosing the GO Term annotation strategy.
+3. evaluate the performance of the different strategies.
+
+Let's start by presenting the GO term data structures used within scDiffCom.
+
+## GO Terms data structures in `scDiffCom`
+
+First, there is the gene ontology `data.table` that describes the location of each GO term in the GO ontology graph. In particular, note the integer column `LEVEL` that is a proxy for the distance to the GO term in the GO ontology graph from the (pseudo)roots.
+
+```{r}
+data(gene_ontology_level)
+head(gene_ontology_level)
+```
+
+Second, there is another `data.table` that connects LRIs to GO terms. For example, for mice, there are multiple ways of finding it:
+
+1. compute for LRI
+2. compute for genes in LRI
+3. internal `scDiffCom` data: `scDiffCom::LRI_mouse$LRI_curated_GO`, computed with (1)
+
+```{r}
+## Compute
+# GO_interactions_genes = scDiffCom:::get_GO_interactions("mouse", scDiffCom::LRI_mouse$LRI_curated, only_genes_annotations = TRUE)
+# GO_interactions = scDiffCom:::get_GO_interactions("mouse", scDiffCom::LRI_mouse$LRI_curated, only_genes_annotations = FALSE)
+scDiffCom::LRI_mouse$LRI_curated_GO
+```
+
+Internally, `get_GO_interactions` computes intersection of ancestors. Let's see alternative strategies.
+
+## 
