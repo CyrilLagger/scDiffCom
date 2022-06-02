@@ -23,6 +23,8 @@ Let's start by presenting the GO term data structures used within scDiffCom.
 First, there is the gene ontology `data.table` that describes the location of each GO term in the GO ontology graph. In particular, note the integer column `LEVEL` that is a proxy for the distance to the GO term in the GO ontology graph from the (pseudo)roots.
 
 ```{r}
+library(scDiffCom)
+
 data(gene_ontology_level)
 head(gene_ontology_level)
 ```
@@ -35,11 +37,31 @@ Second, there is another `data.table` that connects LRIs to GO terms. For exampl
 
 ```{r}
 ## Compute
-# GO_interactions_genes = scDiffCom:::get_GO_interactions("mouse", scDiffCom::LRI_mouse$LRI_curated, only_genes_annotations = TRUE)
+GO_interactions_genes = scDiffCom:::get_GO_interactions("mouse", scDiffCom::LRI_mouse$LRI_curated, only_genes_annotations = TRUE)
 # GO_interactions = scDiffCom:::get_GO_interactions("mouse", scDiffCom::LRI_mouse$LRI_curated, only_genes_annotations = FALSE)
-scDiffCom::LRI_mouse$LRI_curated_GO
+# scDiffCom::LRI_mouse$LRI_curated_GO
 ```
 
-Internally, `get_GO_interactions` computes intersection of ancestors. Let's see alternative strategies.
+Internally, `get_GO_interactions` computes the LR_GO. We allow for several modes of mergin the GO terms for the ligands and receptors into a set of GO terms associated with a LRI. Below we compute the `LRI_curated_GO` for each such mode. In what follows, we will compare them.
 
-## 
+```{r}
+LR_MERGING_MODES = c(
+    "ancestors_intersection", "ancestors_union",
+    "ancestors_ligands", "ancestors_receptors",
+    "intersection", "union", "ligands", "receptors"
+  )
+
+list_LRI_curated_GO = lapply(LR_MERGING_MODES, function(mode) {
+  scDiffCom:::get_GO_interactions(
+    "mouse", 
+    scDiffCom::LRI_mouse$LRI_curated, 
+    only_genes_annotations = FALSE,
+    LR_merging_mode = mode,
+    return_genes_go_ancestors = FALSE)
+})
+names(res) = LR_MERGING_MODES
+```
+
+In terms of ORA, a `LRI_curated_GO` is used by `run_ora`` to perform the analysis.
+
+TODO: run ORA after scDiffCom with custom LRI_curated_GO (check changes)

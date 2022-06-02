@@ -1694,7 +1694,9 @@ get_KEGG_PWS_interactions <- function(
 get_GO_interactions <- function(
   species,
   LR_db,
-  only_genes_annotations = FALSE
+  only_genes_annotations = FALSE,
+  LR_merging_mode = "ancestors_intersection",
+  return_genes_go_ancestors = FALSE
 ) {
   GO_NAME <- i.GO_name <- ASPECT <- GO_ID <-
     LEVEL <- i.LEVEL <- NULL
@@ -1724,6 +1726,14 @@ get_GO_interactions <- function(
       ),
       call. = FALSE
     )
+  }
+  LR_MERGING_MODES = c(
+    "ancestors_intersection", "ancestors_union",
+    "ancestors_ligands", "ancestors_receptors",
+    "intersection", "union", "ligands", "receptors"
+  )
+  if (!(LR_merging_mode %in% LR_MERGING_MODES)) {
+    stop(paste0("Invalid LR_merging_mode: ", LR_merging_mode))
   }
   ALL_LR_genes <- unique(
     unlist(
@@ -1781,21 +1791,52 @@ get_GO_interactions <- function(
     USE.NAMES = TRUE,
     simplify = FALSE
   )
+  if (return_genes_go_ancestors) {
+    return(ALL_LR_genes_go)
+  }
+  GENE_TO_GOs_MAP = ALL_LR_genes_go
+  if (LR_merging_mode == "ancestors_intersection") {
+    lr_merge_func = intersect
+  } else if (LR_merging_mode == "ancestors_union") {
+    lr_merge_func = union
+  } else if (LR_merging_mode == "ancestors_ligands") {
+    lr_merge_func = function(...) {list(...)[[1]]}
+  } else if (LR_merging_mode == "ancestors_receptors") {
+    lr_merge_func = function(...) {list(...)[[2]]}
+  } else {
+    # Don't use ancestors
+    ALL_LR_genes_info_unique = unique(ALL_LR_genes_info$mgi_symbol)
+    ALL_LR_genes_info_as_list = sapply(
+      ALL_LR_genes_info_unique, function(gene) {
+        ALL_LR_genes_info[mgi_symbol == gene]$go_id
+      }
+    )
+    GENE_TO_GOs_MAP = ALL_LR_genes_info_as_list
+    if (LR_merging_mode == "intersection") {
+      lr_merge_func = intersect
+    } else if (LR_merging_mode == "union") {
+      lr_merge_func = union
+    } else if (LR_merging_mode == "ligands") {
+      lr_merge_func = function(...) {list(...)[[1]]}
+    } else if (LR_merging_mode == "receptors") {
+      lr_merge_func = function(...) {list(...)[[2]]}
+    }
+  }
   LR_interactions_go_intersection <- rbindlist(
     apply(
       LR_db,
       MARGIN = 1,
       function(row) {
         LIGAND_GO <- unique(c(
-          ALL_LR_genes_go[[row[["LIGAND_1"]]]],
-          ALL_LR_genes_go[[row[["LIGAND_2"]]]]
+          GENE_TO_GOs_MAP[[row[["LIGAND_1"]]]],
+          GENE_TO_GOs_MAP[[row[["LIGAND_2"]]]]
         ))
         RECEPTOR_GO <- unique(c(
-          ALL_LR_genes_go[[row[["RECEPTOR_1"]]]],
-          ALL_LR_genes_go[[row[["RECEPTOR_2"]]]],
-          ALL_LR_genes_go[[row[["RECEPTOR_3"]]]]
+          GENE_TO_GOs_MAP[[row[["RECEPTOR_1"]]]],
+          GENE_TO_GOs_MAP[[row[["RECEPTOR_2"]]]],
+          GENE_TO_GOs_MAP[[row[["RECEPTOR_3"]]]]
         ))
-        res_inter <- intersect(LIGAND_GO, RECEPTOR_GO)
+        res_inter <- lr_merge_func(LIGAND_GO, RECEPTOR_GO)
         if (length(res_inter) > 0) {
           res_inter <- data.table(
             LRI = rep(row[["LRI"]], length(res_inter)),
