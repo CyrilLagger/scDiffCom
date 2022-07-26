@@ -1,5 +1,5 @@
 ---
-title: "scDiffCom: GO Annotation"
+title: "scDiffCom: GO Terms"
 description: >
   Check GO term annotation strategies and evaluate within scDiffCom.
 author: "Cyril Lagger, Eugen Ursu"
@@ -223,9 +223,9 @@ for (i in 1:length(results_ora)) {
 }
 
 dt_ora = dt_ora[!is.na(LEVEL)]
-# dt_ora = dt_ora[MERGE_MODE %in% c("ancestors_intersection", "ancestors_union", "ancestors_ligands", "ancestors_receptors", "intersection")]
+dt_ora = dt_ora[TYPE %in% c("UP", "DOWN")]
 
-violin_plot = ggplot(data=dt_ora, aes(fill=TYPE, y=LEVEL, x=MERGE_MODE)) + 
+violin_plot = ggplot(data=dt_ora, aes(y=LEVEL, x=MERGE_MODE)) + 
   geom_violin() + 
   scale_x_discrete(labels = c(
     "ancestors_intersection" = glue("ancestors_intersection\nN={table(dt_ora$MERGE_MODE)['ancestors_intersection']}"),
@@ -239,7 +239,7 @@ violin_plot = ggplot(data=dt_ora, aes(fill=TYPE, y=LEVEL, x=MERGE_MODE)) +
   )) +
   xlab("GO Terms merging modes") +
   ylab("Level") +
-  ggtitle("Distribution of GO Term level by merging modes and over-representation type") +
+  ggtitle("Distribution of GO Term levels by merging modes.") +
   theme(axis.text.x = element_text(size=12, angle=0))
 violin_plot
 ```
