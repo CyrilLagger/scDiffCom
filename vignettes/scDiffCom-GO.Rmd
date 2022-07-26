@@ -10,58 +10,237 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-The objective of this vignette is to:
+The objectives of this vignette are:
 
-1. showcase how the GO Term annotation takes place in scDiffCom.
-2. parameter for choosing the GO Term annotation strategy.
-3. evaluate the performance of the different strategies.
+1. Show some of the details on how the GO Term annotation takes place in `scDiffCom`.
+2. Investigate the properties of GO Term merging modes.
 
-Let's start by presenting the GO term data structures used within scDiffCom.
+Let's start by presenting the relevant data structures used within `scDiffCom`.
 
 ## GO Terms data structures in `scDiffCom`
 
-First, there is the gene ontology `data.table` that describes the location of each GO term in the GO ontology graph. In particular, note the integer column `LEVEL` that is a proxy for the distance to the GO term in the GO ontology graph from the (pseudo)roots.
+First, there is the gene ontology `data.table` that describes the location of each GO term in the GO ontology graph. In particular, note the integer column `LEVEL` that is a proxy for the distance to the GO term in the GO ontology graph from the "roots" (biological process, molecular function, cellular component).
 
-```{r}
+```{r,error=FALSE,message=FALSE,warning=FALSE,results='hide'}
+library(knitr)
+library(glue)
+library(data.table)
+library(ggplot2)
+library(easyGgplot2)
 library(scDiffCom)
 
 data(gene_ontology_level)
 head(gene_ontology_level)
 ```
 
-Second, there is another `data.table` that connects LRIs to GO terms. For example, for mice, there are multiple ways of finding it:
+Second, there is another `data.table` that connects LRIs to GO terms. For example, for mice, there are two ways of accessing it:
 
-1. compute for LRI
-2. compute for genes in LRI
-3. internal `scDiffCom` data: `scDiffCom::LRI_mouse$LRI_curated_GO`, computed with (1)
+1. Compute
+2. Precomputed - internal `scDiffCom` data: `scDiffCom::LRI_mouse$LRI_curated_GO`, computed with (1)
 
-```{r}
-## Compute
+```{r,echo=FALSE,error=FALSE,message=FALSE,warning=FALSE,results='hide'}
+## 1. Compute
 GO_interactions_genes = scDiffCom:::get_GO_interactions("mouse", scDiffCom::LRI_mouse$LRI_curated, only_genes_annotations = TRUE)
-# GO_interactions = scDiffCom:::get_GO_interactions("mouse", scDiffCom::LRI_mouse$LRI_curated, only_genes_annotations = FALSE)
+
+## 2. Precomputed
 # scDiffCom::LRI_mouse$LRI_curated_GO
+
+GO_interactions_genes
 ```
 
-Internally, `get_GO_interactions` computes the LR_GO. We allow for several modes of mergin the GO terms for the ligands and receptors into a set of GO terms associated with a LRI. Below we compute the `LRI_curated_GO` for each such mode. In what follows, we will compare them.
+So internally, `get_GO_interactions` performs the assignment of GO Terms to LRI. We allow for several modes of merging the GO terms for the ligands and receptors into a set of GO terms associated with a LRI. Below we compute the `LRI_curated_GO` for each such mode. In what follows, we will compare them.
 
-```{r}
+```{r,include=FALSE}
 LR_MERGING_MODES = c(
     "ancestors_intersection", "ancestors_union",
     "ancestors_ligands", "ancestors_receptors",
     "intersection", "union", "ligands", "receptors"
   )
 
-list_LRI_curated_GO = lapply(LR_MERGING_MODES, function(mode) {
-  scDiffCom:::get_GO_interactions(
+LRI_curated_GO_list = lapply(LR_MERGING_MODES, function(mode) {
+  GO = scDiffCom:::get_GO_interactions(
     "mouse", 
     scDiffCom::LRI_mouse$LRI_curated, 
     only_genes_annotations = FALSE,
     LR_merging_mode = mode,
     return_genes_go_ancestors = FALSE)
+  GO = GO[!is.na(GO_NAME)]
 })
-names(res) = LR_MERGING_MODES
+names(LRI_curated_GO_list) = LR_MERGING_MODES
 ```
 
-In terms of ORA, a `LRI_curated_GO` is used by `run_ora`` to perform the analysis.
+Let's see how different are the assignments of GO Terms to LRI as a function of merging modes. Firstly, we check the distribution across LRI of the maximum level of the assigned GO Terms. In other words, for each LRI, we extract the levels of each of the assigned GO Terms and take the maximum over this set.
 
-TODO: run ORA after scDiffCom with custom LRI_curated_GO (check changes)
+```{r,fig.width=15,fig.height=5,warning=FALSE}
+
+plots_max = list()
+plots_median = list()
+for (i in 1:length(LRI_curated_GO_list)) {
+
+  GO = LRI_curated_GO_list[[i]]
+  merge_mode = names(LRI_curated_GO_list)[i]
+  
+  GO = merge(GO, gene_ontology_level, by.x="GO_ID", by.y="ID", all.x=TRUE)
+  GO = GO[!is.na(GO$LEVEL)]
+
+  GO_max_level = GO[, list(max_level = max(LEVEL)), by="LRI"]
+  plot_max = (ggplot(data=GO_max_level, aes(x=max_level)) 
+       + geom_histogram(binwidth = 0.5)
+       + xlim(0, 18)
+       # + scale_x_continuous(breaks = 1:18)
+       + ylim(0, 1200)
+       + ggtitle(glue::glue("{merge_mode}\nNum GO:LRI={nrow(GO)}\nN={nrow(GO_max_level)}\n"))
+  )
+  plots_max[[merge_mode]] = plot_max
+  
+  GO_median_level = GO[, list(median_level = round(median(LEVEL))), by="LRI"]
+  # GO_median_level = GO_median_level[!is.na(GO_median_level$median_level), ]
+  plot_median = (ggplot(data=GO_median_level, aes(x=median_level)) 
+       + geom_histogram(binwidth = 0.5)
+       + xlim(0, 13)
+       # + scale_x_continuous(breaks = 1:18)
+       + ylim(0, 2100)
+       + ggtitle(glue::glue("{merge_mode}\nNum GO:LRI={nrow(GO)}\nN={nrow(GO_median_level)}"))
+  )
+  plots_median[[merge_mode]] = plot_median
+  
+}
+ggplot2.multiplot(plotlist=plots_max, cols=4)
+```
+Now let's check the median level distributions:
+
+```{r,fig.width=15,fig.height=5,warning=FALSE}
+ggplot2.multiplot(plotlist=plots_median, cols=4)
+```
+
+## Overall GO term level distribution
+
+We present below the distribution of levels from the GO Terms. This provides a baseline value of what to expect when examining the levels of the relevant GO Terms in other contexts.
+
+```{r}
+GO_LEVEL_NO_OTHER = gene_ontology_level[ASPECT != "other"]
+(ggplot(data=GO_LEVEL_NO_OTHER, aes(x=LEVEL)) 
+       + geom_histogram(binwidth = 0.5)
+       + scale_x_continuous(breaks = 1:18)
+       + ggtitle(glue::glue("GO Terms level distribution.\nN={nrow(GO_LEVEL_NO_OTHER)}"))
+)
+```
+
+We compute the median level for reference.
+
+```{r}
+median(GO_LEVEL_NO_OTHER$LEVEL)
+```
+## Exploring different merging modes on `scDiffCom` toy object.
+
+Now we have the LRI GO annotations obtained by the different merging modes. We test them on the toy object available in the package `scDiffCom::seurat_sample_tms_liver`. First we perform the raw `scDiffCom` analysis. Then we perform `ORA` on the results using the different LRI GO annotations and compare the results. Finally, we plot the ORA results from different merging modes.
+
+```{r,fig.width=15,fig.height=5}
+
+params = list(
+    LRI_species = "mouse",
+    seurat_celltype_id = "cell_type",
+    seurat_condition_id = list(
+      column_name = "age_group",
+      cond1_name = "YOUNG",
+      cond2_name = "OLD"
+    ),  
+    object_name = "scDiffCom_object",
+    seurat_assay = "RNA",
+    seurat_slot = "data",
+    log_scale = FALSE,
+    score_type = "geometric_mean",
+    threshold_min_cells = 5,
+    threshold_pct = 0.1,
+    iterations = 1000,
+    threshold_quantile_score = 0.2,
+    threshold_p_value_specificity = 0.05,
+    threshold_p_value_de = 0.05,
+    threshold_logfc = log(1.5),  # log(1.5)
+    return_distributions = FALSE,
+    seed = 42,
+    verbose = TRUE
+  )
+  
+results = scDiffCom:::run_internal_raw_analysis(
+  seurat_object = scDiffCom::seurat_sample_tms_liver,
+  LRI_table = scDiffCom::LRI_mouse$LRI_curated,
+  LRI_species = "mouse",
+  params = params
+)
+results = scDiffCom::FilterCCI(results)
+
+
+results_ora = list()
+for (i in 1:length(LRI_curated_GO_list)) {
+  GO = LRI_curated_GO_list[[i]]
+  merge_mode = names(LRI_curated_GO_list)[i]
+  tryCatch(
+    {
+      results_ora[[merge_mode]] = scDiffCom:::run_ora(
+        object = results,
+        categories = "GO_TERMS",
+        extra_annotations = NULL,
+        overwrite = TRUE,
+        stringent_or_default = "default",
+        stringent_logfc_threshold = NULL,
+        verbose = TRUE,
+        class_signature = "scDiffCom",
+        global = FALSE,
+        LRI_curated_GO = GO
+      )
+    },
+    error=function (cond) {
+      print(cond)
+    }
+  )
+}
+
+dt_ora = data.table::data.table()
+for (i in 1:length(results_ora)) {
+  merge_mode = names(results_ora)[i]
+  res = results_ora[[merge_mode]]
+  tryCatch(
+    {
+      dt = res@ora_table$GO_TERMS
+      dt_m = data.table::melt(
+        dt, 
+        id.vars = c("VALUE_BIS", "VALUE", "CATEGORY", "LEVEL"), 
+        measure.vars = c("BH_P_VALUE_UP", "BH_P_VALUE_DOWN", "BH_P_VALUE_FLAT"), 
+        value.name = c("P_VAL")
+      )
+      dt_m$variable = as.character(dt_m$variable)
+      dt_m$TYPE = purrr::map_chr(dt_m$variable, function(s) {strsplit(s, split="_")[[1]][4]})
+      dt_m = dt_m[dt_m$P_VAL < 0.05, ]
+      dt_m$MERGE_MODE = merge_mode
+      
+      dt_ora = rbind(dt_ora, dt_m)
+    },
+    error=function (cond) {
+      print(cond)
+    }
+  )
+}
+
+dt_ora = dt_ora[!is.na(LEVEL)]
+# dt_ora = dt_ora[MERGE_MODE %in% c("ancestors_intersection", "ancestors_union", "ancestors_ligands", "ancestors_receptors", "intersection")]
+
+violin_plot = ggplot(data=dt_ora, aes(fill=TYPE, y=LEVEL, x=MERGE_MODE)) + 
+  geom_violin() + 
+  scale_x_discrete(labels = c(
+    "ancestors_intersection" = glue("ancestors_intersection\nN={table(dt_ora$MERGE_MODE)['ancestors_intersection']}"),
+    "intersection" = glue("intersection\nN={table(dt_ora$MERGE_MODE)['intersection']}"),
+    "ancestors_union" = glue("ancestors_union\nN={table(dt_ora$MERGE_MODE)['ancestors_union']}"),
+    "union" = glue("union\nN={table(dt_ora$MERGE_MODE)['union']}"),
+    "ancestors_ligands" = glue("ancestors_ligands\nN={table(dt_ora$MERGE_MODE)['ancestors_ligands']}"),
+    "ligands" = glue("ligands\nN={table(dt_ora$MERGE_MODE)['ligands']}"),
+    "ancestors_receptors" = glue("ancestors_receptors\nN={table(dt_ora$MERGE_MODE)['ancestors_receptors']}"),
+    "receptors" = glue("receptors\nN={table(dt_ora$MERGE_MODE)['receptors']}")
+  )) +
+  xlab("GO Terms merging modes") +
+  ylab("Level") +
+  ggtitle("Distribution of GO Term level by merging modes and over-representation type") +
+  theme(axis.text.x = element_text(size=12, angle=0))
+violin_plot
+```
+

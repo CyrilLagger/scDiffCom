@@ -1807,7 +1807,8 @@ get_GO_interactions <- function(
     # Don't use ancestors
     ALL_LR_genes_info_unique = unique(ALL_LR_genes_info$mgi_symbol)
     ALL_LR_genes_info_as_list = sapply(
-      ALL_LR_genes_info_unique, function(gene) {
+      ALL_LR_genes_info_unique, 
+      function(gene) {
         ALL_LR_genes_info[mgi_symbol == gene]$go_id
       }
     )
