@@ -7,7 +7,8 @@ run_ora <- function(
   stringent_logfc_threshold,
   verbose,
   class_signature,
-  global
+  global,
+  LRI_curated_GO = NULL
 ) {
   if (global == TRUE) {
     stop(
@@ -176,7 +177,8 @@ run_ora <- function(
               category = category,
               extra_annotation = extra_annotation,
               species = temp_param$LRI_species,
-              global = global
+              global = global,
+              LRI_curated_GO = LRI_curated_GO
             ),
             by = temp_by
           ]
@@ -288,7 +290,8 @@ run_ora <- function(
                   category = category,
                   extra_annotation = extra_annotation,
                   species = temp_param$LRI_species,
-                  global = global
+                  global = global,
+                  LRI_curated_GO = LRI_curated_GO
                 ),
                 by = temp_by
               ]
@@ -350,7 +353,8 @@ build_ora_dt <- function(
   category,
   extra_annotation,
   species,
-  global
+  global,
+  LRI_curated_GO = NULL
 ) {
   ER_CELLTYPES <- LIGAND_COMPLEX <- RECEPTOR_COMPLEX <-
     ID <- LRI <- GO_NAME <- i.NAME <-  NULL
@@ -372,23 +376,30 @@ build_ora_dt <- function(
       if (category %in% c("GO_TERMS", "KEGG_PWS") |
           !is.null(extra_annotation)) {
         if (category == "GO_TERMS") {
-          if (species == "mouse") {
-            new_intersection_dt <- scDiffCom::LRI_mouse$LRI_curated_GO[
-              ,
-              c("LRI", "GO_ID")
-            ]
-          }
-          if (species == "human") {
-            new_intersection_dt <- scDiffCom::LRI_human$LRI_curated_GO[
-              ,
-              c("LRI", "GO_ID")
-            ]
-          }
-          if (species == "rat") {
-            new_intersection_dt <- scDiffCom::LRI_rat$LRI_curated_GO[
-              ,
-              c("LRI", "GO_ID")
-            ]
+          if (!is.null(LRI_curated_GO)) {
+              new_intersection_dt <- LRI_curated_GO[
+                ,
+                c("LRI", "GO_ID")
+              ]
+          } else {
+            if (species == "mouse") {
+              new_intersection_dt <- scDiffCom::LRI_mouse$LRI_curated_GO[
+                ,
+                c("LRI", "GO_ID")
+              ]
+            }
+            if (species == "human") {
+              new_intersection_dt <- scDiffCom::LRI_human$LRI_curated_GO[
+                ,
+                c("LRI", "GO_ID")
+              ]
+            }
+            if (species == "rat") {
+              new_intersection_dt <- scDiffCom::LRI_rat$LRI_curated_GO[
+                ,
+                c("LRI", "GO_ID")
+              ]
+            }
           }
           new_intersection_dt[
             scDiffCom::gene_ontology_level,
