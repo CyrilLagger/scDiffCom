@@ -52,6 +52,7 @@ Suggests:
     shinythemes,
     shinyWidgets,
     SingleCellSignalR,
+    SIMLR,
     testthat (>= 3.0.0),
     visNetwork
 Imports: 
