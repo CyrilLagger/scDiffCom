@@ -261,8 +261,8 @@ setup_graph_config <- function(
     EDGE_COLORING = list(
       ORA_COLOR_UP = "#F94144", # red
       ORA_COLOR_DOWN = "#277DA1", # blue
-      ORA_COLOR_DIFF = "#F9C74F",
-      ORA_COLOR_FLAT = "#90BE6D",
+      ORA_COLOR_DIFF = "#F9C74F", # yellow
+      ORA_COLOR_FLAT = "#000000", # black
       ORA_COLOR_NONE = grDevices::rgb(0.2, 0.2, 0.2, alpha = 0.1),
       BREWER_N = 7,
       BREWER_NAME = "RdBu"
@@ -276,7 +276,7 @@ setup_graph_config <- function(
       ORA_COLOR_UP = "#F94144", # red
       ORA_COLOR_DOWN = "#277DA1", # blue
       ORA_COLOR_DIFF = "#F9C74F",
-      ORA_COLOR_FLAT = "#90BE6D",
+      ORA_COLOR_FLAT = "#000000",
       ORA_COLOR_NONE = "#a6a6a6",
       BORDER = "#577590",
       HIGHLIGHT = list(
@@ -285,7 +285,7 @@ setup_graph_config <- function(
         ORA_COLOR_UP = "#F94144", # red
         ORA_COLOR_DOWN = "#277DA1", # blue
         ORA_COLOR_DIFF = "#F9C74F",
-        ORA_COLOR_FLAT = "#90BE6D",
+        ORA_COLOR_FLAT = "#000000",
         ORA_COLOR_NONE = "#a6a6a6"
       ),
       HOVER = list(
@@ -294,7 +294,7 @@ setup_graph_config <- function(
         ORA_COLOR_UP = "#F94144", # red
         ORA_COLOR_DOWN = "#277DA1", # blue
         ORA_COLOR_DIFF = "#F9C74F",
-        ORA_COLOR_FLAT = "#90BE6D",
+        ORA_COLOR_FLAT = "#000000",
         ORA_COLOR_NONE = "#a6a6a6"
       )
     ),

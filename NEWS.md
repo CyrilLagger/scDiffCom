@@ -1,3 +1,9 @@
+# scDiffCom 0.2.4
+
+11-04-2023
+
+* Change default red-green colors in plots
+
 # scDiffCom 0.2.3
 
 08-05-2022
