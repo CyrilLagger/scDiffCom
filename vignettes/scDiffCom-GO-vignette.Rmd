@@ -1,14 +1,19 @@
 ---
-title: "scDiffCom: GO Terms"
+title: "scDiffCom: GO Annotation"
 description: >
   Check GO term annotation strategies and evaluate within scDiffCom.
 author: "Cyril Lagger, Eugen Ursu"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{GO Annotation}
+  %\VignetteIndexEntry{scDiffCom: GO Annotation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
 
 The objectives of this vignette are:
 
