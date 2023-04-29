@@ -22,12 +22,12 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/CyrilLagger/scDiffCom/workflows/R-CMD-check/badge.svg)](https://github.com/CyrilLagger/scDiffCom/actions)
 <!-- badges: end -->
 
-scDiffCom infers cell type to cell type communication signals from 
-scRNA-seq [Seurat](https://satijalab.org/seurat/) objects,
-and more particularly investigates how these interactions change between two biological 
-conditions. The package relies on an internal collection of ligand-receptor
-interactions (available for human, mouse and rat) retrieved from seven public
-and curated databases.
+scDiffCom stands for "single-cell Differential Communication" and infers 
+changes in intercellular communication between two biological 
+conditions from scRNA-seq data (as [Seurat](https://satijalab.org/seurat/)
+objects). The package relies on an internal collection of ligand-receptor 
+interactions (available for human, mouse and rat) retrieved from seven 
+curated databases.
 
 <details>
 <summary>Display LRI databases</summary>
