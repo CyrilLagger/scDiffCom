@@ -1,7 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/articles/index.html</loc>
+  </url>
+  <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html</loc>
+  </url>
+  <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/authors.html</loc>
+  </url>
+  <url>
     <loc>https://cyrillagger.github.io/scDiffCom/index.html</loc>
+  </url>
+  <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/LICENSE-text.html</loc>
+  </url>
+  <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/LICENSE.html</loc>
+  </url>
+  <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/news/index.html</loc>
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/BuildNetwork.html</loc>
@@ -16,6 +34,9 @@
     <loc>https://cyrillagger.github.io/scDiffCom/reference/FilterCCI.html</loc>
   </url>
   <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/reference/gene_ontology_level.html</loc>
+  </url>
+  <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/GetDistributions.html</loc>
   </url>
   <url>
@@ -26,6 +47,9 @@
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/GetTableORA.html</loc>
+  </url>
+  <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/reference/index.html</loc>
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/LRI_human.html</loc>
@@ -43,9 +67,6 @@
     <loc>https://cyrillagger.github.io/scDiffCom/reference/RunORA.html</loc>
   </url>
   <url>
-    <loc>https://cyrillagger.github.io/scDiffCom/reference/gene_ontology_level.html</loc>
-  </url>
-  <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/run_interaction_analysis.html</loc>
   </url>
   <url>
@@ -56,8 +77,5 @@
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/show-scDiffCom-method.html</loc>
-  </url>
-  <url>
-    <loc>https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html</loc>
   </url>
 </urlset>
