@@ -1,7 +1,7 @@
 Package: scDiffCom
 Type: Package
 Title: Differential Analysis of Intercellular Communication from scRNA-Seq Data
-Version: 0.2.4
+Version: 1.0.0
 Authors@R: c(
     person("Cyril", "Lagger", email = "lagger.cyril@gmail.com",
     role = c("aut", "cre"),
@@ -28,7 +28,7 @@ Encoding: UTF-8
 LazyData: true
 Depends: 
     R (>= 4.0.0)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 biocViews:
 Suggests: 
     biomaRt,
