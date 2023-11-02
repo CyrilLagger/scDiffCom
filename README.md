@@ -58,5 +58,5 @@ age-related changes in intercellular communication.
 
 ## Citation
 
-Please consider reading and citing our Nature Aging paper
+Please consider reading and citing our Nature Aging paper:
 [here](https://www.nature.com/articles/s43587-023-00514-x).
