@@ -25,7 +25,6 @@ methods used by the package.
 
 Important terminology:
 
-* CCI (cell-cell communication)
 * LRI (ligand-receptor interaction): a set of genes whose proteins are known
 to interact during extracellular signalling. The package distinguishes simple
 LRIs (e.g. `Apoe:Ldlr`) and complex/heteromeric LRIs (e.g.
@@ -43,7 +42,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Standard ICC differential analysis
+## Standard intercellular communication differential analysis
 
 ### Load essential libraries
 
