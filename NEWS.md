@@ -1,3 +1,10 @@
+# scDiffCom 1.0.0
+
+01-11-2023
+
+* Prepare for CRAN release
+* Update links to the Nature Aging paper
+
 # scDiffCom 0.2.4
 
 11-04-2023
