@@ -84,24 +84,17 @@
 <p>scDiffCom stands for “single-cell Differential Communication” and infers changes in intercellular communication between two biological conditions from scRNA-seq data (as <a href="https://satijalab.org/seurat/" class="external-link">Seurat</a> objects). The package relies on an internal collection of ligand-receptor interactions (available for human, mouse and rat) retrieved from seven curated databases.</p>
 <details><summary>
 Display LRI databases
-</summary><ul>
-<li><a href="http://www.cellchat.org/" class="external-link">CellChat</a></li>
-<li><a href="https://www.cellphonedb.org/" class="external-link">CellPhoneDB</a></li>
-<li><a href="http://tcm.zju.edu.cn/celltalkdb/" class="external-link">CellTalkDB</a></li>
-<li><a href="https://github.com/forrest-lab/NATMI" class="external-link">connectomeDB2020</a></li>
-<li><a href="https://github.com/soumelis-lab/ICELLNET" class="external-link">ICELLNET</a></li>
-<li><a href="https://github.com/saeyslab/nichenetr" class="external-link">NicheNet</a></li>
-<li><a href="http://www.bioconductor.org/packages/release/bioc/html/SingleCellSignalR.html" class="external-link">SingleCellSignalR</a></li>
-</ul></details><p> </p>
+</summary><p>* <a href="http://www.cellchat.org/" class="external-link">CellChat</a> * <a href="https://www.cellphonedb.org/" class="external-link">CellPhoneDB</a> * <a href="http://tcm.zju.edu.cn/celltalkdb/" class="external-link">CellTalkDB</a> * <a href="https://github.com/forrest-lab/NATMI" class="external-link">connectomeDB2020</a> * <a href="https://github.com/soumelis-lab/ICELLNET" class="external-link">ICELLNET</a> * <a href="https://github.com/saeyslab/nichenetr" class="external-link">NicheNet</a> * <a href="http://www.bioconductor.org/packages/release/bioc/html/SingleCellSignalR.html" class="external-link">SingleCellSignalR</a></p>
+</details><p> </p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install release version from CRAN</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"scDiffCom"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># We currently highly recommend to install the development version from GitHub</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"CyrilLagger/scDiffCom"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Install development version from GitHub</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"CyrilLagger/scDiffCom"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Install release version from CRAN</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"scDiffCom"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
@@ -112,7 +105,7 @@ Display LRI databases
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
-<p>Please consider reading and citing our preprint <a href="https://www.biorxiv.org/content/10.1101/2021.08.13.456238v1" class="external-link">here</a>.</p>
+<p>Please consider reading and citing our Nature Aging paper <a href="https://www.nature.com/articles/s43587-023-00514-x" class="external-link">here</a>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
