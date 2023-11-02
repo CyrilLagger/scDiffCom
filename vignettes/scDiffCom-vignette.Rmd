@@ -18,13 +18,14 @@ of interest from scRNA-seq data. The package can also be used without
 performing differential analysis if one is not interested in comparing
 conditions but only in investigating detected cell-cell interactions.
 
-In addition to this vignette, we also recommend reading our manuscript
-([doi:10.1101/2021.08.13.456238](https://www.biorxiv.org/content/10.1101/2021.08.13.456238v1))
+In addition to this vignette, we also recommend reading our 
+([Nature Aging paper](https://www.nature.com/articles/s43587-023-00514-x))
 for more information about the statistical
 methods used by the package.
 
 Important terminology:
 
+* CCI (cell-cell communication)
 * LRI (ligand-receptor interaction): a set of genes whose proteins are known
 to interact during extracellular signalling. The package distinguishes simple
 LRIs (e.g. `Apoe:Ldlr`) and complex/heteromeric LRIs (e.g.
@@ -42,7 +43,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Standard differential analysis
+## Standard ICC differential analysis
 
 ### Load essential libraries
 
