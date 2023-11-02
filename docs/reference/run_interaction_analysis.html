@@ -5,7 +5,7 @@
  infers biologically relevant cell-cell interactions (CCIs) and how they
  change between two conditions of interest. Over-representation analysis
  is automatically performed to determine dominant differential signals at the
- level of the genes, cell types, GO Terms and KEGG Pathways."><title>Run (differential) intercellular communication analysis — run_interaction_analysis • scDiffCom</title><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.1.0/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.1.0/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Run (differential) intercellular communication analysis — run_interaction_analysis"><meta property="og:description" content="Perform (differential) cell type to cell type communication analysis from a
+ level of the genes, cell types, GO Terms and KEGG Pathways."><title>Run (differential) intercellular communication analysis — run_interaction_analysis • scDiffCom</title><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Run (differential) intercellular communication analysis — run_interaction_analysis"><meta property="og:description" content="Perform (differential) cell type to cell type communication analysis from a
  Seurat object,
  using an internal database of ligand-receptor interactions (LRIs). It
  infers biologically relevant cell-cell interactions (CCIs) and how they
@@ -22,7 +22,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scDiffCom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,27 +66,27 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">run_interaction_analysis</span><span class="op">(</span>
-  <span class="va">seurat_object</span>,
-  <span class="va">LRI_species</span>,
-  <span class="va">seurat_celltype_id</span>,
-  <span class="va">seurat_condition_id</span>,
-  iterations <span class="op">=</span> <span class="fl">1000</span>,
-  scdiffcom_object_name <span class="op">=</span> <span class="st">"scDiffCom_object"</span>,
-  seurat_assay <span class="op">=</span> <span class="st">"RNA"</span>,
-  seurat_slot <span class="op">=</span> <span class="st">"data"</span>,
-  log_scale <span class="op">=</span> <span class="cn">FALSE</span>,
-  score_type <span class="op">=</span> <span class="st">"geometric_mean"</span>,
-  threshold_min_cells <span class="op">=</span> <span class="fl">5</span>,
-  threshold_pct <span class="op">=</span> <span class="fl">0.1</span>,
-  threshold_quantile_score <span class="op">=</span> <span class="fl">0.2</span>,
-  threshold_p_value_specificity <span class="op">=</span> <span class="fl">0.05</span>,
-  threshold_p_value_de <span class="op">=</span> <span class="fl">0.05</span>,
-  threshold_logfc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1.5</span><span class="op">)</span>,
-  return_distributions <span class="op">=</span> <span class="cn">FALSE</span>,
-  seed <span class="op">=</span> <span class="fl">42</span>,
-  verbose <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">run_interaction_analysis</span><span class="op">(</span></span>
+<span>  <span class="va">seurat_object</span>,</span>
+<span>  <span class="va">LRI_species</span>,</span>
+<span>  <span class="va">seurat_celltype_id</span>,</span>
+<span>  <span class="va">seurat_condition_id</span>,</span>
+<span>  iterations <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  scdiffcom_object_name <span class="op">=</span> <span class="st">"scDiffCom_object"</span>,</span>
+<span>  seurat_assay <span class="op">=</span> <span class="st">"RNA"</span>,</span>
+<span>  seurat_slot <span class="op">=</span> <span class="st">"data"</span>,</span>
+<span>  log_scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  score_type <span class="op">=</span> <span class="st">"geometric_mean"</span>,</span>
+<span>  threshold_min_cells <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  threshold_pct <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  threshold_quantile_score <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>  threshold_p_value_specificity <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  threshold_p_value_de <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  threshold_logfc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1.5</span><span class="op">)</span>,</span>
+<span>  return_distributions <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">42</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -271,18 +271,18 @@ results.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"><span class="fu">run_interaction_analysis</span><span class="op">(</span></span>
-<span class="r-in">  seurat_object <span class="op">=</span> <span class="va">seurat_sample_tms_liver</span>,</span>
-<span class="r-in">  LRI_species <span class="op">=</span> <span class="st">"mouse"</span>,</span>
-<span class="r-in">  seurat_celltype_id <span class="op">=</span> <span class="st">"cell_type"</span>,</span>
-<span class="r-in">  seurat_condition_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span class="r-in">    column_name <span class="op">=</span> <span class="st">"age_group"</span>,</span>
-<span class="r-in">    cond1_name <span class="op">=</span> <span class="st">"YOUNG"</span>,</span>
-<span class="r-in">    cond2_name <span class="op">=</span> <span class="st">"OLD"</span></span>
-<span class="r-in">  <span class="op">)</span></span>
-<span class="r-in"><span class="op">)</span></span>
-<span class="r-in"><span class="op">}</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="fu">run_interaction_analysis</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  seurat_object <span class="op">=</span> <span class="va">seurat_sample_tms_liver</span>,</span></span>
+<span class="r-in"><span>  LRI_species <span class="op">=</span> <span class="st">"mouse"</span>,</span></span>
+<span class="r-in"><span>  seurat_celltype_id <span class="op">=</span> <span class="st">"cell_type"</span>,</span></span>
+<span class="r-in"><span>  seurat_condition_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    column_name <span class="op">=</span> <span class="st">"age_group"</span>,</span></span>
+<span class="r-in"><span>    cond1_name <span class="op">=</span> <span class="st">"YOUNG"</span>,</span></span>
+<span class="r-in"><span>    cond2_name <span class="op">=</span> <span class="st">"OLD"</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
