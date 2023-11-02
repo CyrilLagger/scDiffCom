@@ -1,13 +1,8 @@
-## Resubmission
-This is a resubmission. In this version I have:
-
-* Added the Rd-tag \value to show-scDiffCom-method.rd
-* Added a biorxiv reference describing the method in the description field
-of the DESCRIPTION file
-
+## Submission
+This is a submission for V1.0.0 of scDiffCom
 
 ## Test environments
-* local windows 10 install, R 4.1.0
+* local ubuntu 22.04.2 install, R 4.3.1
 * windows-latest, release, github action
 * macOS-latest, release, github action
 * ubuntu-20.04, release, github action
