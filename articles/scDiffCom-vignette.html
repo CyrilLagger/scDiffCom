@@ -28,7 +28,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scDiffCom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,12 +82,12 @@ conditions of interest from scRNA-seq data. The package can also be used
 without performing differential analysis if one is not interested in
 comparing conditions but only in investigating detected cell-cell
 interactions.</p>
-<p>In addition to this vignette, we also recommend reading our
-manuscript (<a href="https://www.biorxiv.org/content/10.1101/2021.08.13.456238v1" class="external-link">doi:10.1101/2021.08.13.456238</a>)
-for more information about the statistical methods used by the
-package.</p>
+<p>In addition to this vignette, we also recommend reading our (<a href="https://www.nature.com/articles/s43587-023-00514-x" class="external-link">Nature Aging
+paper</a>) for more information about the statistical methods used by
+the package.</p>
 <p>Important terminology:</p>
 <ul>
+<li>CCI (cell-cell communication)</li>
 <li>LRI (ligand-receptor interaction): a set of genes whose proteins are
 known to interact during extracellular signalling. The package
 distinguishes simple LRIs (e.g. <code>Apoe:Ldlr</code>) and
@@ -102,7 +102,7 @@ the emitter cell type expressing the ligand <code>Apoe</code> and
 meaningful biology.</strong></p>
 </div>
 <div class="section level2">
-<h2 id="standard-differential-analysis">Standard differential analysis<a class="anchor" aria-label="anchor" href="#standard-differential-analysis"></a>
+<h2 id="standard-icc-differential-analysis">Standard ICC differential analysis<a class="anchor" aria-label="anchor" href="#standard-icc-differential-analysis"></a>
 </h2>
 <div class="section level3">
 <h3 id="load-essential-libraries">Load essential libraries<a class="anchor" aria-label="anchor" href="#load-essential-libraries"></a>
