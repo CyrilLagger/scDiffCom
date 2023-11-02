@@ -5,8 +5,9 @@ This is a submission for V1.0.0 of scDiffCom
 * local ubuntu 22.04.2 install, R 4.3.1
 * windows-latest, release, github action
 * macOS-latest, release, github action
-* ubuntu-20.04, release, github action
-* ubuntu-20.04, devel, github action
+* ubuntu-latest, release, github action
+* ubuntu-latest, devel, github action
+* ubuntu-latest, oldrel-1, github action
 * windows, devel, https://win-builder.r-project.org/
 
 ## R CMD check results
