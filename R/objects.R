@@ -1,4 +1,6 @@
 #' @import data.table
+#' @import utils
+#' @import future
 #' @importFrom methods new setClass setClassUnion
 #'  setValidity setGeneric validObject
 #' @importFrom DelayedArray rowsum

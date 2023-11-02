@@ -4,6 +4,12 @@
     <loc>https://cyrillagger.github.io/scDiffCom/404.html</loc>
   </url>
   <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/LICENSE-text.html</loc>
+  </url>
+  <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/LICENSE.html</loc>
+  </url>
+  <url>
     <loc>https://cyrillagger.github.io/scDiffCom/articles/index.html</loc>
   </url>
   <url>
@@ -17,12 +23,6 @@
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/index.html</loc>
-  </url>
-  <url>
-    <loc>https://cyrillagger.github.io/scDiffCom/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://cyrillagger.github.io/scDiffCom/LICENSE.html</loc>
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/news/index.html</loc>
@@ -40,9 +40,6 @@
     <loc>https://cyrillagger.github.io/scDiffCom/reference/FilterCCI.html</loc>
   </url>
   <url>
-    <loc>https://cyrillagger.github.io/scDiffCom/reference/gene_ontology_level.html</loc>
-  </url>
-  <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/GetDistributions.html</loc>
   </url>
   <url>
@@ -53,9 +50,6 @@
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/GetTableORA.html</loc>
-  </url>
-  <url>
-    <loc>https://cyrillagger.github.io/scDiffCom/reference/index.html</loc>
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/LRI_human.html</loc>
@@ -74,6 +68,12 @@
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/RunORA.html</loc>
+  </url>
+  <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/reference/gene_ontology_level.html</loc>
+  </url>
+  <url>
+    <loc>https://cyrillagger.github.io/scDiffCom/reference/index.html</loc>
   </url>
   <url>
     <loc>https://cyrillagger.github.io/scDiffCom/reference/run_interaction_analysis.html</loc>
