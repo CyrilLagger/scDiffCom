@@ -51,7 +51,7 @@ parameters_mode <- list(
     threshold_logfc = log(1.5),
     return_distributions = FALSE,
     seed = 42,
-    verbose = FALSE
+    verbose = TRUE
   ),
   cond_nostat = list(
     LRI_species = "mouse",
@@ -592,6 +592,45 @@ test_that(
       function(object) {
         expect_s4_class(object, "scDiffCom")
       }
+    )
+  }
+)
+
+## Check main function is not running if not working on Seurat object ####
+
+test_that(
+  "run_interaction_analysis returns error if not passed a Seurat object", {
+    expect_error(
+      run_interaction_analysis(
+        seurat_object = "not a Seurat object",
+        LRI_species = "mouse",
+        seurat_celltype_id = "cell_type",
+        seurat_condition_id = list(
+          column_name = "age_group",
+          cond1_name = "YOUNG",
+          cond2_name = "OLD"
+        )
+      )
+    )
+  }
+)
+
+## Check main function is running ####
+
+test_that(
+  "run_interaction_analysis is running correctly", {
+    expect_s4_class(
+      run_interaction_analysis(
+        seurat_object = seurat_test,
+        LRI_species = "mouse",
+        seurat_celltype_id = "cell_type",
+        seurat_condition_id = list(
+          column_name = "age_group",
+          cond1_name = "YOUNG",
+          cond2_name = "OLD"
+        )
+      ),
+     "scDiffCom"
     )
   }
 )
