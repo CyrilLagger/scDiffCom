@@ -1699,7 +1699,7 @@ get_GO_interactions <- function(
   return_genes_go_ancestors = FALSE
 ) {
   GO_NAME <- i.GO_name <- ASPECT <- GO_ID <-
-    LEVEL <- i.LEVEL <- NULL
+    LEVEL <- i.LEVEL <- mgi_symbol <- NULL
   if (!requireNamespace("biomaRt", quietly = TRUE)) {
     stop(
       paste0(
