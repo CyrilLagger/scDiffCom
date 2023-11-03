@@ -1,4 +1,6 @@
 
+data.table::setDTthreads(2)
+
 ## We test key functions of the package ####
 # roughly in the order how they are called in a standard analysis after
 # calling run_interaction_analysis

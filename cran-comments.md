@@ -1,5 +1,8 @@
-## Submission
-This is a submission for V1.0.0 of scDiffCom
+## Resubmission
+This is a resubmission for V1.0.0 of scDiffCom.
+
+I have made the following changes:
+* I have added data.table::setDTthreads(2) in the tests to avoid the NOTEs about parallel processing
 
 ## Test environments
 * local ubuntu 22.04.2 install, R 4.3.1
