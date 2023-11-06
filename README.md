@@ -39,7 +39,7 @@ retrieved from seven curated databases.
 ## Installation
 
 ``` r
-# We currently highly recommend to install the development version from GitHub
+# Install the development version from GitHub
 devtools::install_github("CyrilLagger/scDiffCom")
 
 # Install release version from CRAN
