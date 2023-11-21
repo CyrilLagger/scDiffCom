@@ -29,7 +29,8 @@ parameters_mode <- list(
     threshold_logfc = 0,
     return_distributions = "FALSE",
     seed = 5.5,
-    verbose = "TRUE"
+    verbose = "TRUE",
+    custom_LRI_table = "something_wrong"
   ),
   cond_stat = list(
     LRI_species = "mouse",
@@ -53,7 +54,8 @@ parameters_mode <- list(
     threshold_logfc = log(1.5),
     return_distributions = FALSE,
     seed = 42,
-    verbose = TRUE
+    verbose = TRUE,
+    custom_LRI_table = NULL
   ),
   cond_nostat = list(
     LRI_species = "mouse",
@@ -77,7 +79,8 @@ parameters_mode <- list(
     threshold_logfc = log(1.5),
     return_distributions = FALSE,
     seed = 42,
-    verbose = FALSE
+    verbose = FALSE,
+    custom_LRI_table = NULL
   ),
   nocond_stat = list(
     LRI_species = "mouse",
@@ -97,7 +100,8 @@ parameters_mode <- list(
     threshold_logfc = log(1.5),
     return_distributions = FALSE,
     seed = 42,
-    verbose = FALSE
+    verbose = FALSE,
+    custom_LRI_table = NULL
   ),
   nocond_nostat = list(
     LRI_species = "mouse",
@@ -117,7 +121,8 @@ parameters_mode <- list(
     threshold_logfc = log(1.5),
     return_distributions = FALSE,
     seed = 42,
-    verbose = FALSE
+    verbose = FALSE,
+    custom_LRI_table = NULL
   )
 )
 
@@ -152,7 +157,7 @@ test_that(
     )
     expect_length(
       parameters_mode_validated$wrong,
-      18
+      19
     )
   }
 )
@@ -631,6 +636,99 @@ test_that(
           cond1_name = "YOUNG",
           cond2_name = "OLD"
         )
+      ),
+     "scDiffCom"
+    )
+  }
+)
+
+## Check the use of custom_LRI_table ####
+
+test_that(
+  "run_interaction_analysis returns error if custom_LRI_table is not a data.table", {
+    expect_error(
+      run_interaction_analysis(
+        seurat_object = seurat_test,
+        LRI_species = "mouse",
+        seurat_celltype_id = "cell_type",
+        seurat_condition_id = list(
+          column_name = "age_group",
+          cond1_name = "YOUNG",
+          cond2_name = "OLD"
+        ),
+        custom_LRI_table = "something_wrong"
+      )
+    )
+  }
+)
+
+test_that(
+  "run_interaction_analysis returns error if custom_LRI_table is not a data.table", {
+    expect_error(
+      run_interaction_analysis(
+        seurat_object = seurat_test,
+        LRI_species = "mouse",
+        seurat_celltype_id = "cell_type",
+        seurat_condition_id = list(
+          column_name = "age_group",
+          cond1_name = "YOUNG",
+          cond2_name = "OLD"
+        ),
+        custom_LRI_table = data.frame(x = 1:4)
+      )
+    )
+  }
+)
+
+test_that(
+  "run_interaction_analysis returns error if custom_LRI_table is not formatted correctly", {
+    expect_error(
+      run_interaction_analysis(
+        seurat_object = seurat_test,
+        LRI_species = "mouse",
+        seurat_celltype_id = "cell_type",
+        seurat_condition_id = list(
+          column_name = "age_group",
+          cond1_name = "YOUNG",
+          cond2_name = "OLD"
+        ),
+        custom_LRI_table = data.table(x = 1:4)
+      )
+    )
+  }
+)
+
+test_that(
+  "error if LRI_species and custom_LRI_table are inconsistent", {
+    expect_error(
+      run_interaction_analysis(
+        seurat_object = seurat_test,
+        LRI_species = "mouse",
+        seurat_celltype_id = "cell_type",
+        seurat_condition_id = list(
+          column_name = "age_group",
+          cond1_name = "YOUNG",
+          cond2_name = "OLD"
+        ),
+        custom_LRI_table = LRI_mouse$LRI_curated[1:500, ]
+      )
+    )
+  }
+)
+
+test_that(
+  "run_interaction_analysis is running correctly with custom LRIs", {
+    expect_s4_class(
+      run_interaction_analysis(
+        seurat_object = seurat_test,
+        LRI_species = "custom",
+        seurat_celltype_id = "cell_type",
+        seurat_condition_id = list(
+          column_name = "age_group",
+          cond1_name = "YOUNG",
+          cond2_name = "OLD"
+        ),
+        custom_LRI_table = LRI_mouse$LRI_curated[1:500, ]
       ),
      "scDiffCom"
     )
