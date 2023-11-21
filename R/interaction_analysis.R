@@ -128,6 +128,11 @@
 #' @param seed Set a random seed (\code{42} by default) to obtain reproducible
 #' results.
 #' @param verbose If \code{TRUE} (default), print progress messages.
+#' @param custom_LRI_table A LRI table supplied by the user. Overwrite
+#' \code{LRI_species} and the corresponding internal LRI table. Use to
+#' your own risk! Must be a data.table in the same format as the internal
+#' LRI_tables, namely with the columns "LRI", "LIGAND_1", "LIGAND_2",
+#' "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3".
 #'
 #' @return An S4 object of class \code{\link{scDiffCom-class}}.
 #' @export
@@ -163,7 +168,8 @@ run_interaction_analysis <- function(
   threshold_logfc = log(1.5),
   return_distributions = FALSE,
   seed = 42,
-  verbose = TRUE
+  verbose = TRUE,
+  custom_LRI_table = NULL
 ) {
   if (!methods::is(seurat_object, "Seurat")) {
     stop(
@@ -188,7 +194,8 @@ run_interaction_analysis <- function(
     threshold_logfc = threshold_logfc,
     return_distributions = return_distributions,
     seed = seed,
-    verbose = verbose
+    verbose = verbose,
+    custom_LRI_table = custom_LRI_table
   )
   check_parameters <- validate_parameters(
     params = analysis_parameters,
@@ -204,14 +211,22 @@ run_interaction_analysis <- function(
   } else {
     analysis_parameters <- check_parameters$params
   }
-  if (LRI_species == "human") {
-    LRI_table <- copy(scDiffCom::LRI_human$LRI_curated)
-  }
-  if (LRI_species == "mouse") {
-    LRI_table <- copy(scDiffCom::LRI_mouse$LRI_curated)
-  }
-  if (LRI_species == "rat") {
-    LRI_table <- copy(scDiffCom::LRI_rat$LRI_curated)
+  if (is.null(analysis_parameters$custom_LRI_table)) {
+    if (LRI_species == "human") {
+      LRI_table <- copy(scDiffCom::LRI_human$LRI_curated)
+    }
+    if (LRI_species == "mouse") {
+      LRI_table <- copy(scDiffCom::LRI_mouse$LRI_curated)
+    }
+    if (LRI_species == "rat") {
+      LRI_table <- copy(scDiffCom::LRI_rat$LRI_curated)
+    }
+  } else {
+    LRI_table <- copy(analysis_parameters$custom_LRI_table)
+    analysis_parameters[["LRI_species"]] <- "custom"
+    warning(
+      "Using custom LRI table. Use at your own risk!"
+    )
   }
   set.seed(seed)
   object <- run_internal_raw_analysis(
