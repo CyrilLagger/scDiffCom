@@ -21,7 +21,8 @@ validate_parameters <- function(
     "threshold_logfc",
     "return_distributions",
     "seed",
-    "verbose"
+    "verbose",
+    "custom_LRI_table"
   )
   params_names_additional <- c(
     "conditional_analysis",
@@ -180,7 +181,7 @@ validate_parameters <- function(
     ) {
     res <- c(res, "'threshold_p_value_de' must be a numeric in ]0,1]")
   }
-  if (
+  if(
     !is.numeric(params$threshold_logfc) |
     length(params$threshold_logfc) != 1
     ) {
@@ -198,18 +199,26 @@ validate_parameters <- function(
       )
   }
   if(from_inputs) {
-    if (!is.numeric(params$seed) | length(params$seed) > 1) {
+    if(!is.numeric(params$seed) | length(params$seed) > 1) {
       res <- c(res, "'seed' must be a numeric vector of length 1")
     } else if (params$seed < 0 | params$seed %% 1 != 0) {
       res <- c(res, "'seed' must be a non-negative integer")
     }
   } else {
-    if (!is.numeric(params$seed)) {
+    if(!is.numeric(params$seed)) {
       res <- c(res, "'seed' must be a numeric vector")
     }
   }
   if(!is.logical(params$verbose) | length(params$verbose) != 1) {
     res <- c(res, "'verbose' must be a logical vector of length 1")
+  }
+  if(!is.null(params$custom_LRI_table)) {
+    if(!is(params$custom_LRI_table, "data.table")) {
+      res <- c(
+        res,
+        "'custom_LRI_table', when supplied, must be a data.table"
+        )
+    }
   }
   if(!from_inputs) {
     if(
