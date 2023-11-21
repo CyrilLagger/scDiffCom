@@ -18,6 +18,10 @@ run_filtering_and_ora <- function(
     )
   }
   temp_param <- object@parameters
+  if (temp_param$LRI_species == "custom"){
+    message("ORA is currently not performed when using a custom LRI database.")
+    skip_ora <- TRUE
+  }
   if (!is.null(new_threshold_quantile_score)) {
     temp_param$threshold_quantile_score <-
       new_threshold_quantile_score
