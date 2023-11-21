@@ -46,8 +46,8 @@ validate_parameters <- function(
   if (!is.character(params$object_name) | length(params$object_name) != 1) {
     res <- c(res, "'object_name' must be a character vector of length 1")
   }
-  if (!(params$LRI_species %in% c("mouse", "human", "rat"))) {
-    res <- c(res, "'LRI_species' must be either 'mouse', 'rat', or 'human'")
+  if (!(params$LRI_species %in% c("mouse", "human", "rat", "custom"))) {
+    res <- c(res, "'LRI_species' must be either 'mouse', 'rat', 'human' or 'custom'")
   }
   if (!is.character(params$seurat_celltype_id) |
       length(params$seurat_celltype_id) != 1) {
