@@ -22,7 +22,7 @@ validate_parameters <- function(
     "return_distributions",
     "seed",
     "verbose",
-    "custom_LRI_table"
+    "custom_LRI_tables"
   )
   params_names_additional <- c(
     "conditional_analysis",
@@ -212,12 +212,19 @@ validate_parameters <- function(
   if(!is.logical(params$verbose) | length(params$verbose) != 1) {
     res <- c(res, "'verbose' must be a logical vector of length 1")
   }
-  if(!is.null(params$custom_LRI_table)) {
-    if(!is(params$custom_LRI_table, "data.table")) {
+  if(!is.null(params$custom_LRI_tables)) {
+    if(!is.list(params$custom_LRI_tables)) {
       res <- c(
         res,
-        "'custom_LRI_table', when supplied, must be a data.table"
-        )
+        "'custom_LRI_table must be a list"
+        )      
+    } else{
+      if(!is(params$custom_LRI_table$LRI, "data.table")) {
+        res <- c(
+          res,
+          "'custom_LRI_table$LRI' must be a data.table"
+          )
+      }
     }
   }
   if(!from_inputs) {

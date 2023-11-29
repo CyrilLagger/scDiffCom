@@ -50,7 +50,7 @@
 #'   MGI (mouse) or HGNC (human) approved symbols.
 #' @param LRI_species Either \code{"mouse"}, \code{"human"}, \code{"rat"} or \code{"custom"}.
 #' Indicates which LRI database to use and corresponds to the species of the \code{seurat_object}.
-#' Use \code{"custom"} at your own risk to use your own LRI table (see \code{custom_LRI_table}).
+#' Use \code{"custom"} at your own risk to use your own LRI table (see \code{custom_LRI_tables}).
 #' @param seurat_celltype_id Name of the \code{meta.data} column in
 #'  \code{seurat_object} that contains cell-type annotations
 #'  (e.g.: \code{"CELL_TYPE"}).
@@ -129,12 +129,17 @@
 #' @param seed Set a random seed (\code{42} by default) to obtain reproducible
 #' results.
 #' @param verbose If \code{TRUE} (default), print progress messages.
-#' @param custom_LRI_table A LRI table supplied by the user. Overwrite
+#' @param custom_LRI_tables A list containing a LRI table and, if known, 
+#' tables with annotations supplied by the user. Overwrite
 #' \code{LRI_species} and the corresponding internal LRI table. Use to
-#' your own risk! Must be a data.table in the same format as the internal
+#' your own risk! Must contain at least the following named item:
+#'  \enumerate{
+#'    \item \code{LRI}: a data.table of LRIs
+#'  }
+#' The data.table of LRIs must be in the same format as the internal
 #' LRI_tables, namely with the columns "LRI", "LIGAND_1", "LIGAND_2",
-#' "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3". If used, no GO Term or KEGG
-#' analysis is currently performed.
+#' "RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3". Other named data.tables
+#' can be supplied for over-representation analysis (ORA) purposes.
 #'
 #' @return An S4 object of class \code{\link{scDiffCom-class}}.
 #' @export
@@ -171,7 +176,7 @@ run_interaction_analysis <- function(
   return_distributions = FALSE,
   seed = 42,
   verbose = TRUE,
-  custom_LRI_table = NULL
+  custom_LRI_tables = NULL
 ) {
   if (!methods::is(seurat_object, "Seurat")) {
     stop(
@@ -197,7 +202,7 @@ run_interaction_analysis <- function(
     return_distributions = return_distributions,
     seed = seed,
     verbose = verbose,
-    custom_LRI_table = custom_LRI_table
+    custom_LRI_tables = custom_LRI_tables
   )
   check_parameters <- validate_parameters(
     params = analysis_parameters,
@@ -214,7 +219,7 @@ run_interaction_analysis <- function(
     analysis_parameters <- check_parameters$params
   }
   if (analysis_parameters$LRI_species != "custom") {
-    if (!is.null(analysis_parameters$custom_LRI_table)) {
+    if (!is.null(analysis_parameters$custom_LRI_tables)) {
       stop(
         "LRI_species is not 'custom' but a custom LRI table was supplied."
         )
@@ -229,12 +234,12 @@ run_interaction_analysis <- function(
       LRI_table <- copy(scDiffCom::LRI_rat$LRI_curated)
     }
   } else {
-    if (is.null(analysis_parameters$custom_LRI_table)) {
+    if (is.null(analysis_parameters$custom_LRI_tables)) {
       stop(
         "LRI_species is 'custom' but no custom LRI table was supplied."
         )
     }
-    LRI_table <- copy(analysis_parameters$custom_LRI_table)
+    LRI_table <- copy(analysis_parameters$custom_LRI_tables$LRI)
     if (verbose) message("Using custom LRI table. Use at your own risk!")
   }
   set.seed(seed)

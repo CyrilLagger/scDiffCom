@@ -97,6 +97,7 @@ run_ora <- function(
       } else {
         categories <- c(categories, extra_new_categories)
         names(extra_annotations) <- extra_new_categories
+        names(categories) <- categories
       }
     }
   }

@@ -30,7 +30,7 @@ parameters_mode <- list(
     return_distributions = "FALSE",
     seed = 5.5,
     verbose = "TRUE",
-    custom_LRI_table = "something_wrong"
+    custom_LRI_tables = "something_wrong"
   ),
   cond_stat = list(
     LRI_species = "mouse",
@@ -55,7 +55,7 @@ parameters_mode <- list(
     return_distributions = FALSE,
     seed = 42,
     verbose = TRUE,
-    custom_LRI_table = NULL
+    custom_LRI_tables = NULL
   ),
   cond_nostat = list(
     LRI_species = "mouse",
@@ -80,7 +80,7 @@ parameters_mode <- list(
     return_distributions = FALSE,
     seed = 42,
     verbose = FALSE,
-    custom_LRI_table = NULL
+    custom_LRI_tables = NULL
   ),
   nocond_stat = list(
     LRI_species = "mouse",
@@ -101,7 +101,7 @@ parameters_mode <- list(
     return_distributions = FALSE,
     seed = 42,
     verbose = FALSE,
-    custom_LRI_table = NULL
+    custom_LRI_tables = NULL
   ),
   nocond_nostat = list(
     LRI_species = "mouse",
@@ -122,7 +122,7 @@ parameters_mode <- list(
     return_distributions = FALSE,
     seed = 42,
     verbose = FALSE,
-    custom_LRI_table = NULL
+    custom_LRI_tables = NULL
   )
 )
 
@@ -645,7 +645,7 @@ test_that(
 ## Check the use of custom_LRI_table ####
 
 test_that(
-  "run_interaction_analysis returns error if custom_LRI_table is not a data.table", {
+  "run_interaction_analysis returns error if custom_LRI_tables$LRI is not a data.table", {
     expect_error(
       run_interaction_analysis(
         seurat_object = seurat_test,
@@ -656,14 +656,14 @@ test_that(
           cond1_name = "YOUNG",
           cond2_name = "OLD"
         ),
-        custom_LRI_table = "something_wrong"
+        custom_LRI_tables = "something_wrong"
       )
     )
   }
 )
 
 test_that(
-  "run_interaction_analysis returns error if custom_LRI_table is not a data.table", {
+  "run_interaction_analysis returns error if custom_LRI_tables is not a data.table", {
     expect_error(
       run_interaction_analysis(
         seurat_object = seurat_test,
@@ -674,7 +674,7 @@ test_that(
           cond1_name = "YOUNG",
           cond2_name = "OLD"
         ),
-        custom_LRI_table = data.frame(x = 1:4)
+        custom_LRI_tables = list(LRI = data.frame(x = 1:4))
       )
     )
   }
@@ -685,14 +685,14 @@ test_that(
     expect_error(
       run_interaction_analysis(
         seurat_object = seurat_test,
-        LRI_species = "mouse",
+        LRI_species = "custom",
         seurat_celltype_id = "cell_type",
         seurat_condition_id = list(
           column_name = "age_group",
           cond1_name = "YOUNG",
           cond2_name = "OLD"
         ),
-        custom_LRI_table = data.table(x = 1:4)
+        custom_LRI_tables = list(LRI = data.table(x = 1:4))
       )
     )
   }
@@ -710,14 +710,14 @@ test_that(
           cond1_name = "YOUNG",
           cond2_name = "OLD"
         ),
-        custom_LRI_table = LRI_mouse$LRI_curated[1:500, ]
+        custom_LRI_table = list(LRI = LRI_mouse$LRI_curated[1:500, ])
       )
     )
   }
 )
 
 test_that(
-  "run_interaction_analysis is running correctly with custom LRIs", {
+  "run_interaction_analysis is running correctly with custom LRIs and no annotations", {
     expect_s4_class(
       run_interaction_analysis(
         seurat_object = seurat_test,
@@ -728,7 +728,29 @@ test_that(
           cond1_name = "YOUNG",
           cond2_name = "OLD"
         ),
-        custom_LRI_table = LRI_mouse$LRI_curated[1:500, ]
+        custom_LRI_table = list(LRI = LRI_mouse$LRI_curated[1:500, ])
+      ),
+     "scDiffCom"
+    )
+  }
+)
+
+custom_LRI <- LRI_mouse$LRI_curated[1:500, ]
+custom_LRI_GO <- LRI_mouse$LRI_curated_GO[LRI %in% custom_LRI$LRI]
+
+test_that(
+  "run_interaction_analysis is running correctly with custom LRIs and annotations", {
+    expect_s4_class(
+      run_interaction_analysis(
+        seurat_object = seurat_test,
+        LRI_species = "custom",
+        seurat_celltype_id = "cell_type",
+        seurat_condition_id = list(
+          column_name = "age_group",
+          cond1_name = "YOUNG",
+          cond2_name = "OLD"
+        ),
+        custom_LRI_table = list(LRI = custom_LRI, my_GO = custom_LRI_GO)
       ),
      "scDiffCom"
     )
