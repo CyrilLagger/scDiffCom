@@ -303,7 +303,7 @@ scdiffcom_object_customlri <-  run_interaction_analysis(
     cond1_name = "YOUNG",
     cond2_name = "OLD"
   ),
-  custom_LRI_table = list(LRI = custom_LRI, custom_GO = custom_LRI_GO, custom_KEGG = custom_LRI_KEGG)
+  custom_LRI_tables = list(LRI = custom_LRI, custom_GO = custom_LRI_GO, custom_KEGG = custom_LRI_KEGG)
 )
 ```
 

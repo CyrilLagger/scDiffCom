@@ -23,7 +23,8 @@ run_interaction_analysis(
   threshold_logfc = log(1.5),
   return_distributions = FALSE,
   seed = 42,
-  verbose = TRUE
+  verbose = TRUE,
+  custom_LRI_tables = NULL
 )
 }
 \arguments{
@@ -31,8 +32,9 @@ run_interaction_analysis(
 data and relevant \code{meta.data} columns (see below). Gene names must be
  MGI (mouse) or HGNC (human) approved symbols.}
 
-\item{LRI_species}{Either \code{"mouse"}, \code{"human"} or \code{"rat"}. Indicates which
-LRI database to use and corresponds to the species of the \code{seurat_object}.}
+\item{LRI_species}{Either \code{"mouse"}, \code{"human"}, \code{"rat"} or \code{"custom"}.
+Indicates which LRI database to use and corresponds to the species of the \code{seurat_object}.
+Use \code{"custom"} at your own risk to use your own LRI table (see \code{custom_LRI_tables}).}
 
 \item{seurat_celltype_id}{Name of the \code{meta.data} column in
 \code{seurat_object} that contains cell-type annotations
@@ -128,6 +130,18 @@ to avoid out of memory issues.}
 results.}
 
 \item{verbose}{If \code{TRUE} (default), print progress messages.}
+
+\item{custom_LRI_tables}{A list containing a LRI table and, if known, 
+tables with annotations supplied by the user. Overwrite
+\code{LRI_species} and the corresponding internal LRI table. Use to
+your own risk! Must contain at least the following named item:
+ \enumerate{
+   \item \code{LRI}: a data.table of LRIs
+ }
+The data.table of LRIs must be in the same format as the internal
+LRI_tables, namely with the columns "LRI", "LIGAND_1", "LIGAND_2",
+"RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3". Other named data.tables
+can be supplied for over-representation analysis (ORA) purposes.}
 }
 \value{
 An S4 object of class \code{\link{scDiffCom-class}}.
