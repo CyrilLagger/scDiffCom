@@ -28,7 +28,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scDiffCom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -360,13 +360,53 @@
 <span><span class="co">## 47220:                                     term tracker item     1</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="using-a-custom-database-of-ligand-receptor-interactions">Using a custom database of ligand-receptor interactions<a class="anchor" aria-label="anchor" href="#using-a-custom-database-of-ligand-receptor-interactions"></a>
+</h2>
+<p><code>scDiffcom</code> also allows users to use their own LRI database and associated annotations as follows.</p>
+<p>As an example, we simply use a downsized version of the mouse database. It can be any database as long as it is a data.table with the same columns as the default.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">custom_LRI</span> <span class="op">&lt;-</span> <span class="va">LRI_mouse</span><span class="op">$</span><span class="va">LRI_curated</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="op">]</span></span></code></pre></div>
+<p>We note that ORA on GO and KEGG terms cannot be peformed by default when using a custom database. It is therefore skipped unless the user provides custom annotation tables. Here, we can obtain them by subsetting the default tables accordingly:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">custom_LRI_GO</span> <span class="op">&lt;-</span> <span class="va">LRI_mouse</span><span class="op">$</span><span class="va">LRI_curated_GO</span><span class="op">[</span><span class="va">LRI</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">custom_LRI</span><span class="op">$</span><span class="va">LRI</span><span class="op">]</span></span>
+<span><span class="va">custom_LRI_KEGG</span> <span class="op">&lt;-</span> <span class="va">LRI_mouse</span><span class="op">$</span><span class="va">LRI_curated_KEGG</span><span class="op">[</span><span class="va">LRI</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">custom_LRI</span><span class="op">$</span><span class="va">LRI</span><span class="op">]</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"LRI"</span>, <span class="st">"KEGG_ID"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<p>Finally, scDiffCom can be run by changing the parameter <code>LRI_species</code> to <code>"custom"</code> and providing the custom LRI and annotation tables as a list:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">scdiffcom_object_customlri</span> <span class="op">&lt;-</span>  <span class="fu"><a href="../reference/run_interaction_analysis.html">run_interaction_analysis</a></span><span class="op">(</span></span>
+<span>  seurat_object <span class="op">=</span> <span class="va">seurat_object</span>,</span>
+<span>  LRI_species <span class="op">=</span> <span class="st">"custom"</span>,</span>
+<span>  seurat_celltype_id <span class="op">=</span> <span class="st">"cell_type"</span>,</span>
+<span>  seurat_condition_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    column_name <span class="op">=</span> <span class="st">"age_group"</span>,</span>
+<span>    cond1_name <span class="op">=</span> <span class="st">"YOUNG"</span>,</span>
+<span>    cond2_name <span class="op">=</span> <span class="st">"OLD"</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  custom_LRI_tables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>LRI <span class="op">=</span> <span class="va">custom_LRI</span>, custom_GO <span class="op">=</span> <span class="va">custom_LRI_GO</span>, custom_KEGG <span class="op">=</span> <span class="va">custom_LRI_KEGG</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">## Using custom LRI table. Use at your own risk!</span></span>
+<span><span class="co">## Extracting data from assay 'RNA' and slot 'data' (assuming normalized log1p-transformed data).</span></span>
+<span><span class="co">## Converting normalized data from log1p-transformed to non-log1p-transformed.</span></span>
+<span><span class="co">## Input data: 726 genes, 468 cells and 5 cell-types.</span></span>
+<span><span class="co">## Input ligand-receptor database: 100 custom interactions.</span></span>
+<span><span class="co">## Number of LRIs that match to genes present in the dataset: 16.</span></span>
+<span><span class="co">## Type of analysis to be performed: differential analysis between YOUNG and OLD cells.</span></span>
+<span><span class="co">## Total number of potential cell-cell interactions (CCIs): 400 (5 * 5 * 16).</span></span>
+<span><span class="co">## Performing permutation analysis (1000 iterations by batches of 1000) on 111 potential CCIs.</span></span>
+<span><span class="co">## Performing batch 1 of 1.</span></span>
+<span><span class="co">## Filtering and cleaning 'raw' CCIs.</span></span>
+<span><span class="co">## Returning 18 detected CCIs.</span></span>
+<span><span class="co">## ORA not performed on GO/KEGG when using a custom LRI database, unless custom tables are provided.</span></span>
+<span><span class="co">## Performing over-representation analysis on the categories: LRI, LIGAND_COMPLEX, RECEPTOR_COMPLEX, ER_CELLTYPES, EMITTER_CELLTYPE, RECEIVER_CELLTYPE, GO_ID, KEGG_ID.</span></span>
+<span><span class="co">## Successfully returning final scDiffCom object.</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="additional-functionalities">Additional functionalities<a class="anchor" aria-label="anchor" href="#additional-functionalities"></a>
 </h2>
 <div class="section level3">
 <h3 id="modifying-default-parameters">Modifying default parameters<a class="anchor" aria-label="anchor" href="#modifying-default-parameters"></a>
 </h3>
 <p><code>run_interaction_analysis</code> depends on several parameters that can be modified. We encourage to carefully read the documentation (<code><a href="../reference/run_interaction_analysis.html">?run_interaction_analysis</a></code>). For convenience, the input parameters are stored in the returned object in the slot <code>parameters</code>:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># display the first three parameters</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/GetParameters.html">GetParameters</a></span><span class="op">(</span><span class="va">scdiffcom_object</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">## $object_name</span></span>
@@ -378,7 +418,7 @@
 <span><span class="co">## $seurat_celltype_id</span></span>
 <span><span class="co">## [1] "cell_type"</span></span></code></pre></div>
 <p>Among those parameters are four filtering thresholds that can be modified to recompute the results without having to perform the time-consuming permutation analyses again. This works because we store an intermediate table of all hypothetic CCIs in the slot <code>cci_table_raw</code>. The disadvantage is that storing this data.table can make the object heavy depending on the dataset. You can either decide to keep this table allowing you to quickly update your results in case you want to modify some filtering parameters or to erase this table to save space.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># create a new object with a different log fold change threshold</span></span>
 <span><span class="va">scdiffcom_object_stringent_logfc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/FilterCCI.html">FilterCCI</a></span><span class="op">(</span></span>
 <span>  object <span class="op">=</span> <span class="va">scdiffcom_object</span>,</span>
@@ -403,7 +443,7 @@
 <h3 id="performing-ora-on-custom-categories">Performing ORA on custom categories<a class="anchor" aria-label="anchor" href="#performing-ora-on-custom-categories"></a>
 </h3>
 <p>By default, ORA is performed on a set of categories that are always present for any dataset analysed (LRI, GO Terms, etc). However, you might want to find over-represented results for a category only relevant to your dataset. This is possible to achieve as long as you are able to build a relationship between the terms of your new category and those of a default category. As an example, we show here how we can perform ORA on cell-type families:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create a data.table that associates cell-type families to cell types</span></span>
 <span><span class="co"># Here we use the default category EMITTER_CELLTYPE (RECEIVER_CELLTYPE would also work)</span></span>
 <span><span class="va">cell_families_relation</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
