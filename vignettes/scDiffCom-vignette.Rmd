@@ -272,6 +272,41 @@ gene_ontology_level[, c("NAME", "LEVEL")]
 
 ```
 
+## Using a custom database of ligand-receptor interactions
+
+`scDiffcom` also allows users to use their own LRI database and associated annotations 
+as follows.
+
+As an example, we simply use a downsized version of the mouse database. It can be any
+database as long as it is a data.table with the same columns as the default.
+```{r}
+custom_LRI <- LRI_mouse$LRI_curated[1:100, ]
+```
+
+We note that ORA on GO and KEGG terms cannot be peformed by default when using a custom
+database. It is therefore skipped unless the user provides custom annotation tables. Here,
+we can obtain them by subsetting the default tables accordingly:
+```{r}
+custom_LRI_GO <- LRI_mouse$LRI_curated_GO[LRI %in% custom_LRI$LRI]
+custom_LRI_KEGG <- LRI_mouse$LRI_curated_KEGG[LRI %in% custom_LRI$LRI][, c("LRI", "KEGG_ID")]
+```
+
+Finally, scDiffCom can be run by changing the parameter `LRI_species` to `"custom"` and
+providing the custom LRI and annotation tables as a list:
+```{r}
+scdiffcom_object_customlri <-  run_interaction_analysis(
+  seurat_object = seurat_test,
+  LRI_species = "custom",
+  seurat_celltype_id = "cell_type",
+  seurat_condition_id = list(
+    column_name = "age_group",
+    cond1_name = "YOUNG",
+    cond2_name = "OLD"
+  ),
+  custom_LRI_tables = list(LRI = custom_LRI, custom_GO = custom_LRI_GO, custom_KEGG = custom_LRI_KEGG)
+)
+```
+
 ## Additional functionalities
 
 ### Modifying default parameters

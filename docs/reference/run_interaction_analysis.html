@@ -85,7 +85,8 @@
 <span>  threshold_logfc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1.5</span><span class="op">)</span>,</span>
 <span>  return_distributions <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">42</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  custom_LRI_tables <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -98,8 +99,9 @@ data and relevant <code>meta.data</code> columns (see below). Gene names must be
 
 
 <dt>LRI_species</dt>
-<dd><p>Either <code>"mouse"</code>, <code>"human"</code> or <code>"rat"</code>. Indicates which
-LRI database to use and corresponds to the species of the <code>seurat_object</code>.</p></dd>
+<dd><p>Either <code>"mouse"</code>, <code>"human"</code>, <code>"rat"</code> or <code>"custom"</code>.
+Indicates which LRI database to use and corresponds to the species of the <code>seurat_object</code>.
+Use <code>"custom"</code> at your own risk to use your own LRI table (see <code>custom_LRI_tables</code>).</p></dd>
 
 
 <dt>seurat_celltype_id</dt>
@@ -226,6 +228,17 @@ results.</p></dd>
 
 <dt>verbose</dt>
 <dd><p>If <code>TRUE</code> (default), print progress messages.</p></dd>
+
+
+<dt>custom_LRI_tables</dt>
+<dd><p>A list containing a LRI table and, if known, 
+tables with annotations supplied by the user. Overwrite
+<code>LRI_species</code> and the corresponding internal LRI table. Use to
+your own risk! Must contain at least the following named item:</p><ol><li><p><code>LRI</code>: a data.table of LRIs</p></li>
+</ol><p>The data.table of LRIs must be in the same format as the internal
+LRI_tables, namely with the columns "LRI", "LIGAND_1", "LIGAND_2",
+"RECEPTOR_1", "RECEPTOR_2", "RECEPTOR_3". Other named data.tables
+can be supplied for over-representation analysis (ORA) purposes.</p></dd>
 
 </dl></div>
     <div class="section level2">

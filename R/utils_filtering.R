@@ -103,50 +103,75 @@ run_filtering_and_ora <- function(
     if (skip_ora) {
       object@ora_table <- list()
     } else {
-      object <- run_ora(
-        object = object,
-        categories = c(
-          "LRI",
-          "LIGAND_COMPLEX",
-          "RECEPTOR_COMPLEX",
-          "ER_CELLTYPES",
-          "EMITTER_CELLTYPE",
-          "RECEIVER_CELLTYPE",
-          "GO_TERMS",
-          "KEGG_PWS"
-        ),
-        extra_annotations = extra_annotations,
-        overwrite = TRUE,
-        stringent_or_default = "default",
-        stringent_logfc_threshold = NULL,
-        verbose = verbose,
-        class_signature = class_signature,
-        global = FALSE
-      )
-      if (class_signature == "scDiffComCombined") {
-        if (verbose) message("Running global ORA.")
-        object <- run_ora(
-          object = object,
-          categories = c(
-            "LRI",
-            "LIGAND_COMPLEX",
-            "RECEPTOR_COMPLEX",
-            "ER_CELLTYPES",
-            "EMITTER_CELLTYPE",
-            "RECEIVER_CELLTYPE",
-            "GO_TERMS",
-            "KEGG_PWS",
-            "ID"
-          ),
-          extra_annotations = extra_annotations,
-          overwrite = TRUE,
-          stringent_or_default = "default",
-          stringent_logfc_threshold = NULL,
-          verbose = verbose,
-          class_signature = class_signature,
-          global = TRUE
-        )
-      }
+        if (temp_param$LRI_species != "custom"){
+          object <- run_ora(
+            object = object,
+            categories = c(
+              "LRI",
+              "LIGAND_COMPLEX",
+              "RECEPTOR_COMPLEX",
+              "ER_CELLTYPES",
+              "EMITTER_CELLTYPE",
+              "RECEIVER_CELLTYPE",
+              "GO_TERMS",
+              "KEGG_PWS"
+            ),
+            extra_annotations = extra_annotations,
+            overwrite = TRUE,
+            stringent_or_default = "default",
+            stringent_logfc_threshold = NULL,
+            verbose = verbose,
+            class_signature = class_signature,
+            global = FALSE
+          )
+          if (class_signature == "scDiffComCombined") {
+            if (verbose) message("Running global ORA.")
+            object <- run_ora(
+              object = object,
+              categories = c(
+                "LRI",
+                "LIGAND_COMPLEX",
+                "RECEPTOR_COMPLEX",
+                "ER_CELLTYPES",
+                "EMITTER_CELLTYPE",
+                "RECEIVER_CELLTYPE",
+                "GO_TERMS",
+                "KEGG_PWS",
+                "ID"
+              ),
+              extra_annotations = extra_annotations,
+              overwrite = TRUE,
+              stringent_or_default = "default",
+              stringent_logfc_threshold = NULL,
+              verbose = verbose,
+              class_signature = class_signature,
+              global = TRUE
+            )
+          }
+        } else {
+          message("ORA not performed on GO/KEGG when using a custom LRI database, unless custom tables are provided.")
+          custom_LRI_anno <- temp_param$custom_LRI_tables
+          custom_LRI_anno[["LRI"]] <- NULL
+          extra_annotations <- c(extra_annotations, custom_LRI_anno)
+          object <- run_ora(
+            object = object,
+            categories = c(
+              "LRI",
+              "LIGAND_COMPLEX",
+              "RECEPTOR_COMPLEX",
+              "ER_CELLTYPES",
+              "EMITTER_CELLTYPE",
+              "RECEIVER_CELLTYPE"
+            ),
+            extra_annotations = extra_annotations,
+            overwrite = TRUE,
+            stringent_or_default = "default",
+            stringent_logfc_threshold = NULL,
+            verbose = verbose,
+            class_signature = class_signature,
+            global = FALSE
+          )
+        }
     }
   }
   return(object)
