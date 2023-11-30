@@ -1,3 +1,7 @@
+# scDiffCom 1.1.0
+
+* Allow to use a custom LRI database
+
 # scDiffCom 1.0.0
 
 01-11-2023
