@@ -1683,11 +1683,15 @@ get_KEGG_PWS_interactions <- function(
       }
     )
   )
-  LR_KEGG_PW[
-    KEGG_PW,
-    on = "KEGG_ID",
-    KEGG_NAME := i.KEGG_NAME
-  ]
+  if (nrow(LR_KEGG_PW) == 0) {
+    LR_KEGG_PW == NULL
+  } else {
+    LR_KEGG_PW[
+      KEGG_PW,
+      on = "KEGG_ID",
+      KEGG_NAME := i.KEGG_NAME
+    ]
+  }
   return(LR_KEGG_PW)
 }
 
