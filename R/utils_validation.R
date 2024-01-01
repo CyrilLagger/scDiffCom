@@ -219,7 +219,7 @@ validate_parameters <- function(
         "'custom_LRI_table must be a list"
         )      
     } else{
-      if(!is(params$custom_LRI_table$LRI, "data.table")) {
+      if(!methods::is(params$custom_LRI_table$LRI, "data.table")) {
         res <- c(
           res,
           "'custom_LRI_table$LRI' must be a data.table"
