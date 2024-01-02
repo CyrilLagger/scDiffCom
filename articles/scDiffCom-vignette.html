@@ -28,7 +28,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">scDiffCom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@
 
 
 
-<script src="scDiffCom-vignette_files/htmlwidgets-1.6.3/htmlwidgets.js"></script><link href="scDiffCom-vignette_files/vis-9.1.0/vis-network.min.css" rel="stylesheet">
+<script src="scDiffCom-vignette_files/htmlwidgets-1.6.4/htmlwidgets.js"></script><link href="scDiffCom-vignette_files/vis-9.1.0/vis-network.min.css" rel="stylesheet">
 <script src="scDiffCom-vignette_files/vis-9.1.0/vis-network.min.js"></script><script src="scDiffCom-vignette_files/visNetwork-binding-2.1.2/visNetwork.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Introduction to scDiffCom</h1>
@@ -525,7 +525,7 @@ on cell-type families:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create a data.table that associates cell-type families to cell types</span></span>
 <span><span class="co"># Here we use the default category EMITTER_CELLTYPE (RECEIVER_CELLTYPE would also work)</span></span>
-<span><span class="va">cell_families_relation</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://Rdatatable.gitlab.io/data.table/reference/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
+<span><span class="va">cell_families_relation</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
 <span>  EMITTER_CELLTYPE <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>    <span class="st">"B cell"</span>,</span>
 <span>    <span class="st">"T cell"</span>,</span>
