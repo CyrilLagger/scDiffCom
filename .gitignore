@@ -2,12 +2,10 @@
 .Rhistory
 .RData
 .Ruserdata.
-.Rprofile
 inst/doc
-
 doc
 Meta
 /doc/
 /Meta/
 /renv
-
+.Rprofile
