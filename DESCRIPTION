@@ -28,7 +28,7 @@ Encoding: UTF-8
 LazyData: true
 Depends: 
     R (>= 4.0.0)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.3
 biocViews:
 Suggests:
     biomaRt,
