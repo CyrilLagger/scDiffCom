@@ -12,6 +12,8 @@ status](https://www.r-pkg.org/badges/version/scDiffCom)](https://CRAN.R-project.
 [![Codecov test
 coverage](https://codecov.io/gh/CyrilLagger/scDiffCom/branch/master/graph/badge.svg)](https://app.codecov.io/gh/CyrilLagger/scDiffCom?branch=master)
 [![R-CMD-check](https://github.com/CyrilLagger/scDiffCom/workflows/R-CMD-check/badge.svg)](https://github.com/CyrilLagger/scDiffCom/actions)
+[![Codecov test
+coverage](https://codecov.io/gh/CyrilLagger/scDiffCom/graph/badge.svg)](https://app.codecov.io/gh/CyrilLagger/scDiffCom)
 <!-- badges: end -->
 
 scDiffCom stands for “single-cell Differential Communication” and infers
@@ -23,14 +25,18 @@ retrieved from seven curated databases.
 
 <details>
 
-<summary>Display LRI databases</summary> \*
-[CellChat](http://www.cellchat.org/) \*
-[CellPhoneDB](https://www.cellphonedb.org/) \*
-[CellTalkDB](http://tcm.zju.edu.cn/celltalkdb/) \*
-[connectomeDB2020](https://github.com/forrest-lab/NATMI) \*
-[ICELLNET](https://github.com/soumelis-lab/ICELLNET) \*
-[NicheNet](https://github.com/saeyslab/nichenetr) \*
-[SingleCellSignalR](https://www.bioconductor.org/packages/release/bioc/html/SingleCellSignalR.html)
+<summary>
+
+Display LRI databases
+</summary>
+
+- [CellChat](http://www.cellchat.org/)
+- [CellPhoneDB](https://www.cellphonedb.org/)
+- [CellTalkDB](http://tcm.zju.edu.cn/celltalkdb/)
+- [connectomeDB2020](https://github.com/forrest-lab/NATMI)
+- [ICELLNET](https://github.com/soumelis-lab/ICELLNET)
+- [NicheNet](https://github.com/saeyslab/nichenetr)
+- [SingleCellSignalR](https://www.bioconductor.org/packages/release/bioc/html/SingleCellSignalR.html)
 
 </details>
 
