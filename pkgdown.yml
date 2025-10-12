@@ -1,11 +1,10 @@
-pandoc: 2.19.2
-pkgdown: 2.0.7
+pandoc: 3.1.11
+pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
   scDiffCom-GO-vignette: scDiffCom-GO-vignette.html
   scDiffCom-vignette: scDiffCom-vignette.html
-last_built: 2024-01-02T00:12Z
+last_built: 2025-10-12T21:47Z
 urls:
   reference: https://cyrillagger.github.io/scDiffCom/reference
   article: https://cyrillagger.github.io/scDiffCom/articles
-
