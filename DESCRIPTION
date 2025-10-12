@@ -1,7 +1,7 @@
 Package: scDiffCom
 Type: Package
 Title: Differential Analysis of Intercellular Communication from scRNA-Seq Data
-Version: 1.1.1
+Version: 1.2.0
 Authors@R: c(
     person("Cyril", "Lagger", email = "lagger.cyril@gmail.com",
     role = c("aut", "cre"),
@@ -77,6 +77,7 @@ Collate:
     'utils_preprocessing.R'
     'utils_validation.R'
     'utils_shiny.R'
-URL: https://cyrillagger.github.io/scDiffCom/
+URL: https://cyrillagger.github.io/scDiffCom/, https://github.com/CyrilLagger/scDiffCom
 Language: en-US
 Config/testthat/edition: 3
+BugReports: https://github.com/CyrilLagger/scDiffCom/issues
