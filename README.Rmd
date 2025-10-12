@@ -33,9 +33,9 @@ curated databases.
 
 <details>
 <summary>Display LRI databases</summary>
-* [CellChat](http://www.cellchat.org/)
+* [CellChat](https://github.com/jinworks/CellChat)
 * [CellPhoneDB](https://www.cellphonedb.org/)
-* [CellTalkDB](http://tcm.zju.edu.cn/celltalkdb/)
+* [CellTalkDB](https://github.com/ZJUFanLab/CellTalkDB)
 * [connectomeDB2020](https://github.com/forrest-lab/NATMI)
 * [ICELLNET](https://github.com/soumelis-lab/ICELLNET)
 * [NicheNet](https://github.com/saeyslab/nichenetr)
