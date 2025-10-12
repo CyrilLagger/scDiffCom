@@ -14,6 +14,7 @@ coverage](https://codecov.io/gh/CyrilLagger/scDiffCom/branch/master/graph/badge.
 [![R-CMD-check](https://github.com/CyrilLagger/scDiffCom/workflows/R-CMD-check/badge.svg)](https://github.com/CyrilLagger/scDiffCom/actions)
 [![Codecov test
 coverage](https://codecov.io/gh/CyrilLagger/scDiffCom/graph/badge.svg)](https://app.codecov.io/gh/CyrilLagger/scDiffCom)
+[![R-CMD-check](https://github.com/CyrilLagger/scDiffCom/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CyrilLagger/scDiffCom/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 scDiffCom stands for “single-cell Differential Communication” and infers
