@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scDiffCom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/CyrilLagger/scDiffCom/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -59,7 +60,7 @@
 Eugen Ursu</h4>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/CyrilLagger/scDiffCom/blob/master/vignettes/scDiffCom-vignette.Rmd" class="external-link"><code>vignettes/scDiffCom-vignette.Rmd</code></a></small>
       <div class="d-none name"><code>scDiffCom-vignette.Rmd</code></div>
     </div>
 
@@ -168,14 +169,7 @@ stored and the explicit names of the two conditions:</p>
 <span>    cond2_name <span class="op">=</span> <span class="st">"OLD"</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">## Extracting data from assay 'RNA' and slot 'data' (assuming normalized log1p-transformed data).</span></span>
-<span><span class="co">## Warning: The `slot` argument of `GetAssayData()` is deprecated as of SeuratObject 5.0.0.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use the `layer` argument instead.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">scDiffCom</span> package.</span></span>
-<span><span class="co">##   Please report the issue to the authors.</span></span>
-<span><span class="co">## <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
-<span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
-<span><span class="co">## <span style="color: #555555;">generated.</span></span></span>
+<span><span class="co">## Extracting data from assay 'RNA' and layer 'data' (assuming normalized log1p-transformed data).</span></span>
 <span><span class="co">## Converting normalized data from log1p-transformed to non-log1p-transformed.</span></span>
 <span><span class="co">## Input data: 726 genes, 468 cells and 5 cell-types.</span></span>
 <span><span class="co">## Input ligand-receptor database: 4582 mouse interactions.</span></span>
@@ -331,7 +325,7 @@ be used to return detected CCIs only:</p>
 <span>  seurat_celltype_id <span class="op">=</span> <span class="st">"cell_type"</span>,</span>
 <span>  seurat_condition_id <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">## Extracting data from assay 'RNA' and slot 'data' (assuming normalized log1p-transformed data).</span></span>
+<span><span class="co">## Extracting data from assay 'RNA' and layer 'data' (assuming normalized log1p-transformed data).</span></span>
 <span><span class="co">## Converting normalized data from log1p-transformed to non-log1p-transformed.</span></span>
 <span><span class="co">## Input data: 726 genes, 468 cells and 5 cell-types.</span></span>
 <span><span class="co">## Input ligand-receptor database: 4582 mouse interactions.</span></span>
@@ -446,7 +440,7 @@ custom LRI and annotation tables as a list:</p>
 <span>  custom_LRI_tables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>LRI <span class="op">=</span> <span class="va">custom_LRI</span>, custom_GO <span class="op">=</span> <span class="va">custom_LRI_GO</span>, custom_KEGG <span class="op">=</span> <span class="va">custom_LRI_KEGG</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">## Using custom LRI table. Use at your own risk!</span></span>
-<span><span class="co">## Extracting data from assay 'RNA' and slot 'data' (assuming normalized log1p-transformed data).</span></span>
+<span><span class="co">## Extracting data from assay 'RNA' and layer 'data' (assuming normalized log1p-transformed data).</span></span>
 <span><span class="co">## Converting normalized data from log1p-transformed to non-log1p-transformed.</span></span>
 <span><span class="co">## Input data: 726 genes, 468 cells and 5 cell-types.</span></span>
 <span><span class="co">## Input ligand-receptor database: 100 custom interactions.</span></span>

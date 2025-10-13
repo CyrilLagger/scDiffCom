@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">scDiffCom</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,7 @@
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/CyrilLagger/scDiffCom/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -41,7 +42,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Run (differential) intercellular communication analysis</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/CyrilLagger/scDiffCom/blob/master/R/interaction_analysis.R" class="external-link"><code>R/interaction_analysis.R</code></a></small>
       <div class="d-none name"><code>run_interaction_analysis.Rd</code></div>
     </div>
 
@@ -65,7 +66,8 @@
 <span>  iterations <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  scdiffcom_object_name <span class="op">=</span> <span class="st">"scDiffCom_object"</span>,</span>
 <span>  seurat_assay <span class="op">=</span> <span class="st">"RNA"</span>,</span>
-<span>  seurat_slot <span class="op">=</span> <span class="st">"data"</span>,</span>
+<span>  seurat_layer <span class="op">=</span> <span class="st">"data"</span>,</span>
+<span>  seurat_slot <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  log_scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  score_type <span class="op">=</span> <span class="st">"geometric_mean"</span>,</span>
 <span>  threshold_min_cells <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -132,20 +134,25 @@ be returned (<code>"scDiffCom_object"</code> by default).</p></dd>
 <dt id="arg-seurat-assay">seurat_assay<a class="anchor" aria-label="anchor" href="#arg-seurat-assay"></a></dt>
 <dd><p>Assay of <code>seurat_object</code> from which to extract data.
 See Details for an explanation on how data are extracted based on the three
-parameters <code>seurat_assay</code>, <code>seurat_slot</code> and <code>log_scale</code>.</p></dd>
+parameters <code>seurat_assay</code>, <code>seurat_layer</code> and <code>log_scale</code>.</p></dd>
+
+
+<dt id="arg-seurat-layer">seurat_layer<a class="anchor" aria-label="anchor" href="#arg-seurat-layer"></a></dt>
+<dd><p>Layer of <code>seurat_object</code> from which to extract data.
+See Details for an explanation on how data are extracted based on the three
+parameters <code>seurat_assay</code>, <code>seurat_layer</code> and <code>log_scale</code>.</p></dd>
 
 
 <dt id="arg-seurat-slot">seurat_slot<a class="anchor" aria-label="anchor" href="#arg-seurat-slot"></a></dt>
-<dd><p>Slot of <code>seurat_object</code> from which to extract data.
-See Details for an explanation on how data are extracted based on the three
-parameters <code>seurat_assay</code>, <code>seurat_slot</code> and <code>log_scale</code>.</p></dd>
+<dd><p>`r lifecycle::badge("deprecated")` `seurat_slot` is no
+longer supported; use `seurat_layer` instead.</p></dd>
 
 
 <dt id="arg-log-scale">log_scale<a class="anchor" aria-label="anchor" href="#arg-log-scale"></a></dt>
 <dd><p>When <code>FALSE</code> (the default, recommended), data are
 treated as normalized but not log1p-transformed. See Details for an
 explanation on how data are extracted based on the three
-parameters <code>seurat_assay</code>, <code>seurat_slot</code> and <code>log_scale</code>.</p></dd>
+parameters <code>seurat_assay</code>, <code>seurat_layer</code> and <code>log_scale</code>.</p></dd>
 
 
 <dt id="arg-score-type">score_type<a class="anchor" aria-label="anchor" href="#arg-score-type"></a></dt>
@@ -256,9 +263,9 @@ can be supplied for over-representation analysis (ORA) purposes.</p></dd>
  package and setting an appropriate <code>plan</code> (see also our
  <a href="https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html">vignette</a>).</p>
 <p>Data extraction. The UMI or read counts matrix is extracted from
- the assay <code>seurat_assay</code> and the slot <code>seurat_slot</code>. By default,
+ the assay <code>seurat_assay</code> and the layer <code>seurat_layer</code>. By default,
  it is assumed that <code>seurat_object</code> contains log1p-transformed
- normalized data in the slot "data" of its assay "RNA". If <code>log_scale</code>
+ normalized data in the layer "data" of its assay "RNA". If <code>log_scale</code>
  is <code>FALSE</code> (as recommended), the data are <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">expm1()</a></code> transformed
  in order to recover normalized values not in log scale.</p>
 <p>Modifying filtering parameters (differential analysis only). As long as
