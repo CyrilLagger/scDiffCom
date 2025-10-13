@@ -10,9 +10,6 @@ stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://
 [![CRAN
 status](https://www.r-pkg.org/badges/version/scDiffCom)](https://CRAN.R-project.org/package=scDiffCom)
 [![Codecov test
-coverage](https://codecov.io/gh/CyrilLagger/scDiffCom/branch/master/graph/badge.svg)](https://app.codecov.io/gh/CyrilLagger/scDiffCom?branch=master)
-[![R-CMD-check](https://github.com/CyrilLagger/scDiffCom/workflows/R-CMD-check/badge.svg)](https://github.com/CyrilLagger/scDiffCom/actions)
-[![Codecov test
 coverage](https://codecov.io/gh/CyrilLagger/scDiffCom/graph/badge.svg)](https://app.codecov.io/gh/CyrilLagger/scDiffCom)
 [![R-CMD-check](https://github.com/CyrilLagger/scDiffCom/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CyrilLagger/scDiffCom/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
