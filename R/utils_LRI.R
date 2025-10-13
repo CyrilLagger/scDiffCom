@@ -1193,18 +1193,18 @@ prepare_LR_SingleCellSignalR <- function(
   one2one
 ) {
   LR_SORTED <- SOURCE <- PMIDs <- L1 <- R1 <- NULL
-  if (!requireNamespace("SingleCellSignalR", quietly = TRUE)) {
-    stop(
-      paste0(
-        "Package \"SingleCellSignalR\" needed for this function to work.",
-        "Please install it."
-      ),
-      call. = FALSE
-    )
-  }
+  # if (!requireNamespace("SingleCellSignalR", quietly = TRUE)) {
+  #   stop(
+  #     paste0(
+  #       "Package \"SingleCellSignalR\" needed for this function to work.",
+  #       "Please install it."
+  #     ),
+  #     call. = FALSE
+  #   )
+  # }
   retrieved_date <- as.Date("2021-03-22")
   retrieved_from <- "SingleCellSignalR::LRdb"
-  LR <- SingleCellSignalR::LRdb
+  LR <- SingleCellSignalR_human
   setDT(LR)
   #there are 19 genes that are not HGNC approved symbol, we change them
   LR[LR == "BY55"] <- "CD160"
@@ -1811,7 +1811,7 @@ get_GO_interactions <- function(
     # Don't use ancestors
     ALL_LR_genes_info_unique = unique(ALL_LR_genes_info$mgi_symbol)
     ALL_LR_genes_info_as_list = sapply(
-      ALL_LR_genes_info_unique, 
+      ALL_LR_genes_info_unique,
       function(gene) {
         ALL_LR_genes_info[mgi_symbol == gene]$go_id
       }
