@@ -223,7 +223,7 @@ combine_LR_db <- function(
     c("SOURCE") := do.call(paste, c(.SD, sep = ";")),
     .SDcols = col_source
   ]
-  LR_full[, c("SOURCE") := gsub("NA|NA;|;NA", "", SOURCE)]
+  LR_full[, c("SOURCE") := gsub("NA|NA;|;NA", "", SOURCE, useBytes = TRUE)]
   col_anno <- paste0("ANNOTATION_", db_names)
   LR_full[
     ,
@@ -411,9 +411,9 @@ combine_LR_db <- function(
       }
     )
   ]
-  LR_full[, SOURCE := gsub("\u00a0", "", SOURCE)]
-  LR_full[, SOURCE := gsub(")", "", SOURCE, fixed = TRUE)]
-  LR_full[, SOURCE := gsub(";;", ";", SOURCE, fixed = TRUE)]
+  LR_full[, SOURCE := gsub("\u00a0", "", SOURCE, , useBytes = TRUE)]
+  LR_full[, SOURCE := gsub(")", "", SOURCE, fixed = TRUE, useBytes = TRUE)]
+  LR_full[, SOURCE := gsub(";;", ";", SOURCE, fixed = TRUE, useBytes = TRUE)]
   LR_full[
     ,
     SOURCE := sapply(
@@ -508,9 +508,9 @@ prepare_LR_connectomeDB2020 <- function(
       "LIGAND_1", "RECEPTOR_1"
     )
   }
-  LR[, SOURCE := gsub("\\s", "", SOURCE)]
+  LR[, SOURCE := gsub("\\s", "", SOURCE, useBytes = TRUE)]
   LR[, SOURCE := paste0("PMID:", SOURCE)]
-  LR[, SOURCE := gsub(",", ";PMID:", SOURCE)]
+  LR[, SOURCE := gsub(",", ";PMID:", SOURCE, useBytes = TRUE)]
   return(
     list(
       retrieved_date = retrieved_date,
