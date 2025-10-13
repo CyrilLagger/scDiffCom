@@ -9,7 +9,7 @@ validate_parameters <- function(
     "seurat_celltype_id",
     "seurat_condition_id",
     "seurat_assay",
-    "seurat_slot",
+    "seurat_layer",
     "log_scale",
     "score_type",
     "threshold_min_cells",
@@ -94,8 +94,8 @@ validate_parameters <- function(
       "'seurat_assay' must be NULL or a character vector of length 1"
     )
   }
-  if (!(params$seurat_slot %in% c("counts", "data"))) {
-    res <- c(res, "'seurat_slot' must be either 'data' or 'counts'")
+  if (!(params$seurat_layer %in% c("counts", "data"))) {
+    res <- c(res, "'seurat_layer' must be either 'data' or 'counts'")
   }
   if (!is.logical(params$log_scale) | length(params$log_scale) != 1) {
     res <- c(res, "'log_scale' must be a logical vector of length 1")
@@ -217,7 +217,7 @@ validate_parameters <- function(
       res <- c(
         res,
         "'custom_LRI_table must be a list"
-        )      
+        )
     } else{
       if(!methods::is(params$custom_LRI_table$LRI, "data.table")) {
         res <- c(

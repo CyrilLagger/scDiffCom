@@ -1,3 +1,9 @@
+# scDiffCom 1.2.0
+
+* `run_interaction_analysis()` now uses `seurat_layer` argument instead of `seurat_slot` to be consistent with Seurat (>= 5.0.0) 
+* Fix broken links in README
+* Prepare for CRAN submission
+
 # scDiffCom 1.1.0
 
 * Allow to use a custom LRI database

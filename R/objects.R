@@ -5,6 +5,7 @@
 #'  setValidity setGeneric validObject
 #' @importFrom DelayedArray rowsum
 #' @importFrom magrittr "%>%"
+#' @importFrom lifecycle deprecated
 #'
 NULL
 

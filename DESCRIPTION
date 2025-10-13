@@ -59,9 +59,10 @@ Imports:
     DelayedArray,
     future,
     future.apply,
+    lifecycle,
     magrittr,
     methods,
-    Seurat (>= 4.0.0),
+    Seurat (>= 5.0.0),
     stats,
     utils
 Collate: 

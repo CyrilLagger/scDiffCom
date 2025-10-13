@@ -12,7 +12,8 @@ run_interaction_analysis(
   iterations = 1000,
   scdiffcom_object_name = "scDiffCom_object",
   seurat_assay = "RNA",
-  seurat_slot = "data",
+  seurat_layer = "data",
+  seurat_slot = deprecated(),
   log_scale = FALSE,
   score_type = "geometric_mean",
   threshold_min_cells = 5,
@@ -65,16 +66,19 @@ be returned (\code{"scDiffCom_object"} by default).}
 
 \item{seurat_assay}{Assay of \code{seurat_object} from which to extract data.
 See Details for an explanation on how data are extracted based on the three
-parameters \code{seurat_assay}, \code{seurat_slot} and \code{log_scale}.}
+parameters \code{seurat_assay}, \code{seurat_layer} and \code{log_scale}.}
 
-\item{seurat_slot}{Slot of \code{seurat_object} from which to extract data.
+\item{seurat_layer}{Layer of \code{seurat_object} from which to extract data.
 See Details for an explanation on how data are extracted based on the three
-parameters \code{seurat_assay}, \code{seurat_slot} and \code{log_scale}.}
+parameters \code{seurat_assay}, \code{seurat_layer} and \code{log_scale}.}
+
+\item{seurat_slot}{`r lifecycle::badge("deprecated")` `seurat_slot` is no
+longer supported; use `seurat_layer` instead.}
 
 \item{log_scale}{When \code{FALSE} (the default, recommended), data are
 treated as normalized but not log1p-transformed. See Details for an
 explanation on how data are extracted based on the three
-parameters \code{seurat_assay}, \code{seurat_slot} and \code{log_scale}.}
+parameters \code{seurat_assay}, \code{seurat_layer} and \code{log_scale}.}
 
 \item{score_type}{Metric used to compute cell-cell interaction (CCI) scores.
 Can either be \code{"geometric_mean"} (default) or \code{"arithmetic_mean"}.
@@ -131,7 +135,7 @@ results.}
 
 \item{verbose}{If \code{TRUE} (default), print progress messages.}
 
-\item{custom_LRI_tables}{A list containing a LRI table and, if known, 
+\item{custom_LRI_tables}{A list containing a LRI table and, if known,
 tables with annotations supplied by the user. Overwrite
 \code{LRI_species} and the corresponding internal LRI table. Use to
 your own risk! Must contain at least the following named item:
@@ -175,9 +179,9 @@ The primary use of this function (and of the package) is to perform
  \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}).
 
  Data extraction. The UMI or read counts matrix is extracted from
- the assay \code{seurat_assay} and the slot \code{seurat_slot}. By default,
+ the assay \code{seurat_assay} and the layer \code{seurat_layer}. By default,
  it is assumed that \code{seurat_object} contains log1p-transformed
- normalized data in the slot "data" of its assay "RNA". If \code{log_scale}
+ normalized data in the layer "data" of its assay "RNA". If \code{log_scale}
  is \code{FALSE} (as recommended), the data are \code{expm1()} transformed
  in order to recover normalized values not in log scale.
 

@@ -152,7 +152,7 @@ params = list(
     ),  
     object_name = "scDiffCom_object",
     seurat_assay = "RNA",
-    seurat_slot = "data",
+    seurat_layer = "data",
     log_scale = FALSE,
     score_type = "geometric_mean",
     threshold_min_cells = 5,

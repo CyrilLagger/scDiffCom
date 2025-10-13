@@ -6,7 +6,7 @@ extract_analysis_inputs <- function(
   cond1_name,
   cond2_name,
   assay,
-  slot,
+  layer,
   log_scale,
   threshold_min_cells,
   LRI_table,
@@ -19,7 +19,7 @@ extract_analysis_inputs <- function(
     sample_column_id = sample_column_id,
     condition_column_id = condition_column_id,
     assay = assay,
-    slot = slot,
+    layer = layer,
     log_scale = log_scale,
     threshold_min_cells = threshold_min_cells,
     verbose = verbose
@@ -55,42 +55,42 @@ extract_seurat_inputs <- function(
   sample_column_id,
   condition_column_id,
   assay,
-  slot,
+  layer,
   log_scale,
   threshold_min_cells,
   verbose
 ) {
   cell_type <- NULL
   mes <- "Extracting data from assay '"
-  if (slot == "data") {
+  if (layer == "data") {
     mes <- paste0(
       mes,
       assay,
-      "' and slot 'data' (assuming normalized log1p-transformed data)."
+      "' and layer 'data' (assuming normalized log1p-transformed data)."
     )
-  } else if (slot == "counts") {
+  } else if (layer == "counts") {
     mes <- paste0(
       mes,
       assay,
-      " and slot 'counts' (assuming normalized non-log1p-transformed data)."
+      " and layer 'counts' (assuming normalized non-log1p-transformed data)."
     )
   }
   if (verbose) message(mes)
   temp_data <- Seurat::GetAssayData(
     object = seurat_object,
-    slot = slot,
+    layer = layer,
     assay = assay
   )
   if(!methods::is(temp_data, "dgCMatrix")) {
     stop(
       paste0(
-        "slot ",
-        slot,
+        "layer ",
+        layer,
         " of 'seurat_object' must be of class 'dgCMatrix'"
       )
     )
   }
-  if (slot == "data" & !log_scale) {
+  if (layer == "data" & !log_scale) {
     if (verbose) {
       message(
         paste0(
@@ -101,7 +101,7 @@ extract_seurat_inputs <- function(
     }
     temp_data <- expm1(temp_data)
   }
-  if (slot == "counts" & log_scale) {
+  if (layer == "counts" & log_scale) {
     if (verbose) {
       message(
         "Converting data from non-log1p-transformed to log1p-transformed."

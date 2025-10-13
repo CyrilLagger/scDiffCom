@@ -27,9 +27,9 @@
 #'  \href{https://cyrillagger.github.io/scDiffCom/articles/scDiffCom-vignette.html}{vignette}).
 #'
 #'  Data extraction. The UMI or read counts matrix is extracted from
-#'  the assay \code{seurat_assay} and the slot \code{seurat_slot}. By default,
+#'  the assay \code{seurat_assay} and the layer \code{seurat_layer}. By default,
 #'  it is assumed that \code{seurat_object} contains log1p-transformed
-#'  normalized data in the slot "data" of its assay "RNA". If \code{log_scale}
+#'  normalized data in the layer "data" of its assay "RNA". If \code{log_scale}
 #'  is \code{FALSE} (as recommended), the data are \code{expm1()} transformed
 #'  in order to recover normalized values not in log scale.
 #'
@@ -76,14 +76,16 @@
 #'  be returned (\code{"scDiffCom_object"} by default).
 #' @param seurat_assay Assay of \code{seurat_object} from which to extract data.
 #'  See Details for an explanation on how data are extracted based on the three
-#'  parameters \code{seurat_assay}, \code{seurat_slot} and \code{log_scale}.
-#' @param seurat_slot Slot of \code{seurat_object} from which to extract data.
+#'  parameters \code{seurat_assay}, \code{seurat_layer} and \code{log_scale}.
+#' @param seurat_slot `r lifecycle::badge("deprecated")` `seurat_slot` is no
+#'   longer supported; use `seurat_layer` instead.
+#' @param seurat_layer Layer of \code{seurat_object} from which to extract data.
 #'  See Details for an explanation on how data are extracted based on the three
-#'  parameters \code{seurat_assay}, \code{seurat_slot} and \code{log_scale}.
+#'  parameters \code{seurat_assay}, \code{seurat_layer} and \code{log_scale}.
 #' @param log_scale When \code{FALSE} (the default, recommended), data are
 #'  treated as normalized but not log1p-transformed. See Details for an
 #'  explanation on how data are extracted based on the three
-#'  parameters \code{seurat_assay}, \code{seurat_slot} and \code{log_scale}.
+#'  parameters \code{seurat_assay}, \code{seurat_layer} and \code{log_scale}.
 #' @param score_type Metric used to compute cell-cell interaction (CCI) scores.
 #'  Can either be \code{"geometric_mean"} (default) or \code{"arithmetic_mean"}.
 #'  It is strongly recommended to use the geometric mean, especially when
@@ -129,7 +131,7 @@
 #' @param seed Set a random seed (\code{42} by default) to obtain reproducible
 #' results.
 #' @param verbose If \code{TRUE} (default), print progress messages.
-#' @param custom_LRI_tables A list containing a LRI table and, if known, 
+#' @param custom_LRI_tables A list containing a LRI table and, if known,
 #' tables with annotations supplied by the user. Overwrite
 #' \code{LRI_species} and the corresponding internal LRI table. Use to
 #' your own risk! Must contain at least the following named item:
@@ -164,7 +166,8 @@ run_interaction_analysis <- function(
   iterations = 1000,
   scdiffcom_object_name = "scDiffCom_object",
   seurat_assay = "RNA",
-  seurat_slot = "data",
+  seurat_layer = "data",
+  seurat_slot = deprecated(),
   log_scale = FALSE,
   score_type = "geometric_mean",
   threshold_min_cells = 5,
@@ -183,13 +186,21 @@ run_interaction_analysis <- function(
       "'seurat_object' must be an object of class Seurat"
       )
   }
+  if (lifecycle::is_present(seurat_slot)) {
+    lifecycle::deprecate_warn(
+      "1.2.0",
+      "run_interaction_analysis(seurat_slot)",
+      "run_interaction_analysis(seurat_layer)"
+    )
+    seurat_layer <- seurat_slot
+  }
   analysis_parameters <- list(
     LRI_species = LRI_species,
     seurat_celltype_id = seurat_celltype_id,
     seurat_condition_id = seurat_condition_id,
     object_name = scdiffcom_object_name,
     seurat_assay = seurat_assay,
-    seurat_slot = seurat_slot,
+    seurat_layer = seurat_layer,
     log_scale = log_scale,
     score_type = score_type,
     threshold_min_cells = threshold_min_cells,
@@ -272,7 +283,7 @@ run_internal_raw_analysis <- function(
     cond1_name = params$seurat_condition_id$cond1_name,
     cond2_name = params$seurat_condition_id$cond2_name,
     assay = params$seurat_assay,
-    slot = params$seurat_slot,
+    layer = params$seurat_layer,
     log_scale = params$log_scale,
     threshold_min_cells = as.integer(params$threshold_min_cells),
     LRI_table = LRI_table,
