@@ -626,17 +626,19 @@ test_that(
 
 test_that(
   "run_interaction_analysis is running correctly", {
-    expect_s4_class(
-      run_interaction_analysis(
-        seurat_object = seurat_test,
-        LRI_species = "mouse",
-        seurat_celltype_id = "cell_type",
-        seurat_condition_id = list(
-          column_name = "age_group",
-          cond1_name = "YOUNG",
-          cond2_name = "OLD"
-        )
+    res <- run_interaction_analysis(
+      seurat_object = seurat_test,
+      LRI_species = "mouse",
+      seurat_celltype_id = "cell_type",
+      seurat_condition_id = list(
+        column_name = "age_group",
+        cond1_name = "YOUNG",
+        cond2_name = "OLD"
       ),
+      iterations = 100
+    )
+    expect_s4_class(
+      res,
      "scDiffCom"
     )
   }
@@ -718,18 +720,20 @@ test_that(
 
 test_that(
   "run_interaction_analysis is running correctly with custom LRIs and no annotations", {
-    expect_s4_class(
-      run_interaction_analysis(
-        seurat_object = seurat_test,
-        LRI_species = "custom",
-        seurat_celltype_id = "cell_type",
-        seurat_condition_id = list(
-          column_name = "age_group",
-          cond1_name = "YOUNG",
-          cond2_name = "OLD"
-        ),
-        custom_LRI_table = list(LRI = LRI_mouse$LRI_curated[1:500, ])
+    res <- run_interaction_analysis(
+      seurat_object = seurat_test,
+      LRI_species = "custom",
+      seurat_celltype_id = "cell_type",
+      seurat_condition_id = list(
+        column_name = "age_group",
+        cond1_name = "YOUNG",
+        cond2_name = "OLD"
       ),
+      iterations = 100,
+      custom_LRI_table = list(LRI = LRI_mouse$LRI_curated[1:500, ])
+    )
+    expect_s4_class(
+      res,
      "scDiffCom"
     )
   }
@@ -740,18 +744,20 @@ custom_LRI_GO <- LRI_mouse$LRI_curated_GO[LRI %in% custom_LRI$LRI]
 
 test_that(
   "run_interaction_analysis is running correctly with custom LRIs and annotations", {
-    expect_s4_class(
-      run_interaction_analysis(
-        seurat_object = seurat_test,
-        LRI_species = "custom",
-        seurat_celltype_id = "cell_type",
-        seurat_condition_id = list(
-          column_name = "age_group",
-          cond1_name = "YOUNG",
-          cond2_name = "OLD"
-        ),
-        custom_LRI_table = list(LRI = custom_LRI, my_GO = custom_LRI_GO)
+    res <- run_interaction_analysis(
+      seurat_object = seurat_test,
+      LRI_species = "custom",
+      seurat_celltype_id = "cell_type",
+      seurat_condition_id = list(
+        column_name = "age_group",
+        cond1_name = "YOUNG",
+        cond2_name = "OLD"
       ),
+      iterations = 100,
+      custom_LRI_table = list(LRI = custom_LRI, my_GO = custom_LRI_GO)
+    )
+    expect_s4_class(
+      res,
      "scDiffCom"
     )
   }
