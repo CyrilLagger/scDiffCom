@@ -9,6 +9,7 @@ There were no ERRORs, WARNINGs or NOTEs
 
 ## Test environments
 * local windows 11 Home, R 4.5.0
+* local windows 11 Home, R 4.5.0 ("_R_CHECK_DEPENDS_ONLY_" = "TRUE")
 * windows-latest, release, github action
 * macOS-latest, release, github action
 * ubuntu-latest, release, github action
