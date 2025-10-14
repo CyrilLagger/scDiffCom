@@ -1,5 +1,8 @@
 ## Submission
-This is a submission for V1.2.0 of scDiffCom.
+This is a resubmission for V1.2.0 of scDiffCom.
+
+## Changes
+Adding conditioning for suggested pkg in tests
 
 ## R CMD check results
 There were no ERRORs, WARNINGs or NOTEs
