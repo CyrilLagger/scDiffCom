@@ -1158,6 +1158,8 @@ types_of_layout = c(
 test_that(
   "BuildNetwork works and returns a visNetwork object",
   {
+    if (!requireNamespace("visNetwork", quietly = TRUE))
+      testthat::skip("visNetwork not installed")
     lapply(
       types_of_network,
       function(net) {
@@ -1181,18 +1183,11 @@ test_that(
 
 ## Check BuildNetwork internal functions #####
 
-build_interactive_network(
-  object = scdiffcom_objects$cond_stat,
-  network_type = types_of_network[[1]],
-  layout_type = types_of_layout[[2]],
-  class_signature = "scDiffCom",
-  subobject_name = NULL,
-  abbreviation_table = NULL
-)
-
 test_that(
   "No network available for object without statistical analysis",
   {
+    if (!requireNamespace("visNetwork", quietly = TRUE))
+      testthat::skip("visNetwork not installed")
     expect_error(
       build_interactive_network(
         object = scdiffcom_objects$cond_nostat,
